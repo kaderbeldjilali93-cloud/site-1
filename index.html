@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI SaaS - Next-Gen CRM & Automation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .rtl { direction: rtl; }
+        .ltr { direction: ltr; }
+        [v-cloak] { display: none; }
+        .transition-all { transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-white text-slate-900">
+    <div id="app" class="min-h-screen transition-all">
+        <!-- Navigation -->
+        <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-sm border-b border-slate-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-20">
+                    <!-- Logo -->
+                    <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer" onclick="setView('home')">
+                        <div class="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                        </div>
+                        <span class="font-bold text-xl tracking-tight text-slate-900">AISaaS</span>
+                    </div>
+
+                    <!-- Desktop Menu -->
+                    <div class="hidden md:flex items-center gap-8">
+                        <button onclick="setView('home')" id="nav-home" class="text-slate-900 font-medium text-sm transition-colors">الرئيسية</button>
+                        <a href="#features" id="nav-features" class="text-slate-500 hover:text-slate-900 transition-colors font-medium text-sm">التقنيات</a>
+                        <a href="#services" id="nav-services" class="text-slate-500 hover:text-slate-900 transition-colors font-medium text-sm">الخدمات</a>
+                        <button onclick="setView('contact')" id="nav-contact" class="text-slate-500 hover:text-slate-900 transition-colors font-medium text-sm">تواصل معنا</button>
+                        
+                        <!-- Language Switcher -->
+                        <div class="flex items-center border border-slate-200 rounded-full px-1 p-1">
+                            <button onclick="setLang('en')" class="lang-btn en px-3 py-1 rounded-full text-xs font-bold uppercase transition-all text-slate-400">EN</button>
+                            <button onclick="setLang('ar')" class="lang-btn ar px-3 py-1 rounded-full text-xs font-bold uppercase transition-all bg-slate-900 text-white">AR</button>
+                            <button onclick="setLang('fr')" class="lang-btn fr px-3 py-1 rounded-full text-xs font-bold uppercase transition-all text-slate-400">FR</button>
+                        </div>
+
+                        <button class="bg-slate-900 text-white px-5 py-2 rounded-full font-medium text-sm hover:bg-slate-800 transition-all" id="nav-cta">
+                            ابدأ الآن
+                        </button>
+                    </div>
+
+                    <!-- Mobile Toggle -->
+                    <div class="md:hidden flex items-center gap-4">
+                        <button onclick="toggleMenu()" class="text-slate-600 p-2">
+                            <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100 shadow-lg px-4 py-6 space-y-4">
+                <button onclick="setView('home'); toggleMenu();" class="block text-slate-600 font-medium w-full text-right" id="m-nav-home">الرئيسية</button>
+                <a href="#features" class="block text-slate-600 font-medium" onclick="toggleMenu()" id="m-nav-features">التقنيات</a>
+                <a href="#services" class="block text-slate-600 font-medium" onclick="toggleMenu()" id="m-nav-services">الخدمات</a>
+                <button onclick="setView('contact'); toggleMenu();" class="block text-slate-600 font-medium w-full text-right" id="m-nav-contact">تواصل معنا</button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main id="main-content">
+            <!-- Home View -->
+            <div id="home-view">
+                <!-- Hero Section -->
+                <section class="pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+                    <div class="text-center max-w-4xl mx-auto">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold mb-8 uppercase tracking-wide" id="hero-badge">
+                            قوة المصادر المفتوحة
+                        </div>
+                        <h1 class="text-4xl md:text-6xl font-bold text-slate-900 leading-[1.1] mb-8 tracking-tight" id="hero-title">
+                            الجيل القادم من أنظمة إدارة العملاء والأتمتة
+                        </h1>
+                        <p class="text-lg md:text-xl text-slate-500 mb-10 leading-relaxed max-w-2xl mx-auto font-light" id="hero-subtitle">
+                            نظام بيئي متكامل يجمع بين Chatwoot و n8n و Typebot و واتساب. امتلك بياناتك وأتمت محادثاتك.
+                        </p>
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <button class="w-full sm:w-auto px-8 py-4 bg-slate-900 text-white rounded-full font-medium hover:bg-slate-800 transition-all" id="hero-cta-primary">عرض الخطط</button>
+                            <button onclick="setView('contact')" class="w-full sm:w-auto px-8 py-4 bg-white text-slate-600 border border-slate-200 rounded-full font-medium hover:border-slate-400 transition-all" id="hero-cta-secondary">المزيد من المعلومات</button>
+                        </div>
+                    </div>
+
+                    <div class="mt-20 border-t border-slate-100 pt-16 grid grid-cols-2 md:grid-cols-4 gap-12 text-center opacity-80">
+                        <div class="flex flex-col items-center gap-4">
+                            <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-700"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></div>
+                            <span class="font-medium text-slate-500 text-xs uppercase">Chatwoot</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-4">
+                            <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-700"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 14a8 8 0 0 1-8 8"/><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V9a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v1"/><path d="M10 9.5V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v10"/><path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-2 5.27"/><path d="M10 15h0"/><path d="M2 10h0"/></svg></div>
+                            <span class="font-medium text-slate-500 text-xs uppercase">n8n</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-4">
+                            <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-700"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/></svg></div>
+                            <span class="font-medium text-slate-500 text-xs uppercase">Typebot</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-4">
+                            <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-700"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg></div>
+                            <span class="font-medium text-slate-500 text-xs uppercase text-nowrap">Evolution API</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Services Section -->
+                <section id="services" class="py-24 bg-slate-50/50 border-t border-slate-100">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="mb-16">
+                            <h2 class="text-2xl font-bold text-slate-900 mb-2" id="serv-title">اختر نموذج النشر المناسب</h2>
+                            <p class="text-slate-500 max-w-2xl font-light" id="serv-subtitle">سواء كنت تريد إدارة كاملة منا أو تحكماً كاملاً لك، لدينا الحل.</p>
+                        </div>
+                        <div class="grid lg:grid-cols-2 gap-8">
+                            <!-- Managed -->
+                            <div class="bg-white rounded-2xl p-8 border border-slate-200 hover:border-slate-900 transition-all duration-300">
+                                <h3 class="text-xl font-bold text-slate-900" id="serv-m-title">الخدمة المُدارة</h3>
+                                <p class="text-slate-900 text-sm font-semibold mt-1 uppercase tracking-wider" id="serv-m-price">اشتراك شهري</p>
+                                <p class="text-slate-500 my-6 text-sm leading-relaxed" id="serv-m-desc">نحن نستضيف ونحدث ونحمي النظام. أنت تركز فقط على عملك.</p>
+                                <ul class="space-y-4 mb-8 text-sm text-slate-600" id="serv-m-list">
+                                    <li class="flex items-center gap-3"><svg class="text-slate-900" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> استضافة سحابية عالية الأداء</li>
+                                    <li class="flex items-center gap-3"><svg class="text-slate-900" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> نسخ احتياطي يومي</li>
+                                    <li class="flex items-center gap-3"><svg class="text-slate-900" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> تحديثات تلقائية</li>
+                                </ul>
+                                <button class="w-full py-3 bg-slate-900 text-white rounded-lg font-medium text-sm" id="serv-m-cta">اشترك الآن</button>
+                            </div>
+                            <!-- Self-Hosted -->
+                            <div class="bg-white rounded-2xl p-8 border border-slate-200 hover:border-slate-900 transition-all duration-300">
+                                <h3 class="text-xl font-bold text-slate-900" id="serv-s-title">نشر على خادمك الخاص</h3>
+                                <p class="text-slate-500 text-sm font-semibold mt-1 uppercase tracking-wider" id="serv-s-price">دفعة لمرة واحدة</p>
+                                <p class="text-slate-500 my-6 text-sm leading-relaxed" id="serv-s-desc">نقوم بتثبيت النظام بالكامل على خادمك الخاص (VPS). أنت تمتلك البنية التحتية.</p>
+                                <ul class="space-y-4 mb-8 text-sm text-slate-600" id="serv-s-list">
+                                    <li class="flex items-center gap-3"><svg class="text-slate-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> التثبيت على خادمك الخاص</li>
+                                    <li class="flex items-center gap-3"><svg class="text-slate-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> صلاحيات وصول كاملة (Root)</li>
+                                    <li class="flex items-center gap-3"><svg class="text-slate-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> دعم فني لمدة 30 يوماً</li>
+                                </ul>
+                                <button class="w-full py-3 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium text-sm" id="serv-s-cta">احجز خدمة النشر</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Contact View -->
+            <div id="contact-view" class="hidden">
+                <section class="pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-[80vh]">
+                    <div class="grid md:grid-cols-2 gap-16">
+                        <div>
+                            <h1 class="text-4xl font-bold text-slate-900 mb-4" id="con-title">تواصل معنا</h1>
+                            <p class="text-slate-500 mb-12 text-lg font-light" id="con-subtitle">هل لديك أسئلة حول خدمات النشر لدينا؟ نحن هنا للمساعدة.</p>
+                            <div class="space-y-8">
+                                <div class="flex items-start gap-4">
+                                    <div class="p-3 bg-slate-100 rounded-full text-slate-900"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
+                                    <div>
+                                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-400 mb-1">Email</h4>
+                                        <p class="text-slate-900 font-medium">hello@aisaas.site</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-8 rounded-3xl border border-slate-100">
+                            <form id="contact-form" class="space-y-6" onsubmit="handleContact(event)">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2" id="label-name">الاسم</label>
+                                    <input type="text" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-slate-900 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2" id="label-email">البريد الإلكتروني</label>
+                                    <input type="email" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-slate-900 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2" id="label-msg">الرسالة</label>
+                                    <textarea rows="4" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-slate-900 transition-colors resize-none"></textarea>
+                                </div>
+                                <button type="submit" class="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-2" id="btn-send">
+                                    إرسال الرسالة
+                                </button>
+                            </form>
+                            <div id="form-success" class="hidden h-full flex flex-col items-center justify-center text-center py-12">
+                                <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                                <p class="text-lg font-medium text-slate-900" id="txt-success">شكراً لك! سنرد عليك في أقرب وقت ممكن.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white text-slate-500 py-16 border-t border-slate-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 justify-between items-center gap-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-6 h-6 bg-slate-900 rounded flex items-center justify-center text-white text-[10px]">🤖</div>
+                        <span class="font-bold text-base text-slate-900">AISaaS</span>
+                    </div>
+                    <p class="text-sm max-w-xs" id="footer-desc">تمكين الشركات من خلال أتمتة المصادر المفتوحة.</p>
+                </div>
+                <div class="md:text-left text-right">
+                    <p class="text-sm font-medium text-slate-900 mb-1" id="footer-rights">© 2026 AI SaaS. جميع الحقوق محفوظة.</p>
+                    <p class="text-xs text-slate-400 italic font-medium" id="footer-template">هذا هو قالب GPT4AR</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const content = {
+            en: {
+                dir: 'ltr',
+                nav: { home: "Home", features: "Technology", pricing: "Services", contact: "Contact", cta: "Get Started" },
+                hero: { badge: "Open Source Powerhouse", title: "Next-Gen AI CRM & Automation", subtitle: "Deploy a fully integrated ecosystem with Chatwoot, n8n, Typebot, and WhatsApp.", cta1: "View Plans", cta2: "Learn More" },
+                serv: { title: "Choose Your Model", sub: "Whether you want hands-off management or total control.", mt: "Managed Service", mp: "Subscription", md: "We host, maintain, and update everything.", ml: ["Cloud hosting", "Daily Backups", "Automatic Updates"], mc: "Subscribe Now", st: "On-Premise", sp: "One-Time Fee", sd: "We deploy on your own servers (VPS).", sl: ["Installation on VPS", "Full Root Access", "30 Days Support"], sc: "Book Deployment" },
+                con: { title: "Get in Touch", sub: "Questions? We're here to help.", n: "Name", e: "Email", m: "Message", s: "Send Message", ok: "Success! We'll reply soon." },
+                foot: { desc: "Empowering businesses with open-source automation.", r: "© 2026 AI SaaS. All rights reserved.", t: "This is GPT4AR template" }
+            },
+            ar: {
+                dir: 'rtl',
+                nav: { home: "الرئيسية", features: "التقنيات", pricing: "الخدمات", contact: "تواصل معنا", cta: "ابدأ الآن" },
+                hero: { badge: "قوة المصادر المفتوحة", title: "الجيل القادم من أنظمة إدارة العملاء والأتمتة", subtitle: "نظام بيئي متكامل يجمع بين Chatwoot و n8n و Typebot و واتساب. امتلك بياناتك وأتمت محادثاتك.", cta1: "عرض الخطط", cta2: "المزيد من المعلومات" },
+                serv: { title: "اختر نموذج النشر المناسب", sub: "سواء كنت تريد إدارة كاملة منا أو تحكماً كاملاً لك، لدينا الحل.", mt: "الخدمة المُدارة", mp: "اشتراك شهري", md: "نحن نستضيف ونحدث ونحمي النظام. أنت تركز فقط على عملك.", ml: ["استضافة سحابية عالية الأداء", "نسخ احتياطي يومي", "تحديثات تلقائية"], mc: "اشترك الآن", st: "نشر على خادمك الخاص", sp: "دفعة لمرة واحدة", sd: "نقوم بتثبيت النظام بالكامل على خادمك الخاص (VPS). أنت تمتلك البنية التحتية.", sl: ["التثبيت على خادمك الخاص", "صلاحيات وصول كاملة (Root)", "دعم فني لمدة 30 يوماً"], sc: "احجز خدمة النشر" },
+                con: { title: "تواصل معنا", sub: "هل لديك أسئلة حول خدمات النشر لدينا؟ نحن هنا للمساعدة.", n: "الاسم", e: "البريد الإلكتروني", m: "الرسالة", s: "إرسال الرسالة", ok: "شكراً لك! سنرد عليك في أقرب وقت ممكن." },
+                foot: { desc: "تمكين الشركات من خلال أتمتة المصادر المفتوحة.", r: "© 2026 AI SaaS. جميع الحقوق محفوظة.", t: "هذا هو قالب GPT4AR" }
+            },
+            fr: {
+                dir: 'ltr',
+                nav: { home: "Accueil", features: "Technologies", pricing: "Services", contact: "Contact", cta: "Démarrer" },
+                hero: { badge: "Puissance Open Source", title: "CRM IA & Automatisation", subtitle: "Déployez un écosystème intégré avec Chatwoot, n8n, Typebot et WhatsApp.", cta1: "Voir les plans", cta2: "En savoir plus" },
+                serv: { title: "Choisissez votre modèle", sub: "Gestion complète ou contrôle total.", mt: "Service Géré", mp: "Abonnement", md: "Nous hébergeons et maintenons tout.", ml: ["Cloud haute performance", "Sauvegardes quotidiennes", "Mises à jour auto"], mc: "S'abonner", st: "Auto-hébergé", sp: "Frais unique", sd: "Nous déployons sur votre propre serveur (VPS).", sl: ["Installation sur VPS", "Accès Root complet", "30 jours de support"], sc: "Réserver" },
+                con: { title: "Contactez-nous", sub: "Des questions ? Nous sommes là.", n: "Nom", e: "E-mail", m: "Message", s: "Envoyer", ok: "Merci ! Réponse rapide garantie." },
+                foot: { desc: "Autonomiser les entreprises grâce à l'open source.", r: "© 2026 AI SaaS. Tous droits réservés.", t: "Ceci est le modèle GPT4AR" }
+            }
+        };
+
+        let currentLang = 'ar';
+        let currentView = 'home';
+
+        function setLang(l) {
+            currentLang = l;
+            const t = content[l];
+            document.documentElement.lang = l;
+            document.documentElement.dir = t.dir;
+            document.body.className = t.dir === 'rtl' ? 'rtl' : 'ltr';
+
+            // Update Nav
+            document.getElementById('nav-home').innerText = t.nav.home;
+            document.getElementById('nav-features').innerText = t.nav.features;
+            document.getElementById('nav-services').innerText = t.nav.pricing;
+            document.getElementById('nav-contact').innerText = t.nav.contact;
+            document.getElementById('nav-cta').innerText = t.nav.cta;
+            
+            // Hero
+            document.getElementById('hero-badge').innerText = t.hero.badge;
+            document.getElementById('hero-title').innerText = t.hero.title;
+            document.getElementById('hero-subtitle').innerText = t.hero.subtitle;
+            document.getElementById('hero-cta-primary').innerText = t.hero.cta1;
+            document.getElementById('hero-cta-secondary').innerText = t.hero.cta2;
+
+            // Services
+            document.getElementById('serv-title').innerText = t.serv.title;
+            document.getElementById('serv-subtitle').innerText = t.serv.sub;
+            document.getElementById('serv-m-title').innerText = t.serv.mt;
+            document.getElementById('serv-m-price').innerText = t.serv.mp;
+            document.getElementById('serv-m-desc').innerText = t.serv.md;
+            document.getElementById('serv-m-cta').innerText = t.serv.mc;
+            document.getElementById('serv-s-title').innerText = t.serv.st;
+            document.getElementById('serv-s-price').innerText = t.serv.sp;
+            document.getElementById('serv-s-desc').innerText = t.serv.sd;
+            document.getElementById('serv-s-cta').innerText = t.serv.sc;
+
+            // Contact
+            document.getElementById('con-title').innerText = t.con.title;
+            document.getElementById('con-subtitle').innerText = t.con.sub;
+            document.getElementById('label-name').innerText = t.con.n;
+            document.getElementById('label-email').innerText = t.con.e;
+            document.getElementById('label-msg').innerText = t.con.m;
+            document.getElementById('btn-send').innerText = t.con.s;
+            document.getElementById('txt-success').innerText = t.con.ok;
+
+            // Footer
+            document.getElementById('footer-desc').innerText = t.foot.desc;
+            document.getElementById('footer-rights').innerText = t.foot.r;
+            document.getElementById('footer-template').innerText = t.foot.t;
+
+            // Language Btn classes
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-900', 'text-white');
+                btn.classList.add('text-slate-400');
+            });
+            document.querySelector(`.lang-btn.${l}`).classList.add('bg-slate-900', 'text-white');
+            document.querySelector(`.lang-btn.${l}`).classList.remove('text-slate-400');
+        }
+
+        function setView(v) {
+            currentView = v;
+            document.getElementById('home-view').classList.toggle('hidden', v !== 'home');
+            document.getElementById('contact-view').classList.toggle('hidden', v !== 'contact');
+            
+            document.getElementById('nav-home').classList.toggle('font-bold', v === 'home');
+            document.getElementById('nav-contact').classList.toggle('font-bold', v === 'contact');
+            window.scrollTo(0, 0);
+        }
+
+        function toggleMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        function handleContact(e) {
+            e.preventDefault();
+            document.getElementById('contact-form').classList.add('hidden');
+            document.getElementById('form-success').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('contact-form').classList.remove('hidden');
+                document.getElementById('form-success').classList.add('hidden');
+                document.getElementById('contact-form').reset();
+            }, 5000);
+        }
+
+        // Chatwoot Load
+        (function(d,t) {
+            var BASE_URL="https://chatwoot.panel.aisaas.site";
+            var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+            g.src=BASE_URL+"/packs/js/sdk.js";
+            g.defer = true; g.async = true;
+            g.onload=function(){
+                window.chatwootSDK.run({
+                    websiteToken: 'WSP9oqKuW18ALUno6fe41kc9',
+                    baseUrl: BASE_URL
+                })
+            }
+            s.parentNode.insertBefore(g,s);
+        })(document,"script");
+    </script>
+</body>
+</html>
