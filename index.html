@@ -31,6 +31,13 @@
                     },
                     animation: {
                         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float-attention': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0) scale(1)' },
+                            '50%': { transform: 'translateY(-6px) scale(1.05)' },
+                        }
                     }
                 }
             }
@@ -62,6 +69,14 @@
         }
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
+        
+        /* Icon Hover Effect Class */
+        .icon-hover {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .icon-hover:hover {
+            transform: scale(1.2) rotate(5deg);
+        }
     </style>
 </head>
 <body class="bg-dark-900 text-slate-200 selection:bg-gold-500 selection:text-white">
@@ -71,11 +86,11 @@
         <nav class="fixed w-full z-50 bg-dark-900/90 backdrop-blur-md border-b border-white/5">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20">
-                    <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" onclick="window.scrollTo(0,0)">
-                        <div class="w-10 h-10 bg-gradient-to-br from-gold-500 to-burnt-500 rounded-lg flex items-center justify-center text-white shadow-lg">
+                    <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer group" onclick="window.scrollTo(0,0)">
+                        <div class="w-10 h-10 bg-gradient-to-br from-gold-500 to-burnt-500 rounded-lg flex items-center justify-center text-white shadow-lg icon-hover">
                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
                         </div>
-                        <span class="font-bold text-xl text-white">RestoPro</span>
+                        <span class="font-bold text-xl text-white group-hover:text-gold-500 transition-colors">RestoPro</span>
                     </div>
                     <div class="hidden md:flex items-center gap-8">
                         <button onclick="document.getElementById('pain-points').scrollIntoView({behavior: 'smooth'})" class="text-slate-300 hover:text-gold-400 transition-colors text-sm font-medium">لماذا نحن؟</button>
@@ -88,7 +103,7 @@
                             <button onclick="setLang('ar')" class="lang-btn ar px-3 py-1 rounded-full text-xs font-bold uppercase transition-all bg-gold-500 text-dark-900">AR</button>
                         </div>
 
-                        <button onclick="document.getElementById('cta-section').scrollIntoView({behavior: 'smooth'})" class="bg-white text-dark-900 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-gold-400 transition-all shadow-lg">
+                        <button onclick="document.getElementById('cta-section').scrollIntoView({behavior: 'smooth'})" class="bg-white text-dark-900 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-gold-400 transition-all shadow-lg hover:shadow-gold-500/50 hover:-translate-y-1">
                             احجز مكانك
                         </button>
                     </div>
@@ -112,14 +127,11 @@
 
             <!-- 3. Video Section -->
             <section class="px-4 max-w-4xl mx-auto mb-16">
-                <div class="gradient-border p-1 shadow-2xl">
+                <div class="gradient-border p-1 shadow-2xl hover:scale-[1.01] transition-transform duration-500">
                     <div class="aspect-video bg-dark-900 rounded-xl overflow-hidden relative group">
-                        <!-- Placeholder for YouTube Video -->
-                        <!-- قم بتغيير src بالرابط الخاص بالفيديو الخاص بك -->
                         <iframe class="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=Placeholder" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                        <!-- Fallback overlay if no video -->
                         <div class="absolute inset-0 bg-black/50 flex items-center justify-center group-hover:bg-black/40 transition-all pointer-events-none">
-                            <div class="w-20 h-20 bg-gold-500 rounded-full flex items-center justify-center cursor-pointer shadow-[0_0_30px_rgba(245,158,11,0.5)]">
+                            <div class="w-20 h-20 bg-gold-500 rounded-full flex items-center justify-center cursor-pointer shadow-[0_0_30px_rgba(245,158,11,0.5)] icon-hover">
                                 <svg class="w-8 h-8 text-dark-900 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                             </div>
                         </div>
@@ -135,25 +147,25 @@
                         <p class="text-white text-2xl font-bold">عرض الإطلاق الخاص ينتهي قريباً:</p>
                     </div>
                     <div class="flex gap-4 text-center dir-ltr">
-                        <div class="bg-dark-700 p-4 rounded-xl border border-white/10 min-w-[80px]">
-                            <span class="block text-3xl font-mono font-bold text-white" id="hours">24</span>
+                        <div class="bg-dark-700 p-4 rounded-xl border border-white/10 min-w-[80px] hover:border-red-500/30 transition-colors">
+                            <span class="block text-3xl font-mono font-bold text-red-500" id="hours">24</span>
                             <span class="text-xs text-slate-400 uppercase">ساعة</span>
                         </div>
-                        <div class="bg-dark-700 p-4 rounded-xl border border-white/10 min-w-[80px]">
-                            <span class="block text-3xl font-mono font-bold text-white" id="minutes">00</span>
+                        <div class="bg-dark-700 p-4 rounded-xl border border-white/10 min-w-[80px] hover:border-red-500/30 transition-colors">
+                            <span class="block text-3xl font-mono font-bold text-red-500" id="minutes">00</span>
                             <span class="text-xs text-slate-400 uppercase">دقيقة</span>
                         </div>
-                        <div class="bg-dark-700 p-4 rounded-xl border border-white/10 min-w-[80px]">
-                            <span class="block text-3xl font-mono font-bold text-gold-500" id="seconds">00</span>
+                        <div class="bg-dark-700 p-4 rounded-xl border border-white/10 min-w-[80px] hover:border-red-500/30 transition-colors">
+                            <span class="block text-3xl font-mono font-bold text-red-500" id="seconds">00</span>
                             <span class="text-xs text-slate-400 uppercase">ثانية</span>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- 5. CTA 1 -->
+            <!-- 5. CTA 1 (Animated Button) -->
             <div class="text-center py-12">
-                <button onclick="document.getElementById('cta-section').scrollIntoView({behavior: 'smooth'})" class="bg-gradient-to-r from-gold-500 to-burnt-500 text-white text-xl md:text-2xl font-bold px-12 py-5 rounded-full shadow-[0_0_20px_rgba(234,88,12,0.4)] hover:shadow-[0_0_40px_rgba(234,88,12,0.6)] hover:scale-105 transition-all transform">
+                <button onclick="document.getElementById('cta-section').scrollIntoView({behavior: 'smooth'})" class="bg-gradient-to-r from-gold-500 to-burnt-500 text-white text-xl md:text-2xl font-bold px-12 py-5 rounded-full shadow-[0_0_20px_rgba(234,88,12,0.4)] hover:shadow-[0_0_40px_rgba(234,88,12,0.6)] animate-float-attention transition-all transform">
                     نعم، أريد أتمتة مطعمي الآن
                 </button>
                 <p class="mt-4 text-slate-400 text-sm">ضمان استرجاع الأموال لمدة 30 يوماً</p>
@@ -165,24 +177,24 @@
                 <div class="mb-20">
                     <h2 class="text-3xl md:text-4xl font-bold text-center text-white mb-12">هل يبدو هذا مألوفاً لك؟</h2>
                     <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div class="bg-dark-800 p-6 rounded-2xl border border-red-900/30 hover:border-red-500/50 transition-colors">
-                            <div class="text-4xl mb-4">🤯</div>
-                            <h3 class="text-xl font-bold text-white mb-2">فوضى المطبخ</h3>
+                        <div class="bg-dark-800 p-6 rounded-2xl border border-red-900/30 hover:border-red-500/50 transition-colors group cursor-default">
+                            <div class="text-4xl mb-4 icon-hover inline-block">🤯</div>
+                            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors">فوضى المطبخ</h3>
                             <p class="text-slate-400 text-sm">أوراق الطلبات تضيع، الطباخ يصرخ، والطلبات تخرج بالترتيب الخاطئ.</p>
                         </div>
-                        <div class="bg-dark-800 p-6 rounded-2xl border border-red-900/30 hover:border-red-500/50 transition-colors">
-                            <div class="text-4xl mb-4">📉</div>
-                            <h3 class="text-xl font-bold text-white mb-2">سرقة أو ضياع</h3>
+                        <div class="bg-dark-800 p-6 rounded-2xl border border-red-900/30 hover:border-red-500/50 transition-colors group cursor-default">
+                            <div class="text-4xl mb-4 icon-hover inline-block">📉</div>
+                            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors">سرقة أو ضياع</h3>
                             <p class="text-slate-400 text-sm">لا تعرف كم بعت بالضبط في نهاية اليوم، وتشعر أن هناك أموالاً ناقصة.</p>
                         </div>
-                        <div class="bg-dark-800 p-6 rounded-2xl border border-red-900/30 hover:border-red-500/50 transition-colors">
-                            <div class="text-4xl mb-4">😡</div>
-                            <h3 class="text-xl font-bold text-white mb-2">غضب الزبائن</h3>
+                        <div class="bg-dark-800 p-6 rounded-2xl border border-red-900/30 hover:border-red-500/50 transition-colors group cursor-default">
+                            <div class="text-4xl mb-4 icon-hover inline-block">😡</div>
+                            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors">غضب الزبائن</h3>
                             <p class="text-slate-400 text-sm">"وين راهي طلبيتي؟" عبارة تسمعها كل يوم، وزبائن لا يعودون مرة أخرى.</p>
                         </div>
-                        <div class="bg-dark-800 p-6 rounded-2xl border border-red-900/30 hover:border-red-500/50 transition-colors">
-                            <div class="text-4xl mb-4">😫</div>
-                            <h3 class="text-xl font-bold text-white mb-2">الإرهاق الدائم</h3>
+                        <div class="bg-dark-800 p-6 rounded-2xl border border-red-900/30 hover:border-red-500/50 transition-colors group cursor-default">
+                            <div class="text-4xl mb-4 icon-hover inline-block">😫</div>
+                            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors">الإرهاق الدائم</h3>
                             <p class="text-slate-400 text-sm">أنت مضطر للتواجد في المطعم 24/7 لأن العمل يتوقف بمجرد خروجك.</p>
                         </div>
                     </div>
@@ -213,31 +225,31 @@
                         <p class="text-slate-400 mb-8">ليس مجرد برنامج، بل شريك نجاحك الذي ينظم كل شيء أوتوماتيكياً.</p>
                         
                         <div class="space-y-6">
-                            <div class="flex gap-4">
-                                <div class="w-12 h-12 bg-dark-700 rounded-full flex items-center justify-center text-gold-500 text-xl font-bold">1</div>
+                            <div class="flex gap-4 group">
+                                <div class="w-12 h-12 bg-dark-700 rounded-full flex items-center justify-center text-gold-500 text-xl font-bold icon-hover cursor-default">1</div>
                                 <div>
-                                    <h4 class="text-white font-bold text-lg">منيو ذكي (QR Code)</h4>
+                                    <h4 class="text-white font-bold text-lg group-hover:text-gold-400 transition-colors">منيو ذكي (QR Code)</h4>
                                     <p class="text-slate-400 text-sm">الزبون يطلب من طاولته، الطلب يصل للمطبخ فوراً. وداعاً لأخطاء النادل.</p>
                                 </div>
                             </div>
-                            <div class="flex gap-4">
-                                <div class="w-12 h-12 bg-dark-700 rounded-full flex items-center justify-center text-gold-500 text-xl font-bold">2</div>
+                            <div class="flex gap-4 group">
+                                <div class="w-12 h-12 bg-dark-700 rounded-full flex items-center justify-center text-gold-500 text-xl font-bold icon-hover cursor-default">2</div>
                                 <div>
-                                    <h4 class="text-white font-bold text-lg">شاشة المطبخ (KDS)</h4>
+                                    <h4 class="text-white font-bold text-lg group-hover:text-gold-400 transition-colors">شاشة المطبخ (KDS)</h4>
                                     <p class="text-slate-400 text-sm">شاشة للطباخ ترتب الطلبات حسب الوقت. تنظيم تام وسرعة في الإنجاز.</p>
                                 </div>
                             </div>
-                            <div class="flex gap-4">
-                                <div class="w-12 h-12 bg-dark-700 rounded-full flex items-center justify-center text-gold-500 text-xl font-bold">3</div>
+                            <div class="flex gap-4 group">
+                                <div class="w-12 h-12 bg-dark-700 rounded-full flex items-center justify-center text-gold-500 text-xl font-bold icon-hover cursor-default">3</div>
                                 <div>
-                                    <h4 class="text-white font-bold text-lg">لوحة تحكم للمالك</h4>
+                                    <h4 class="text-white font-bold text-lg group-hover:text-gold-400 transition-colors">لوحة تحكم للمالك</h4>
                                     <p class="text-slate-400 text-sm">شاهد مبيعاتك لحظة بلحظة من هاتفك وأنت في منزلك.</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Bonuses -->
-                        <div class="mt-10 p-6 bg-gradient-to-br from-dark-800 to-dark-700 rounded-2xl border border-gold-500/30">
+                        <div class="mt-10 p-6 bg-gradient-to-br from-dark-800 to-dark-700 rounded-2xl border border-gold-500/30 transform hover:scale-[1.02] transition-transform duration-300">
                             <h4 class="text-gold-500 font-bold mb-4 flex items-center gap-2">🎁 هدايا مجانية عند الاشتراك اليوم:</h4>
                             <ul class="space-y-2 text-sm text-slate-300">
                                 <li class="flex items-center gap-2">✅ <strong>مجاناً:</strong> إدخال المنيو الخاص بك بالكامل من طرفنا.</li>
@@ -250,18 +262,18 @@
                     <!-- Offer Visual -->
                     <div class="relative">
                         <div class="absolute inset-0 bg-gold-500/20 blur-[80px] rounded-full"></div>
-                        <div class="bg-dark-800 border border-white/10 rounded-2xl p-8 relative z-10 shadow-2xl">
+                        <div class="bg-dark-800 border border-white/10 rounded-2xl p-8 relative z-10 shadow-2xl hover:border-gold-500/50 transition-colors">
                             <div class="text-center mb-8">
                                 <p class="text-slate-400 text-sm mb-2">الباقة الشاملة</p>
                                 <div class="text-5xl font-bold text-white mb-2">4900 <span class="text-xl text-gold-500">دج/شهر</span></div>
                                 <p class="text-green-500 text-sm font-bold">وفر 20% عند الدفع السنوي</p>
                             </div>
                             <div class="space-y-4 mb-8">
-                                <div class="w-full h-12 bg-dark-700 rounded-lg flex items-center px-4 text-slate-300">✨ كل مميزات النظام</div>
-                                <div class="w-full h-12 bg-dark-700 rounded-lg flex items-center px-4 text-slate-300">🚀 دعم فني VIP</div>
-                                <div class="w-full h-12 bg-dark-700 rounded-lg flex items-center px-4 text-slate-300">🔄 تحديثات مستمرة</div>
+                                <div class="w-full h-12 bg-dark-700 rounded-lg flex items-center px-4 text-slate-300 hover:bg-dark-600 transition-colors">✨ كل مميزات النظام</div>
+                                <div class="w-full h-12 bg-dark-700 rounded-lg flex items-center px-4 text-slate-300 hover:bg-dark-600 transition-colors">🚀 دعم فني VIP</div>
+                                <div class="w-full h-12 bg-dark-700 rounded-lg flex items-center px-4 text-slate-300 hover:bg-dark-600 transition-colors">🔄 تحديثات مستمرة</div>
                             </div>
-                            <button onclick="document.getElementById('cta-section').scrollIntoView({behavior: 'smooth'})" class="w-full py-4 bg-gold-500 hover:bg-gold-400 text-dark-900 font-bold rounded-xl transition-colors">
+                            <button onclick="document.getElementById('cta-section').scrollIntoView({behavior: 'smooth'})" class="w-full py-4 bg-gold-500 hover:bg-gold-400 text-dark-900 font-bold rounded-xl transition-colors hover:shadow-lg hover:shadow-gold-500/50">
                                 احصل على العرض الآن
                             </button>
                             <p class="text-center text-xs text-slate-500 mt-4">لا توجد مصاريف خفية. يمكنك الإلغاء في أي وقت.</p>
@@ -275,7 +287,7 @@
                 <div class="max-w-4xl mx-auto px-4">
                     <h2 class="text-3xl font-bold mb-4">لماذا تنتظر والمنافسون يتقدمون؟</h2>
                     <p class="text-lg font-medium mb-8 opacity-90">انضم لأكثر من 50 مطعماً قاموا بتغيير واقعهم معنا هذا الشهر.</p>
-                    <button onclick="document.getElementById('cta-section').scrollIntoView({behavior: 'smooth'})" class="bg-dark-900 text-white text-xl font-bold px-10 py-4 rounded-full hover:scale-105 transition-transform shadow-xl">
+                    <button onclick="document.getElementById('cta-section').scrollIntoView({behavior: 'smooth'})" class="bg-dark-900 text-white text-xl font-bold px-10 py-4 rounded-full hover:scale-105 transition-transform shadow-xl hover:shadow-2xl">
                         ابدأ فترتك التجريبية
                     </button>
                 </div>
@@ -296,33 +308,33 @@
                 <div class="max-w-6xl mx-auto">
                     <h2 class="text-3xl font-bold text-center text-white mb-12">ماذا يقول أصحاب المطاعم عنا؟</h2>
                     <div class="grid md:grid-cols-3 gap-8">
-                        <div class="bg-dark-900 p-8 rounded-2xl border border-white/5 relative">
+                        <div class="bg-dark-900 p-8 rounded-2xl border border-white/5 relative hover:border-gold-500/30 transition-colors">
                             <div class="text-gold-500 text-4xl absolute top-4 left-4">"</div>
                             <p class="text-slate-300 mb-6 italic">"كنت أعاني من فوضى عارمة في الويكند. بعد RestoPro، المطبخ أصبح هادئاً والطلبات تخرج في وقتها. زادت أرباحي 30% في أول شهر."</p>
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center">👨🏽</div>
+                                <div class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center text-xl icon-hover cursor-default">👨🏽</div>
                                 <div>
                                     <div class="text-white font-bold">سيد أحمد</div>
                                     <div class="text-xs text-slate-500">صاحب مطعم برجر - العاصمة</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-dark-900 p-8 rounded-2xl border border-white/5 relative">
+                        <div class="bg-dark-900 p-8 rounded-2xl border border-white/5 relative hover:border-gold-500/30 transition-colors">
                             <div class="text-gold-500 text-4xl absolute top-4 left-4">"</div>
                             <p class="text-slate-300 mb-6 italic">"أفضل ميزة هي أنني أستطيع مراقبة المطعم وأنا مسافر. النظام سهل جداً حتى العمال الكبار في السن فهموه بسرعة."</p>
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center">👨🏻</div>
+                                <div class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center text-xl icon-hover cursor-default">👨🏻</div>
                                 <div>
                                     <div class="text-white font-bold">مراد. ب</div>
                                     <div class="text-xs text-slate-500">مدير بيتزيريا - وهران</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-dark-900 p-8 rounded-2xl border border-white/5 relative">
+                        <div class="bg-dark-900 p-8 rounded-2xl border border-white/5 relative hover:border-gold-500/30 transition-colors">
                             <div class="text-gold-500 text-4xl absolute top-4 left-4">"</div>
                             <p class="text-slate-300 mb-6 italic">"الدعم الفني رائع. واجهت مشكلة صغيرة في الليل وردوا علي فوراً وحلوها. هذا ما أبحث عنه، الشراكة الحقيقية."</p>
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center">👨🏿</div>
+                                <div class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center text-xl icon-hover cursor-default">👨🏿</div>
                                 <div>
                                     <div class="text-white font-bold">كريم</div>
                                     <div class="text-xs text-slate-500">مقهى ومطعم - سطيف</div>
