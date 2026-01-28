@@ -612,23 +612,28 @@
             document.getElementById('form-success').classList.remove('hidden');
         }
     </script>
-<script>
-  (function(d,t) {
-    var BASE_URL="https://chatwoot.panel.vidsai.site";
-    var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-    g.src=BASE_URL+"/packs/js/sdk.js";
-    g.async = true;
-    s.parentNode.insertBefore(g,s);
-    g.onload=function(){
-      window.chatwootSDK.run({
-        websiteToken: 'WSD216oggJShKavM2rTzKEvz',
-        baseUrl: BASE_URL,
-        locale: 'ar',                    
-        launcherTitle: 'تحدث معنا' 
-      })
-    }
-  })(document,"script");
-</script>
+    <script>
+      // Global Chatwoot settings to force Arabic locale
+      window.chatwootSettings = {
+        position: 'right',
+        type: 'standard',
+        locale: 'ar'
+      };
+      (function(d,t) {
+        var BASE_URL="https://chatwoot.panel.vidsai.site";
+        var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=BASE_URL+"/packs/js/sdk.js";
+        g.async = true;
+        s.parentNode.insertBefore(g,s);
+        g.onload=function(){
+          window.chatwootSDK.run({
+            websiteToken: 'WSD216oggJShKavM2rTzKEvz',
+            baseUrl: BASE_URL,
+            locale: "ar" // Also setting it here for redundancy
+          })
+        }
+      })(document,"script");
+    </script>
     <!-- Animation Observer Script -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -659,10 +664,5 @@
             scrollElements.forEach(el => observer.observe(el));
         });
     </script>
-    <script>
-  window.addEventListener('chatwoot:ready', function () {
-    window.$chatwoot.toggle('open'); 
-  });
-</script>
 </body>
 </html>
