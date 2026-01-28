@@ -33,11 +33,52 @@
                         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'float-attention': 'float 3s ease-in-out infinite',
                         'bounce-slow': 'bounce 2s infinite',
+                        // New Custom Animations
+                        'zoom-out-smooth': 'zoomOut 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                        'zoom-in-smooth': 'zoomIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                        'slide-up-smooth': 'slideUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                        'slide-down-smooth': 'slideDownEnter 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards', 
+                        'slide-in-left': 'slideInLeft 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                        'slide-in-right': 'slideInRight 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                        'slide-down': 'slideDown 0.8s cubic-bezier(0.4, 0, 0.2, 1)', 
+                        'ken-burns': 'kenburns 10s ease-in-out infinite alternate', // تم تسريع الحركة إلى 10 ثواني
                     },
                     keyframes: {
                         float: {
                             '0%, 100%': { transform: 'translateY(0) scale(1)' },
                             '50%': { transform: 'translateY(-6px) scale(1.05)' },
+                        },
+                        zoomIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.8)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        },
+                        zoomOut: {
+                            '0%': { opacity: '0', transform: 'scale(1.1)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(60px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideDownEnter: { 
+                            '0%': { opacity: '0', transform: 'translateY(-60px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideInLeft: {
+                            '0%': { opacity: '0', transform: 'translateX(60px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' },
+                        },
+                        slideInRight: {
+                            '0%': { opacity: '0', transform: 'translateX(-60px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' },
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-15px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        kenburns: { // إعدادات حركة الخلفية
+                            '0%': { transform: 'scale(1) translate(0, 0)' },
+                            '100%': { transform: 'scale(1.15) translate(-2%, -1%)' },
                         }
                     }
                 }
@@ -45,7 +86,18 @@
         }
     </script>
     <style>
-        body { font-family: 'Cairo', sans-serif; }
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            /* ملاحظة هامة: في بيئة المعاينة نستخدم رابط صورة خارجي لكي تظهر الخلفية.
+               عندما ترفع الموقع على استضافتك، قم بتغيير السطر التالي إلى:
+               background-image: url('bg.gif');
+            */
+            background-image: url('https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* لتثبيت الخلفية أثناء التمرير */
+            background-repeat: no-repeat;
+        }
         .rtl { direction: rtl; }
         .ltr { direction: ltr; }
         .transition-all { transition: all 0.3s ease; }
@@ -72,17 +124,22 @@
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
         
-        /* Icon Hover Effect Class */
         .icon-hover {
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .icon-hover:hover {
             transform: scale(1.2) rotate(5deg);
         }
+
+        .opacity-0-start {
+            opacity: 0;
+        }
     </style>
 </head>
-<body class="bg-dark-900 text-slate-200 selection:bg-gold-500 selection:text-white">
-    <div id="app" class="min-h-screen transition-all relative overflow-hidden">
+<!-- إزالة bg-dark-900 من هنا لأننا سنضعها كطبقة فوق الخلفية -->
+<body class="text-slate-200 selection:bg-gold-500 selection:text-white">
+    <!-- إضافة bg-dark-900/90 لعمل طبقة تعتيم فوق الصورة -->
+    <div id="app" class="min-h-screen transition-all relative overflow-hidden bg-dark-900/90">
         
         <!-- Navigation -->
         <nav class="fixed w-full z-50 bg-dark-900/90 backdrop-blur-md border-b border-white/5">
@@ -99,7 +156,6 @@
                         <button onclick="document.getElementById('offer-section').scrollIntoView({behavior: 'smooth'})" class="text-slate-300 hover:text-gold-400 transition-colors text-sm font-medium">العرض</button>
                         <button onclick="document.getElementById('faq-section').scrollIntoView({behavior: 'smooth'})" class="text-slate-300 hover:text-gold-400 transition-colors text-sm font-medium">الأسئلة</button>
                         
-                        <!-- Language Switcher -->
                         <div class="flex items-center border border-white/10 bg-dark-800 rounded-full px-1 p-1">
                             <button onclick="setLang('en')" class="lang-btn en px-3 py-1 rounded-full text-xs font-bold uppercase transition-all text-slate-400 hover:text-white">EN</button>
                             <button onclick="setLang('ar')" class="lang-btn ar px-3 py-1 rounded-full text-xs font-bold uppercase transition-all bg-gold-500 text-dark-900">AR</button>
@@ -115,50 +171,50 @@
 
         <main id="main-content">
             
-            <!-- 1. Headline & 2. Subheadline -->
-            <section class="pt-40 pb-8 px-4 text-center max-w-5xl mx-auto relative z-10">
-                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gold-500/5 blur-[120px] -z-10"></div>
+            <!-- Hero Wrapper: Background Image covers Headline + Warning Text -->
+            <div class="relative w-full overflow-hidden border-b border-white/5">
+                <!-- Background Image Container with Animation -->
+                <div class="absolute inset-0 w-full h-full overflow-hidden">
+                    <!-- تم إضافة كلاس animate-ken-burns لجعل الصورة تتحرك -->
+                    <div class="w-full h-full bg-[url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center bg-no-repeat animate-ken-burns"></div>
+                </div>
                 
-                <h1 class="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.3] mb-6 glow-text" id="lp-headline">
-                    اجعل مطعمك يعمل <span class="text-gold-500">ذاتياً</span> وضاعف أرباحك دون عمال إضافيين
-                </h1>
-                <p class="text-xl md:text-2xl text-slate-300 font-light max-w-3xl mx-auto leading-relaxed" id="lp-subhead">
-                    اكتشف "النظام الرقمي" الذي تستخدمه كبرى السلاسل للسيطرة على فوضى المطبخ والصالة... وهو ليس مجرد "برنامج" تقليدي، بل مديرك الرقمي الذي لا ينام.
-                </p>
-            </section>
+                <!-- Dark Overlay for readability -->
+                <div class="absolute inset-0 w-full h-full bg-dark-900/70 backdrop-blur-sm"></div>
+                <!-- Gradient Fade at bottom to blend with next section -->
+                <div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-dark-900 to-transparent"></div>
 
-            <!-- 3. Video Section with New Warning & Arrows -->
-            <section class="px-4 max-w-4xl mx-auto mb-16">
-                <!-- New Warning Text & Arrows -->
-                <div class="text-center mb-8 relative z-20">
+                <!-- 1. Headline: Zoom Out Smooth on Load -->
+                <section class="pt-40 pb-12 px-4 text-center max-w-5xl mx-auto relative z-10">
+                    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gold-500/5 blur-[120px] -z-10"></div>
+                    
+                    <h1 class="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.3] mb-6 glow-text animate-zoom-out-smooth max-w-4xl mx-auto" id="lp-headline" style="will-change: transform, opacity;">
+                        اجعل مطعمك يعمل <span class="text-gold-500">ذاتياً</span> وضاعف أرباحك دون عمال إضافيين
+                    </h1>
+                    <p class="text-xl md:text-2xl text-slate-300 font-light max-w-3xl mx-auto leading-relaxed animate-zoom-out-smooth" id="lp-subhead" style="will-change: transform, opacity; animation-delay: 0.1s;">
+                        اكتشف "النظام الرقمي" الذي تستخدمه كبرى السلاسل للسيطرة على فوضى المطبخ والصالة... وهو ليس مجرد "برنامج" تقليدي، بل مديرك الرقمي الذي لا ينام.
+                    </p>
+                </section>
+
+                <!-- Warning Text & Arrows (Moved inside Hero Background) -->
+                <div class="text-center pb-24 px-4 relative z-10 opacity-0-start scroll-anim" data-anim="slide-up">
                     <h2 class="text-3xl md:text-5xl font-extrabold text-red-500 mb-6 glow-text-red tracking-tight leading-tight">
                         هكذا أنت تعاني يومياً في صمت
                     </h2>
                     <div class="flex justify-center gap-8 animate-bounce-slow">
-                        <!-- Arrow 1 -->
-                        <svg class="w-10 h-10 text-red-500 filter drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <polyline points="19 12 12 19 5 12"></polyline>
-                        </svg>
-                        <!-- Arrow 2 -->
-                        <svg class="w-10 h-10 text-red-500 filter drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <polyline points="19 12 12 19 5 12"></polyline>
-                        </svg>
-                        <!-- Arrow 3 -->
-                        <svg class="w-10 h-10 text-red-500 filter drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <polyline points="19 12 12 19 5 12"></polyline>
-                        </svg>
+                        <svg class="w-10 h-10 text-red-500 filter drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                        <svg class="w-10 h-10 text-red-500 filter drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                        <svg class="w-10 h-10 text-red-500 filter drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
                     </div>
                 </div>
+            </div>
 
-                <div class="gradient-border p-1 shadow-2xl hover:scale-[1.01] transition-transform duration-500">
+            <!-- 3. Video Section: Slide Up Smooth on Scroll (Outside Hero Background) -->
+            <section class="px-4 max-w-4xl mx-auto mb-16 -mt-16 relative z-20">
+                <!-- Video Frame - Animated on Scroll -->
+                <div class="gradient-border p-1 shadow-2xl hover:scale-[1.01] transition-transform duration-500 opacity-0-start scroll-anim" data-anim="slide-up">
                     <div class="aspect-video bg-dark-900 rounded-xl overflow-hidden relative group">
-                        <!-- Added id="video-iframe" to control it -->
-<iframe class="w-full h-full" src="https://www.youtube.com/embed/OxfQq9bYW7s" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>                        
-                        <!-- Video Overlay with ID and onclick event -->
-                        <!-- Removed pointer-events-none so it can be clicked -->
+                        <iframe id="video-iframe" class="w-full h-full" src="https://www.youtube.com/embed/OxfQq9bYW7s" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>                        
                         <div id="video-overlay" onclick="playVideo()" class="absolute inset-0 bg-black/60 flex items-center justify-center cursor-pointer group hover:bg-black/50 transition-all z-10">
                             <div class="w-24 h-24 bg-gold-500 rounded-full flex items-center justify-center cursor-pointer shadow-[0_0_30px_rgba(245,158,11,0.6)] animate-pulse group-hover:scale-110 transition-transform duration-300">
                                 <svg class="w-10 h-10 text-dark-900 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -168,23 +224,25 @@
                 </div>
             </section>
 
-            <!-- 4. Countdown & Scarcity -->
-            <section class="bg-dark-800 py-8 border-y border-white/5">
-                <div class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div class="text-center md:text-right">
-                        <p class="text-gold-500 font-bold text-lg mb-1 animate-pulse-slow">⚠️ الأماكن محدودة لنسخة هذا الشهر</p>
-                        <p class="text-white text-2xl font-bold">عرض الإطلاق الخاص ينتهي قريباً:</p>
+            <!-- 4. Countdown & Scarcity - 3D Glass Effect & Slide Up -->
+            <section class="py-12 px-4 relative z-20">
+                <div class="max-w-4xl mx-auto p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 border-t-white/20 border-l-white/20 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden opacity-0-start scroll-anim transform transition-transform hover:scale-[1.01] duration-500" data-anim="slide-up">
+                    <div class="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-gradient-to-br from-transparent via-white/5 to-transparent rotate-45 pointer-events-none"></div>
+
+                    <div class="text-center md:text-right relative z-10">
+                        <p class="text-gold-500 font-bold text-lg mb-1 animate-pulse-slow drop-shadow-md">⚠️ الأماكن محدودة لنسخة هذا الشهر</p>
+                        <p class="text-white text-2xl font-bold drop-shadow-lg">عرض الإطلاق الخاص ينتهي قريباً:</p>
                     </div>
-                    <div class="flex gap-4 text-center dir-ltr">
-                        <div class="bg-dark-700 p-4 rounded-xl border border-white/10 min-w-[80px] hover:border-red-500/30 transition-colors">
+                    <div class="flex gap-4 text-center dir-ltr relative z-10">
+                        <div class="bg-dark-900/60 p-4 rounded-xl border border-white/10 min-w-[80px] hover:border-red-500/30 transition-colors shadow-inner backdrop-blur-sm">
                             <span class="block text-3xl font-mono font-bold text-red-500" id="hours">24</span>
                             <span class="text-xs text-slate-400 uppercase">ساعة</span>
                         </div>
-                        <div class="bg-dark-700 p-4 rounded-xl border border-white/10 min-w-[80px] hover:border-red-500/30 transition-colors">
+                        <div class="bg-dark-900/60 p-4 rounded-xl border border-white/10 min-w-[80px] hover:border-red-500/30 transition-colors shadow-inner backdrop-blur-sm">
                             <span class="block text-3xl font-mono font-bold text-red-500" id="minutes">00</span>
                             <span class="text-xs text-slate-400 uppercase">دقيقة</span>
                         </div>
-                        <div class="bg-dark-700 p-4 rounded-xl border border-white/10 min-w-[80px] hover:border-red-500/30 transition-colors">
+                        <div class="bg-dark-900/60 p-4 rounded-xl border border-white/10 min-w-[80px] hover:border-red-500/30 transition-colors shadow-inner backdrop-blur-sm">
                             <span class="block text-3xl font-mono font-bold text-red-500" id="seconds">00</span>
                             <span class="text-xs text-slate-400 uppercase">ثانية</span>
                         </div>
@@ -192,9 +250,9 @@
                 </div>
             </section>
 
-            <!-- 5. CTA 1 (Animated Button) -->
+            <!-- 5. CTA 1: Zoom In Smooth on Scroll -->
             <div class="text-center py-12">
-                <button onclick="document.getElementById('cta-section').scrollIntoView({behavior: 'smooth'})" class="bg-gradient-to-r from-gold-500 to-burnt-500 text-white text-xl md:text-2xl font-bold px-12 py-5 rounded-full shadow-[0_0_20px_rgba(234,88,12,0.4)] hover:shadow-[0_0_40px_rgba(234,88,12,0.6)] animate-float-attention transition-all transform">
+                <button onclick="document.getElementById('cta-section').scrollIntoView({behavior: 'smooth'})" class="bg-gradient-to-r from-gold-500 to-burnt-500 text-white text-xl md:text-2xl font-bold px-12 py-5 rounded-full shadow-[0_0_20px_rgba(234,88,12,0.4)] hover:shadow-[0_0_40px_rgba(234,88,12,0.6)] hover:scale-105 transition-all transform opacity-0-start scroll-anim" data-anim="zoom-in">
                     نعم، أريد أتمتة مطعمي الآن
                 </button>
                 <p class="mt-4 text-slate-400 text-sm">ضمان استرجاع الأموال لمدة 30 يوماً</p>
@@ -202,36 +260,52 @@
 
             <!-- 6. Pain Points & Solution -->
             <section id="pain-points" class="py-20 px-4 max-w-6xl mx-auto">
-                <!-- Pain Points -->
+                <!-- Pain Points Title: Slide Up Smooth -->
                 <div class="mb-20">
-                    <h2 class="text-3xl md:text-4xl font-bold text-center text-white mb-12">هل تسرق هذه الفوضى أرباحك وتعبك يومياً؟</h2>
-                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div class="bg-dark-800 p-6 rounded-2xl border border-red-900/30 hover:border-red-500/50 transition-colors group cursor-default">
-                            <div class="text-4xl mb-4 icon-hover inline-block">🤯</div>
-                            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors">فوضى المطبخ</h3>
-                            <p class="text-slate-400 text-sm">أوراق الطلبات تضيع، الطباخ يصرخ، والطلبات تخرج بالترتيب الخاطئ.</p>
+                    <h2 class="text-3xl md:text-4xl font-bold text-center text-white mb-12 opacity-0-start scroll-anim" data-anim="slide-up">
+                        هل تسرق هذه الفوضى أرباحك وتعبك يومياً؟
+                    </h2>
+                    
+                    <!-- Pain Points Cards: 3D Glass Effect & Animated -->
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-hidden p-2">
+                        <!-- Card 1 -->
+                        <div class="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 border-t-white/20 border-l-white/20 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] p-6 rounded-2xl relative overflow-hidden group cursor-default opacity-0-start scroll-anim hover:border-red-500/30 transition-all" data-anim="slide-left">
+                            <div class="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-gradient-to-br from-transparent via-white/5 to-transparent rotate-45 pointer-events-none"></div>
+                            <div class="text-4xl mb-4 icon-hover inline-block relative z-10">🤯</div>
+                            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors relative z-10">فوضى المطبخ</h3>
+                            <p class="text-slate-400 text-sm relative z-10">أوراق الطلبات تضيع، الطباخ يصرخ، والطلبات تخرج بالترتيب الخاطئ.</p>
                         </div>
-                        <div class="bg-dark-800 p-6 rounded-2xl border border-red-900/30 hover:border-red-500/50 transition-colors group cursor-default">
-                            <div class="text-4xl mb-4 icon-hover inline-block">📉</div>
-                            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors">سرقة أو ضياع</h3>
-                            <p class="text-slate-400 text-sm">لا تعرف كم بعت بالضبط في نهاية اليوم، وتشعر أن هناك أموالاً ناقصة.</p>
+                        
+                        <!-- Card 2 -->
+                        <div class="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 border-t-white/20 border-l-white/20 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] p-6 rounded-2xl relative overflow-hidden group cursor-default opacity-0-start scroll-anim hover:border-red-500/30 transition-all" data-anim="slide-right">
+                            <div class="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-gradient-to-br from-transparent via-white/5 to-transparent rotate-45 pointer-events-none"></div>
+                            <div class="text-4xl mb-4 icon-hover inline-block relative z-10">📉</div>
+                            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors relative z-10">سرقة أو ضياع</h3>
+                            <p class="text-slate-400 text-sm relative z-10">لا تعرف كم بعت بالضبط في نهاية اليوم، وتشعر أن هناك أموالاً ناقصة.</p>
                         </div>
-                        <div class="bg-dark-800 p-6 rounded-2xl border border-red-900/30 hover:border-red-500/50 transition-colors group cursor-default">
-                            <div class="text-4xl mb-4 icon-hover inline-block">😡</div>
-                            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors">غضب الزبائن</h3>
-                            <p class="text-slate-400 text-sm">"وين راهي طلبيتي؟" عبارة تسمعها كل يوم، وزبائن لا يعودون مرة أخرى.</p>
+                        
+                        <!-- Card 3 -->
+                        <div class="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 border-t-white/20 border-l-white/20 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] p-6 rounded-2xl relative overflow-hidden group cursor-default opacity-0-start scroll-anim hover:border-red-500/30 transition-all" data-anim="slide-left">
+                            <div class="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-gradient-to-br from-transparent via-white/5 to-transparent rotate-45 pointer-events-none"></div>
+                            <div class="text-4xl mb-4 icon-hover inline-block relative z-10">😡</div>
+                            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors relative z-10">غضب الزبائن</h3>
+                            <p class="text-slate-400 text-sm relative z-10">"وين راهي طلبيتي؟" عبارة تسمعها كل يوم، وزبائن لا يعودون مرة أخرى.</p>
                         </div>
-                        <div class="bg-dark-800 p-6 rounded-2xl border border-red-900/30 hover:border-red-500/50 transition-colors group cursor-default">
-                            <div class="text-4xl mb-4 icon-hover inline-block">😫</div>
-                            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors">الإرهاق الدائم</h3>
-                            <p class="text-slate-400 text-sm">أنت مضطر للتواجد في المطعم 24/7 لأن العمل يتوقف بمجرد خروجك.</p>
+                        
+                        <!-- Card 4 -->
+                        <div class="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 border-t-white/20 border-l-white/20 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] p-6 rounded-2xl relative overflow-hidden group cursor-default opacity-0-start scroll-anim hover:border-red-500/30 transition-all" data-anim="slide-right">
+                            <div class="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-gradient-to-br from-transparent via-white/5 to-transparent rotate-45 pointer-events-none"></div>
+                            <div class="text-4xl mb-4 icon-hover inline-block relative z-10">😫</div>
+                            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors relative z-10">الإرهاق الدائم</h3>
+                            <p class="text-slate-400 text-sm relative z-10">أنت مضطر للتواجد في المطعم 24/7 لأن العمل يتوقف بمجرد خروجك.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Empathy & Bridge -->
-                <div class="bg-dark-800 rounded-3xl p-8 md:p-12 border border-white/5 relative overflow-hidden mb-20">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-gold-500/10 rounded-bl-full"></div>
+                <!-- Empathy & Bridge - 3D Glass Effect -->
+                <div class="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 border-t-white/20 border-l-white/20 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] rounded-3xl p-8 md:p-12 relative overflow-hidden mb-20 scroll-anim opacity-0-start" data-anim="slide-up">
+                    <div class="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-gradient-to-br from-transparent via-white/5 to-transparent rotate-45 pointer-events-none"></div>
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gold-500/10 rounded-bl-full pointer-events-none"></div>
                     <div class="relative z-10 max-w-3xl mx-auto text-center md:text-right">
                         <h3 class="text-2xl font-bold text-gold-500 mb-6">دعني أخبرك سراً... العيب ليس فيك ولا في عمالك</h3>
                         <p class="text-lg text-slate-300 mb-6 leading-relaxed">
@@ -246,66 +320,59 @@
                     </div>
                 </div>
 
-                <!-- Solution & Offer Details -->
-                <div id="offer-section" class="grid md:grid-cols-2 gap-12 items-center">
-                    <div>
+                <!-- Solution & Offer Details (Re-designed Center Layout) -->
+                <div id="offer-section" class="max-w-5xl mx-auto">
+                    <div class="text-center mb-16">
                         <span class="text-gold-500 font-bold tracking-wider text-sm uppercase">الحل الشامل</span>
                         <h2 class="text-3xl md:text-4xl font-bold text-white mb-6 mt-2">نقدم لك: نظام RestoPro المتكامل</h2>
-                        <p class="text-slate-400 mb-8">ليس مجرد برنامج، بل شريك نجاحك الذي ينظم كل شيء أوتوماتيكياً.</p>
+                        <p class="text-slate-400 text-lg max-w-2xl mx-auto">ليس مجرد برنامج، بل شريك نجاحك الذي ينظم كل شيء أوتوماتيكياً من الطلب حتى الدفع.</p>
+                    </div>
                         
-                        <div class="space-y-6">
-                            <div class="flex gap-4 group">
-                                <div class="w-12 h-12 bg-dark-700 rounded-full flex items-center justify-center text-gold-500 text-xl font-bold icon-hover cursor-default">1</div>
-                                <div>
-                                    <h4 class="text-white font-bold text-lg group-hover:text-gold-400 transition-colors">منيو ذكي (QR Code)</h4>
-                                    <p class="text-slate-400 text-sm">الزبون يطلب من طاولته، الطلب يصل للمطبخ فوراً. وداعاً لأخطاء النادل.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-4 group">
-                                <div class="w-12 h-12 bg-dark-700 rounded-full flex items-center justify-center text-gold-500 text-xl font-bold icon-hover cursor-default">2</div>
-                                <div>
-                                    <h4 class="text-white font-bold text-lg group-hover:text-gold-400 transition-colors">شاشة المطبخ (KDS)</h4>
-                                    <p class="text-slate-400 text-sm">شاشة للطباخ ترتب الطلبات حسب الوقت. تنظيم تام وسرعة في الإنجاز.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-4 group">
-                                <div class="w-12 h-12 bg-dark-700 rounded-full flex items-center justify-center text-gold-500 text-xl font-bold icon-hover cursor-default">3</div>
-                                <div>
-                                    <h4 class="text-white font-bold text-lg group-hover:text-gold-400 transition-colors">لوحة تحكم للمالك</h4>
-                                    <p class="text-slate-400 text-sm">شاهد مبيعاتك لحظة بلحظة من هاتفك وأنت في منزلك.</p>
-                                </div>
-                            </div>
+                    <!-- Added opacity-0-start, scroll-anim, and data-anim="slide-up" for smooth slide up effect -->
+                    <div class="grid md:grid-cols-3 gap-8 mb-16 relative z-10 opacity-0-start scroll-anim" data-anim="slide-up">
+                        <!-- Feature 1 -->
+                        <div class="bg-dark-800/50 p-6 rounded-2xl border border-white/5 hover:border-gold-500/30 transition-all group text-center">
+                            <div class="w-16 h-16 bg-dark-700 rounded-full flex items-center justify-center text-gold-500 text-2xl font-bold icon-hover cursor-default mx-auto mb-6 shadow-lg shadow-gold-500/10">1</div>
+                            <h4 class="text-white font-bold text-lg group-hover:text-gold-400 transition-colors mb-3">منيو ذكي (QR Code)</h4>
+                            <p class="text-slate-400 text-sm leading-relaxed">الزبون يطلب من طاولته، الطلب يصل للمطبخ فوراً. وداعاً لأخطاء النادل وانتظار القائمة.</p>
                         </div>
 
-                        <!-- Bonuses -->
-                        <div class="mt-10 p-6 bg-gradient-to-br from-dark-800 to-dark-700 rounded-2xl border border-gold-500/30 transform hover:scale-[1.02] transition-transform duration-300">
-                            <h4 class="text-gold-500 font-bold mb-4 flex items-center gap-2">🎁 هدايا مجانية عند الاشتراك اليوم:</h4>
-                            <ul class="space-y-2 text-sm text-slate-300">
-                                <li class="flex items-center gap-2">✅ <strong>مجاناً:</strong> إدخال المنيو الخاص بك بالكامل من طرفنا.</li>
-                                <li class="flex items-center gap-2">✅ <strong>مجاناً:</strong> تدريب شامل لطاقم العمل (حضوري أو أونلاين).</li>
-                                <li class="flex items-center gap-2">✅ <strong>مجاناً:</strong> دومين واستضافة خاصة باسم مطعمك.</li>
-                            </ul>
+                        <!-- Feature 2 -->
+                        <div class="bg-dark-800/50 p-6 rounded-2xl border border-white/5 hover:border-gold-500/30 transition-all group text-center">
+                            <div class="w-16 h-16 bg-dark-700 rounded-full flex items-center justify-center text-gold-500 text-2xl font-bold icon-hover cursor-default mx-auto mb-6 shadow-lg shadow-gold-500/10">2</div>
+                            <h4 class="text-white font-bold text-lg group-hover:text-gold-400 transition-colors mb-3">شاشة المطبخ (KDS)</h4>
+                            <p class="text-slate-400 text-sm leading-relaxed">شاشة للطباخ ترتب الطلبات حسب الوقت. تنظيم تام، هدوء في المطبخ، وسرعة في الإنجاز.</p>
+                        </div>
+
+                        <!-- Feature 3 -->
+                        <div class="bg-dark-800/50 p-6 rounded-2xl border border-white/5 hover:border-gold-500/30 transition-all group text-center">
+                            <div class="w-16 h-16 bg-dark-700 rounded-full flex items-center justify-center text-gold-500 text-2xl font-bold icon-hover cursor-default mx-auto mb-6 shadow-lg shadow-gold-500/10">3</div>
+                            <h4 class="text-white font-bold text-lg group-hover:text-gold-400 transition-colors mb-3">لوحة تحكم للمالك</h4>
+                            <p class="text-slate-400 text-sm leading-relaxed">شاهد مبيعاتك لحظة بلحظة من هاتفك وأنت في منزلك. تحكم كامل في المخزون والموظفين.</p>
                         </div>
                     </div>
-                    
-                    <!-- Offer Visual -->
-                    <div class="relative">
-                        <div class="absolute inset-0 bg-gold-500/20 blur-[80px] rounded-full"></div>
-                        <div class="bg-dark-800 border border-white/10 rounded-2xl p-8 relative z-10 shadow-2xl hover:border-gold-500/50 transition-colors">
-                            <div class="text-center mb-8">
-                                <p class="text-slate-400 text-sm mb-2">الباقة الشاملة</p>
-                                <div class="text-5xl font-bold text-white mb-2">4900 <span class="text-xl text-gold-500">دج/شهر</span></div>
-                                <p class="text-green-500 text-sm font-bold">وفر 20% عند الدفع السنوي</p>
+
+                    <!-- Bonuses Center Box -->
+                    <!-- Added opacity-0-start, scroll-anim, and data-anim="slide-up" for smooth slide up effect -->
+                    <div class="p-8 bg-gradient-to-br from-dark-800 to-dark-700 rounded-3xl border border-gold-500/30 transform hover:scale-[1.01] transition-transform duration-300 max-w-3xl mx-auto shadow-[0_0_40px_-10px_rgba(245,158,11,0.1)] opacity-0-start scroll-anim" data-anim="slide-up">
+                        <div class="text-center mb-6">
+                            <h4 class="text-gold-500 font-bold text-xl inline-flex items-center gap-2">
+                                <span>🎁</span> هدايا مجانية عند الاشتراك اليوم:
+                            </h4>
+                        </div>
+                        <div class="grid md:grid-cols-3 gap-4 text-center md:text-right">
+                            <div class="flex flex-col items-center bg-dark-900/50 p-4 rounded-xl border border-white/5">
+                                <span class="text-green-500 text-xl mb-2">✅</span>
+                                <span class="text-slate-300 text-sm"><strong>مجاناً:</strong> إدخال المنيو بالكامل من طرفنا.</span>
                             </div>
-                            <div class="space-y-4 mb-8">
-                                <div class="w-full h-12 bg-dark-700 rounded-lg flex items-center px-4 text-slate-300 hover:bg-dark-600 transition-colors">✨ كل مميزات النظام</div>
-                                <div class="w-full h-12 bg-dark-700 rounded-lg flex items-center px-4 text-slate-300 hover:bg-dark-600 transition-colors">🚀 دعم فني VIP</div>
-                                <div class="w-full h-12 bg-dark-700 rounded-lg flex items-center px-4 text-slate-300 hover:bg-dark-600 transition-colors">🔄 تحديثات مستمرة</div>
+                            <div class="flex flex-col items-center bg-dark-900/50 p-4 rounded-xl border border-white/5">
+                                <span class="text-green-500 text-xl mb-2">✅</span>
+                                <span class="text-slate-300 text-sm"><strong>مجاناً:</strong> تدريب شامل لطاقم العمل.</span>
                             </div>
-                            <button onclick="document.getElementById('cta-section').scrollIntoView({behavior: 'smooth'})" class="w-full py-4 bg-gold-500 hover:bg-gold-400 text-dark-900 font-bold rounded-xl transition-colors hover:shadow-lg hover:shadow-gold-500/50">
-                                احصل على العرض الآن
-                            </button>
-                            <p class="text-center text-xs text-slate-500 mt-4">لا توجد مصاريف خفية. يمكنك الإلغاء في أي وقت.</p>
+                            <div class="flex flex-col items-center bg-dark-900/50 p-4 rounded-xl border border-white/5">
+                                <span class="text-green-500 text-xl mb-2">✅</span>
+                                <span class="text-slate-300 text-sm"><strong>مجاناً:</strong> دومين واستضافة خاصة باسمك.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -316,7 +383,7 @@
                 <div class="max-w-4xl mx-auto px-4">
                     <h2 class="text-3xl font-bold mb-4">لماذا تنتظر والمنافسون يتقدمون؟</h2>
                     <p class="text-lg font-medium mb-8 opacity-90">انضم لأكثر من 50 مطعماً قاموا بتغيير واقعهم معنا هذا الشهر.</p>
-                    <button onclick="document.getElementById('cta-section').scrollIntoView({behavior: 'smooth'})" class="bg-dark-900 text-white text-xl font-bold px-10 py-4 rounded-full hover:scale-105 transition-transform shadow-xl hover:shadow-2xl">
+                    <button onclick="document.getElementById('cta-section').scrollIntoView({behavior: 'smooth'})" class="bg-dark-900 text-white text-xl font-bold px-10 py-4 rounded-full hover:scale-105 transition-transform shadow-xl hover:shadow-2xl opacity-0-start scroll-anim" data-anim="zoom-in">
                         ابدأ فترتك التجريبية
                     </button>
                 </div>
@@ -337,7 +404,8 @@
                 <div class="max-w-6xl mx-auto">
                     <h2 class="text-3xl font-bold text-center text-white mb-12">ماذا يقول أصحاب المطاعم عنا؟</h2>
                     <div class="grid md:grid-cols-3 gap-8">
-                        <div class="bg-dark-900 p-8 rounded-2xl border border-white/5 relative hover:border-gold-500/30 transition-colors">
+                        <!-- Card 1: Slide Up -->
+                        <div class="bg-dark-900 p-8 rounded-2xl border border-white/5 relative hover:border-gold-500/30 transition-colors shadow-2xl opacity-0-start scroll-anim" data-anim="slide-up">
                             <div class="text-gold-500 text-4xl absolute top-4 left-4">"</div>
                             <p class="text-slate-300 mb-6 italic">"كنت أعاني من فوضى عارمة في الويكند. بعد RestoPro، المطبخ أصبح هادئاً والطلبات تخرج في وقتها. زادت أرباحي 30% في أول شهر."</p>
                             <div class="flex items-center gap-3">
@@ -348,7 +416,9 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-dark-900 p-8 rounded-2xl border border-white/5 relative hover:border-gold-500/30 transition-colors">
+                        
+                        <!-- Card 2: Slide Down (from top) -->
+                        <div class="bg-dark-900 p-8 rounded-2xl border border-white/5 relative hover:border-gold-500/30 transition-colors shadow-2xl opacity-0-start scroll-anim" data-anim="slide-down-smooth">
                             <div class="text-gold-500 text-4xl absolute top-4 left-4">"</div>
                             <p class="text-slate-300 mb-6 italic">"أفضل ميزة هي أنني أستطيع مراقبة المطعم وأنا مسافر. النظام سهل جداً حتى العمال الكبار في السن فهموه بسرعة."</p>
                             <div class="flex items-center gap-3">
@@ -359,7 +429,9 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-dark-900 p-8 rounded-2xl border border-white/5 relative hover:border-gold-500/30 transition-colors">
+                        
+                        <!-- Card 3: Slide Up -->
+                        <div class="bg-dark-900 p-8 rounded-2xl border border-white/5 relative hover:border-gold-500/30 transition-colors shadow-2xl opacity-0-start scroll-anim" data-anim="slide-up">
                             <div class="text-gold-500 text-4xl absolute top-4 left-4">"</div>
                             <p class="text-slate-300 mb-6 italic">"الدعم الفني رائع. واجهت مشكلة صغيرة في الليل وردوا علي فوراً وحلوها. هذا ما أبحث عنه، الشراكة الحقيقية."</p>
                             <div class="flex items-center gap-3">
@@ -414,7 +486,7 @@
                     <div class="absolute top-0 right-0 w-full h-2 bg-gradient-to-r from-gold-500 to-burnt-500"></div>
                     
                     <div class="text-center mb-8">
-                        <h2 class="text-3xl font-bold text-white mb-2">احجز نسختك التجريبية الآن</h2>
+                        <h2 class="text-3xl font-bold text-white mb-2">إحجز إستشارة مجانية الأن</h2>
                         <p class="text-slate-400">سنقوم بإعداد النظام لك وتجربته مجاناً. لا مخاطرة عليك.</p>
                     </div>
 
@@ -461,8 +533,7 @@
             // Hide the overlay
             overlay.style.display = 'none';
             
-            // Auto-play the video by updating the src with autoplay parameter
-            // We check if '?' exists to determine whether to append with '?' or '&'
+            // Auto-play the video
             const src = iframe.src;
             if (src.indexOf('?') > -1) {
                 iframe.src = src + "&autoplay=1";
@@ -475,6 +546,20 @@
         const targetDate = new Date();
         targetDate.setHours(targetDate.getHours() + 24); // 24 hours from now
 
+        // Helper function to animate numbers
+        function updateNumber(id, newValue) {
+            const el = document.getElementById(id);
+            const currentText = el.innerText;
+            const newText = newValue < 10 ? '0' + newValue : newValue;
+            
+            if (currentText !== String(newText)) {
+                el.innerText = newText;
+                el.classList.remove('animate-slide-down');
+                void el.offsetWidth; // Trigger reflow to restart animation
+                el.classList.add('animate-slide-down');
+            }
+        }
+
         function updateCountdown() {
             const now = new Date();
             const diff = targetDate - now;
@@ -485,13 +570,13 @@
             const m = Math.floor((diff / 1000 / 60) % 60);
             const s = Math.floor((diff / 1000) % 60);
 
-            document.getElementById('hours').innerText = h < 10 ? '0' + h : h;
-            document.getElementById('minutes').innerText = m < 10 ? '0' + m : m;
-            document.getElementById('seconds').innerText = s < 10 ? '0' + s : s;
+            updateNumber('hours', h);
+            updateNumber('minutes', m);
+            updateNumber('seconds', s);
         }
         setInterval(updateCountdown, 1000);
 
-        // Content & Language Logic (Simplified for the new layout)
+        // Content & Language Logic (Simplified)
         const content = {
             ar: {
                 dir: 'rtl',
@@ -506,19 +591,15 @@
         };
 
         function setLang(l) {
-            // Only basic switching for headline demo purposes in this specific marketing LP
-            // In a real production version with this much copy, we'd use a full i18n library
-            if(l === 'fr') l = 'en'; // Fallback for demo
+            if(l === 'fr') l = 'en'; 
             
             const t = content[l];
             document.documentElement.dir = t.dir;
             document.body.className = `bg-dark-900 text-slate-200 selection:bg-gold-500 selection:text-white ${t.dir === 'rtl' ? 'rtl' : 'ltr'}`;
             
-            // Only updating main headline dynamically for now to preserve the hardcoded Arabic copywriting quality
             document.getElementById('lp-headline').innerHTML = t.h;
             document.getElementById('lp-subhead').innerText = t.sh;
             
-            // Update active button state
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.className = `lang-btn ${btn.classList.contains('en') ? 'en' : 'ar'} px-3 py-1 rounded-full text-xs font-bold uppercase transition-all text-slate-400 hover:text-white`;
             });
@@ -545,6 +626,36 @@
           })
         }
       })(document,"script");
+    </script>
+    <!-- Animation Observer Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const animType = entry.target.getAttribute('data-anim');
+                        entry.target.classList.remove('opacity-0-start'); // Show element
+                        
+                        if (animType === 'slide-up') {
+                            entry.target.classList.add('animate-slide-up-smooth');
+                        } else if (animType === 'slide-down-smooth') {
+                            entry.target.classList.add('animate-slide-down-smooth');
+                        } else if (animType === 'zoom-in') {
+                            entry.target.classList.add('animate-zoom-in-smooth');
+                        } else if (animType === 'slide-left') {
+                            entry.target.classList.add('animate-slide-in-left');
+                        } else if (animType === 'slide-right') {
+                            entry.target.classList.add('animate-slide-in-right');
+                        }
+                        
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15 }); // Trigger when 15% of element is visible
+
+            const scrollElements = document.querySelectorAll('.scroll-anim');
+            scrollElements.forEach(el => observer.observe(el));
+        });
     </script>
 </body>
 </html>
