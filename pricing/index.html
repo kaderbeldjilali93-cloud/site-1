@@ -3,73 +3,384 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>باقات الاشتراك - RestoPro</title>
+    <title>صفحة الأسعار - RestoPro</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Fonts: Cairo -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Custom Styles -->
     <style>
-        body { font-family: 'Tajawal', sans-serif; }
+        body {
+            font-family: 'Cairo', sans-serif;
+        }
+        .glow-text {
+            text-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+        }
+        .card-gradient-border {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1px;
+            transition: all 0.3s ease;
+        }
+        .card-gradient-border:hover {
+            background-image: linear-gradient(163deg, #f59e0b 0%, #ea580c 100%);
+            box-shadow: 0px 0px 30px 1px rgba(245, 158, 11, 0.2);
+        }
+        /* Custom Toggle Transition */
+        .toggle-circle {
+            transition: left 0.3s ease-in-out, right 0.3s ease-in-out;
+        }
     </style>
 </head>
-<body class="bg-gray-900 text-white">
+<body class="min-h-screen text-slate-200 selection:bg-[#f59e0b] selection:text-white overflow-x-hidden relative bg-[#0B1120]">
 
+    <!-- Background Image with Overlay -->
     <div class="fixed inset-0 z-0">
-        <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop" alt="Restaurant Background" class="w-full h-full object-cover opacity-20">
+        <img 
+            src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop" 
+            alt="Restaurant Background" 
+            class="w-full h-full object-cover"
+        />
+        <!-- Dark Overlay -->
+        <div class="absolute inset-0 bg-[#0B1120]/90 backdrop-blur-[2px]"></div>
     </div>
 
-    <div class="relative z-10 container mx-auto px-4 py-16">
-        <div class="text-center mb-12">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-yellow-500">اختر الباقة المناسبة لمطعمك</h1>
-            <p class="text-gray-300 text-lg">حلول تقنية متكاملة لإدارة مطعمك بكفاءة واحترافية</p>
-        </div>
+    <!-- Decorative Blur Element -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-[#f59e0b]/5 blur-[120px] pointer-events-none z-0"></div>
 
-        <div class="flex justify-center mb-12">
-            <div class="bg-gray-800 p-1 rounded-full flex items-center border border-gray-700">
-                <button class="px-6 py-2 rounded-full bg-yellow-500 text-black font-bold text-sm">شهري</button>
-                <button class="px-6 py-2 rounded-full text-gray-400 font-bold text-sm hover:text-white">سنوي (خصم 20%)</button>
+    <div class="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        
+        <!-- Header -->
+        <div class="text-center">
+            <div class="mb-4 inline-flex items-center gap-2 rounded-full bg-[#f59e0b]/10 border border-[#f59e0b]/20 px-4 py-1.5 text-sm font-medium text-[#f59e0b]">
+                <!-- Sparkles Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                أسعار بسيطة وشفافة
             </div>
+            <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl glow-text">
+                اختر الخطة المثالية لـ
+                <span class="bg-gradient-to-l from-[#f59e0b] to-[#ea580c] bg-clip-text text-transparent">
+                    RestoPro
+                </span>
+            </h1>
+            <p class="mx-auto mt-4 max-w-2xl text-lg text-slate-400 font-light">
+                مكّن مطعمك بأدوات قوية. ابدأ مجانًا وتوسع مع نمو أعمالك.
+            </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <!-- Toggle -->
+        <div class="mt-10 flex items-center justify-center gap-4">
+            <span id="label-monthly" class="text-sm font-medium transition-colors text-white">
+                شهري
+            </span>
+            <button
+                id="billing-toggle"
+                onclick="toggleBilling()"
+                class="relative h-8 w-16 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#f59e0b] focus:ring-offset-2 focus:ring-offset-[#0B1120] bg-slate-700"
+                aria-pressed="false"
+                aria-label="تبديل الفوترة السنوية"
+            >
+                <span
+                    id="toggle-circle"
+                    class="absolute top-1 h-6 w-6 rounded-full bg-white shadow-md transition-all duration-300 left-9"
+                    style="left: 36px;" 
+                ></span>
+            </button>
+            <span id="label-yearly" class="text-sm font-medium transition-colors text-slate-500">
+                سنوي
+            </span>
             
-            <div class="bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-2xl p-8 hover:border-yellow-500 transition-all duration-300">
-                <h3 class="text-xl font-bold text-gray-200 mb-2">الباقة الأساسية</h3>
-                <div class="text-3xl font-bold text-yellow-500 mb-6">2,900 د.ج <span class="text-sm text-gray-400 font-normal">/ شهرياً</span></div>
-                <ul class="space-y-4 mb-8 text-gray-300 text-sm">
-                    <li class="flex items-center"><span class="text-green-500 ml-2">✔</span> حتى 50 طلب يومياً</li>
-                    <li class="flex items-center"><span class="text-green-500 ml-2">✔</span> قائمة طعام رقمية (QR)</li>
-                    <li class="flex items-center"><span class="text-green-500 ml-2">✔</span> دعم فني عبر الواتساب</li>
-                </ul>
-                <button class="w-full py-3 rounded-xl border border-yellow-500 text-yellow-500 font-bold hover:bg-yellow-500 hover:text-black transition">اشترك الآن</button>
-            </div>
+            <span id="yearly-badge" class="mr-2 rounded-full bg-[#f59e0b]/20 border border-[#f59e0b]/30 px-3 py-1 text-xs font-semibold text-[#f59e0b] hidden">
+                شهران مجاناً
+            </span>
+        </div>
 
-            <div class="bg-gray-800/90 backdrop-blur-md border-2 border-yellow-500 rounded-2xl p-8 transform md:-translate-y-4 relative shadow-2xl shadow-yellow-500/10">
-                <div class="absolute top-0 right-0 left-0 -mt-3 flex justify-center">
-                    <span class="bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-full">الأكثر طلباً</span>
+        <!-- Pricing Cards -->
+        <div class="mt-12 grid gap-8 md:grid-cols-3 items-start">
+            
+            <!-- Plan 1: الأساسية -->
+            <div class="card-gradient-border group h-full flex flex-col">
+                <div class="relative h-full flex flex-col rounded-2xl bg-[#151e32]/95 backdrop-blur-sm p-8 transition-transform duration-300 group-hover:scale-[0.99] border border-white/5">
+                    
+                    <!-- Header -->
+                    <div class="text-center pt-4">
+                        <h3 class="text-xl font-bold text-white">الأساسية</h3>
+                        <p class="mt-2 text-sm text-slate-400">مثالية للمطاعم الصغيرة التي تبدأ رحلتها</p>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="mt-6 text-center">
+                        <div class="flex items-baseline justify-center gap-1">
+                            <span class="text-sm font-medium text-slate-500">دج</span>
+                            <span class="text-5xl font-bold tracking-tight text-white transition-all duration-500 glow-text price-value" data-monthly="2900" data-yearly="29000">
+                                2,900
+                            </span>
+                        </div>
+                        <p class="mt-1 text-sm text-slate-500 period-text">
+                            / شهر
+                        </p>
+                    </div>
+
+                    <div class="my-6 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+                    <!-- Features -->
+                    <ul class="space-y-4 flex-1 mb-4">
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">حتى 50 صنف في القائمة</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">إدارة طلبات أساسية</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">فرع مطعم واحد</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">دعم عبر البريد الإلكتروني</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">تحليلات أساسية</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">تقارير قياسية</span>
+                        </li>
+                    </ul>
+
+                    <div class="mt-auto pt-4">
+                       <button class="w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 border bg-transparent text-[#f59e0b] border-[#f59e0b] hover:bg-[#f59e0b] hover:text-[#0B1120]">
+                           اشترك الآن
+                       </button>
+                    </div>
                 </div>
-                <h3 class="text-xl font-bold text-white mb-2">الباقة الاحترافية</h3>
-                <div class="text-3xl font-bold text-yellow-500 mb-6">7,900 د.ج <span class="text-sm text-gray-400 font-normal">/ شهرياً</span></div>
-                <ul class="space-y-4 mb-8 text-gray-300 text-sm">
-                    <li class="flex items-center"><span class="text-green-500 ml-2">✔</span> طلبات غير محدودة</li>
-                    <li class="flex items-center"><span class="text-green-500 ml-2">✔</span> لوحة تحكم متقدمة</li>
-                    <li class="flex items-center"><span class="text-green-500 ml-2">✔</span> ربط مع طابعات المطبخ</li>
-                    <li class="flex items-center"><span class="text-green-500 ml-2">✔</span> إحصائيات المبيعات</li>
-                </ul>
-                <button class="w-full py-3 rounded-xl bg-yellow-500 text-black font-bold hover:bg-yellow-400 transition">اشترك الآن</button>
             </div>
 
-            <div class="bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-2xl p-8 hover:border-yellow-500 transition-all duration-300">
-                <h3 class="text-xl font-bold text-gray-200 mb-2">باقة الشركات</h3>
-                <div class="text-3xl font-bold text-yellow-500 mb-6">19,900 د.ج <span class="text-sm text-gray-400 font-normal">/ شهرياً</span></div>
-                <ul class="space-y-4 mb-8 text-gray-300 text-sm">
-                    <li class="flex items-center"><span class="text-green-500 ml-2">✔</span> كل مميزات الاحترافية</li>
-                    <li class="flex items-center"><span class="text-green-500 ml-2">✔</span> تطبيق خاص (White-label)</li>
-                    <li class="flex items-center"><span class="text-green-500 ml-2">✔</span> دعم فني مخصص 24/7</li>
-                    <li class="flex items-center"><span class="text-green-500 ml-2">✔</span> واجهة برمجة (API)</li>
-                </ul>
-                <button class="w-full py-3 rounded-xl border border-yellow-500 text-yellow-500 font-bold hover:bg-yellow-500 hover:text-black transition">تواصل معنا</button>
+            <!-- Plan 2: المحترفة (Popular) -->
+            <div class="card-gradient-border group h-full flex flex-col">
+                <div class="relative h-full flex flex-col rounded-2xl bg-[#151e32]/95 backdrop-blur-sm p-8 transition-transform duration-300 group-hover:scale-[0.99] border border-white/5">
+                    
+                    <!-- Popular Badge -->
+                    <div class="absolute -top-4 right-1/2 translate-x-1/2 w-full text-center">
+                        <span class="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#f59e0b] to-[#ea580c] px-4 py-1.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(245,158,11,0.4)]">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                            الأكثر شعبية
+                        </span>
+                    </div>
+
+                    <!-- Header -->
+                    <div class="text-center pt-4">
+                        <h3 class="text-xl font-bold text-white">المحترفة</h3>
+                        <p class="mt-2 text-sm text-slate-400">الأفضل للمطاعم النامية ذات الاحتياجات المتعددة</p>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="mt-6 text-center">
+                        <div class="flex items-baseline justify-center gap-1">
+                            <span class="text-sm font-medium text-slate-500">دج</span>
+                            <span class="text-5xl font-bold tracking-tight text-white transition-all duration-500 glow-text price-value" data-monthly="7900" data-yearly="79000">
+                                7,900
+                            </span>
+                        </div>
+                        <p class="mt-1 text-sm text-slate-500 period-text">
+                            / شهر
+                        </p>
+                    </div>
+
+                    <div class="my-6 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+                    <!-- Features -->
+                    <ul class="space-y-4 flex-1 mb-4">
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">عدد غير محدود من الأصناف</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">إدارة طلبات متقدمة</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">حتى 5 فروع</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">أولوية في الدعم الفني</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">تحليلات متقدمة</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">تقارير مخصصة</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">حجوزات الطاولات</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">تتبع المخزون</span>
+                        </li>
+                    </ul>
+
+                    <div class="mt-auto pt-4">
+                       <button class="w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 border bg-[#f59e0b] text-[#0B1120] border-[#f59e0b] hover:bg-[#d97706] hover:border-[#d97706]">
+                           اشترك الآن
+                       </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plan 3: المتقدمة -->
+            <div class="card-gradient-border group h-full flex flex-col">
+                <div class="relative h-full flex flex-col rounded-2xl bg-[#151e32]/95 backdrop-blur-sm p-8 transition-transform duration-300 group-hover:scale-[0.99] border border-white/5">
+                    
+                    <!-- Header -->
+                    <div class="text-center pt-4">
+                        <h3 class="text-xl font-bold text-white">المتقدمة</h3>
+                        <p class="mt-2 text-sm text-slate-400">لسلاسل المطاعم التي تطلب الأفضل</p>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="mt-6 text-center">
+                        <div class="flex items-baseline justify-center gap-1">
+                            <span class="text-sm font-medium text-slate-500">دج</span>
+                            <span class="text-5xl font-bold tracking-tight text-white transition-all duration-500 glow-text price-value" data-monthly="19900" data-yearly="199000">
+                                19,900
+                            </span>
+                        </div>
+                        <p class="mt-1 text-sm text-slate-500 period-text">
+                            / شهر
+                        </p>
+                    </div>
+
+                    <div class="my-6 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+                    <!-- Features -->
+                    <ul class="space-y-4 flex-1 mb-4">
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">كل مميزات الباقة المحترفة</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">فروع غير محدودة</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">دعم مخصص 24/7</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">حلول العلامة التجارية (White-label)</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">وصول للواجهة البرمجية (API)</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">تكاملات مخصصة</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">إدارة الموظفين</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">أدوات الفرنشايز</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/10 text-[#f59e0b]"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                            <span class="text-sm text-slate-300 group-hover:text-white transition-colors">مدير حساب مخصص</span>
+                        </li>
+                    </ul>
+
+                    <div class="mt-auto pt-4">
+                       <button class="w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 border bg-transparent text-[#f59e0b] border-[#f59e0b] hover:bg-[#f59e0b] hover:text-[#0B1120]">
+                           اشترك الآن
+                       </button>
+                    </div>
+                </div>
             </div>
 
         </div>
+
+        <!-- Footer Note -->
+        <p class="mt-12 text-center text-sm text-slate-500">
+             جميع الأسعار بالدينار الجزائري (DZD) وتشمل الضرائب.
+        </p>
     </div>
+
+    <!-- Logic Script -->
+    <script>
+        let isYearly = false;
+
+        function toggleBilling() {
+            isYearly = !isYearly;
+            
+            // UI References
+            const toggleBtn = document.getElementById('billing-toggle');
+            const toggleCircle = document.getElementById('toggle-circle');
+            const yearlyBadge = document.getElementById('yearly-badge');
+            const labelMonthly = document.getElementById('label-monthly');
+            const labelYearly = document.getElementById('label-yearly');
+            
+            // Update toggle visual state
+            if (isYearly) {
+                // To Yearly
+                toggleBtn.classList.remove('bg-slate-700');
+                toggleBtn.classList.add('bg-gradient-to-r', 'from-[#f59e0b]', 'to-[#ea580c]');
+                toggleCircle.style.left = '4px'; // Move to left (since RTL)
+                yearlyBadge.classList.remove('hidden', 'animate-pulse');
+                void yearlyBadge.offsetWidth; // Trigger reflow
+                yearlyBadge.classList.add('animate-pulse');
+                
+                labelMonthly.classList.replace('text-white', 'text-slate-500');
+                labelYearly.classList.replace('text-slate-500', 'text-white');
+            } else {
+                // To Monthly
+                toggleBtn.classList.remove('bg-gradient-to-r', 'from-[#f59e0b]', 'to-[#ea580c]');
+                toggleBtn.classList.add('bg-slate-700');
+                toggleCircle.style.left = '36px'; // Move to right (default start position in RTL visual)
+                yearlyBadge.classList.add('hidden');
+
+                labelMonthly.classList.replace('text-slate-500', 'text-white');
+                labelYearly.classList.replace('text-white', 'text-slate-500');
+            }
+
+            // Update Prices
+            const priceElements = document.querySelectorAll('.price-value');
+            const periodElements = document.querySelectorAll('.period-text');
+
+            priceElements.forEach(el => {
+                const monthly = parseInt(el.getAttribute('data-monthly'));
+                const yearly = parseInt(el.getAttribute('data-yearly'));
+                const newVal = isYearly ? yearly : monthly;
+                
+                // Animate text change
+                el.style.opacity = '0';
+                setTimeout(() => {
+                    el.innerText = newVal.toLocaleString();
+                    el.style.opacity = '1';
+                }, 200);
+            });
+
+            periodElements.forEach(el => {
+                el.innerText = isYearly ? '/ سنة' : '/ شهر';
+            });
+        }
+    </script>
 </body>
 </html>
