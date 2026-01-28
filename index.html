@@ -612,22 +612,23 @@
             document.getElementById('form-success').classList.remove('hidden');
         }
     </script>
-    <script>
-      (function(d,t) {
-        var BASE_URL="https://chatwoot.panel.vidsai.site";
-        var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-        g.src=BASE_URL+"/packs/js/sdk.js";
-        g.async = true;
-        s.parentNode.insertBefore(g,s);
-        g.onload=function(){
-          window.chatwootSDK.run({
-            websiteToken: 'WSD216oggJShKavM2rTzKEvz',
-            baseUrl: BASE_URL,
-            locale: "ar"
-          })
-        }
-      })(document,"script");
-    </script>
+<script>
+  (function(d,t) {
+    var BASE_URL="https://chatwoot.panel.vidsai.site";
+    var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=BASE_URL+"/packs/js/sdk.js";
+    g.async = true;
+    s.parentNode.insertBefore(g,s);
+    g.onload=function(){
+      window.chatwootSDK.run({
+        websiteToken: 'WSD216oggJShKavM2rTzKEvz',
+        baseUrl: BASE_URL,
+        locale: 'ar',                    
+        launcherTitle: 'تحدث معنا' 
+      })
+    }
+  })(document,"script");
+</script>
     <!-- Animation Observer Script -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
