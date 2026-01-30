@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>قائمة الطعام | RestoPro</title>
+    <title>قائمة الطعام | PRESTIGE</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -18,8 +18,6 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* --- Animations from AdWave (Modified for Gold Theme) --- */
-        
         /* Zoom In Animation */
         @keyframes zoomInSmooth {
             0% { opacity: 0; transform: scale(0.8); }
@@ -27,7 +25,7 @@
         }
         .animate-zoom-in { animation: zoomInSmooth 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
 
-        /* Slide Up Reveal Class (Controlled by JS) */
+        /* Slide Up Reveal Class */
         .reveal-on-scroll {
             opacity: 0;
             transform: translateY(30px);
@@ -38,24 +36,17 @@
             transform: translateY(0);
         }
 
-        /* Stagger Delays */
-        .delay-100 { transition-delay: 0.1s; animation-delay: 0.1s; }
-        .delay-200 { transition-delay: 0.2s; animation-delay: 0.2s; }
-        .delay-300 { transition-delay: 0.3s; animation-delay: 0.3s; }
-
-        /* --- LED Glow Effects --- */
-        
         /* Active Tab LED Glow */
         .nav-active {
-            background-color: #D4AF37 !important; /* Gold */
+            background-color: #D4AF37 !important;
             color: #09090b !important;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.2);
             border-color: #D4AF37 !important;
             transform: scale(1.05);
         }
 
-        .item-card { transition: transform 0.2s, background-color 0.2s; }
-        .item-card:active { transform: scale(0.98); }
+        .item-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .item-card:active { transform: scale(0.97); }
         
         @keyframes pop {
             0% { transform: scale(1); }
@@ -86,98 +77,104 @@
 </head>
 <body class="bg-dark-950 text-gray-100 pb-28 select-none">
 
-    <!-- الرأس (Header) -->
-    <div class="fixed top-0 w-full bg-dark-950/80 backdrop-blur-xl border-b border-dark-800 z-50 transition-all duration-300">
-        <div class="px-4 py-3 flex justify-between items-center shadow-lg shadow-black/20">
-            <div class="flex items-center gap-2 animate-zoom-in">
-                <div class="w-9 h-9 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center text-dark-950 font-black text-lg shadow-[0_0_15px_rgba(212,175,55,0.4)]">R</div>
-                <h1 class="font-bold text-gray-100 text-lg tracking-wide">بيست برغر <span class="text-brand-500">جولد</span></h1>
-            </div>
-            <div class="bg-dark-800/80 text-brand-500 border border-brand-500/20 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 animate-zoom-in delay-100">
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
-                مفتوح
+    <!-- الرأس (Header) - ممركز -->
+    <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 transition-all duration-300">
+        <!-- الشعار في الوسط -->
+        <div class="pt-4 pb-2 flex justify-center items-center animate-zoom-in">
+            <div class="relative group cursor-default">
+                <div class="absolute -inset-4 bg-brand-500/10 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                <div class="relative leading-none flex items-center">
+                    <span class="text-3xl font-black tracking-tighter text-white font-sans drop-shadow-lg">
+                        PRES<span class="text-brand-500">TIGE</span>
+                    </span>
+                </div>
             </div>
         </div>
 
-        <!-- شريط التصنيفات (Sticky Scrollspy Nav) -->
-        <div class="px-4 py-3 overflow-x-auto hide-scrollbar border-t border-white/5">
-            <div class="flex gap-3 min-w-max">
-                <a href="#section-burger" id="nav-burger" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-full text-sm font-bold shadow-sm">برغر</a>
-                <a href="#section-pizza" id="nav-pizza" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-full text-sm font-bold shadow-sm">بيتزا</a>
-                <a href="#section-drinks" id="nav-drinks" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-full text-sm font-bold shadow-sm">مشروبات</a>
-                <a href="#section-sides" id="nav-sides" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-full text-sm font-bold shadow-sm">جانبي</a>
+        <!-- شريط التصنيفات (تحت الشعار مباشرة) -->
+        <div class="px-2 pb-3 overflow-x-auto hide-scrollbar flex justify-center">
+            <div class="flex gap-2 min-w-max px-2">
+                <a href="#section-burger" id="nav-burger" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Burger</a>
+                <a href="#section-pizza" id="nav-pizza" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Pizza</a>
+                <a href="#section-drinks" id="nav-drinks" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Boissons</a>
+                <a href="#section-sides" id="nav-sides" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Suppléments</a>
             </div>
         </div>
     </div>
 
     <!-- المحتوى الرئيسي (Main Content) -->
-    <div class="mt-[140px] px-4 space-y-12 pb-8" id="main-container">
+    <!-- زيادة الهامش العلوي لأن الهيدر أصبح أطول -->
+    <div class="mt-[130px] px-3 space-y-10 pb-8" id="main-container">
         
         <!-- قسم البرغر -->
-        <section id="section-burger" class="scroll-mt-40">
-            <div class="flex items-center gap-3 mb-4 reveal-on-scroll">
-                <h2 class="text-2xl font-black text-white">🍔 برغر فاخر</h2>
-                <div class="h-[1px] flex-1 bg-gradient-to-r from-brand-500/50 to-transparent"></div>
+        <section id="section-burger" class="scroll-mt-44">
+            <div class="flex items-center justify-center gap-3 mb-4 reveal-on-scroll">
+                <div class="h-[1px] w-8 bg-brand-500/50"></div>
+                <h2 class="text-xl font-black text-white uppercase tracking-wider">Burger</h2>
+                <div class="h-[1px] w-8 bg-brand-500/50"></div>
             </div>
-            <div class="grid grid-cols-1 gap-4" id="grid-burger"></div>
+            <!-- Grid Cols 2 -->
+            <div class="grid grid-cols-2 gap-3" id="grid-burger"></div>
         </section>
 
         <!-- قسم البيتزا -->
-        <section id="section-pizza" class="scroll-mt-40">
-            <div class="flex items-center gap-3 mb-4 reveal-on-scroll">
-                <h2 class="text-2xl font-black text-white">🍕 بيتزا إيطالية</h2>
-                <div class="h-[1px] flex-1 bg-gradient-to-r from-brand-500/50 to-transparent"></div>
+        <section id="section-pizza" class="scroll-mt-44">
+            <div class="flex items-center justify-center gap-3 mb-4 reveal-on-scroll">
+                <div class="h-[1px] w-8 bg-brand-500/50"></div>
+                <h2 class="text-xl font-black text-white uppercase tracking-wider">Pizza</h2>
+                <div class="h-[1px] w-8 bg-brand-500/50"></div>
             </div>
-            <div class="grid grid-cols-1 gap-4" id="grid-pizza"></div>
+            <div class="grid grid-cols-2 gap-3" id="grid-pizza"></div>
         </section>
 
         <!-- قسم المشروبات -->
-        <section id="section-drinks" class="scroll-mt-40">
-            <div class="flex items-center gap-3 mb-4 reveal-on-scroll">
-                <h2 class="text-2xl font-black text-white">🥤 مشروبات باردة</h2>
-                <div class="h-[1px] flex-1 bg-gradient-to-r from-brand-500/50 to-transparent"></div>
+        <section id="section-drinks" class="scroll-mt-44">
+            <div class="flex items-center justify-center gap-3 mb-4 reveal-on-scroll">
+                <div class="h-[1px] w-8 bg-brand-500/50"></div>
+                <h2 class="text-xl font-black text-white uppercase tracking-wider">Boissons</h2>
+                <div class="h-[1px] w-8 bg-brand-500/50"></div>
             </div>
             
-            <!-- تصنيفات فرعية للمشروبات -->
             <div class="space-y-6">
                 <div>
-                    <h3 class="text-sm text-brand-500 font-bold mb-3 px-1 reveal-on-scroll">مشروبات غازية</h3>
-                    <div class="grid grid-cols-1 gap-4" id="grid-drinks-soda"></div>
+                    <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 reveal-on-scroll opacity-80 text-center">Sodas</h3>
+                    <div class="grid grid-cols-2 gap-3" id="grid-drinks-soda"></div>
                 </div>
                 <div>
-                    <h3 class="text-sm text-brand-500 font-bold mb-3 px-1 reveal-on-scroll">عصائر طبيعية</h3>
-                    <div class="grid grid-cols-1 gap-4" id="grid-drinks-juice"></div>
+                    <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 reveal-on-scroll opacity-80 text-center">Jus</h3>
+                    <div class="grid grid-cols-2 gap-3" id="grid-drinks-juice"></div>
                 </div>
                 <div>
-                    <h3 class="text-sm text-brand-500 font-bold mb-3 px-1 reveal-on-scroll">مياه وعبوات</h3>
-                    <div class="grid grid-cols-1 gap-4" id="grid-drinks-water"></div>
+                    <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 reveal-on-scroll opacity-80 text-center">Eaux</h3>
+                    <div class="grid grid-cols-2 gap-3" id="grid-drinks-water"></div>
                 </div>
             </div>
         </section>
 
         <!-- قسم الجانبي -->
-        <section id="section-sides" class="scroll-mt-40">
-            <div class="flex items-center gap-3 mb-4 reveal-on-scroll">
-                <h2 class="text-2xl font-black text-white">🍟 إضافات</h2>
-                <div class="h-[1px] flex-1 bg-gradient-to-r from-brand-500/50 to-transparent"></div>
+        <section id="section-sides" class="scroll-mt-44">
+            <div class="flex items-center justify-center gap-3 mb-4 reveal-on-scroll">
+                <div class="h-[1px] w-8 bg-brand-500/50"></div>
+                <h2 class="text-xl font-black text-white uppercase tracking-wider">Suppléments</h2>
+                <div class="h-[1px] w-8 bg-brand-500/50"></div>
             </div>
-            <div class="grid grid-cols-1 gap-4" id="grid-sides"></div>
+            <div class="grid grid-cols-2 gap-3" id="grid-sides"></div>
         </section>
 
     </div>
 
     <!-- شريط السلة العائم -->
-    <div id="cart-bar" class="fixed bottom-6 left-4 right-4 bg-gradient-to-r from-brand-500 to-brand-600 text-dark-950 p-4 rounded-2xl shadow-[0_0_40px_rgba(212,175,55,0.4)] transform translate-y-[150%] transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) z-50 flex justify-between items-center cursor-pointer active:scale-95 border border-white/20" onclick="openCartModal()">
-        <div class="flex items-center gap-4">
-            <div class="bg-dark-950 text-brand-500 w-12 h-12 rounded-full flex items-center justify-center font-black text-xl shadow-inner border border-brand-600" id="total-count">0</div>
-            <div class="flex flex-col leading-none gap-1">
-                <span class="text-xs text-dark-900 font-bold uppercase tracking-wider">الإجمالي</span>
-                <span class="font-black text-2xl" id="total-price">0 د.ج</span>
+    <div id="cart-bar" class="fixed bottom-6 left-4 right-4 bg-gradient-to-r from-brand-500 to-brand-600 text-dark-950 p-3 rounded-2xl shadow-[0_0_30px_rgba(212,175,55,0.3)] transform translate-y-[150%] transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) z-50 flex justify-between items-center cursor-pointer active:scale-95 border border-white/20" onclick="openCartModal()">
+        <div class="flex items-center gap-3">
+            <div class="bg-dark-950 text-brand-500 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shadow-inner border border-brand-600" id="total-count">0</div>
+            <div class="flex flex-col leading-none">
+                <span class="text-[10px] text-dark-900 font-bold uppercase tracking-wider">Total</span>
+                <span class="font-black text-xl" id="total-price">0 د.ج</span>
             </div>
         </div>
-        <div class="flex items-center gap-2 text-dark-950 font-bold bg-white/20 px-5 py-2.5 rounded-xl hover:bg-white/30 transition backdrop-blur-md border border-white/10">
-            <span>سلة الطلبات</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rtl:rotate-180" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+        <div class="flex items-center gap-2 text-dark-950 font-bold bg-white/20 px-4 py-2 rounded-xl hover:bg-white/30 transition backdrop-blur-md border border-white/10 text-sm">
+            <span>Panier</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rtl:rotate-180" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
         </div>
     </div>
 
@@ -187,7 +184,7 @@
             
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-white flex items-center gap-2">
-                    <span class="text-brand-500">🛒</span> تفاصيل الطلب
+                    <span class="text-brand-500">🛒</span> Panier
                 </h2>
                 <button onclick="closeCartModal()" class="w-9 h-9 bg-dark-800 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-dark-700 transition border border-dark-700">✕</button>
             </div>
@@ -202,76 +199,85 @@
                     <div class="flex items-center gap-3">
                         <img src="https://images.unsplash.com/photo-1541592103048-f8ce6a557c71?w=100" class="w-12 h-12 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/30">
                         <div class="text-sm">
-                            <p class="font-bold text-gray-100">بطاطس مقلية؟</p>
+                            <p class="font-bold text-gray-100">Frites ?</p>
                             <p class="text-brand-500 font-bold text-xs">+200 د.ج</p>
                         </div>
                     </div>
-                    <button onclick="addUpsell()" class="bg-brand-500 text-dark-950 border border-brand-400 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-brand-400 transition-all shadow-[0_0_10px_rgba(212,175,55,0.3)]">إضافة</button>
+                    <button onclick="addUpsell()" class="bg-brand-500 text-dark-950 border border-brand-400 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-brand-400 transition-all shadow-[0_0_10px_rgba(212,175,55,0.3)]">Ajouter</button>
                 </div>
             </div>
 
             <div class="mt-auto space-y-4">
                 <div class="flex justify-between items-center bg-dark-800 p-4 rounded-xl border border-dark-700 shadow-inner">
-                    <span class="text-gray-400 font-bold">المبلغ النهائي</span>
+                    <span class="text-gray-400 font-bold">Total</span>
                     <span class="text-3xl font-black text-brand-500" id="final-price">0 د.ج</span>
                 </div>
 
                 <button onclick="sendToWhatsapp()" class="w-full bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#20bd5a] hover:to-[#0e7a6d] text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(37,211,102,0.3)] flex justify-center items-center gap-3 transition-transform active:scale-95 border-t border-white/20">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.463 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-                    <span>إتمام الطلب عبر واتساب</span>
+                    <span>Commander (WhatsApp)</span>
                 </button>
             </div>
         </div>
     </div>
 
     <script>
-        // 1. البيانات (كاملة)
+        // 1. البيانات
         const products = [
             // --- Burger ---
-            { id: 1, name: "تشيز برغر كلاسيك", price: 450, category: "burger", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400", desc: "لحم بقري صافي، جبنة شيدر، صوص بيست الخاص" },
-            { id: 2, name: "برغر دجاج كريسبي", price: 500, category: "burger", img: "https://images.unsplash.com/photo-1615297928064-24977384d0f4?w=400", desc: "صدر دجاج مقرمش، خس، مايونيز بالثوم" },
-            { id: 3, name: "برغر مشروم سويسري", price: 550, category: "burger", img: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=400", desc: "لحم بقري، مشروم طازج، جبنة سويسرية" },
-            { id: 4, name: "دبل تشيز برغر", price: 650, category: "burger", img: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400", desc: "شريحتين لحم، دبل جبنة، صوص مدخن" },
-            { id: 5, name: "برغر دجاج حار (زينجر)", price: 550, category: "burger", img: "https://images.unsplash.com/photo-1619250907482-13c9320e1718?w=400", desc: "دجاج حار، فلفل هالبينو، صوص سبايسي" },
-            { id: 6, name: "برغر باربيكيو بيف", price: 600, category: "burger", img: "https://images.unsplash.com/photo-1596662951482-0c4ba74a6df6?w=400", desc: "لحم بقري، بصل مقرمش، صوص باربيكيو" },
+            { id: 1, name: "Cheeseburger", price: 450, category: "burger", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400", desc: "Bœuf pur, cheddar, sauce spéciale" },
+            { id: 2, name: "Chicken Crispy", price: 500, category: "burger", img: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400", desc: "Poulet croustillant, laitue, mayo" },
+            { id: 3, name: "Mushroom Swiss", price: 550, category: "burger", img: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=400", desc: "Bœuf, champignons frais, suisse" },
+            { id: 4, name: "Double Cheese", price: 650, category: "burger", img: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400", desc: "Double bœuf, double fromage" },
+            { id: 5, name: "Zinger Spicy", price: 550, category: "burger", img: "https://images.unsplash.com/photo-1520072959219-c595dc3f3a2a?w=400", desc: "Poulet épicé, jalapeño" },
+            { id: 6, name: "BBQ Beef", price: 600, category: "burger", img: "https://images.unsplash.com/photo-1596662951482-0c4ba74a6df6?w=400", desc: "Bœuf, oignons croustillants, BBQ" },
 
             // --- Pizza ---
-            { id: 10, name: "بيتزا مارغريتا", price: 600, category: "pizza", img: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400", desc: "صلصة طماطم إيطالية، موزاريلا، ريحان" },
-            { id: 11, name: "بيتزا بيبروني", price: 750, category: "pizza", img: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400", desc: "شرائح بيبروني بقري، موزاريلا، أوريغانو" },
-            { id: 12, name: "بيتزا 4 فصول", price: 800, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400", desc: "موزاريلا، مشروم، زيتون، خرشوف، طماطم" },
-            { id: 13, name: "بيتزا خضار", price: 650, category: "pizza", img: "https://images.unsplash.com/photo-1595708684082-a173bb3a06c5?w=400", desc: "فلفل ألوان، بصل، زيتون، طماطم، ذرة" },
-            { id: 14, name: "بيتزا دجاج باربيكيو", price: 850, category: "pizza", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400", desc: "قطع دجاج، صوص باربيكيو، بصل أحمر" },
-            { id: 15, name: "بيتزا تونة", price: 750, category: "pizza", img: "https://images.unsplash.com/photo-1555072956-7758afb20e8f?w=400", desc: "تونة فاخرة، بصل، زيتون، موزاريلا" },
+            { id: 10, name: "Margherita", price: 600, category: "pizza", img: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400", desc: "Sauce tomate, mozzarella, basilic" },
+            { id: 11, name: "Pepperoni", price: 750, category: "pizza", img: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400", desc: "Pepperoni, mozzarella, origan" },
+            { id: 12, name: "4 Saisons", price: 800, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400", desc: "Mozzarella, champignons, olives" },
+            { id: 13, name: "Végétarienne", price: 650, category: "pizza", img: "https://images.unsplash.com/photo-1595708684082-a173bb3a06c5?w=400", desc: "Légumes frais, mozzarella" },
+            { id: 14, name: "Poulet BBQ", price: 850, category: "pizza", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400", desc: "Poulet, sauce BBQ, oignons" },
+            { id: 15, name: "Thon", price: 750, category: "pizza", img: "https://images.unsplash.com/photo-1555072956-7758afb20e8f?w=400", desc: "Thon, oignons, olives" },
 
             // --- Drinks ---
-            { id: 20, name: "حمود بوعلام (بيضاء)", price: 120, category: "drinks", sub_category: "soda", img: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400", desc: "مشروب غازي جزائري (بلانش) 33cl" },
-            { id: 21, name: "سليكتو (حمود)", price: 120, category: "drinks", sub_category: "soda", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400", desc: "مشروب غازي أسود مميز 33cl" },
-            { id: 25, name: "بيبسي / كوكا", price: 120, category: "drinks", sub_category: "soda", img: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400", desc: "علبة باردة 33cl" },
-            { id: 22, name: "سليم (برتقال)", price: 100, category: "drinks", sub_category: "juice", img: "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=400", desc: "مشروب سليم بنكهة البرتقال المنعشة" },
-            { id: 23, name: "ماء إيفري (صغير)", price: 50, category: "drinks", sub_category: "water", img: "https://images.unsplash.com/photo-1560714771-1d5289f81251?w=400", desc: "قارورة مياه معدنية 0.5 لتر" },
-            { id: 24, name: "ماء إيفري (كبير)", price: 80, category: "drinks", sub_category: "water", img: "https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400", desc: "قارورة مياه معدنية 1.5 لتر" },
+            { id: 20, name: "Hamoud (Blanche)", price: 120, category: "drinks", sub_category: "soda", img: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400", desc: "33cl" },
+            { id: 21, name: "Selecto", price: 120, category: "drinks", sub_category: "soda", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400", desc: "33cl" },
+            { id: 25, name: "Pepsi / Coca", price: 120, category: "drinks", sub_category: "soda", img: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400", desc: "33cl" },
+            { id: 22, name: "Slim (Orange)", price: 100, category: "drinks", sub_category: "juice", img: "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=400", desc: "Jus d'orange" },
+            { id: 23, name: "Ifri (Petit)", price: 50, category: "drinks", sub_category: "water", img: "https://images.unsplash.com/photo-1560714771-1d5289f81251?w=400", desc: "0.5 L" },
+            { id: 24, name: "Ifri (Grand)", price: 80, category: "drinks", sub_category: "water", img: "https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400", desc: "1.5 L" },
 
             // --- Sides ---
-            { id: 99, name: "بطاطس مقلية", price: 200, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1541592103048-f8ce6a557c71?w=400", desc: "بطاطس ذهبية مقرمشة" }
+            { id: 99, name: "Frites", price: 200, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1541592103048-f8ce6a557c71?w=400", desc: "Croustillantes" }
         ];
 
         let cart = {};
 
-        // 2. دالة توليد بطاقة المنتج
+        // 2. دالة توليد بطاقة المنتج (العمودية الجديدة - مقسمة 3 أجزاء)
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             return `
-            <div class="item-card bg-dark-900 p-3 rounded-2xl shadow-lg shadow-black/20 border border-dark-800 flex gap-3 items-center reveal-on-scroll group hover:border-dark-700">
-                <img src="${p.img}" class="w-24 h-24 rounded-xl object-cover bg-dark-800 shadow-md brightness-90 group-hover:brightness-100 transition duration-300" alt="${p.name}">
-                <div class="flex-1 min-w-0">
-                    <h3 class="font-bold text-gray-100 text-base mb-1 truncate">${p.name}</h3>
-                    <p class="text-xs text-gray-400 mb-3 line-clamp-2 leading-relaxed">${p.desc}</p>
-                    <div class="flex justify-between items-center">
-                        <span class="font-black text-brand-500 text-lg drop-shadow-sm">${p.price} <span class="text-xs font-normal text-gray-500">د.ج</span></span>
-                        
-                        <div id="controls-${p.id}" class="h-9">
-                            ${generateControlsHTML(p.id, qty)}
-                        </div>
+            <div class="item-card bg-dark-900 rounded-2xl shadow-lg shadow-black/30 border border-dark-800 flex flex-col overflow-hidden reveal-on-scroll group hover:border-dark-700 h-full">
+                <!-- 1. القسم العلوي: صورة مربعة -->
+                <div class="aspect-square w-full relative overflow-hidden">
+                    <img src="${p.img}" class="w-full h-full object-cover brightness-90 group-hover:brightness-100 group-hover:scale-110 transition duration-500" alt="${p.name}">
+                    <!-- تدرج خفيف لجعل الصورة تندمج -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark-900/50 to-transparent opacity-40"></div>
+                </div>
+                
+                <!-- 2. القسم الأوسط: الاسم والمكونات (في الوسط) -->
+                <div class="p-3 text-center flex-1 flex flex-col justify-center border-t border-dark-800/50">
+                    <h3 class="font-bold text-gray-100 text-sm mb-1 leading-tight tracking-wide">${p.name}</h3>
+                    <p class="text-[10px] text-gray-400 line-clamp-2 leading-relaxed font-light">${p.desc}</p>
+                </div>
+                
+                <!-- 3. القسم السفلي: السعر والزر (في الوسط) -->
+                <div class="p-3 pt-0 flex justify-center items-center gap-3">
+                    <span class="font-black text-brand-500 text-base drop-shadow-sm">${p.price} <span class="text-[9px] font-normal text-gray-500">DA</span></span>
+                    
+                    <div id="controls-${p.id}" class="h-8 flex items-center">
+                        ${generateControlsHTML(p.id, qty)}
                     </div>
                 </div>
             </div>
@@ -281,15 +287,15 @@
         function generateControlsHTML(id, qty) {
             if (qty > 0) {
                 return `
-                <div class="flex items-center bg-dark-800 rounded-lg p-1 gap-2 border border-dark-700 h-full animate-zoom-in">
-                    <button onclick="updateCart(${id}, -1)" class="w-8 h-full bg-dark-700 rounded-md text-gray-300 font-bold flex items-center justify-center hover:bg-red-900/30 hover:text-red-400 border border-dark-600 transition">-</button>
-                    <span class="font-bold text-base w-6 text-center text-white">${qty}</span>
-                    <button onclick="updateCart(${id}, 1)" class="w-8 h-full bg-brand-500 rounded-md text-dark-950 font-bold flex items-center justify-center hover:bg-brand-600 active:scale-95 transition-transform">+</button>
+                <div class="flex items-center bg-dark-800 rounded-lg p-0.5 gap-1 border border-dark-700 h-full animate-zoom-in">
+                    <button onclick="updateCart(${id}, -1)" class="w-7 h-full bg-dark-700 rounded-md text-gray-300 font-bold flex items-center justify-center hover:bg-red-900/30 hover:text-red-400 border border-dark-600 transition text-xs">-</button>
+                    <span class="font-bold text-sm w-5 text-center text-white">${qty}</span>
+                    <button onclick="updateCart(${id}, 1)" class="w-7 h-full bg-brand-500 rounded-md text-dark-950 font-bold flex items-center justify-center hover:bg-brand-600 active:scale-95 transition-transform text-xs">+</button>
                 </div>
                 `;
             } else {
                 return `
-                <button onclick="updateCart(${id}, 1)" class="w-9 h-full bg-dark-800 border border-dark-700 text-brand-500 rounded-lg shadow-sm font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition-all active:scale-90 group-hover:bg-dark-700">
+                <button onclick="updateCart(${id}, 1)" class="w-8 h-8 bg-dark-800 border border-dark-700 text-brand-500 rounded-lg shadow-sm font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition-all active:scale-90 group-hover:bg-dark-700">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                     </svg>
@@ -298,7 +304,7 @@
             }
         }
 
-        // 3. عرض المنتجات في الأقسام
+        // 3. عرض المنتجات
         function renderAllSections() {
             // Burger
             document.getElementById('grid-burger').innerHTML = products
@@ -310,7 +316,7 @@
                 .filter(p => p.category === 'pizza')
                 .map(createProductCard).join('');
             
-            // Drinks (Sub Categories)
+            // Drinks
             document.getElementById('grid-drinks-soda').innerHTML = products
                 .filter(p => p.category === 'drinks' && p.sub_category === 'soda')
                 .map(createProductCard).join('');
@@ -412,12 +418,12 @@
         function sendToWhatsapp() {
             const phone = "213600000000";
             const tableNumber = 5;
-            let message = `مرحبا *RestoPro* 👋\nأود تقديم طلب جديد (طاولة ${tableNumber}):\n\n`;
+            let message = `Bonjour *PRESTIGE* 👋\nNouvelle commande (Table ${tableNumber}):\n\n`;
             Object.values(cart).forEach(item => {
-                message += `▫️ ${item.name} *(x${item.qty})* - ${item.price * item.qty} د.ج\n`;
+                message += `▫️ ${item.name} *(x${item.qty})* - ${item.price * item.qty} DA\n`;
             });
             const total = document.getElementById('final-price').innerText;
-            message += `\n💰 *المجموع الكلي: ${total}*`;
+            message += `\n💰 *Total: ${total}*`;
             const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
             window.open(url, '_blank');
         }
