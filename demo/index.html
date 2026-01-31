@@ -545,7 +545,7 @@
             btn.disabled = true;
 
             const orderData = {
-                order_id: Math.floor(1000 + Math.random() * 9000), 
+            order_id: 0,
                 table: getTableNumber(),
                 total: document.getElementById('final-price').innerText,
                 items: Object.values(cart).map(item => ({
