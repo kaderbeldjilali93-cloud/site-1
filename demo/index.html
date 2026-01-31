@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>قائمة الطعام | PRESTIGE</title>
+    <title>قائمة الطعام | مطعم الفخامة</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -25,15 +25,19 @@
         }
         .animate-zoom-in { animation: zoomInSmooth 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
 
-        /* Slide Up Reveal Class */
+        /* Slide Up Reveal Class (للبطاقات فقط) */
         .reveal-on-scroll {
             opacity: 0;
             transform: translateY(30px);
             transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid rgba(255, 255, 255, 0.05); /* الإطار للبطاقات فقط */
         }
+        
         .reveal-visible {
             opacity: 1;
             transform: translateY(0);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.15), inset 0 0 20px rgba(212, 175, 55, 0.05);
+            border-color: rgba(212, 175, 55, 0.4);
         }
 
         /* Active Tab LED Glow */
@@ -70,12 +74,21 @@
 
         /* تأثير توهج العناوين */
         @keyframes titleGlow {
-            0%, 100% { text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); color: #ffffff; transform: scale(1); }
-            50% { text-shadow: 0 0 25px rgba(212, 175, 55, 0.8), 0 0 10px rgba(255, 255, 255, 0.4); color: #D4AF37; transform: scale(1.05); }
+            0%, 100% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.1); color: #ffffff; transform: scale(1); }
+            50% { text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); color: #D4AF37; transform: scale(1.02); }
         }
         
-        .reveal-visible .glow-text-anim {
-            animation: titleGlow 2s infinite ease-in-out;
+        .glow-text-anim {
+            animation: titleGlow 3s infinite ease-in-out;
+        }
+
+        /* تم تخفيف توهج العنوان الرئيسي */
+        @keyframes welcomeGlow {
+            0%, 100% { text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
+            50% { text-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
+        }
+        .welcome-title-anim {
+            animation: welcomeGlow 4s infinite ease-in-out;
         }
     </style>
     
@@ -94,98 +107,96 @@
 </head>
 <body class="bg-dark-950 text-gray-100 pb-28 select-none">
 
-    <!-- الرأس (Header) - ممركز -->
-    <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 transition-all duration-300">
-        <!-- الشعار في الوسط -->
-        <div class="pt-4 pb-2 flex justify-center items-center animate-zoom-in">
-            <div class="relative group cursor-default flex items-center gap-3">
-                <div class="absolute -inset-4 bg-brand-500/10 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                
-                <!-- أيقونة الطباخ المشعة -->
-                <div class="logo-glow text-brand-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12,2A5,5,0,0,1,17,7C17,7.76 16.8,8.47 16.44,9.11C18.5,9.5 20,11.31 20,13.5A3.5,3.5,0,0,1,16.5,17H16V22H14V17H10V22H8V17H7.5A3.5,3.5,0,0,1,4,13.5C4,11.31 5.5,9.5 7.56,9.11C7.2,8.47 7,7.76 7,7A5,5,0,0,1,12,2M12,4A3,3,0,0,0,9,7C9,7.5 9.13,7.97 9.35,8.38C10.13,8.13 11.03,8 12,8C12.97,8 13.87,8.13 14.65,8.38C14.87,7.97 15,7.5 15,7A3,3,0,0,0,12,4Z" />
-                    </svg>
-                </div>
+    <!-- حاوية المحتوى (تم حذف الهامش العلوي الكبير لأن الهيدر حذف) -->
+    <div class="pt-6">
 
-                <div class="relative leading-none flex items-center">
-                    <span class="text-3xl font-black tracking-tighter text-white font-sans drop-shadow-lg">
-                        مطعم <span class="text-brand-500">الفخامة</span>
-                    </span>
+        <!-- عنوان ترحيبي كبير -->
+        <div class="text-center px-4 mb-4 animate-zoom-in">
+            <h1 class="text-3xl sm:text-4xl font-black text-white leading-tight welcome-title-anim">
+                مرحبا بك في مطعمنا<br>
+                <span class="text-brand-500 text-4xl sm:text-5xl">الفخامة</span>
+            </h1>
+        </div>
+
+        <!-- 2. إطار الترحيب والشرح (مصغر جداً) -->
+        <div class="px-4 mb-6 animate-zoom-in delay-100">
+            <div class="bg-dark-900 border border-brand-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+                <div class="space-y-3">
+                    <h3 class="text-white font-bold text-lg border-b border-brand-500/20 pb-2 w-fit">كيف تطلب؟</h3>
+                    <p class="text-white text-sm leading-relaxed">
+                        يمكنك اختيار المنتجات التي تريدها من القائمة، ثم اضغط على زر "تأكيد الطلب" وسيصلك طلبك في غضون دقائق.
+                    </p>
+                    <div class="text-xs text-white font-bold bg-brand-500/5 p-3 rounded-lg border border-brand-500/10 inline-block w-full">
+                        🔔 ملاحظة: إذا كنت بحاجة إلى مساعدة، يمكنك استخدام زر 
+                        <span class="text-brand-500 mx-1 inline-flex items-center gap-1 font-black">
+                            ( <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C10.3431 2 9 3.34315 9 5V6.05202C6.73318 6.92484 5.2323 9.27891 5.62024 11.9939L6.19169 15.9939C6.26252 16.4897 6.03759 16.9855 5.61746 17.2656L4.2886 18.1515C3.76672 18.4994 3.86433 19.324 4.45331 19.5298C6.91896 20.3916 9.53917 20.7302 12 20.7302C14.4608 20.7302 17.081 20.3916 19.5467 19.5298C20.1357 19.324 20.2333 18.4994 19.7114 18.1515L18.3825 17.2656C17.9624 16.9855 17.7375 16.4897 17.8083 15.9939L18.3798 11.9939C18.7677 9.27891 17.2668 6.92484 15 6.05202V5C15 3.34315 13.6569 2 12 2ZM14 22C14 23.1046 13.1046 24 12 24C10.8954 24 10 23.1046 10 22H14Z"></path></svg>
+                            إستدعي النادل )
+                        </span> 
+                        وسوف يحضر النادل لديك مباشرة.
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- شريط التصنيفات (تحت الشعار مباشرة) -->
-        <div class="px-2 pb-3 overflow-x-auto hide-scrollbar flex justify-center">
-            <div class="flex gap-2 min-w-max px-2">
-                <a href="#section-burger" id="nav-burger" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Burger</a>
-                <a href="#section-pizza" id="nav-pizza" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Pizza</a>
-                <a href="#section-drinks" id="nav-drinks" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Boissons</a>
-                <a href="#section-sides" id="nav-sides" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Suppléments</a>
+        <!-- 3. شريط التصنيفات (Sticky - تم ضبطه ليكون في الأعلى تماماً عند التمرير) -->
+        <div class="sticky top-0 z-40 bg-dark-950/95 backdrop-blur-md border-b border-dark-800/50 py-3 mb-6 shadow-md transition-all">
+            <div class="px-2 overflow-x-auto hide-scrollbar flex justify-center">
+                <div class="flex gap-2 min-w-max px-2">
+                    <a href="#section-burger" id="nav-burger" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Burger</a>
+                    <a href="#section-pizza" id="nav-pizza" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Pizza</a>
+                    <a href="#section-drinks" id="nav-drinks" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Boissons</a>
+                    <a href="#section-sides" id="nav-sides" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Suppléments</a>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- المحتوى الرئيسي (Main Content) -->
-    <!-- زيادة الهامش العلوي لأن الهيدر أصبح أطول -->
-    <div class="mt-[130px] px-3 space-y-10 pb-8" id="main-container">
-        
-        <!-- قسم البرغر -->
-        <section id="section-burger" class="scroll-mt-44">
-            <div class="flex items-center justify-center gap-3 mb-4 reveal-on-scroll">
-                <div class="h-[1px] w-8 bg-brand-500/50"></div>
-                <h2 class="text-xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Burger</h2>
-                <div class="h-[1px] w-8 bg-brand-500/50"></div>
-            </div>
-            <!-- Grid Cols 2 -->
-            <div class="grid grid-cols-2 gap-3" id="grid-burger"></div>
-        </section>
-
-        <!-- قسم البيتزا -->
-        <section id="section-pizza" class="scroll-mt-44">
-            <div class="flex items-center justify-center gap-3 mb-4 reveal-on-scroll">
-                <div class="h-[1px] w-8 bg-brand-500/50"></div>
-                <h2 class="text-xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Pizza</h2>
-                <div class="h-[1px] w-8 bg-brand-500/50"></div>
-            </div>
-            <div class="grid grid-cols-2 gap-3" id="grid-pizza"></div>
-        </section>
-
-        <!-- قسم المشروبات -->
-        <section id="section-drinks" class="scroll-mt-44">
-            <div class="flex items-center justify-center gap-3 mb-4 reveal-on-scroll">
-                <div class="h-[1px] w-8 bg-brand-500/50"></div>
-                <h2 class="text-xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Boissons</h2>
-                <div class="h-[1px] w-8 bg-brand-500/50"></div>
-            </div>
+        <!-- 4. المنتجات -->
+        <div id="main-container" class="px-3 space-y-10 pb-8">
             
-            <div class="space-y-6">
-                <div>
-                    <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 reveal-on-scroll opacity-80 text-center">Sodas</h3>
-                    <div class="grid grid-cols-2 gap-3" id="grid-drinks-soda"></div>
+            <!-- قسم البرغر -->
+            <section id="section-burger" class="scroll-mt-32">
+                <!-- تم حذف الإطار والخطوط الجانبية -->
+                <div class="text-center mb-4">
+                    <h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Burger</h2>
                 </div>
-                <div>
-                    <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 reveal-on-scroll opacity-80 text-center">Jus</h3>
-                    <div class="grid grid-cols-2 gap-3" id="grid-drinks-juice"></div>
-                </div>
-                <div>
-                    <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 reveal-on-scroll opacity-80 text-center">Eaux</h3>
-                    <div class="grid grid-cols-2 gap-3" id="grid-drinks-water"></div>
-                </div>
-            </div>
+                <!-- Grid Cols 2 -->
+                <div class="grid grid-cols-2 gap-3" id="grid-burger"></div>
+            </section>
 
-        </section>
+            <!-- قسم البيتزا -->
+            <section id="section-pizza" class="scroll-mt-32">
+                <div class="text-center mb-4">
+                    <h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Pizza</h2>
+                </div>
+                <div class="grid grid-cols-2 gap-3" id="grid-pizza"></div>
+            </section>
 
-        <!-- قسم الجانبي -->
-        <section id="section-sides" class="scroll-mt-44">
-            <div class="flex items-center justify-center gap-3 mb-4 reveal-on-scroll">
-                <div class="h-[1px] w-8 bg-brand-500/50"></div>
-                <h2 class="text-xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Suppléments</h2>
-                <div class="h-[1px] w-8 bg-brand-500/50"></div>
-            </div>
-            <div class="grid grid-cols-2 gap-3" id="grid-sides"></div>
-        </section>
+            <!-- قسم المشروبات -->
+            <section id="section-drinks" class="scroll-mt-32">
+                <div class="text-center mb-4">
+                    <h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Boissons</h2>
+                </div>
+                
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 opacity-80 text-center">Sodas</h3>
+                        <div class="grid grid-cols-2 gap-3" id="grid-drinks-soda"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 opacity-80 text-center">Jus</h3>
+                        <div class="grid grid-cols-2 gap-3" id="grid-drinks-juice"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- قسم الجانبي -->
+            <section id="section-sides" class="scroll-mt-32">
+                <div class="text-center mb-4">
+                    <h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Suppléments</h2>
+                </div>
+                <div class="grid grid-cols-2 gap-3" id="grid-sides"></div>
+            </section>
+        </div>
 
     </div>
 
@@ -274,9 +285,6 @@
             { id: 23, name: "Rouiba (1L)", price: 140, category: "drinks", sub_category: "juice", img: "JPG 23", desc: "Citronnade" },
             { id: 24, name: "tazij (1L)", price: 150, category: "drinks", sub_category: "juice", img: "JPG 24", desc: "Mélange de fruits" },
             
-            { id: 25, name: "Ifri (1L)", price: 50, category: "drinks", sub_category: "water", img: "JPG 25", desc: "0.5 L" },
-            { id: 26, name: "Ifri (0,5L)", price: 80, category: "drinks", sub_category: "water", img: "JPG 26", desc: "1.5 L" },
-
             // --- Sides ---
             { id: 27, name: "Frites", price: 200, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1630384031162-91ad75aa397a?w=400", desc: "Croustillantes" },
             { id: 31, name: "Mayonnaise", price: 0, category: "sides", sub_category: "", img: "JPG 31", desc: "Gratuit" },
@@ -359,10 +367,6 @@
                 .filter(p => p.category === 'drinks' && p.sub_category === 'juice')
                 .map(createProductCard).join('');
 
-            document.getElementById('grid-drinks-water').innerHTML = products
-                .filter(p => p.category === 'drinks' && p.sub_category === 'water')
-                .map(createProductCard).join('');
-
             // Sides
             document.getElementById('grid-sides').innerHTML = products
                 .filter(p => p.category === 'sides')
@@ -408,14 +412,12 @@
             
             // متغيرات لتتبع حالة السلة
             let hasDrinks = false; // يشمل Sodas و Juice
-            let hasWater = false;
             let hasFries = false;
             
             if (Object.keys(cart).length === 0) return;
 
             Object.values(cart).forEach(item => {
                 if (item.sub_category === 'soda' || item.sub_category === 'juice') hasDrinks = true;
-                if (item.sub_category === 'water') hasWater = true;
                 if (item.id === 27) hasFries = true; // 27 هو ID البطاطس
 
                 list.innerHTML += `
@@ -437,7 +439,7 @@
             let upsellHTML = '';
             let showUpsell = false;
 
-            // 1. إذا لم يطلب مشروب (Sodas أو Juice) - اقتراح Hamoud (ID 13) بدلاً من Slim Orange المحذوف من العصائر
+            // 1. إذا لم يطلب مشروب (Sodas أو Juice) - اقتراح Hamoud (ID 13)
             if (!hasDrinks) {
                 const drink = products.find(p => p.id === 13); // Hamoud
                 if (drink) {
@@ -451,26 +453,6 @@
                                 </div>
                             </div>
                             <button onclick="addUpsell(${drink.id})" class="bg-brand-500 text-dark-950 w-8 h-8 rounded-lg flex items-center justify-center font-bold hover:bg-brand-400 transition-all shadow-sm text-lg leading-none">+</button>
-                        </div>
-                    `;
-                    showUpsell = true;
-                }
-            }
-
-            // 2. إذا لم يطلب ماء - اقتراح Ifri Petit (ID 25)
-            if (!hasWater) {
-                const water = products.find(p => p.id === 25);
-                if (water) {
-                    upsellHTML += `
-                        <div class="relative flex justify-between items-center bg-dark-800/50 p-2 rounded-lg border border-dark-700 ${showUpsell ? 'mt-2' : ''}">
-                            <div class="flex items-center gap-3">
-                                <img src="${water.img}" class="w-10 h-10 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/20">
-                                <div class="text-sm">
-                                    <p class="font-bold text-gray-100">Eau Minérale</p>
-                                    <p class="text-brand-500 font-bold text-xs">+${water.price} د.ج</p>
-                                </div>
-                            </div>
-                            <button onclick="addUpsell(${water.id})" class="bg-brand-500 text-dark-950 w-8 h-8 rounded-lg flex items-center justify-center font-bold hover:bg-brand-400 transition-all shadow-sm text-lg leading-none">+</button>
                         </div>
                     `;
                     showUpsell = true;
@@ -530,13 +512,50 @@
             updateCart(id, 1);
             openCartModal(); // Refresh to hide the added upsell
         }
+// دالة لجلب رقم الطاولة من الرابط
+        function getTableNumber() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('table') || '5';
+        }
+
+        async function callWaiter() {
+            const btn = document.getElementById('waiter-btn');
+            const originalContent = btn.innerHTML;
+            
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+            btn.disabled = true;
+
+            try {
+                const tableNum = getTableNumber();
+                
+                // 🔴 تأكد من أن هذا الرابط هو الصحيح للويب هوك الخاص بك 🔴
+                const WH_URL = "https://n8n.panel.vidsai.site/webhook/146e5a16-fe2c-4d4e-8284-4f6900a40931"; 
+
+                await fetch(WH_URL, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ table: tableNum, type: 'help' })
+                });
+
+                btn.classList.remove('border-brand-500', 'text-brand-500');
+                btn.classList.add('border-green-500', 'text-green-500');
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
+
+            } catch (error) {
+                console.error(error);
+                alert("فشل الاتصال، حاول مرة أخرى.");
+            } finally {
+                setTimeout(() => {
+                    btn.classList.add('border-brand-500', 'text-brand-500');
+                    btn.classList.remove('border-green-500', 'text-green-500');
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                }, 3000);
+            }
+        }
 
         const WEBHOOK_URL = "https://n8n.panel.vidsai.site/webhook/c25c8a4a-e633-4ae8-80f0-adece675548b"; 
-// دالة لجلب رقم الطاولة من الرابط
-        function getTableNumber() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('table') || '5';
-        }
+
         async function submitOrder() {
             if (Object.keys(cart).length === 0) return;
 
@@ -546,7 +565,7 @@
             btn.disabled = true;
 
             const orderData = {
-            order_id: Math.floor(1000 + Math.random() * 9000),
+                order_id: Math.floor(1000 + Math.random() * 9000), 
                 table: getTableNumber(),
                 total: document.getElementById('final-price').innerText,
                 items: Object.values(cart).map(item => ({
@@ -639,45 +658,7 @@
             document.getElementById('nav-burger').classList.add('nav-active');
             document.getElementById('nav-burger').classList.remove('bg-dark-900', 'text-gray-400');
         });
-                        // دالة استدعاء النادل
-    async function callWaiter() {
-        const btn = document.getElementById('waiter-btn');
-        const originalContent = btn.innerHTML;
-        
-        // تغيير شكل الزر لإظهار التحميل
-        btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
-        btn.disabled = true;
 
-        try {
-            const tableNum = getTableNumber(); // جلب رقم الطاولة
-            
-            // 🔴 هام جداً: ضع رابط الويب هوك الجديد هنا 🔴
-            const WH_URL = "https://n8n.panel.vidsai.site/webhook/146e5a16-fe2c-4d4e-8284-4f6900a40931"; 
-
-            await fetch(WH_URL, { 
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ table: tableNum, type: 'help' })
-            });
-
-            // علامة النجاح (صح خضراء)
-            btn.classList.remove('border-brand-500', 'text-brand-500');
-            btn.classList.add('border-green-500', 'text-green-500');
-            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
-
-        } catch (error) {
-            console.error(error);
-            alert("فشل الاتصال، حاول مرة أخرى.");
-        } finally {
-            // إعادة الزر لحالته الأصلية بعد 3 ثواني
-            setTimeout(() => {
-                btn.classList.add('border-brand-500', 'text-brand-500');
-                btn.classList.remove('border-green-500', 'text-green-500');
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
-            }, 3000);
-        }
-    }
     </script>
     <div id="success-modal" class="fixed inset-0 bg-dark-950/95 z-[70] hidden flex flex-col items-center justify-center p-4 text-center animate-zoom-in">
         <div class="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mb-6 border border-green-500/20 shadow-[0_0_30px_rgba(34,197,94,0.2)]">
@@ -692,8 +673,11 @@
             الرجوع لصفحة الرئيسية
         </button>
     </div>
+    
+    <!-- زر استدعاء النادل المعدل -->
     <div class="fixed bottom-24 left-4 z-40">
-        <button onclick="callWaiter()" id="waiter-btn" class="w-12 h-12 bg-dark-800 border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.3)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 group">
+        <button onclick="callWaiter()" id="waiter-btn" class="flex items-center gap-3 bg-dark-900/90 backdrop-blur-md border border-brand-500 text-brand-500 px-5 py-3 rounded-full shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 group logo-glow">
+            <span class="font-bold text-sm">إستدعي النادل</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2C10.3431 2 9 3.34315 9 5V6.05202C6.73318 6.92484 5.2323 9.27891 5.62024 11.9939L6.19169 15.9939C6.26252 16.4897 6.03759 16.9855 5.61746 17.2656L4.2886 18.1515C3.76672 18.4994 3.86433 19.324 4.45331 19.5298C6.91896 20.3916 9.53917 20.7302 12 20.7302C14.4608 20.7302 17.081 20.3916 19.5467 19.5298C20.1357 19.324 20.2333 18.4994 19.7114 18.1515L18.3825 17.2656C17.9624 16.9855 17.7375 16.4897 17.8083 15.9939L18.3798 11.9939C18.7677 9.27891 17.2668 6.92484 15 6.05202V5C15 3.34315 13.6569 2 12 2ZM14 22C14 23.1046 13.1046 24 12 24C10.8954 24 10 23.1046 10 22H14Z"></path>
             </svg>
@@ -710,6 +694,10 @@
     }
     .group-hover\:animate-swing:hover {
         animation: swing 1s ease-in-out infinite;
+    }
+    /* جعل الزر يتوهج باستمرار */
+    .logo-glow {
+        animation: logoPulse 2s infinite;
     }
     </style>
 </body>
