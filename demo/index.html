@@ -532,17 +532,42 @@
             openCartModal(); // Refresh to hide the added upsell
         }
 
-        function sendToWhatsapp() {
-            const phone = "213665409702";
-            const tableNumber = 5;
-            let message = `Bonjour *PRESTIGE* 👋\nNouvelle commande (Table ${tableNumber}):\n\n`;
-            Object.values(cart).forEach(item => {
-                message += `▫️ ${item.name} *(x${item.qty})* - ${item.price * item.qty} DA\n`;
-            });
-            const total = document.getElementById('final-price').innerText;
-            message += `\n💰 *Total: ${total}*`;
-            const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-            window.open(url, '_blank');
+// دالة إرسال الطلب (الجديدة - محاكاة)
+        function submitOrder() {
+            // 1. إذا السلة فارغة لا تفعل شيئاً
+            if (Object.keys(cart).length === 0) return;
+
+            // 2. تغيير شكل الزر ليعرف الزبون أن الطلب جارٍ
+            const btn = document.querySelector('#cart-modal button:last-child');
+            const originalText = btn.innerHTML; 
+            
+            // نضع أيقونة تحميل تدور
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white ml-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> جارٍ الإرسال...`;
+            btn.disabled = true; 
+
+            // 3. محاكاة وقت الإرسال
+            setTimeout(() => {
+                // توليد رقم طلب عشوائي
+                const randomOrderId = Math.floor(1000 + Math.random() * 9000);
+                document.getElementById('order-id-display').innerText = randomOrderId;
+
+                // إغلاق نافذة السلة
+                closeCartModal(); 
+                
+                // إظهار نافذة "تم الاستلام"
+                const successModal = document.getElementById('success-modal');
+                successModal.classList.remove('hidden');
+                successModal.classList.add('flex');
+
+                // إعادة الزر لحالته الطبيعية
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                
+                // إفراغ السلة
+                cart = {};
+                updateCartBar(); 
+
+            }, 2000); // 2 ثانية
         }
 
         // --- 6. ScrollSpy & Animations Logic ---
