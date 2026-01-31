@@ -598,5 +598,18 @@
         });
 
     </script>
+    <div id="success-modal" class="fixed inset-0 bg-dark-950/95 z-[70] hidden flex flex-col items-center justify-center p-4 text-center animate-zoom-in">
+        <div class="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mb-6 border border-green-500/20 shadow-[0_0_30px_rgba(34,197,94,0.2)]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+            </svg>
+        </div>
+        <h2 class="text-3xl font-black text-white mb-2">تم استلام طلبك!</h2>
+        <p class="text-gray-400 mb-8 max-w-xs leading-relaxed">المطبخ يقوم بتحضير وجبتك الآن.<br>رقم طلبك هو <span class="text-brand-500 font-bold text-xl block mt-2">#<span id="order-id-display">000</span></span></p>
+        
+        <button onclick="location.reload()" class="bg-dark-800 text-white px-8 py-4 rounded-xl font-bold border border-dark-700 hover:bg-dark-700 hover:border-brand-500/50 transition-all w-full max-w-xs shadow-lg">
+            طلب جديد
+        </button>
+    </div>
 </body>
 </html>
