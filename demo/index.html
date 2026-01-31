@@ -551,6 +551,10 @@
         }
 
         async function callWaiter() {
+            // ✅✅ أضف هذين السطرين هنا مباشرة ✅✅
+    const bellSound = new Audio('الجرس.mp3'); 
+    bellSound.play().catch(e => console.log("الصوت يحتاج تفاعل"));
+    // ✅✅ نهاية الإضافة ✅✅
             const btn = document.getElementById('waiter-btn');
             const originalContent = btn.innerHTML;
             
