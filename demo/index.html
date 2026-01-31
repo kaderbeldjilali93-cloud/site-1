@@ -532,42 +532,69 @@
             openCartModal(); // Refresh to hide the added upsell
         }
 
-// دالة إرسال الطلب (الجديدة - محاكاة)
-        function submitOrder() {
-            // 1. إذا السلة فارغة لا تفعل شيئاً
+// 🛑 هام: ضع رابط الويب هوك الخاص بك هنا بين علامتي التنصيص
+        const WEBHOOK_URL = "https://n8n.panel.vidsai.site/webhook/c25c8a4a-e633-4ae8-80f0-adece675548b"; 
+
+        // دالة إرسال الطلب (الحقيقية - مربوطة بالسيرفر)
+        async function submitOrder() {
+            // 1. التحقق من أن السلة ليست فارغة
             if (Object.keys(cart).length === 0) return;
 
-            // 2. تغيير شكل الزر ليعرف الزبون أن الطلب جارٍ
+            // 2. تغيير شكل الزر للتحميل
             const btn = document.querySelector('#cart-modal button:last-child');
-            const originalText = btn.innerHTML; 
-            
-            // نضع أيقونة تحميل تدور
-            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white ml-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> جارٍ الإرسال...`;
-            btn.disabled = true; 
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white ml-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> جارٍ الاتصال بالمطبخ...`;
+            btn.disabled = true;
 
-            // 3. محاكاة وقت الإرسال
-            setTimeout(() => {
-                // توليد رقم طلب عشوائي
-                const randomOrderId = Math.floor(1000 + Math.random() * 9000);
-                document.getElementById('order-id-display').innerText = randomOrderId;
+            // 3. تجهيز بيانات الطلب لإرسالها
+            const orderData = {
+                order_id: Math.floor(1000 + Math.random() * 9000), // رقم طلب مؤقت
+                table: 5, // رقم الطاولة
+                total: document.getElementById('final-price').innerText,
+                items: Object.values(cart).map(item => ({
+                    name: item.name,
+                    qty: item.qty,
+                    price: item.price
+                })),
+                time: new Date().toLocaleString('ar-DZ')
+            };
 
-                // إغلاق نافذة السلة
-                closeCartModal(); 
+            try {
+                // 4. عملية الإرسال الفعلي لـ n8n
+                // ملاحظة: إذا لم يكن لديك رابط حقيقي الآن، سيعطي خطأ. 
+                // جرب وضع رابط الويب هوك الخاص بك في الأعلى.
                 
-                // إظهار نافذة "تم الاستلام"
-                const successModal = document.getElementById('success-modal');
-                successModal.classList.remove('hidden');
-                successModal.classList.add('flex');
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
 
-                // إعادة الزر لحالته الطبيعية
+                if (response.ok) {
+                    // --- نجاح الإرسال ---
+                    document.getElementById('order-id-display').innerText = orderData.order_id;
+                    closeCartModal();
+                    
+                    const successModal = document.getElementById('success-modal');
+                    successModal.classList.remove('hidden');
+                    successModal.classList.add('flex');
+
+                    // تنظيف
+                    cart = {};
+                    updateCartBar();
+                } else {
+                    throw new Error('فشل الاتصال بالسيرفر');
+                }
+
+            } catch (error) {
+                // --- فشل الإرسال (مثلاً انترنت مقطوع أو الرابط خطأ) ---
+                console.error(error);
+                alert("عذراً، حدث خطأ في الاتصال بالمطبخ! يرجى المحاولة مرة أخرى.");
+            } finally {
+                // إرجاع الزر لحالته الأصلية
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                
-                // إفراغ السلة
-                cart = {};
-                updateCartBar(); 
-
-            }, 2000); // 2 ثانية
+            }
         }
 
         // --- 6. ScrollSpy & Animations Logic ---
