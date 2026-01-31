@@ -43,23 +43,23 @@
             box-shadow: 0 0 15px rgba(212, 175, 55, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.2);
             border-color: #D4AF37 !important;
             transform: scale(1.05);
+        /* Logo Glow Animation */
+        @keyframes logoPulse {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(212,175,55,0.6)); }
+            50% { filter: drop-shadow(0 0 15px rgba(212,175,55,0.9)); }
         }
+        .logo-glow { animation: logoPulse 3s infinite; }
 
-        .item-card { transition: transform 0.2s, box-shadow 0.2s; }
-        .item-card:active { transform: scale(0.97); }
+        /* تأثير توهج العناوين الجديد */
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); color: #ffffff; transform: scale(1); }
+            50% { text-shadow: 0 0 25px rgba(212, 175, 55, 0.8), 0 0 10px rgba(255, 255, 255, 0.4); color: #D4AF37; transform: scale(1.05); }
+        }
         
-        @keyframes pop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.3); }
-            100% { transform: scale(1); }
+        /* يتم تفعيل الأنيميشن عندما يصبح العنصر مرئياً */
+        .reveal-visible .glow-text-anim {
+            animation: titleGlow 2s infinite ease-in-out;
         }
-        .pop-anim { animation: pop 0.2s ease-in-out; }
-
-        @keyframes slideUpModal {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .animate-slide-up-smooth { animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
     </style>
     
     <script>
@@ -97,7 +97,7 @@
                 <a href="#section-burger" id="nav-burger" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Burger</a>
                 <a href="#section-pizza" id="nav-pizza" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Pizza</a>
                 <a href="#section-drinks" id="nav-drinks" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Boissons</a>
-                <!-- تم حذف زر Suppléments -->
+                <a href="#section-sides" id="nav-sides" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Suppléments</a>
             </div>
         </div>
     </div>
@@ -110,7 +110,7 @@
         <section id="section-burger" class="scroll-mt-44">
             <div class="flex items-center justify-center gap-3 mb-4 reveal-on-scroll">
                 <div class="h-[1px] w-8 bg-brand-500/50"></div>
-                <h2 class="text-xl font-black text-white uppercase tracking-wider">Burger</h2>
+                <h2 class="text-xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Burger</h2>
                 <div class="h-[1px] w-8 bg-brand-500/50"></div>
             </div>
             <!-- Grid Cols 2 -->
@@ -121,7 +121,7 @@
         <section id="section-pizza" class="scroll-mt-44">
             <div class="flex items-center justify-center gap-3 mb-4 reveal-on-scroll">
                 <div class="h-[1px] w-8 bg-brand-500/50"></div>
-                <h2 class="text-xl font-black text-white uppercase tracking-wider">Pizza</h2>
+                <h2 class="text-xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Pizza</h2>
                 <div class="h-[1px] w-8 bg-brand-500/50"></div>
             </div>
             <div class="grid grid-cols-2 gap-3" id="grid-pizza"></div>
@@ -131,7 +131,7 @@
         <section id="section-drinks" class="scroll-mt-44">
             <div class="flex items-center justify-center gap-3 mb-4 reveal-on-scroll">
                 <div class="h-[1px] w-8 bg-brand-500/50"></div>
-                <h2 class="text-xl font-black text-white uppercase tracking-wider">Boissons</h2>
+                <h2 class="text-xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Boissons</h2>
                 <div class="h-[1px] w-8 bg-brand-500/50"></div>
             </div>
             
@@ -151,7 +151,15 @@
             </div>
         </section>
 
-        <!-- تم حذف قسم الجانبي (Suppléments) -->
+        <!-- قسم الجانبي -->
+        <section id="section-sides" class="scroll-mt-44">
+            <div class="flex items-center justify-center gap-3 mb-4 reveal-on-scroll">
+                <div class="h-[1px] w-8 bg-brand-500/50"></div>
+                <h2 class="text-xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Suppléments</h2>
+                <div class="h-[1px] w-8 bg-brand-500/50"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-3" id="grid-sides"></div>
+        </section>
 
     </div>
 
@@ -165,7 +173,7 @@
             </div>
         </div>
         <div class="flex items-center gap-2 text-dark-950 font-bold bg-white/20 px-4 py-2 rounded-xl hover:bg-white/30 transition backdrop-blur-md border border-white/10 text-sm">
-            <span>Panier</span>
+            <span>تأكد من طلبك</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rtl:rotate-180" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
         </div>
     </div>
@@ -174,40 +182,32 @@
     <div id="cart-modal" class="fixed inset-0 bg-dark-950/90 z-[60] hidden backdrop-blur-md flex items-end sm:items-center justify-center transition-opacity duration-300">
         <div class="bg-dark-900 border border-dark-700 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 relative animate-slide-up-smooth shadow-2xl h-[85vh] sm:h-auto flex flex-col">
             
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold text-white flex items-center gap-2">
-                    <span class="text-brand-500">🛒</span> Panier
+                    <span class="text-brand-500">🛒</span> سلة المشتريات
                 </h2>
                 <button onclick="closeCartModal()" class="w-9 h-9 bg-dark-800 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-dark-700 transition border border-dark-700">✕</button>
             </div>
             
-            <div id="cart-items-list" class="flex-1 overflow-y-auto mb-4 space-y-3 hide-scrollbar pr-1"></div>
+            <div id="cart-items-list" class="flex-1 overflow-y-auto mb-2 space-y-3 hide-scrollbar pr-1"></div>
 
-            <div class="border-t border-dark-800 my-4"></div>
-
-            <div id="upsell-section" class="bg-gradient-to-r from-brand-500/10 to-transparent p-4 rounded-xl border border-brand-500/20 mb-6 hidden relative overflow-hidden">
-                <div class="absolute inset-0 bg-brand-500/5 animate-pulse"></div>
-                <div class="relative flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <img src="https://images.unsplash.com/photo-1541592103048-f8ce6a557c71?w=100" class="w-12 h-12 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/30">
-                        <div class="text-sm">
-                            <p class="font-bold text-gray-100">Frites ?</p>
-                            <p class="text-brand-500 font-bold text-xs">+200 د.ج</p>
-                        </div>
-                    </div>
-                    <button onclick="addUpsell()" class="bg-brand-500 text-dark-950 border border-brand-400 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-brand-400 transition-all shadow-[0_0_10px_rgba(212,175,55,0.3)]">Ajouter</button>
-                </div>
-            </div>
-
-            <div class="mt-auto space-y-4">
+            <!-- الفوتر: السعر + الاقتراحات + الزر -->
+            <div class="mt-auto space-y-4 pt-4 border-t border-dark-800">
+                
+                <!-- السعر الإجمالي (نقل للأعلى) -->
                 <div class="flex justify-between items-center bg-dark-800 p-4 rounded-xl border border-dark-700 shadow-inner">
                     <span class="text-gray-400 font-bold">Total</span>
                     <span class="text-3xl font-black text-brand-500" id="final-price">0 د.ج</span>
                 </div>
 
+                <!-- قسم العروض الإضافية (Upsell) - أصبح هنا -->
+                <div id="upsell-section" class="flex flex-col gap-3 hidden">
+                    <!-- سيتم ملؤه بواسطة JS -->
+                </div>
+
+                <!-- زر الإرسال -->
                 <button onclick="sendToWhatsapp()" class="w-full bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#20bd5a] hover:to-[#0e7a6d] text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(37,211,102,0.3)] flex justify-center items-center gap-3 transition-transform active:scale-95 border-t border-white/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.463 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-                    <span>Commander (WhatsApp)</span>
+                    <span>أرسل الطلب</span>
                 </button>
             </div>
         </div>
@@ -218,7 +218,7 @@
         const products = [
             // --- Burger ---
             { id: 1, name: "Cheeseburger", price: 450, category: "burger", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400", desc: "Bœuf pur, cheddar, sauce spéciale" },
-            { id: 2, name: "Chicken Crispy", price: 500, category: "burger", img: "JPG 2.", desc: "Poulet croustillant, laitue, mayo" },
+            { id: 2, name: "Chicken Crispy", price: 500, category: "burger", img: "JPG 2", desc: "Poulet croustillant, laitue, mayo" },
             { id: 3, name: "Mushroom Swiss", price: 550, category: "burger", img: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=400", desc: "Bœuf, champignons frais, suisse" },
             { id: 4, name: "Double Cheese", price: 650, category: "burger", img: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400", desc: "Double bœuf, double fromage" },
             { id: 5, name: "Zinger Spicy", price: 550, category: "burger", img: "JPG 5", desc: "Poulet épicé, jalapeño" },
@@ -240,6 +240,9 @@
             { id: 16, name: "slim orange", price: 120, category: "drinks", sub_category: "soda", img: "JPG 16", desc: "33cl" },
             { id: 17, name: "slim citron", price: 120, category: "drinks", sub_category: "soda", img: "JPG 17", desc: "33cl" },
             { id: 18, name: "selecto", price: 120, category: "drinks", sub_category: "soda", img: "JPG 18", desc: "33cl" },
+            { id: 40, name: "Schweppes", price: 120, category: "drinks", sub_category: "soda", img: "JPG 40", desc: "33cl" },
+            { id: 41, name: "Mirinda", price: 120, category: "drinks", sub_category: "soda", img: "JPG 41", desc: "33cl" },
+            { id: 42, name: "7 Up", price: 120, category: "drinks", sub_category: "soda", img: "JPG 42", desc: "33cl" },
             
             { id: 19, name: "tazij", price: 60, category: "drinks", sub_category: "juice", img: "JPG 19", desc: "Jus d'orange" },
             { id: 20, name: "Ramy", price: 70, category: "drinks", sub_category: "juice", img: "JPG 20", desc: "Fraise" },
@@ -247,11 +250,12 @@
             { id: 22, name: "Ramy (1L)", price: 180, category: "drinks", sub_category: "juice", img: "JPG 22", desc: "Pêche avec pulpe" },
             { id: 23, name: "Rouiba (1L)", price: 140, category: "drinks", sub_category: "juice", img: "JPG 23", desc: "Citronnade" },
             { id: 24, name: "tazij (1L)", price: 150, category: "drinks", sub_category: "juice", img: "JPG 24", desc: "Mélange de fruits" },
+            { id: 24, name: "Slim (Orange)", price: 100, category: "drinks", sub_category: "juice", img: "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=400", desc: "Jus d'orange" },
             
             { id: 25, name: "Ifri (1L)", price: 50, category: "drinks", sub_category: "water", img: "JPG 25", desc: "0.5 L" },
             { id: 26, name: "Ifri (0,5L)", price: 80, category: "drinks", sub_category: "water", img: "JPG 26", desc: "1.5 L" },
 
-            // --- Sides (Only for Upsell now) ---
+            // --- Sides ---
             { id: 27, name: "Frites", price: 200, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1630384031162-91ad75aa397a?w=400", desc: "Croustillantes" },
             { id: 28, name: "Onion Rings", price: 300, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1639024471283-03518883512d?w=400", desc: "Rondelles d'oignon frites" },
             { id: 29, name: "Chicken Nuggets", price: 400, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1562967960-f55ca034330b?w=400", desc: "6 pièces croustillantes" },
@@ -260,25 +264,24 @@
 
         let cart = {};
 
-        // 2. دالة توليد بطاقة المنتج (العمودية الجديدة - مقسمة 3 أجزاء)
+        // 2. دالة توليد بطاقة المنتج
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             return `
             <div class="item-card bg-dark-900 rounded-2xl shadow-lg shadow-black/30 border border-dark-800 flex flex-col overflow-hidden reveal-on-scroll group hover:border-dark-700 h-full">
-                <!-- 1. القسم العلوي: صورة مربعة -->
+                <!-- 1. القسم العلوي -->
                 <div class="aspect-square w-full relative overflow-hidden">
                     <img src="${p.img}" class="w-full h-full object-cover brightness-90 group-hover:brightness-100 group-hover:scale-110 transition duration-500" alt="${p.name}">
-                    <!-- تدرج خفيف لجعل الصورة تندمج -->
                     <div class="absolute inset-0 bg-gradient-to-t from-dark-900/50 to-transparent opacity-40"></div>
                 </div>
                 
-                <!-- 2. القسم الأوسط: الاسم والمكونات (في الوسط) -->
+                <!-- 2. القسم الأوسط -->
                 <div class="p-3 text-center flex-1 flex flex-col justify-center border-t border-dark-800/50">
                     <h3 class="font-bold text-gray-100 text-sm mb-1 leading-tight tracking-wide">${p.name}</h3>
                     <p class="text-[10px] text-gray-400 line-clamp-2 leading-relaxed font-light">${p.desc}</p>
                 </div>
                 
-                <!-- 3. القسم السفلي: السعر والزر (في الوسط) -->
+                <!-- 3. القسم السفلي -->
                 <div class="p-3 pt-0 flex justify-center items-center gap-3">
                     <span class="font-black text-brand-500 text-base drop-shadow-sm">${p.price} <span class="text-[9px] font-normal text-gray-500">DA</span></span>
                     
@@ -334,6 +337,11 @@
             document.getElementById('grid-drinks-water').innerHTML = products
                 .filter(p => p.category === 'drinks' && p.sub_category === 'water')
                 .map(createProductCard).join('');
+
+            // Sides
+            document.getElementById('grid-sides').innerHTML = products
+                .filter(p => p.category === 'sides')
+                .map(createProductCard).join('');
         }
 
         // 4. تحديث السلة
@@ -368,15 +376,23 @@
             else cartBar.classList.add('translate-y-[150%]');
         }
 
-        // 5. المودال
+        // 5. المودال مع منطق Upsell الجديد
         function openCartModal() {
             const list = document.getElementById('cart-items-list');
             list.innerHTML = '';
-            let hasSides = false;
+            
+            // متغيرات لتتبع حالة السلة
+            let hasDrinks = false; // يشمل Sodas و Juice
+            let hasWater = false;
+            let hasFries = false;
+            
             if (Object.keys(cart).length === 0) return;
 
             Object.values(cart).forEach(item => {
-                if(item.category === 'sides') hasSides = true;
+                if (item.sub_category === 'soda' || item.sub_category === 'juice') hasDrinks = true;
+                if (item.sub_category === 'water') hasWater = true;
+                if (item.id === 27) hasFries = true; // 27 هو ID البطاطس
+
                 list.innerHTML += `
                     <div class="flex justify-between items-center text-sm border-b border-dark-800 pb-3 last:border-0 animate-slide-up-smooth">
                         <div class="flex items-center gap-3">
@@ -391,9 +407,95 @@
                 `;
             });
 
+            // بناء قسم Upsell ديناميكياً
             const upsellSection = document.getElementById('upsell-section');
-            if(!hasSides) upsellSection.classList.remove('hidden');
-            else upsellSection.classList.add('hidden');
+            let upsellHTML = '';
+            let showUpsell = false;
+
+            // 1. إذا لم يطلب مشروب (Sodas أو Juice) - اقتراح Slim Orange (ID 24)
+            if (!hasDrinks) {
+                const drink = products.find(p => p.id === 24); // Slim Orange
+                if (drink) {
+                    upsellHTML += `
+                        <div class="relative flex justify-between items-center bg-dark-800/50 p-2 rounded-lg border border-dark-700">
+                            <div class="flex items-center gap-3">
+                                <img src="${drink.img}" class="w-10 h-10 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/20">
+                                <div class="text-sm">
+                                    <p class="font-bold text-gray-100 flex items-center gap-1">${drink.name} <span class="text-[9px] bg-brand-500 text-dark-950 px-1 rounded">منعش!</span></p>
+                                    <p class="text-brand-500 font-bold text-xs">+${drink.price} د.ج</p>
+                                </div>
+                            </div>
+                            <button onclick="addUpsell(${drink.id})" class="bg-brand-500 text-dark-950 w-8 h-8 rounded-lg flex items-center justify-center font-bold hover:bg-brand-400 transition-all shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                    showUpsell = true;
+                }
+            }
+
+            // 2. إذا لم يطلب ماء - اقتراح Ifri Petit (ID 25)
+            if (!hasWater) {
+                const water = products.find(p => p.id === 25);
+                if (water) {
+                    upsellHTML += `
+                        <div class="relative flex justify-between items-center bg-dark-800/50 p-2 rounded-lg border border-dark-700 ${showUpsell ? 'mt-2' : ''}">
+                            <div class="flex items-center gap-3">
+                                <img src="${water.img}" class="w-10 h-10 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/20">
+                                <div class="text-sm">
+                                    <p class="font-bold text-gray-100">Eau Minérale</p>
+                                    <p class="text-brand-500 font-bold text-xs">+${water.price} د.ج</p>
+                                </div>
+                            </div>
+                            <button onclick="addUpsell(${water.id})" class="bg-brand-500 text-dark-950 w-8 h-8 rounded-lg flex items-center justify-center font-bold hover:bg-brand-400 transition-all shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                    showUpsell = true;
+                }
+            }
+
+            // 3. إذا لم يطلب بطاطس - اقتراح Frites (ID 27)
+            if (!hasFries) {
+                const fries = products.find(p => p.id === 27);
+                if (fries) {
+                    upsellHTML += `
+                        <div class="relative flex justify-between items-center bg-dark-800/50 p-2 rounded-lg border border-dark-700 ${showUpsell ? 'mt-2' : ''}">
+                            <div class="flex items-center gap-3">
+                                <img src="${fries.img}" class="w-10 h-10 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/20">
+                                <div class="text-sm">
+                                    <p class="font-bold text-gray-100">Frites ?</p>
+                                    <p class="text-brand-500 font-bold text-xs">+${fries.price} د.ج</p>
+                                </div>
+                            </div>
+                            <button onclick="addUpsell(${fries.id})" class="bg-brand-500 text-dark-950 w-8 h-8 rounded-lg flex items-center justify-center font-bold hover:bg-brand-400 transition-all shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                    showUpsell = true;
+                }
+            }
+
+            if (showUpsell) {
+                upsellSection.innerHTML = `
+                    <div class="absolute inset-0 bg-brand-500/5 animate-pulse pointer-events-none"></div>
+                    <p class="text-xs text-brand-500 font-bold mb-2 px-1">✨ ما رأيك في إضافة بعض الانتعاش؟</p>
+                    ${upsellHTML}
+                `;
+                upsellSection.classList.remove('hidden');
+                upsellSection.classList.add('flex', 'flex-col');
+            } else {
+                upsellSection.classList.add('hidden');
+                upsellSection.classList.remove('flex', 'flex-col');
+            }
 
             document.getElementById('cart-modal').classList.remove('hidden');
         }
@@ -411,13 +513,13 @@
             if(Object.keys(cart).length === 0) closeCartModal();
         }
 
-        function addUpsell() {
-            updateCart(27, 1);
-            openCartModal();
+        function addUpsell(id) {
+            updateCart(id, 1);
+            openCartModal(); // Refresh to hide the added upsell
         }
 
         function sendToWhatsapp() {
-            const phone = "213600000000";
+            const phone = "213665409702";
             const tableNumber = 5;
             let message = `Bonjour *PRESTIGE* 👋\nNouvelle commande (Table ${tableNumber}):\n\n`;
             Object.values(cart).forEach(item => {
@@ -450,7 +552,7 @@
             document.querySelectorAll('.reveal-on-scroll').forEach(el => revealObserver.observe(el));
 
             // Intersection Observer for ScrollSpy (LED Glow)
-            const sections = ['burger', 'pizza', 'drinks'];
+            const sections = ['burger', 'pizza', 'drinks', 'sides'];
             const navObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
