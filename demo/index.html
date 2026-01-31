@@ -531,7 +531,11 @@
         }
 
         const WEBHOOK_URL = "https://n8n.panel.vidsai.site/webhook/c25c8a4a-e633-4ae8-80f0-adece675548b"; 
-
+// دالة لجلب رقم الطاولة من الرابط
+        function getTableNumber() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('table') || '5';
+        }
         async function submitOrder() {
             if (Object.keys(cart).length === 0) return;
 
@@ -542,7 +546,7 @@
 
             const orderData = {
                 order_id: Math.floor(1000 + Math.random() * 9000), 
-                table: 5,
+                table: getTableNumber(),
                 total: document.getElementById('final-price').innerText,
                 items: Object.values(cart).map(item => ({
                     name: item.name,
