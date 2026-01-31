@@ -231,10 +231,8 @@
                 </div>
 
                 <!-- زر الإرسال -->
-<button onclick="submitOrder()" class="w-full bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#20bd5a] hover:to-[#0e7a6d] text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(37,211,102,0.3)] flex justify-center items-center gap-3 transition-transform active:scale-95 border-t border-white/20">
-    <span>تأكيد وإرسال الطلب</span>
-</button>
-                    <span>أرسل الطلب</span>
+                <button onclick="submitOrder()" class="w-full bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#20bd5a] hover:to-[#0e7a6d] text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(37,211,102,0.3)] flex justify-center items-center gap-3 transition-transform active:scale-95 border-t border-white/20">
+                    <span>تأكيد وإرسال الطلب</span>
                 </button>
             </div>
         </div>
@@ -245,7 +243,7 @@
         const products = [
             // --- Burger ---
             { id: 1, name: "Cheeseburger", price: 450, category: "burger", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400", desc: "Bœuf pur, cheddar, sauce spéciale" },
-            { id: 2, name: "Chicken Crispy", price: 500, category: "burger", img: "JPG 2,.jpg", desc: "Poulet croustillant, laitue, mayo" },
+            { id: 2, name: "Chicken Crispy", price: 500, category: "burger", img: "JPG 2", desc: "Poulet croustillant, laitue, mayo" },
             { id: 3, name: "Mushroom Swiss", price: 550, category: "burger", img: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=400", desc: "Bœuf, champignons frais, suisse" },
             { id: 4, name: "Double Cheese", price: 650, category: "burger", img: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400", desc: "Double bœuf, double fromage" },
             { id: 5, name: "Zinger Spicy", price: 550, category: "burger", img: "JPG 5", desc: "Poulet épicé, jalapeño" },
@@ -279,10 +277,10 @@
             { id: 26, name: "Ifri (0,5L)", price: 80, category: "drinks", sub_category: "water", img: "JPG 26", desc: "1.5 L" },
 
             // --- Sides ---
-            { id: 27, name: "Frites", price: 200, category: "sides", sub_category: "", img: "JPG 27", desc: "Croustillantes" },
-            { id: 28, name: "Mayonnaise", price: 0, category: "sides", sub_category: "", img: "JPG 28", desc: "Gratuit" },
-            { id: 29, name: "Harissa", price: 0, category: "sides", sub_category: "", img: "JPG 29", desc: "Gratuit" },
-            { id: 30, name: "Ketchup", price: 0, category: "sides", sub_category: "", img: "JPG 30", desc: "Gratuit" }
+            { id: 27, name: "Frites", price: 200, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1630384031162-91ad75aa397a?w=400", desc: "Croustillantes" },
+            { id: 31, name: "Mayonnaise", price: 0, category: "sides", sub_category: "", img: "JPG 31", desc: "Gratuit" },
+            { id: 32, name: "Harissa", price: 0, category: "sides", sub_category: "", img: "JPG 32", desc: "Gratuit" },
+            { id: 33, name: "Ketchup", price: 0, category: "sides", sub_category: "", img: "JPG 33", desc: "Gratuit" }
         ];
 
         let cart = {};
@@ -532,24 +530,19 @@
             openCartModal(); // Refresh to hide the added upsell
         }
 
-// 🛑 هام: ضع رابط الويب هوك الخاص بك هنا بين علامتي التنصيص
         const WEBHOOK_URL = "https://n8n.panel.vidsai.site/webhook/c25c8a4a-e633-4ae8-80f0-adece675548b"; 
 
-        // دالة إرسال الطلب (الحقيقية - مربوطة بالسيرفر)
         async function submitOrder() {
-            // 1. التحقق من أن السلة ليست فارغة
             if (Object.keys(cart).length === 0) return;
 
-            // 2. تغيير شكل الزر للتحميل
             const btn = document.querySelector('#cart-modal button:last-child');
             const originalText = btn.innerHTML;
             btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white ml-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> جارٍ الاتصال بالمطبخ...`;
             btn.disabled = true;
 
-            // 3. تجهيز بيانات الطلب لإرسالها
             const orderData = {
-                order_id: Math.floor(1000 + Math.random() * 9000), // رقم طلب مؤقت
-                table: 5, // رقم الطاولة
+                order_id: Math.floor(1000 + Math.random() * 9000), 
+                table: 5,
                 total: document.getElementById('final-price').innerText,
                 items: Object.values(cart).map(item => ({
                     name: item.name,
@@ -560,10 +553,6 @@
             };
 
             try {
-                // 4. عملية الإرسال الفعلي لـ n8n
-                // ملاحظة: إذا لم يكن لديك رابط حقيقي الآن، سيعطي خطأ. 
-                // جرب وضع رابط الويب هوك الخاص بك في الأعلى.
-                
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -571,15 +560,12 @@
                 });
 
                 if (response.ok) {
-                    // --- نجاح الإرسال ---
-                    document.getElementById('order-id-display').innerText = orderData.order_id;
                     closeCartModal();
                     
                     const successModal = document.getElementById('success-modal');
                     successModal.classList.remove('hidden');
                     successModal.classList.add('flex');
 
-                    // تنظيف
                     cart = {};
                     updateCartBar();
                 } else {
@@ -587,11 +573,9 @@
                 }
 
             } catch (error) {
-                // --- فشل الإرسال (مثلاً انترنت مقطوع أو الرابط خطأ) ---
                 console.error(error);
                 alert("عذراً، حدث خطأ في الاتصال بالمطبخ! يرجى المحاولة مرة أخرى.");
             } finally {
-                // إرجاع الزر لحالته الأصلية
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
@@ -659,10 +643,10 @@
             </svg>
         </div>
         <h2 class="text-3xl font-black text-white mb-2">تم استلام طلبك!</h2>
-        <p class="text-gray-400 mb-8 max-w-xs leading-relaxed">المطبخ يقوم بتحضير وجبتك الآن.<br>رقم طلبك هو <span class="text-brand-500 font-bold text-xl block mt-2">#<span id="order-id-display">000</span></span></p>
+        <p class="text-gray-400 mb-8 max-w-xs leading-relaxed">المطبخ يقوم بتحضير وجبتك الآن.</p>
         
         <button onclick="location.reload()" class="bg-dark-800 text-white px-8 py-4 rounded-xl font-bold border border-dark-700 hover:bg-dark-700 hover:border-brand-500/50 transition-all w-full max-w-xs shadow-lg">
-            طلب جديد
+            الرجوع لصفحة الرئيسية
         </button>
     </div>
 </body>
