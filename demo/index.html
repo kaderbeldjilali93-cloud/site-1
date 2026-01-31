@@ -619,6 +619,11 @@
                 });
 
                 if (response.ok) {
+                    // ✅✅✅ أضف كود الصوت هنا ✅✅✅
+                // استبدل الرابط أدناه برابط صوت النجاح الخاص بك من GitHub (Raw Link)
+                const successSound = new Audio('صوت شراء.mp3'); 
+                successSound.play().catch(e => console.log("الصوت يحتاج تفاعل"));
+                // ✅✅✅ نهاية الإضافة ✅✅✅
                     closeCartModal();
                     
                     const successModal = document.getElementById('success-modal');
