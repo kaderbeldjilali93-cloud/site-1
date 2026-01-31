@@ -12,7 +12,6 @@
         body { 
             font-family: 'Cairo', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
-            scroll-behavior: smooth;
         }
         
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -20,15 +19,15 @@
         
         /* Zoom In Animation */
         @keyframes zoomInSmooth {
-            0% { opacity: 0; transform: scale(0.8); }
+            0% { opacity: 0; transform: scale(0.95); }
             100% { opacity: 1; transform: scale(1); }
         }
-        .animate-zoom-in { animation: zoomInSmooth 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .animate-zoom-in { animation: zoomInSmooth 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        /* Slide Up Reveal Class */
+        /* Slide Up Reveal Class (للبطاقات) */
         .reveal-on-scroll {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(20px);
             transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -40,16 +39,17 @@
             border-color: rgba(212, 175, 55, 0.4);
         }
 
-        /* Active Tab LED Glow */
+        /* Active Tab Style */
         .nav-active {
             background-color: #D4AF37 !important;
             color: #09090b !important;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.6), inset 0 0 5px rgba(255, 255, 255, 0.2);
             border-color: #D4AF37 !important;
             transform: scale(1.05);
+            font-weight: 900 !important;
         }
 
-        .item-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .item-card { transition: transform 0.2s, box-shadow 0.3s, border-color 0.3s; }
         .item-card:active { transform: scale(0.97); }
         
         @keyframes pop {
@@ -138,7 +138,7 @@
             </h1>
         </div>
 
-        <!-- 2. إطار الترحيب والشرح (تم تعديل الملاحظة وإزالة الإطار) -->
+        <!-- 2. إطار الترحيب والشرح -->
         <div class="px-4 mb-6 animate-zoom-in delay-100">
             <div class="bg-dark-900 border border-brand-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden">
                 <div class="space-y-3">
@@ -146,52 +146,44 @@
                     <p class="text-white text-sm leading-relaxed">
                         اختر وجبتك 🛒، اضغط "تأكيد الطلب" ✅، وسيتم تحضيره فوراً.
                     </p>
-                    <!-- الملاحظة بدون إطار، كلمة ملاحظة بالأصفر، والجرس في الأخير -->
                     <div class="text-xs text-gray-300 font-medium pt-2 mt-2 border-t border-white/5">
-                        <span class="text-brand-500 font-bold text-sm">ملاحظة:</span> إذا احتجت مساعدة، اضغط زر <span class="text-brand-500 font-bold">إستدعي النادل</span> 🔔 وسنكون عندك.
+                        <span class="text-brand-500 font-bold text-sm">ملاحظة:</span> إذا احتجت مساعدة إضغط على الجرس 🔔 وسنكون عندك.
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 3. شريط التصنيفات (Sticky) -->
+        <!-- 3. شريط التصنيفات (Sticky) - العودة إلى النصوص -->
         <div class="sticky top-[60px] z-40 bg-dark-950/95 backdrop-blur-md border-b border-dark-800/50 py-3 mb-6 shadow-md transition-all">
             <div class="px-2 overflow-x-auto hide-scrollbar flex justify-center">
-                <div class="flex gap-2 min-w-max px-2">
-                    <a href="#section-burger" id="nav-burger" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Burger</a>
-                    <a href="#section-pizza" id="nav-pizza" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Pizza</a>
-                    <a href="#section-drinks" id="nav-drinks" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Boissons</a>
-                    <a href="#section-sides" id="nav-sides" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Suppléments</a>
+                <div class="flex gap-3 min-w-max px-2">
+                    <!-- تم إعادة النصوص للأزرار كما طلبت -->
+                    <button onclick="switchTab('burger')" id="btn-burger" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm whitespace-nowrap">Burger</button>
+                    <button onclick="switchTab('pizza')" id="btn-pizza" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm whitespace-nowrap">Pizza</button>
+                    <button onclick="switchTab('drinks')" id="btn-drinks" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm whitespace-nowrap">Boissons</button>
+                    <button onclick="switchTab('sides')" id="btn-sides" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm whitespace-nowrap">Suppléments</button>
                 </div>
             </div>
         </div>
 
-        <!-- 4. المنتجات -->
-        <div id="main-container" class="px-3 space-y-10 pb-8">
+        <!-- 4. المنتجات (نظام الصفحات) - تم حذف العناوين الكبيرة -->
+        <div id="main-container" class="px-3 space-y-4 pb-8 min-h-[500px]">
             
-            <!-- قسم البرغر -->
-            <section id="section-burger" class="scroll-mt-32">
-                <div class="text-center mb-4">
-                    <h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Burger</h2>
-                </div>
-                <!-- Grid Cols 2 -->
+            <!-- صفحة البرغر -->
+            <div id="view-burger" class="tab-content block animate-zoom-in">
+                <!-- تم حذف العنوان الكبير من هنا -->
                 <div class="grid grid-cols-2 gap-3" id="grid-burger"></div>
-            </section>
+            </div>
 
-            <!-- قسم البيتزا -->
-            <section id="section-pizza" class="scroll-mt-32">
-                <div class="text-center mb-4">
-                    <h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Pizza</h2>
-                </div>
+            <!-- صفحة البيتزا -->
+            <div id="view-pizza" class="tab-content hidden animate-zoom-in">
+                <!-- تم حذف العنوان الكبير من هنا -->
                 <div class="grid grid-cols-2 gap-3" id="grid-pizza"></div>
-            </section>
+            </div>
 
-            <!-- قسم المشروبات -->
-            <section id="section-drinks" class="scroll-mt-32">
-                <div class="text-center mb-4">
-                    <h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Boissons</h2>
-                </div>
-                
+            <!-- صفحة المشروبات -->
+            <div id="view-drinks" class="tab-content hidden animate-zoom-in">
+                <!-- تم حذف العنوان الكبير من هنا -->
                 <div class="space-y-6">
                     <div>
                         <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 opacity-80 text-center">Sodas</h3>
@@ -202,15 +194,13 @@
                         <div class="grid grid-cols-2 gap-3" id="grid-drinks-juice"></div>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <!-- قسم الجانبي -->
-            <section id="section-sides" class="scroll-mt-32">
-                <div class="text-center mb-4">
-                    <h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim transition-all duration-300">Suppléments</h2>
-                </div>
+            <!-- صفحة الجانبي -->
+            <div id="view-sides" class="tab-content hidden animate-zoom-in">
+                <!-- تم حذف العنوان الكبير من هنا -->
                 <div class="grid grid-cols-2 gap-3" id="grid-sides"></div>
-            </section>
+            </div>
         </div>
 
     </div>
@@ -385,6 +375,38 @@
             document.getElementById('grid-sides').innerHTML = products
                 .filter(p => p.category === 'sides')
                 .map(createProductCard).join('');
+        }
+
+        // --- Tab Switching Logic (Modified) ---
+        function switchTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('block');
+            });
+
+            // Show selected tab content
+            const selectedTab = document.getElementById('view-' + tabId);
+            if (selectedTab) {
+                selectedTab.classList.remove('hidden');
+                selectedTab.classList.add('block');
+            }
+
+            // Reset all nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('nav-active', 'text-dark-950');
+                btn.classList.add('bg-dark-900', 'text-gray-400', 'border-dark-800');
+            });
+
+            // Activate current nav button
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-dark-900', 'text-gray-400', 'border-dark-800');
+                activeBtn.classList.add('nav-active', 'text-dark-950');
+            }
+
+            // Scroll to top of container smoothly
+            document.getElementById('main-container').scrollIntoView({ behavior: 'smooth' });
         }
 
         // 4. تحديث السلة
@@ -614,11 +636,15 @@
             }
         }
 
-        // --- 6. ScrollSpy & Animations Logic ---
+        // --- 6. Tab Switching Logic (Modified) ---
 
         document.addEventListener('DOMContentLoaded', () => {
             renderAllSections();
+            
+            // Set initial active tab
+            switchTab('burger');
 
+            // Add reveal animation on scroll for items
             const revealObserver = new IntersectionObserver((entries) => {
                 entries.forEach((entry, index) => {
                     if (entry.isIntersecting) {
@@ -631,33 +657,6 @@
             }, { threshold: 0.1, rootMargin: '50px' });
 
             document.querySelectorAll('.reveal-on-scroll').forEach(el => revealObserver.observe(el));
-
-            const sections = ['burger', 'pizza', 'drinks', 'sides'];
-            const navObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const id = entry.target.id.replace('section-', '');
-                        document.querySelectorAll('.nav-btn').forEach(btn => {
-                            btn.classList.remove('nav-active');
-                            btn.classList.add('bg-dark-900', 'text-gray-400');
-                        });
-                        const activeBtn = document.getElementById(`nav-${id}`);
-                        if(activeBtn) {
-                            activeBtn.classList.remove('bg-dark-900', 'text-gray-400');
-                            activeBtn.classList.add('nav-active');
-                            activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                        }
-                    }
-                });
-            }, { threshold: 0.2, rootMargin: '-20% 0px -60% 0px' });
-
-            sections.forEach(sec => {
-                const el = document.getElementById(`section-${sec}`);
-                if(el) navObserver.observe(el);
-            });
-            
-            document.getElementById('nav-burger').classList.add('nav-active');
-            document.getElementById('nav-burger').classList.remove('bg-dark-900', 'text-gray-400');
         });
 
     </script>
