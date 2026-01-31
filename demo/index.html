@@ -97,7 +97,7 @@
                 <a href="#section-burger" id="nav-burger" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Burger</a>
                 <a href="#section-pizza" id="nav-pizza" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Pizza</a>
                 <a href="#section-drinks" id="nav-drinks" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Boissons</a>
-                <a href="#section-sides" id="nav-sides" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-5 py-2 rounded-xl text-sm font-bold shadow-sm">Suppléments</a>
+                <!-- تم حذف زر Suppléments -->
             </div>
         </div>
     </div>
@@ -151,15 +151,7 @@
             </div>
         </section>
 
-        <!-- قسم الجانبي -->
-        <section id="section-sides" class="scroll-mt-44">
-            <div class="flex items-center justify-center gap-3 mb-4 reveal-on-scroll">
-                <div class="h-[1px] w-8 bg-brand-500/50"></div>
-                <h2 class="text-xl font-black text-white uppercase tracking-wider">Suppléments</h2>
-                <div class="h-[1px] w-8 bg-brand-500/50"></div>
-            </div>
-            <div class="grid grid-cols-2 gap-3" id="grid-sides"></div>
-        </section>
+        <!-- تم حذف قسم الجانبي (Suppléments) -->
 
     </div>
 
@@ -244,7 +236,7 @@
             { id: 13, name: "Hamoud", price: 120, category: "drinks", sub_category: "soda", img: "JPG 13", desc: "33cl" },
             { id: 14, name: "Coca-Cola", price: 120, category: "drinks", sub_category: "soda", img: "JPG 14", desc: "33cl" },
             { id: 15, name: "Pepsi", price: 120, category: "drinks", sub_category: "soda", img: "JPG 15", desc: "33cl" },
-            // البطاقات الثلاث الجديدة:
+            
             { id: 16, name: "slim orange", price: 120, category: "drinks", sub_category: "soda", img: "JPG 16", desc: "33cl" },
             { id: 17, name: "slim citron", price: 120, category: "drinks", sub_category: "soda", img: "JPG 17", desc: "33cl" },
             { id: 18, name: "selecto", price: 120, category: "drinks", sub_category: "soda", img: "JPG 18", desc: "33cl" },
@@ -259,9 +251,8 @@
             { id: 25, name: "Ifri (1L)", price: 50, category: "drinks", sub_category: "water", img: "JPG 25", desc: "0.5 L" },
             { id: 26, name: "Ifri (0,5L)", price: 80, category: "drinks", sub_category: "water", img: "JPG 26", desc: "1.5 L" },
 
-            // --- Sides ---
+            // --- Sides (Only for Upsell now) ---
             { id: 27, name: "Frites", price: 200, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1630384031162-91ad75aa397a?w=400", desc: "Croustillantes" },
-            // الإضافات الثلاث الجديدة:
             { id: 28, name: "Onion Rings", price: 300, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1639024471283-03518883512d?w=400", desc: "Rondelles d'oignon frites" },
             { id: 29, name: "Chicken Nuggets", price: 400, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1562967960-f55ca034330b?w=400", desc: "6 pièces croustillantes" },
             { id: 30, name: "Mozza Sticks", price: 350, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1548340748-438075a1264c?w=400", desc: "Fromage fondant pané" }
@@ -343,11 +334,6 @@
             document.getElementById('grid-drinks-water').innerHTML = products
                 .filter(p => p.category === 'drinks' && p.sub_category === 'water')
                 .map(createProductCard).join('');
-
-            // Sides
-            document.getElementById('grid-sides').innerHTML = products
-                .filter(p => p.category === 'sides')
-                .map(createProductCard).join('');
         }
 
         // 4. تحديث السلة
@@ -426,7 +412,7 @@
         }
 
         function addUpsell() {
-            updateCart(99, 1);
+            updateCart(27, 1);
             openCartModal();
         }
 
@@ -464,7 +450,7 @@
             document.querySelectorAll('.reveal-on-scroll').forEach(el => revealObserver.observe(el));
 
             // Intersection Observer for ScrollSpy (LED Glow)
-            const sections = ['burger', 'pizza', 'drinks', 'sides'];
+            const sections = ['burger', 'pizza', 'drinks'];
             const navObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
