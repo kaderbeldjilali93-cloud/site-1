@@ -12,6 +12,7 @@
         body { 
             font-family: 'Cairo', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
+            scroll-behavior: smooth;
         }
         
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -24,7 +25,7 @@
         }
         .animate-zoom-in { animation: zoomInSmooth 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        /* Slide Up Reveal Class (للبطاقات) */
+        /* Slide Up Reveal Class */
         .reveal-on-scroll {
             opacity: 0;
             transform: translateY(20px);
@@ -90,6 +91,16 @@
         .welcome-title-anim {
             animation: welcomeGlow 4s infinite ease-in-out;
         }
+        
+        /* 3D Glassy Effect for cards */
+        .glass-3d {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
     </style>
     
     <script>
@@ -107,7 +118,7 @@
 </head>
 <body class="bg-dark-950 text-gray-100 pb-28 select-none">
 
-    <!-- 1. الرأس الثابت (اسم المطعم فقط) -->
+    <!-- 1. الرأس الثابت -->
     <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center justify-center shadow-lg">
         <div class="flex items-center gap-2 animate-zoom-in">
             <div class="relative leading-none flex items-center">
@@ -118,7 +129,7 @@
         </div>
     </div>
 
-    <!-- زر استدعاء النادل المعدل (في الأعلى يساراً) -->
+    <!-- زر استدعاء النادل -->
     <div class="fixed top-3 left-4 z-[60]">
         <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center w-10 h-10 bg-dark-900/90 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 group logo-glow">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
@@ -130,7 +141,7 @@
     <!-- حاوية المحتوى -->
     <div class="pt-[80px]">
 
-        <!-- عنوان ترحيبي كبير -->
+        <!-- عنوان ترحيبي -->
         <div class="text-center px-4 mb-4 mt-2 animate-zoom-in">
             <h1 class="text-3xl sm:text-4xl font-black text-white leading-tight welcome-title-anim">
                 مرحبا بك في مطعمنا<br>
@@ -139,7 +150,7 @@
         </div>
 
         <!-- 2. إطار الترحيب والشرح -->
-        <div class="px-4 mb-6 animate-zoom-in delay-100">
+        <div class="px-6 mb-6 animate-zoom-in" style="animation-delay: 0.1s;">
             <div class="bg-dark-900 border border-brand-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden">
                 <div class="space-y-3">
                     <h3 class="text-white font-bold text-lg border-b border-brand-500/20 pb-2 w-fit">طريقة الطلب</h3>
@@ -153,11 +164,10 @@
             </div>
         </div>
 
-        <!-- 3. شريط التصنيفات (Sticky) - العودة إلى النصوص -->
+        <!-- 3. شريط التصنيفات (Sticky) -->
         <div class="sticky top-[60px] z-40 bg-dark-950/95 backdrop-blur-md border-b border-dark-800/50 py-3 mb-6 shadow-md transition-all">
             <div class="px-2 overflow-x-auto hide-scrollbar flex justify-center">
                 <div class="flex gap-3 min-w-max px-2">
-                    <!-- تم إعادة النصوص للأزرار كما طلبت -->
                     <button onclick="switchTab('burger')" id="btn-burger" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm whitespace-nowrap">Burger</button>
                     <button onclick="switchTab('pizza')" id="btn-pizza" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm whitespace-nowrap">Pizza</button>
                     <button onclick="switchTab('drinks')" id="btn-drinks" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm whitespace-nowrap">Boissons</button>
@@ -166,24 +176,21 @@
             </div>
         </div>
 
-        <!-- 4. المنتجات (نظام الصفحات) - تم حذف العناوين الكبيرة -->
-        <div id="main-container" class="px-3 space-y-4 pb-8 min-h-[500px]">
+        <!-- 4. المنتجات -->
+        <div id="main-container" class="px-6 space-y-4 pb-8 min-h-[500px]">
             
             <!-- صفحة البرغر -->
             <div id="view-burger" class="tab-content block animate-zoom-in">
-                <!-- تم حذف العنوان الكبير من هنا -->
                 <div class="grid grid-cols-2 gap-3" id="grid-burger"></div>
             </div>
 
             <!-- صفحة البيتزا -->
             <div id="view-pizza" class="tab-content hidden animate-zoom-in">
-                <!-- تم حذف العنوان الكبير من هنا -->
                 <div class="grid grid-cols-2 gap-3" id="grid-pizza"></div>
             </div>
 
             <!-- صفحة المشروبات -->
             <div id="view-drinks" class="tab-content hidden animate-zoom-in">
-                <!-- تم حذف العنوان الكبير من هنا -->
                 <div class="space-y-6">
                     <div>
                         <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 opacity-80 text-center">Sodas</h3>
@@ -193,12 +200,15 @@
                         <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 opacity-80 text-center">Jus</h3>
                         <div class="grid grid-cols-2 gap-3" id="grid-drinks-juice"></div>
                     </div>
+                    <div>
+                        <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 opacity-80 text-center">Eaux</h3>
+                        <div class="grid grid-cols-2 gap-3" id="grid-drinks-water"></div>
+                    </div>
                 </div>
             </div>
 
             <!-- صفحة الجانبي -->
             <div id="view-sides" class="tab-content hidden animate-zoom-in">
-                <!-- تم حذف العنوان الكبير من هنا -->
                 <div class="grid grid-cols-2 gap-3" id="grid-sides"></div>
             </div>
         </div>
@@ -206,7 +216,7 @@
     </div>
 
     <!-- شريط السلة العائم -->
-    <div id="cart-bar" class="fixed bottom-6 left-4 right-4 bg-gradient-to-r from-brand-500 to-brand-600 text-dark-950 p-3 rounded-2xl shadow-[0_0_30px_rgba(212,175,55,0.3)] transform translate-y-[150%] transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) z-50 flex justify-between items-center cursor-pointer active:scale-95 border border-white/20" onclick="openCartModal()">
+    <div id="cart-bar" class="fixed bottom-6 left-4 right-4 bg-gradient-to-r from-brand-500 to-brand-600 text-dark-950 p-3 rounded-2xl shadow-[0_0_30px_rgba(212,175,55,0.3)] transform translate-y-[150%] transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) z-50 flex justify-between items-center cursor-pointer active:scale-95 border border-white/20 glass-3d" onclick="openCartModal()">
         <div class="flex items-center gap-3">
             <div class="bg-dark-950 text-brand-500 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shadow-inner border border-brand-600" id="total-count">0</div>
             <div class="flex flex-col leading-none">
@@ -222,32 +232,26 @@
 
     <!-- نافذة المودال -->
     <div id="cart-modal" class="fixed inset-0 bg-dark-950/90 z-[60] hidden backdrop-blur-md flex items-end sm:items-center justify-center transition-opacity duration-300">
-        <div class="bg-dark-900 border border-dark-700 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 relative animate-slide-up-smooth shadow-2xl h-[85vh] sm:h-auto flex flex-col">
+        <div class="bg-dark-900 border border-white/10 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 relative animate-slide-up-smooth shadow-2xl h-[85vh] sm:h-auto flex flex-col glass-3d">
             
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold text-white flex items-center gap-2">
                     <span class="text-brand-500">🛒</span> سلة المشتريات
                 </h2>
-                <button onclick="closeCartModal()" class="w-9 h-9 bg-dark-800 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-dark-700 transition border border-dark-700">✕</button>
+                <button onclick="closeCartModal()" class="w-9 h-9 bg-white/5 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition">✕</button>
             </div>
             
             <div id="cart-items-list" class="flex-1 overflow-y-auto mb-2 space-y-3 hide-scrollbar pr-1"></div>
 
-            <!-- الفوتر: السعر + الاقتراحات + الزر -->
-            <div class="mt-auto space-y-4 pt-4 border-t border-dark-800">
-                
-                <!-- السعر الإجمالي (نقل للأعلى) -->
-                <div class="flex justify-between items-center bg-dark-800 p-4 rounded-xl border border-dark-700 shadow-inner">
+            <!-- الفوتر -->
+            <div class="mt-auto space-y-4 pt-4 border-t border-white/10">
+                <div class="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5 shadow-inner">
                     <span class="text-gray-400 font-bold">Total</span>
                     <span class="text-3xl font-black text-brand-500" id="final-price">0 د.ج</span>
                 </div>
 
-                <!-- قسم العروض الإضافية (Upsell) -->
-                <div id="upsell-section" class="flex flex-col gap-3 hidden">
-                    <!-- سيتم ملؤه بواسطة JS -->
-                </div>
+                <div id="upsell-section" class="flex flex-col gap-3 hidden"></div>
 
-                <!-- زر الإرسال -->
                 <button onclick="submitOrder()" class="w-full bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#20bd5a] hover:to-[#0e7a6d] text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(37,211,102,0.3)] flex justify-center items-center gap-3 transition-transform active:scale-95 border-t border-white/20">
                     <span>تأكيد وإرسال الطلب</span>
                 </button>
@@ -256,14 +260,14 @@
     </div>
 
     <script>
-        // 1. البيانات
+        // 1. البيانات (تم تصحيحها وحذف العناصر غير المطلوبة)
         const products = [
             // --- Burger ---
             { id: 1, name: "Cheeseburger", price: 450, category: "burger", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400", desc: "Bœuf pur, cheddar, sauce spéciale" },
-            { id: 2, name: "Chicken Crispy", price: 500, category: "burger", img: "JPG 2,.jpg", desc: "Poulet croustillant, laitue, mayo" },
+            { id: 2, name: "Chicken Crispy", price: 500, category: "burger", img: "https://images.unsplash.com/photo-1615297928064-24977384d0f4?w=400", desc: "Poulet croustillant, laitue, mayo" },
             { id: 3, name: "Mushroom Swiss", price: 550, category: "burger", img: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=400", desc: "Bœuf, champignons frais, suisse" },
             { id: 4, name: "Double Cheese", price: 650, category: "burger", img: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400", desc: "Double bœuf, double fromage" },
-            { id: 5, name: "Zinger Spicy", price: 550, category: "burger", img: "JPG 5", desc: "Poulet épicé, jalapeño" },
+            { id: 5, name: "Zinger Spicy", price: 550, category: "burger", img: "https://images.unsplash.com/photo-1619250907482-13c9320e1718?w=400", desc: "Poulet épicé, jalapeño" },
             { id: 6, name: "BBQ Beef", price: 600, category: "burger", img: "https://images.unsplash.com/photo-1596662951482-0c4ba74a6df6?w=400", desc: "Bœuf, oignons croustillants, BBQ" },
 
             // --- Pizza ---
@@ -275,45 +279,50 @@
             { id: 12, name: "Thon", price: 750, category: "pizza", img: "https://images.unsplash.com/photo-1555072956-7758afb20e8f?w=400", desc: "Thon, oignons, olives" },
 
             // --- Drinks ---
-            { id: 13, name: "Hamoud", price: 120, category: "drinks", sub_category: "soda", img: "JPG 13", desc: "33cl" },
-            { id: 14, name: "Coca-Cola", price: 120, category: "drinks", sub_category: "soda", img: "JPG 14", desc: "33cl" },
-            { id: 15, name: "Pepsi", price: 120, category: "drinks", sub_category: "soda", img: "JPG 15", desc: "33cl" },
+            // Sodas
+            { id: 13, name: "Hamoud", price: 120, category: "drinks", sub_category: "soda", img: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400", desc: "33cl" },
+            { id: 14, name: "Coca-Cola", price: 120, category: "drinks", sub_category: "soda", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400", desc: "33cl" },
+            { id: 15, name: "Pepsi", price: 120, category: "drinks", sub_category: "soda", img: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400", desc: "33cl" },
+            { id: 16, name: "Slim Orange", price: 120, category: "drinks", sub_category: "soda", img: "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=400", desc: "33cl" },
+            { id: 17, name: "Slim Citron", price: 120, category: "drinks", sub_category: "soda", img: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400", desc: "33cl" },
+            { id: 18, name: "Selecto", price: 120, category: "drinks", sub_category: "soda", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400", desc: "33cl" },
             
-            { id: 16, name: "slim orange", price: 120, category: "drinks", sub_category: "soda", img: "JPG 16", desc: "33cl" },
-            { id: 17, name: "slim citron", price: 120, category: "drinks", sub_category: "soda", img: "JPG 17", desc: "33cl" },
-            { id: 18, name: "selecto", price: 120, category: "drinks", sub_category: "soda", img: "JPG 18", desc: "33cl" },
+            // Jus
+            { id: 19, name: "Tazij", price: 60, category: "drinks", sub_category: "juice", img: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=400", desc: "Jus d'orange" },
+            { id: 20, name: "Ramy", price: 70, category: "drinks", sub_category: "juice", img: "https://images.unsplash.com/photo-1589733955941-5eeaf752f6dd?w=400", desc: "Fraise" },
+            { id: 21, name: "Rouiba", price: 60, category: "drinks", sub_category: "juice", img: "https://images.unsplash.com/photo-1623594611593-7901763c3e21?w=400", desc: "Mangue" },
+            { id: 22, name: "Ramy (1L)", price: 180, category: "drinks", sub_category: "juice", img: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400", desc: "Pêche avec pulpe" },
+            { id: 23, name: "Rouiba (1L)", price: 140, category: "drinks", sub_category: "juice", img: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400", desc: "Citronnade" },
+            { id: 24, name: "Tazij (1L)", price: 150, category: "drinks", sub_category: "juice", img: "https://images.unsplash.com/photo-1546171753-97d7676e4602?w=400", desc: "Mélange de fruits" },
             
-            { id: 19, name: "tazij", price: 60, category: "drinks", sub_category: "juice", img: "JPG 19", desc: "Jus d'orange" },
-            { id: 20, name: "Ramy", price: 70, category: "drinks", sub_category: "juice", img: "JPG 20", desc: "Fraise" },
-            { id: 21, name: "Rouiba", price: 60, category: "drinks", sub_category: "juice", img: "JPG 21", desc: "Mangue" },
-            { id: 22, name: "Ramy (1L)", price: 180, category: "drinks", sub_category: "juice", img: "JPG 22", desc: "Pêche avec pulpe" },
-            { id: 23, name: "Rouiba (1L)", price: 140, category: "drinks", sub_category: "juice", img: "JPG 23", desc: "Citronnade" },
-            { id: 24, name: "tazij (1L)", price: 150, category: "drinks", sub_category: "juice", img: "JPG 24", desc: "Mélange de fruits" },
-            
+            // Water
+            { id: 25, name: "Ifri (Petit)", price: 50, category: "drinks", sub_category: "water", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400", desc: "0.5 L" },
+            { id: 26, name: "Ifri (Grand)", price: 80, category: "drinks", sub_category: "water", img: "https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400", desc: "1.5 L" },
+
             // --- Sides ---
             { id: 27, name: "Frites", price: 200, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1630384031162-91ad75aa397a?w=400", desc: "Croustillantes" },
-            { id: 31, name: "Mayonnaise", price: 0, category: "sides", sub_category: "", img: "JPG 31", desc: "Gratuit" },
-            { id: 32, name: "Harissa", price: 0, category: "sides", sub_category: "", img: "JPG 32", desc: "Gratuit" },
-            { id: 33, name: "Ketchup", price: 0, category: "sides", sub_category: "", img: "JPG 33", desc: "Gratuit" }
+            { id: 31, name: "Mayonnaise", price: 0, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1585250493864-162e87361c47?w=400", desc: "Gratuit" },
+            { id: 32, name: "Harissa", price: 0, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1621532087596-3c0f4f910403?w=400", desc: "Gratuit" },
+            { id: 33, name: "Ketchup", price: 0, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1584841793758-c2b64d7dfc88?w=400", desc: "Gratuit" }
         ];
 
         let cart = {};
 
-        // 2. دالة توليد بطاقة المنتج
+        // 2. دالة توليد بطاقة المنتج (3D Glassy)
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             const priceDisplay = p.price === 0 ? "Gratuit" : `${p.price} <span class="text-[9px] font-normal text-gray-500">DA</span>`;
             
             return `
-            <div class="item-card bg-dark-900 rounded-2xl shadow-lg shadow-black/30 border border-dark-800 flex flex-col overflow-hidden reveal-on-scroll group hover:border-dark-700 h-full">
+            <div class="glass-3d rounded-2xl overflow-hidden reveal-on-scroll h-full flex flex-col">
                 <!-- 1. القسم العلوي -->
                 <div class="aspect-square w-full relative overflow-hidden">
-                    <img src="${p.img}" class="w-full h-full object-cover brightness-90 group-hover:brightness-100 group-hover:scale-110 transition duration-500" alt="${p.name}">
-                    <div class="absolute inset-0 bg-gradient-to-t from-dark-900/50 to-transparent opacity-40"></div>
+                    <img src="${p.img}" class="w-full h-full object-cover brightness-90 hover:brightness-110 hover:scale-105 transition duration-500" alt="${p.name}">
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-60"></div>
                 </div>
                 
                 <!-- 2. القسم الأوسط -->
-                <div class="p-3 text-center flex-1 flex flex-col justify-center border-t border-dark-800/50">
+                <div class="p-3 text-center flex-1 flex flex-col justify-center border-t border-white/5">
                     <h3 class="font-bold text-gray-100 text-sm mb-1 leading-tight tracking-wide">${p.name}</h3>
                     <p class="text-[10px] text-gray-400 line-clamp-2 leading-relaxed font-light">${p.desc}</p>
                 </div>
@@ -333,15 +342,15 @@
         function generateControlsHTML(id, qty) {
             if (qty > 0) {
                 return `
-                <div class="flex items-center bg-dark-800 rounded-lg p-0.5 gap-1 border border-dark-700 h-full animate-zoom-in">
-                    <button onclick="updateCart(${id}, -1)" class="w-7 h-full bg-dark-700 rounded-md text-gray-300 font-bold flex items-center justify-center hover:bg-red-900/30 hover:text-red-400 border border-dark-600 transition text-xs">-</button>
+                <div class="flex items-center bg-white/5 rounded-lg p-0.5 gap-1 border border-white/10 h-full animate-zoom-in backdrop-blur-sm">
+                    <button onclick="updateCart(${id}, -1)" class="w-7 h-full bg-white/5 rounded-md text-gray-300 font-bold flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 border border-white/5 transition text-xs">-</button>
                     <span class="font-bold text-sm w-5 text-center text-white">${qty}</span>
                     <button onclick="updateCart(${id}, 1)" class="w-7 h-full bg-brand-500 rounded-md text-dark-950 font-bold flex items-center justify-center hover:bg-brand-600 active:scale-95 transition-transform text-xs">+</button>
                 </div>
                 `;
             } else {
                 return `
-                <button onclick="updateCart(${id}, 1)" class="w-8 h-8 bg-dark-800 border border-dark-700 text-brand-500 rounded-lg shadow-sm font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition-all active:scale-90 group-hover:bg-dark-700">
+                <button onclick="updateCart(${id}, 1)" class="w-8 h-8 bg-white/5 border border-white/10 text-brand-500 rounded-lg shadow-sm font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition-all active:scale-90 backdrop-blur-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                     </svg>
@@ -371,41 +380,40 @@
                 .filter(p => p.category === 'drinks' && p.sub_category === 'juice')
                 .map(createProductCard).join('');
 
+            document.getElementById('grid-drinks-water').innerHTML = products
+                .filter(p => p.category === 'drinks' && p.sub_category === 'water')
+                .map(createProductCard).join('');
+
             // Sides
             document.getElementById('grid-sides').innerHTML = products
                 .filter(p => p.category === 'sides')
                 .map(createProductCard).join('');
         }
 
-        // --- Tab Switching Logic (Modified) ---
+        // --- Tab Switching Logic ---
         function switchTab(tabId) {
-            // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(el => {
                 el.classList.add('hidden');
                 el.classList.remove('block');
             });
 
-            // Show selected tab content
             const selectedTab = document.getElementById('view-' + tabId);
             if (selectedTab) {
                 selectedTab.classList.remove('hidden');
                 selectedTab.classList.add('block');
             }
 
-            // Reset all nav buttons
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('nav-active', 'text-dark-950');
-                btn.classList.add('bg-dark-900', 'text-gray-400', 'border-dark-800');
+                btn.classList.add('bg-dark-900/50', 'text-gray-400', 'border-white/5');
             });
 
-            // Activate current nav button
             const activeBtn = document.getElementById('btn-' + tabId);
             if (activeBtn) {
-                activeBtn.classList.remove('bg-dark-900', 'text-gray-400', 'border-dark-800');
+                activeBtn.classList.remove('bg-dark-900/50', 'text-gray-400', 'border-white/5');
                 activeBtn.classList.add('nav-active', 'text-dark-950');
             }
 
-            // Scroll to top of container smoothly
             document.getElementById('main-container').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -441,7 +449,7 @@
             else cartBar.classList.add('translate-y-[150%]');
         }
 
-        // 5. المودال مع منطق Upsell الجديد
+        // 5. المودال مع منطق Upsell
         function openCartModal() {
             const list = document.getElementById('cart-items-list');
             list.innerHTML = '';
@@ -456,14 +464,14 @@
                 if (item.id === 27) hasFries = true; 
 
                 list.innerHTML += `
-                    <div class="flex justify-between items-center text-sm border-b border-dark-800 pb-3 last:border-0 animate-slide-up-smooth">
+                    <div class="flex justify-between items-center text-sm border-b border-white/10 pb-3 last:border-0 animate-slide-up-smooth">
                         <div class="flex items-center gap-3">
-                            <span class="bg-dark-800 text-brand-500 px-2.5 py-1 rounded text-xs font-bold border border-dark-700">x${item.qty}</span>
+                            <span class="bg-white/10 text-brand-500 px-2.5 py-1 rounded text-xs font-bold border border-white/10">x${item.qty}</span>
                             <span class="font-medium text-gray-200">${item.name}</span>
                         </div>
                         <div class="flex items-center gap-3">
-                             <span class="font-bold text-brand-500">${item.price * item.qty}</span>
-                             <button onclick="removeFromCart(${item.id})" class="text-red-400 text-xs px-2 py-1 bg-red-900/10 rounded hover:bg-red-900/30 transition">✕</button>
+                             <span class="font-bold text-brand-500">${item.price === 0 ? 'Gratuit' : item.price * item.qty}</span>
+                             <button onclick="removeFromCart(${item.id})" class="text-red-400 text-xs px-2 py-1 bg-red-500/10 rounded hover:bg-red-500/30 transition">✕</button>
                         </div>
                     </div>
                 `;
@@ -477,7 +485,7 @@
                 const drink = products.find(p => p.id === 13);
                 if (drink) {
                     upsellHTML += `
-                        <div class="relative flex justify-between items-center bg-dark-800/50 p-2 rounded-lg border border-dark-700">
+                        <div class="relative flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10">
                             <div class="flex items-center gap-3">
                                 <img src="${drink.img}" class="w-10 h-10 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/20">
                                 <div class="text-sm">
@@ -496,7 +504,7 @@
                 const fries = products.find(p => p.id === 27);
                 if (fries) {
                     upsellHTML += `
-                        <div class="relative flex justify-between items-center bg-dark-800/50 p-2 rounded-lg border border-dark-700 ${showUpsell ? 'mt-2' : ''}">
+                        <div class="relative flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10 ${showUpsell ? 'mt-2' : ''}">
                             <div class="flex items-center gap-3">
                                 <img src="${fries.img}" class="w-10 h-10 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/20">
                                 <div class="text-sm">
@@ -551,10 +559,6 @@
         }
 
         async function callWaiter() {
-            // ✅✅ أضف هذين السطرين هنا مباشرة ✅✅
-    const bellSound = new Audio('الجرس.mp3'); 
-    bellSound.play().catch(e => console.log("الصوت يحتاج تفاعل"));
-    // ✅✅ نهاية الإضافة ✅✅
             const btn = document.getElementById('waiter-btn');
             const originalContent = btn.innerHTML;
             
@@ -563,7 +567,6 @@
 
             try {
                 const tableNum = getTableNumber();
-                
                 const WH_URL = "https://n8n.panel.vidsai.site/webhook/146e5a16-fe2c-4d4e-8284-4f6900a40931"; 
 
                 await fetch(WH_URL, { 
@@ -619,11 +622,6 @@
                 });
 
                 if (response.ok) {
-                    // ✅✅✅ أضف كود الصوت هنا ✅✅✅
-                // استبدل الرابط أدناه برابط صوت النجاح الخاص بك من GitHub (Raw Link)
-                const successSound = new Audio('صوت شراء.mp3'); 
-                successSound.play().catch(e => console.log("الصوت يحتاج تفاعل"));
-                // ✅✅✅ نهاية الإضافة ✅✅✅
                     closeCartModal();
                     
                     const successModal = document.getElementById('success-modal');
@@ -645,15 +643,10 @@
             }
         }
 
-        // --- 6. Tab Switching Logic (Modified) ---
-
         document.addEventListener('DOMContentLoaded', () => {
             renderAllSections();
-            
-            // Set initial active tab
             switchTab('burger');
 
-            // Add reveal animation on scroll for items
             const revealObserver = new IntersectionObserver((entries) => {
                 entries.forEach((entry, index) => {
                     if (entry.isIntersecting) {
