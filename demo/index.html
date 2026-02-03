@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>قائمة الطعام | PRESTIGE</title>
+    <title>قائمة الطعام | مطعم الفخامة</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -20,15 +20,15 @@
         
         /* Zoom In Animation */
         @keyframes zoomInSmooth {
-            0% { opacity: 0; transform: scale(0.8); }
+            0% { opacity: 0; transform: scale(0.95); }
             100% { opacity: 1; transform: scale(1); }
         }
-        .animate-zoom-in { animation: zoomInSmooth 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .animate-zoom-in { animation: zoomInSmooth 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        /* Slide Up Reveal Class */
+        /* Slide Up Reveal Class (للبطاقات) */
         .reveal-on-scroll {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(20px);
             transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -40,16 +40,17 @@
             border-color: rgba(212, 175, 55, 0.4);
         }
 
-        /* Active Tab LED Glow */
+        /* Active Tab Style */
         .nav-active {
             background-color: #D4AF37 !important;
             color: #09090b !important;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.6), inset 0 0 5px rgba(255, 255, 255, 0.2);
             border-color: #D4AF37 !important;
             transform: scale(1.05);
+            font-weight: 900 !important;
         }
 
-        .item-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .item-card { transition: transform 0.2s, box-shadow 0.3s, border-color 0.3s; }
         .item-card:active { transform: scale(0.97); }
         
         @keyframes pop {
@@ -72,18 +73,17 @@
         }
         .logo-glow { animation: logoPulse 3s infinite; }
 
-        /* تأثير توهج العناوين الجديد */
+        /* تأثير توهج العناوين */
         @keyframes titleGlow {
-            0%, 100% { text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); color: #ffffff; transform: scale(1); }
-            50% { text-shadow: 0 0 25px rgba(212, 175, 55, 0.8), 0 0 10px rgba(255, 255, 255, 0.4); color: #D4AF37; transform: scale(1.05); }
+            0%, 100% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.1); color: #ffffff; transform: scale(1); }
+            50% { text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); color: #D4AF37; transform: scale(1.02); }
         }
         
-        /* يتم تفعيل الأنيميشن عندما يصبح العنصر مرئياً */
-        .reveal-visible .glow-text-anim {
-            animation: titleGlow 2s infinite ease-in-out;
+        .glow-text-anim {
+            animation: titleGlow 3s infinite ease-in-out;
         }
 
-         /* تم تخفيف توهج العنوان الرئيسي */
+        /* تم تخفيف توهج العنوان الرئيسي */
         @keyframes welcomeGlow {
             0%, 100% { text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
             50% { text-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
@@ -108,7 +108,7 @@
 </head>
 <body class="bg-dark-950 text-gray-100 pb-28 select-none">
 
-    <!-- 1. الرأس الثابت (اسم المطعم فقط - مصغر للتنقل) -->
+    <!-- 1. الرأس الثابت (اسم المطعم فقط) -->
     <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center justify-center shadow-lg">
         <div class="flex items-center gap-2 animate-zoom-in">
             <div class="relative leading-none flex items-center">
@@ -139,8 +139,8 @@
             </h1>
         </div>
 
-        <!-- 2. إطار الترحيب والشرح (مصغر جداً) - تم تحديث النصوص -->
-        <div class="px-4 mb-6 animate-zoom-in delay-100">
+        <!-- 2. إطار الترحيب والشرح -->
+        <div class="px-6 mb-6 animate-zoom-in" style="animation-delay: 0.1s;">
             <div class="bg-dark-900 border border-brand-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden">
                 <div class="space-y-3">
                     <h3 class="text-white font-bold text-lg border-b border-brand-500/20 pb-2 w-fit">طريقة الطلب</h3>
@@ -172,19 +172,16 @@
             
             <!-- صفحة البرغر -->
             <div id="view-burger" class="tab-content block animate-zoom-in">
-                <!-- تم حذف العنوان الكبير من هنا -->
                 <div class="grid grid-cols-2 gap-3" id="grid-burger"></div>
             </div>
 
             <!-- صفحة البيتزا -->
             <div id="view-pizza" class="tab-content hidden animate-zoom-in">
-                <!-- تم حذف العنوان الكبير من هنا -->
                 <div class="grid grid-cols-2 gap-3" id="grid-pizza"></div>
             </div>
 
             <!-- صفحة المشروبات -->
             <div id="view-drinks" class="tab-content hidden animate-zoom-in">
-                <!-- تم حذف العنوان الكبير من هنا -->
                 <div class="space-y-6">
                     <div>
                         <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 opacity-80 text-center">Sodas</h3>
@@ -203,7 +200,6 @@
 
             <!-- صفحة الجانبي -->
             <div id="view-sides" class="tab-content hidden animate-zoom-in">
-                <!-- تم حذف العنوان الكبير من هنا -->
                 <div class="grid grid-cols-2 gap-3" id="grid-sides"></div>
             </div>
         </div>
@@ -284,17 +280,20 @@
             { id: 14, name: "Coca-Cola", price: 120, category: "drinks", sub_category: "soda", img: "JPG 14", desc: "33cl" },
             { id: 15, name: "Pepsi", price: 120, category: "drinks", sub_category: "soda", img: "JPG 15", desc: "33cl" },
             
-            // تم حذف (Slim Orange, Slim Citron, Selecto, Schweppes, Mirinda, 7up)
-
-            { id: 19, name: "tazij", price: 60, category: "drinks", sub_category: "juice", img: "JPG 19", desc: "Jus d'orange" },
+            { id: 16, name: "Slim Orange", price: 120, category: "drinks", sub_category: "soda", img: "JPG 16", desc: "33cl" },
+            { id: 17, name: "Slim Citron", price: 120, category: "drinks", sub_category: "soda", img: "JPG 17", desc: "33cl" },
+            { id: 43, name: "Slim Ananas", price: 120, category: "drinks", sub_category: "soda", img: "JPG 43", desc: "33cl" },
+            { id: 18, name: "Selecto", price: 120, category: "drinks", sub_category: "soda", img: "JPG 18", desc: "33cl" },
+            
+            { id: 19, name: "Tazij", price: 60, category: "drinks", sub_category: "juice", img: "JPG 19", desc: "Jus d'orange" },
             { id: 20, name: "Ramy", price: 70, category: "drinks", sub_category: "juice", img: "JPG 20", desc: "Fraise" },
             { id: 21, name: "Rouiba", price: 60, category: "drinks", sub_category: "juice", img: "JPG 21", desc: "Mangue" },
             { id: 22, name: "Ramy (1L)", price: 180, category: "drinks", sub_category: "juice", img: "JPG 22", desc: "Pêche avec pulpe" },
             { id: 23, name: "Rouiba (1L)", price: 140, category: "drinks", sub_category: "juice", img: "JPG 23", desc: "Citronnade" },
-            { id: 24, name: "tazij (1L)", price: 150, category: "drinks", sub_category: "juice", img: "JPG 24", desc: "Mélange de fruits" },
+            { id: 24, name: "Tazij (1L)", price: 150, category: "drinks", sub_category: "juice", img: "JPG 24", desc: "Mélange de fruits" },
             
-            { id: 25, name: "Ifri (1L)", price: 50, category: "drinks", sub_category: "water", img: "JPG 25", desc: "0.5 L" },
-            { id: 26, name: "Ifri (0,5L)", price: 80, category: "drinks", sub_category: "water", img: "JPG 26", desc: "1.5 L" },
+            { id: 25, name: "Ifri (Petit)", price: 50, category: "drinks", sub_category: "water", img: "JPG 25", desc: "0.5 L" },
+            { id: 26, name: "Ifri (Grand)", price: 80, category: "drinks", sub_category: "water", img: "JPG 26", desc: "1.5 L" },
 
             // --- Sides ---
             { id: 27, name: "Frites", price: 200, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1630384031162-91ad75aa397a?w=400", desc: "Croustillantes" },
@@ -308,7 +307,6 @@
         // 2. دالة توليد بطاقة المنتج
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
-            // التحقق من السعر المجاني
             const priceDisplay = p.price === 0 ? "Gratuit" : `${p.price} <span class="text-[9px] font-normal text-gray-500">DA</span>`;
             
             return `
