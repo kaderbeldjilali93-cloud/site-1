@@ -25,7 +25,7 @@
         }
         .animate-zoom-in { animation: zoomInSmooth 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        /* Slide Up Reveal Class (للبطاقات) */
+        /* Slide Up Reveal Class */
         .reveal-on-scroll {
             opacity: 0;
             transform: translateY(20px);
@@ -40,12 +40,23 @@
             border-color: rgba(212, 175, 55, 0.4);
         }
 
-        /* Active Tab Style */
+        /* تنسيق أزرار التصنيفات (3D Glassy Glowing - Small) */
+        .nav-btn {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            color: #9ca3af;
+            transition: all 0.3s ease;
+        }
+
         .nav-active {
-            background-color: #D4AF37 !important;
-            color: #09090b !important;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.6), inset 0 0 5px rgba(255, 255, 255, 0.2);
-            border-color: #D4AF37 !important;
+            background: linear-gradient(135deg, #D4AF37 0%, #B5952F 100%) !important;
+            color: #09090b !important; 
+            box-shadow: 
+                0 0 10px rgba(212, 175, 55, 0.5), 
+                inset 0 0 5px rgba(255, 255, 255, 0.3) !important;
+            border-color: rgba(255, 255, 255, 0.5) !important;
             transform: scale(1.05);
             font-weight: 900 !important;
         }
@@ -91,6 +102,16 @@
         .welcome-title-anim {
             animation: welcomeGlow 4s infinite ease-in-out;
         }
+
+        /* 3D Glassy Effect */
+        .glass-3d {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
     </style>
     
     <script>
@@ -108,21 +129,22 @@
 </head>
 <body class="bg-dark-950 text-gray-100 pb-28 select-none">
 
-    <!-- 1. الرأس الثابت (اسم المطعم فقط) -->
-    <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center justify-center shadow-lg">
+    <!-- 1. الرأس الثابت -->
+    <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center justify-start px-4 shadow-lg">
         <div class="flex items-center gap-2 animate-zoom-in">
             <div class="relative leading-none flex items-center">
-                <span class="text-2xl font-black tracking-tighter text-white font-sans drop-shadow-lg">
+                <span class="text-xl font-black tracking-tighter text-white font-sans drop-shadow-lg">
                     مطعم <span class="text-brand-500">الفخامة</span>
                 </span>
             </div>
         </div>
     </div>
 
-    <!-- زر استدعاء النادل المعدل (في الأعلى يساراً) -->
+    <!-- زر استدعاء النادل -->
     <div class="fixed top-3 left-4 z-[60]">
-        <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center w-10 h-10 bg-dark-900/90 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 group logo-glow">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
+        <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center gap-2 px-3 py-1.5 bg-dark-900/90 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] active:scale-95 transition-all duration-300 group logo-glow">
+            <span class="font-bold text-xs">إستدعي النادل</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2C10.3431 2 9 3.34315 9 5V6.05202C6.73318 6.92484 5.2323 9.27891 5.62024 11.9939L6.19169 15.9939C6.26252 16.4897 6.03759 16.9855 5.61746 17.2656L4.2886 18.1515C3.76672 18.4994 3.86433 19.324 4.45331 19.5298C6.91896 20.3916 9.53917 20.7302 12 20.7302C14.4608 20.7302 17.081 20.3916 19.5467 19.5298C20.1357 19.324 20.2333 18.4994 19.7114 18.1515L18.3825 17.2656C17.9624 16.9855 17.7375 16.4897 17.8083 15.9939L18.3798 11.9939C18.7677 9.27891 17.2668 6.92484 15 6.05202V5C15 3.34315 13.6569 2 12 2ZM14 22C14 23.1046 13.1046 24 12 24C10.8954 24 10 23.1046 10 22H14Z"></path>
             </svg>
         </button>
@@ -133,41 +155,41 @@
 
         <!-- عنوان ترحيبي كبير -->
         <div class="text-center px-4 mb-4 mt-2 animate-zoom-in">
-            <h1 class="text-3xl sm:text-4xl font-black text-white leading-tight welcome-title-anim">
-                مرحبا بك في مطعمنا<br>
-                <span class="text-brand-500 text-4xl sm:text-5xl">الفخامة</span>
+            <h1 class="text-2xl sm:text-3xl font-black text-white leading-tight welcome-title-anim whitespace-nowrap">
+                مرحبا بيك في مطعمك
             </h1>
         </div>
 
-        <!-- 2. إطار الترحيب والشرح -->
+        <!-- 2. إطار الترحيب والشرح (3D Glass) -->
         <div class="px-6 mb-6 animate-zoom-in" style="animation-delay: 0.1s;">
-            <div class="bg-dark-900 border border-brand-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden">
-                <div class="space-y-3">
-                    <h3 class="text-white font-bold text-lg border-b border-brand-500/20 pb-2 w-fit">طريقة الطلب</h3>
-                    <p class="text-white text-sm leading-relaxed">
+            <div class="glass-3d rounded-2xl p-5 relative overflow-hidden">
+                <div class="space-y-3 relative z-10">
+                    <h3 class="text-white font-bold text-lg border-b border-white/10 pb-2 w-fit">طريقة الطلب</h3>
+                    <p class="text-gray-200 text-sm leading-relaxed">
                         اختر وجبتك 🛒، اضغط "تأكيد الطلب" ✅، وسيتم تحضيره فوراً.
                     </p>
-                    <div class="text-xs text-gray-300 font-medium pt-2 mt-2 border-t border-white/5">
+                    <div class="text-xs text-gray-300 font-medium pt-2 mt-2 border-t border-white/10">
                         <span class="text-brand-500 font-bold text-sm">ملاحظة:</span> إذا احتجت مساعدة إضغط على الجرس 🔔 وسنكون عندك.
                     </div>
                 </div>
+                <!-- لمعان خفيف في الخلفية -->
+                <div class="absolute -top-10 -right-10 w-24 h-24 bg-white/5 rounded-full blur-xl pointer-events-none"></div>
             </div>
         </div>
 
-        <!-- 3. شريط التصنيفات (Sticky) - العودة إلى النصوص -->
+        <!-- 3. شريط التصنيفات (Sticky) -->
         <div class="sticky top-[60px] z-40 bg-dark-950/95 backdrop-blur-md border-b border-dark-800/50 py-3 mb-6 shadow-md transition-all">
             <div class="px-2 overflow-x-auto hide-scrollbar flex justify-center">
-                <div class="flex gap-3 min-w-max px-2">
-                    <!-- تم إعادة النصوص للأزرار كما طلبت -->
-                    <button onclick="switchTab('burger')" id="btn-burger" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm whitespace-nowrap">Burger</button>
-                    <button onclick="switchTab('pizza')" id="btn-pizza" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm whitespace-nowrap">Pizza</button>
-                    <button onclick="switchTab('drinks')" id="btn-drinks" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm whitespace-nowrap">Boissons</button>
-                    <button onclick="switchTab('sides')" id="btn-sides" class="nav-btn transition-all duration-300 bg-dark-900 text-gray-400 border border-dark-800 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm whitespace-nowrap">Suppléments</button>
+                <div class="flex gap-2 min-w-max px-2">
+                    <button onclick="switchTab('burger')" id="btn-burger" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap">Burger</button>
+                    <button onclick="switchTab('pizza')" id="btn-pizza" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap">Pizza</button>
+                    <button onclick="switchTab('drinks')" id="btn-drinks" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap">Boissons</button>
+                    <button onclick="switchTab('sides')" id="btn-sides" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap">Suppléments</button>
                 </div>
             </div>
         </div>
 
-        <!-- 4. المنتجات (نظام الصفحات) - تم حذف العناوين الكبيرة -->
+        <!-- 4. المنتجات -->
         <div id="main-container" class="px-3 space-y-4 pb-8 min-h-[500px]">
             
             <!-- صفحة البرغر -->
@@ -207,7 +229,7 @@
     </div>
 
     <!-- شريط السلة العائم -->
-    <div id="cart-bar" class="fixed bottom-6 left-4 right-4 bg-gradient-to-r from-brand-500 to-brand-600 text-dark-950 p-3 rounded-2xl shadow-[0_0_30px_rgba(212,175,55,0.3)] transform translate-y-[150%] transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) z-50 flex justify-between items-center cursor-pointer active:scale-95 border border-white/20" onclick="openCartModal()">
+    <div id="cart-bar" class="fixed bottom-6 left-4 right-4 bg-gradient-to-r from-brand-500 to-brand-600 text-dark-950 p-3 rounded-2xl shadow-[0_0_30px_rgba(212,175,55,0.3)] transform translate-y-[150%] transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) z-50 flex justify-between items-center cursor-pointer active:scale-95 border border-white/20 glass-3d" onclick="openCartModal()">
         <div class="flex items-center gap-3">
             <div class="bg-dark-950 text-brand-500 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shadow-inner border border-brand-600" id="total-count">0</div>
             <div class="flex flex-col leading-none">
@@ -223,32 +245,26 @@
 
     <!-- نافذة المودال -->
     <div id="cart-modal" class="fixed inset-0 bg-dark-950/90 z-[60] hidden backdrop-blur-md flex items-end sm:items-center justify-center transition-opacity duration-300">
-        <div class="bg-dark-900 border border-dark-700 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 relative animate-slide-up-smooth shadow-2xl h-[85vh] sm:h-auto flex flex-col">
+        <div class="bg-dark-900 border border-white/10 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 relative animate-slide-up-smooth shadow-2xl h-[85vh] sm:h-auto flex flex-col glass-3d">
             
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold text-white flex items-center gap-2">
                     <span class="text-brand-500">🛒</span> سلة المشتريات
                 </h2>
-                <button onclick="closeCartModal()" class="w-9 h-9 bg-dark-800 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-dark-700 transition border border-dark-700">✕</button>
+                <button onclick="closeCartModal()" class="w-9 h-9 bg-white/5 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition">✕</button>
             </div>
             
             <div id="cart-items-list" class="flex-1 overflow-y-auto mb-2 space-y-3 hide-scrollbar pr-1"></div>
 
-            <!-- الفوتر: السعر + الاقتراحات + الزر -->
-            <div class="mt-auto space-y-4 pt-4 border-t border-dark-800">
-                
-                <!-- السعر الإجمالي (نقل للأعلى) -->
-                <div class="flex justify-between items-center bg-dark-800 p-4 rounded-xl border border-dark-700 shadow-inner">
+            <!-- الفوتر -->
+            <div class="mt-auto space-y-4 pt-4 border-t border-white/10">
+                <div class="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5 shadow-inner">
                     <span class="text-gray-400 font-bold">Total</span>
                     <span class="text-3xl font-black text-brand-500" id="final-price">0 د.ج</span>
                 </div>
 
-                <!-- قسم العروض الإضافية (Upsell) -->
-                <div id="upsell-section" class="flex flex-col gap-3 hidden">
-                    <!-- سيتم ملؤه بواسطة JS -->
-                </div>
+                <div id="upsell-section" class="flex flex-col gap-3 hidden"></div>
 
-                <!-- زر الإرسال -->
                 <button onclick="submitOrder()" class="w-full bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#20bd5a] hover:to-[#0e7a6d] text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(37,211,102,0.3)] flex justify-center items-center gap-3 transition-transform active:scale-95 border-t border-white/20">
                     <span>تأكيد وإرسال الطلب</span>
                 </button>
@@ -261,28 +277,26 @@
         const products = [
             // --- Burger ---
             { id: 1, name: "Cheeseburger", price: 450, category: "burger", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400", desc: "Bœuf pur, cheddar, sauce spéciale" },
-            { id: 2, name: "Chicken Crispy", price: 500, category: "burger", img: "JPG 2.", desc: "Poulet croustillant, laitue, mayo" },
-            { id: 3, name: "Mushroom Swiss", price: 550, category: "burger", img: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=400", desc: "Bœuf, champignons frais, suisse" },
-            { id: 4, name: "Double Cheese", price: 650, category: "burger", img: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400", desc: "Double bœuf, double fromage" },
+            { id: 2, name: "Chicken Crispy", price: 500, category: "burger", img: "JPG 2", desc: "Poulet croustillant, laitue, mayo" },
+            { id: 3, name: "Mushroom Swiss", price: 550, category: "burger", img: "JPG 3", desc: "Bœuf, champignons frais, suisse" },
+            { id: 4, name: "Double Cheese", price: 650, category: "burger", img: "JPG 4", desc: "Double bœuf, double fromage" },
             { id: 5, name: "Zinger Spicy", price: 550, category: "burger", img: "JPG 5", desc: "Poulet épicé, jalapeño" },
-            { id: 6, name: "BBQ Beef", price: 600, category: "burger", img: "https://images.unsplash.com/photo-1596662951482-0c4ba74a6df6?w=400", desc: "Bœuf, oignons croustillants, BBQ" },
+            { id: 6, name: "BBQ Beef", price: 600, category: "burger", img: "JPG 6", desc: "Bœuf, oignons croustillants, BBQ" },
 
             // --- Pizza ---
-            { id: 7, name: "Margherita", price: 600, category: "pizza", img: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400", desc: "Sauce tomate, mozzarella, basilic" },
-            { id: 8, name: "Pepperoni", price: 750, category: "pizza", img: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400", desc: "Pepperoni, mozzarella, origan" },
-            { id: 9, name: "4 Saisons", price: 800, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400", desc: "Mozzarella, champignons, olives" },
-            { id: 10, name: "Végétarienne", price: 650, category: "pizza", img: "https://images.unsplash.com/photo-1595708684082-a173bb3a06c5?w=400", desc: "Légumes frais, mozzarella" },
-            { id: 11, name: "Poulet BBQ", price: 850, category: "pizza", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400", desc: "Poulet, sauce BBQ, oignons" },
-            { id: 12, name: "Thon", price: 750, category: "pizza", img: "https://images.unsplash.com/photo-1555072956-7758afb20e8f?w=400", desc: "Thon, oignons, olives" },
+            { id: 7, name: "Margherita", price: 600, category: "pizza", img: "JPG 7", desc: "Sauce tomate, mozzarella, basilic" },
+            { id: 8, name: "Pepperoni", price: 750, category: "pizza", img: "JPG 8", desc: "Pepperoni, mozzarella, origan" },
+            { id: 9, name: "4 Saisons", price: 800, category: "pizza", img: "JPG 9", desc: "Mozzarella, champignons, olives" },
+            { id: 10, name: "Végétarienne", price: 650, category: "pizza", img: "JPG 10", desc: "Légumes frais, mozzarella" },
+            { id: 11, name: "Poulet BBQ", price: 850, category: "pizza", img: "JPG 11", desc: "Poulet, sauce BBQ, oignons" },
+            { id: 12, name: "Thon", price: 750, category: "pizza", img: "JPG 12", desc: "Thon, oignons, olives" },
 
             // --- Drinks ---
             { id: 13, name: "Hamoud", price: 120, category: "drinks", sub_category: "soda", img: "JPG 13", desc: "33cl" },
             { id: 14, name: "Coca-Cola", price: 120, category: "drinks", sub_category: "soda", img: "JPG 14", desc: "33cl" },
             { id: 15, name: "Pepsi", price: 120, category: "drinks", sub_category: "soda", img: "JPG 15", desc: "33cl" },
-            
             { id: 16, name: "Slim Orange", price: 120, category: "drinks", sub_category: "soda", img: "JPG 16", desc: "33cl" },
             { id: 17, name: "Slim Citron", price: 120, category: "drinks", sub_category: "soda", img: "JPG 17", desc: "33cl" },
-            { id: 43, name: "Slim Ananas", price: 120, category: "drinks", sub_category: "soda", img: "JPG 43", desc: "33cl" },
             { id: 18, name: "Selecto", price: 120, category: "drinks", sub_category: "soda", img: "JPG 18", desc: "33cl" },
             
             { id: 19, name: "Tazij", price: 60, category: "drinks", sub_category: "juice", img: "JPG 19", desc: "Jus d'orange" },
@@ -297,28 +311,28 @@
 
             // --- Sides ---
             { id: 27, name: "Frites", price: 200, category: "sides", sub_category: "", img: "JPG 27", desc: "Croustillantes" },
-            { id: 28, name: "Mayonnaise", price: 0, category: "sides", sub_category: "", img: "JPG 28", desc: "Gratuit" },
-            { id: 29, name: "Harissa", price: 0, category: "sides", sub_category: "", img: "JPG 29", desc: "Gratuit" },
-            { id: 30, name: "Ketchup", price: 0, category: "sides", sub_category: "", img: "JPG 30", desc: "Gratuit" }
+            { id: 31, name: "Mayonnaise", price: 0, category: "sides", sub_category: "", img: "JPG 31", desc: "Gratuit" },
+            { id: 32, name: "Harissa", price: 0, category: "sides", sub_category: "", img: "JPG 32", desc: "Gratuit" },
+            { id: 33, name: "Ketchup", price: 0, category: "sides", sub_category: "", img: "JPG 33", desc: "Gratuit" }
         ];
 
         let cart = {};
 
-        // 2. دالة توليد بطاقة المنتج
+        // 2. دالة توليد بطاقة المنتج (3D Glassy)
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             const priceDisplay = p.price === 0 ? "Gratuit" : `${p.price} <span class="text-[9px] font-normal text-gray-500">DA</span>`;
             
             return `
-            <div class="item-card bg-dark-900 rounded-2xl shadow-lg shadow-black/30 border border-dark-800 flex flex-col overflow-hidden reveal-on-scroll group hover:border-dark-700 h-full">
+            <div class="glass-3d rounded-2xl overflow-hidden reveal-on-scroll h-full flex flex-col">
                 <!-- 1. القسم العلوي -->
-                <div class="aspect-square w-full relative overflow-hidden">
-                    <img src="${p.img}" class="w-full h-full object-cover brightness-90 group-hover:brightness-100 group-hover:scale-110 transition duration-500" alt="${p.name}">
-                    <div class="absolute inset-0 bg-gradient-to-t from-dark-900/50 to-transparent opacity-40"></div>
+                <div class="aspect-square w-full relative overflow-hidden bg-gray-800">
+                    <img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 hover:brightness-110 hover:scale-105 transition duration-500" alt="${p.name}">
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-60"></div>
                 </div>
                 
                 <!-- 2. القسم الأوسط -->
-                <div class="p-3 text-center flex-1 flex flex-col justify-center border-t border-dark-800/50">
+                <div class="p-3 text-center flex-1 flex flex-col justify-center border-t border-white/5">
                     <h3 class="font-bold text-gray-100 text-sm mb-1 leading-tight tracking-wide">${p.name}</h3>
                     <p class="text-[10px] text-gray-400 line-clamp-2 leading-relaxed font-light">${p.desc}</p>
                 </div>
@@ -338,15 +352,15 @@
         function generateControlsHTML(id, qty) {
             if (qty > 0) {
                 return `
-                <div class="flex items-center bg-dark-800 rounded-lg p-0.5 gap-1 border border-dark-700 h-full animate-zoom-in">
-                    <button onclick="updateCart(${id}, -1)" class="w-7 h-full bg-dark-700 rounded-md text-gray-300 font-bold flex items-center justify-center hover:bg-red-900/30 hover:text-red-400 border border-dark-600 transition text-xs">-</button>
+                <div class="flex items-center bg-white/5 rounded-lg p-0.5 gap-1 border border-white/10 h-full animate-zoom-in backdrop-blur-sm">
+                    <button onclick="updateCart(${id}, -1)" class="w-7 h-full bg-white/5 rounded-md text-gray-300 font-bold flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 border border-white/5 transition text-xs">-</button>
                     <span class="font-bold text-sm w-5 text-center text-white">${qty}</span>
                     <button onclick="updateCart(${id}, 1)" class="w-7 h-full bg-brand-500 rounded-md text-dark-950 font-bold flex items-center justify-center hover:bg-brand-600 active:scale-95 transition-transform text-xs">+</button>
                 </div>
                 `;
             } else {
                 return `
-                <button onclick="updateCart(${id}, 1)" class="w-8 h-8 bg-dark-800 border border-dark-700 text-brand-500 rounded-lg shadow-sm font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition-all active:scale-90 group-hover:bg-dark-700">
+                <button onclick="updateCart(${id}, 1)" class="w-8 h-8 bg-white/5 border border-white/10 text-brand-500 rounded-lg shadow-sm font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition-all active:scale-90 backdrop-blur-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                     </svg>
@@ -401,12 +415,12 @@
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('nav-active', 'text-dark-950');
-                btn.classList.add('bg-dark-900', 'text-gray-400', 'border-dark-800');
+                btn.classList.add('bg-dark-900/50', 'text-gray-400', 'border-white/5');
             });
 
             const activeBtn = document.getElementById('btn-' + tabId);
             if (activeBtn) {
-                activeBtn.classList.remove('bg-dark-900', 'text-gray-400', 'border-dark-800');
+                activeBtn.classList.remove('bg-dark-900/50', 'text-gray-400', 'border-white/5');
                 activeBtn.classList.add('nav-active', 'text-dark-950');
             }
 
@@ -445,7 +459,7 @@
             else cartBar.classList.add('translate-y-[150%]');
         }
 
-        // 5. المودال مع منطق Upsell الجديد
+        // 5. المودال مع منطق Upsell
         function openCartModal() {
             const list = document.getElementById('cart-items-list');
             list.innerHTML = '';
@@ -460,14 +474,14 @@
                 if (item.id === 27) hasFries = true; 
 
                 list.innerHTML += `
-                    <div class="flex justify-between items-center text-sm border-b border-dark-800 pb-3 last:border-0 animate-slide-up-smooth">
+                    <div class="flex justify-between items-center text-sm border-b border-white/10 pb-3 last:border-0 animate-slide-up-smooth">
                         <div class="flex items-center gap-3">
-                            <span class="bg-dark-800 text-brand-500 px-2.5 py-1 rounded text-xs font-bold border border-dark-700">x${item.qty}</span>
+                            <span class="bg-white/10 text-brand-500 px-2.5 py-1 rounded text-xs font-bold border border-white/10">x${item.qty}</span>
                             <span class="font-medium text-gray-200">${item.name}</span>
                         </div>
                         <div class="flex items-center gap-3">
                              <span class="font-bold text-brand-500">${item.price === 0 ? 'Gratuit' : item.price * item.qty}</span>
-                             <button onclick="removeFromCart(${item.id})" class="text-red-400 text-xs px-2 py-1 bg-red-900/10 rounded hover:bg-red-900/30 transition">✕</button>
+                             <button onclick="removeFromCart(${item.id})" class="text-red-400 text-xs px-2 py-1 bg-red-500/10 rounded hover:bg-red-500/30 transition">✕</button>
                         </div>
                     </div>
                 `;
@@ -481,7 +495,7 @@
                 const drink = products.find(p => p.id === 13);
                 if (drink) {
                     upsellHTML += `
-                        <div class="relative flex justify-between items-center bg-dark-800/50 p-2 rounded-lg border border-dark-700">
+                        <div class="relative flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10">
                             <div class="flex items-center gap-3">
                                 <img src="${drink.img}" class="w-10 h-10 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/20">
                                 <div class="text-sm">
@@ -500,9 +514,9 @@
                 const fries = products.find(p => p.id === 27);
                 if (fries) {
                     upsellHTML += `
-                        <div class="relative flex justify-between items-center bg-dark-800/50 p-2 rounded-lg border border-dark-700 ${showUpsell ? 'mt-2' : ''}">
+                        <div class="relative flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10 ${showUpsell ? 'mt-2' : ''}">
                             <div class="flex items-center gap-3">
-                                <img src="${fries.img}" class="w-10 h-10 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/20">
+                                <img src="${fries.img}" class="w-10 h-10 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/20" onerror="this.src='https://placehold.co/100x100?text=Fries'">
                                 <div class="text-sm">
                                     <p class="font-bold text-gray-100">Frites ?</p>
                                     <p class="text-brand-500 font-bold text-xs">+${fries.price} د.ج</p>
@@ -559,7 +573,7 @@
             const originalContent = btn.innerHTML;
             
             // تشغيل صوت الجرس
-            const bellSound = new Audio('صوت إستدعاء النادل'); 
+            const bellSound = new Audio('الجرس.mp3'); 
             bellSound.play().catch(e => console.log("الصوت يحتاج تفاعل"));
 
             btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
@@ -623,7 +637,7 @@
 
                 if (response.ok) {
                     // تشغيل صوت الشراء عند النجاح
-                    const successSound = new Audio('إتمام الشراء.mp4'); 
+                    const successSound = new Audio('صوت شراء.mp3'); 
                     successSound.play().catch(e => console.log("الصوت يحتاج تفاعل"));
 
                     closeCartModal();
@@ -682,8 +696,9 @@
     
     <!-- زر استدعاء النادل المعدل -->
     <div class="fixed top-3 left-4 z-[60]">
-        <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center w-10 h-10 bg-dark-900/90 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 group logo-glow">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
+        <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center gap-2 px-3 py-1.5 bg-dark-900/90 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] active:scale-95 transition-all duration-300 group logo-glow">
+            <span class="font-bold text-xs">إستدعي النادل</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2C10.3431 2 9 3.34315 9 5V6.05202C6.73318 6.92484 5.2323 9.27891 5.62024 11.9939L6.19169 15.9939C6.26252 16.4897 6.03759 16.9855 5.61746 17.2656L4.2886 18.1515C3.76672 18.4994 3.86433 19.324 4.45331 19.5298C6.91896 20.3916 9.53917 20.7302 12 20.7302C14.4608 20.7302 17.081 20.3916 19.5467 19.5298C20.1357 19.324 20.2333 18.4994 19.7114 18.1515L18.3825 17.2656C17.9624 16.9855 17.7375 16.4897 17.8083 15.9939L18.3798 11.9939C18.7677 9.27891 17.2668 6.92484 15 6.05202V5C15 3.34315 13.6569 2 12 2ZM14 22C14 23.1046 13.1046 24 12 24C10.8954 24 10 23.1046 10 22H14Z"></path>
             </svg>
         </button>
