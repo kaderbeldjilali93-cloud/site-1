@@ -9,10 +9,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     
     <style>
+        html {
+            scroll-behavior: smooth;
+        }
         body { 
             font-family: 'Cairo', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
-            scroll-behavior: smooth;
         }
         
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -33,12 +35,11 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
-        /* إزالة الحواف الصفراء من البطاقات */
         .reveal-visible {
             opacity: 1;
             transform: translateY(0);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.15), inset 0 0 20px rgba(212, 175, 55, 0.05);
+            border-color: rgba(212, 175, 55, 0.4);
         }
 
         /* تنسيق أزرار التصنيفات */
@@ -48,7 +49,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             color: #9ca3af;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .nav-active {
@@ -113,10 +114,6 @@
             border-left: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
         }
-        
-        html {
-            scroll-padding-top: 140px; 
-        }
     </style>
     
     <script>
@@ -135,10 +132,10 @@
 <body class="bg-dark-950 text-gray-100 pb-28 select-none">
 
     <!-- 1. الرأس الثابت -->
-    <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center justify-center shadow-lg">
+    <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center justify-start px-4 shadow-lg">
         <div class="flex items-center gap-2 animate-zoom-in">
             <div class="relative leading-none flex items-center">
-                <span class="text-2xl font-black tracking-tighter text-white font-sans drop-shadow-lg">
+                <span class="text-xl font-black tracking-tighter text-white font-sans drop-shadow-lg">
                     مطعم <span class="text-brand-500">الفخامة</span>
                 </span>
             </div>
@@ -158,23 +155,21 @@
     <!-- حاوية المحتوى -->
     <div class="pt-[80px]">
 
-        <!-- عنوان ترحيبي كبير -->
+        <!-- عنوان ترحيبي -->
         <div class="text-center px-4 mb-4 mt-2 animate-zoom-in">
-            <h1 class="text-2xl sm:text-3xl font-black text-white leading-tight welcome-title-anim whitespace-nowrap">
-                مرحبا بيك في مطعمك
+            <h1 class="text-3xl sm:text-4xl font-black text-white leading-tight welcome-title-anim whitespace-nowrap">
+                مرحبا بيك في مطعمك<br>
             </h1>
         </div>
 
-        <!-- 2. إطار الترحيب والشرح (تم حذف الإطار الأصفر) -->
+        <!-- 2. إطار الترحيب والشرح -->
         <div class="px-6 mb-6 animate-zoom-in" style="animation-delay: 0.1s;">
             <div class="bg-dark-900 border border-white/10 rounded-2xl p-5 shadow-lg relative overflow-hidden">
-                <div class="space-y-3 text-center">
+                <div class="space-y-3 text-center relative z-10">
                     <h3 class="text-white font-bold text-lg w-fit mx-auto">طريقة الطلب</h3>
                     
-                    <p class="text-white text-sm leading-relaxed flex items-center justify-center gap-2">
-                        اختر وجبتك 
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white inline-block" viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>، 
-                        اضغط "تأكيد الطلب" ✅، وسيتم تحضيره فوراً.
+                    <p class="text-white text-sm leading-relaxed flex items-center justify-center gap-2 whitespace-nowrap overflow-x-auto hide-scrollbar">
+                        اختر وجبتك <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white inline-block mb-1" viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>، اضغط "تأكيد الطلب" ✅، وسيتم تحضيره فوراً.
                     </p>
                     
                     <div class="text-xs text-gray-300 font-medium pt-2 mt-2">
@@ -190,15 +185,15 @@
         <div class="sticky top-[60px] z-40 bg-dark-950/95 backdrop-blur-md border-b border-dark-800/50 py-3 mb-6 shadow-md transition-all">
             <div class="px-2 overflow-x-auto hide-scrollbar flex justify-center">
                 <div class="flex gap-2 min-w-max px-2">
-                    <a href="#section-burger" id="nav-burger" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block">Burger</a>
-                    <a href="#section-pizza" id="nav-pizza" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block">Pizza</a>
-                    <a href="#section-drinks" id="nav-drinks" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block">Boissons</a>
-                    <a href="#section-sides" id="nav-sides" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block">Suppléments</a>
+                    <button onclick="scrollToSection('burger')" id="btn-burger" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block">Burger</button>
+                    <button onclick="scrollToSection('pizza')" id="btn-pizza" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block">Pizza</button>
+                    <button onclick="scrollToSection('drinks')" id="btn-drinks" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block">Boissons</button>
+                    <button onclick="scrollToSection('sides')" id="btn-sides" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block">Suppléments</button>
                 </div>
             </div>
         </div>
 
-        <!-- 4. المنتجات (كلها تحت بعض) -->
+        <!-- 4. المنتجات (عرض في صفحة واحدة) -->
         <div id="main-container" class="px-3 space-y-12 pb-8 min-h-[500px]">
             
             <!-- قسم البرغر -->
@@ -291,23 +286,23 @@
     </div>
 
     <script>
-        // 1. البيانات (تم استرجاع الروابط الأصلية وحذف Slim Ananas و Eaux)
+        // 1. البيانات
         const products = [
             // --- Burger ---
-            { id: 1, name: "Cheeseburger", price: 450, category: "burger", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400", desc: "Bœuf pur, cheddar, sauce spéciale" },
+            { id: 1, name: "Cheeseburger", price: 450, category: "burger", img: "JPG 1", desc: "Bœuf pur, cheddar, sauce spéciale" },
             { id: 2, name: "Chicken Crispy", price: 500, category: "burger", img: "JPG 2", desc: "Poulet croustillant, laitue, mayo" },
-            { id: 3, name: "Mushroom Swiss", price: 550, category: "burger", img: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=400", desc: "Bœuf, champignons frais, suisse" },
-            { id: 4, name: "Double Cheese", price: 650, category: "burger", img: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400", desc: "Double bœuf, double fromage" },
+            { id: 3, name: "Mushroom Swiss", price: 550, category: "burger", img: "JPG 3", desc: "Bœuf, champignons frais, suisse" },
+            { id: 4, name: "Double Cheese", price: 650, category: "burger", img: "JPG 4", desc: "Double bœuf, double fromage" },
             { id: 5, name: "Zinger Spicy", price: 550, category: "burger", img: "JPG 5", desc: "Poulet épicé, jalapeño" },
-            { id: 6, name: "BBQ Beef", price: 600, category: "burger", img: "https://images.unsplash.com/photo-1596662951482-0c4ba74a6df6?w=400", desc: "Bœuf, oignons croustillants, BBQ" },
+            { id: 6, name: "BBQ Beef", price: 600, category: "burger", img: "JPG 6", desc: "Bœuf, oignons croustillants, BBQ" },
 
             // --- Pizza ---
-            { id: 7, name: "Margherita", price: 600, category: "pizza", img: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400", desc: "Sauce tomate, mozzarella, basilic" },
-            { id: 8, name: "Pepperoni", price: 750, category: "pizza", img: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400", desc: "Pepperoni, mozzarella, origan" },
-            { id: 9, name: "4 Saisons", price: 800, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400", desc: "Mozzarella, champignons, olives" },
-            { id: 10, name: "Végétarienne", price: 650, category: "pizza", img: "https://images.unsplash.com/photo-1595708684082-a173bb3a06c5?w=400", desc: "Légumes frais, mozzarella" },
-            { id: 11, name: "Poulet BBQ", price: 850, category: "pizza", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400", desc: "Poulet, sauce BBQ, oignons" },
-            { id: 12, name: "Thon", price: 750, category: "pizza", img: "https://images.unsplash.com/photo-1555072956-7758afb20e8f?w=400", desc: "Thon, oignons, olives" },
+            { id: 7, name: "Margherita", price: 600, category: "pizza", img: "JPG 7", desc: "Sauce tomate, mozzarella, basilic" },
+            { id: 8, name: "Pepperoni", price: 750, category: "pizza", img: "JPG 8", desc: "Pepperoni, mozzarella, origan" },
+            { id: 9, name: "4 Saisons", price: 800, category: "pizza", img: "JPG 9", desc: "Mozzarella, champignons, olives" },
+            { id: 10, name: "Végétarienne", price: 650, category: "pizza", img: "JPG 10", desc: "Légumes frais, mozzarella" },
+            { id: 11, name: "Poulet BBQ", price: 850, category: "pizza", img: "JPG 11", desc: "Poulet, sauce BBQ, oignons" },
+            { id: 12, name: "Thon", price: 750, category: "pizza", img: "JPG 12", desc: "Thon, oignons, olives" },
 
             // --- Drinks ---
             { id: 13, name: "Hamoud", price: 120, category: "drinks", sub_category: "soda", img: "JPG 13", desc: "33cl" },
@@ -409,6 +404,22 @@
             document.getElementById('grid-sides').innerHTML = products
                 .filter(p => p.category === 'sides')
                 .map(createProductCard).join('');
+        }
+
+        // --- Scroll To Section Logic ---
+        function scrollToSection(sectionId) {
+            const element = document.getElementById('section-' + sectionId);
+            if (element) {
+                // حساب المسافة بدقة مع التعويض عن الهيدر الثابت
+                const headerOffset = 140;
+                const elementPosition = element.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: "smooth"
+                });
+            }
         }
 
         // 4. تحديث السلة
@@ -647,36 +658,40 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             renderAllSections();
-
-            // ScrollSpy for Single Page Scrolling
+            
+            // ScrollSpy Logic (Active button based on scroll)
             const sections = ['burger', 'pizza', 'drinks', 'sides'];
-            const navObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const id = entry.target.id.replace('section-', '');
-                        // Remove active class from all
-                        document.querySelectorAll('.nav-btn').forEach(btn => {
-                            btn.classList.remove('nav-active', 'text-dark-950');
-                            btn.classList.add('bg-white/5', 'text-gray-400');
-                        });
-                        // Add active class to current
-                        const activeBtn = document.getElementById(`nav-${id}`);
-                        if(activeBtn) {
-                            activeBtn.classList.remove('bg-white/5', 'text-gray-400');
-                            activeBtn.classList.add('nav-active', 'text-dark-950');
-                            activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                const offset = 250; // Activate a bit earlier
+
+                sections.forEach(secId => {
+                    const section = document.getElementById('section-' + secId);
+                    const btn = document.getElementById('btn-' + secId);
+                    
+                    if (section && btn) {
+                        const top = section.offsetTop - offset;
+                        const bottom = top + section.offsetHeight;
+
+                        if (scrollY >= top && scrollY < bottom) {
+                            // Remove active from all
+                            document.querySelectorAll('.nav-btn').forEach(b => {
+                                b.classList.remove('nav-active', 'text-dark-950');
+                                b.classList.add('bg-white/5', 'text-gray-400');
+                            });
+                            // Add active to current
+                            btn.classList.remove('bg-white/5', 'text-gray-400');
+                            btn.classList.add('nav-active', 'text-dark-950');
+                            
+                            // Horizontal scroll nav
+                            btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                         }
                     }
                 });
-            }, { threshold: 0.2, rootMargin: '-20% 0px -60% 0px' });
-
-            sections.forEach(sec => {
-                const el = document.getElementById(`section-${sec}`);
-                if(el) navObserver.observe(el);
             });
-            
-            // Set initial active manually if needed
-            const firstBtn = document.getElementById('nav-burger');
+
+            // Initial trigger
+            const firstBtn = document.getElementById('btn-burger');
             if(firstBtn) {
                  firstBtn.classList.add('nav-active', 'text-dark-950');
                  firstBtn.classList.remove('bg-white/5', 'text-gray-400');
