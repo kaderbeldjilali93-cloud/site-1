@@ -12,7 +12,7 @@
         body { 
             font-family: 'Cairo', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
-            scroll-behavior: smooth; /* تفعيل التمرير السلس */
+            scroll-behavior: smooth;
         }
         
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -28,16 +28,17 @@
         /* Slide Up Reveal Class */
         .reveal-on-scroll {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(20px);
             transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
+        /* إزالة الحواف الصفراء من البطاقات */
         .reveal-visible {
             opacity: 1;
             transform: translateY(0);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.15), inset 0 0 20px rgba(212, 175, 55, 0.05);
-            border-color: rgba(212, 175, 55, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         /* تنسيق أزرار التصنيفات */
@@ -114,7 +115,7 @@
         }
         
         html {
-            scroll-padding-top: 140px; /* لضبط مكان التمرير بدقة تحت الهيدر */
+            scroll-padding-top: 140px; 
         }
     </style>
     
@@ -134,10 +135,10 @@
 <body class="bg-dark-950 text-gray-100 pb-28 select-none">
 
     <!-- 1. الرأس الثابت -->
-    <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center justify-start px-4 shadow-lg">
+    <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center justify-center shadow-lg">
         <div class="flex items-center gap-2 animate-zoom-in">
             <div class="relative leading-none flex items-center">
-                <span class="text-xl font-black tracking-tighter text-white font-sans drop-shadow-lg">
+                <span class="text-2xl font-black tracking-tighter text-white font-sans drop-shadow-lg">
                     مطعم <span class="text-brand-500">الفخامة</span>
                 </span>
             </div>
@@ -164,21 +165,18 @@
             </h1>
         </div>
 
-        <!-- 2. إطار الترحيب والشرح (تم حذف الخطوط) -->
+        <!-- 2. إطار الترحيب والشرح (تم حذف الإطار الأصفر) -->
         <div class="px-6 mb-6 animate-zoom-in" style="animation-delay: 0.1s;">
-            <div class="bg-dark-900 border border-brand-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+            <div class="bg-dark-900 border border-white/10 rounded-2xl p-5 shadow-lg relative overflow-hidden">
                 <div class="space-y-3 text-center">
-                    <!-- حذف border-b -->
                     <h3 class="text-white font-bold text-lg w-fit mx-auto">طريقة الطلب</h3>
                     
                     <p class="text-white text-sm leading-relaxed flex items-center justify-center gap-2">
                         اختر وجبتك 
-                        <!-- أيقونة سلة بيضاء -->
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white inline-block" viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>، 
                         اضغط "تأكيد الطلب" ✅، وسيتم تحضيره فوراً.
                     </p>
                     
-                    <!-- حذف border-t -->
                     <div class="text-xs text-gray-300 font-medium pt-2 mt-2">
                         <span class="text-brand-500 font-bold text-sm">ملاحظة:</span> إذا احتجت مساعدة إضغط على الجرس 🔔 وسنكون عندك.
                     </div>
@@ -233,10 +231,6 @@
                     <div>
                         <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 opacity-80 text-center">Jus</h3>
                         <div class="grid grid-cols-2 gap-3" id="grid-drinks-juice"></div>
-                    </div>
-                    <div>
-                        <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 opacity-80 text-center">Eaux</h3>
-                        <div class="grid grid-cols-2 gap-3" id="grid-drinks-water"></div>
                     </div>
                 </div>
             </section>
@@ -297,23 +291,23 @@
     </div>
 
     <script>
-        // 1. البيانات (تم استرجاع الروابط الأصلية وحذف Slim Ananas)
+        // 1. البيانات (تم استرجاع الروابط الأصلية وحذف Slim Ananas و Eaux)
         const products = [
             // --- Burger ---
             { id: 1, name: "Cheeseburger", price: 450, category: "burger", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400", desc: "Bœuf pur, cheddar, sauce spéciale" },
             { id: 2, name: "Chicken Crispy", price: 500, category: "burger", img: "JPG 2", desc: "Poulet croustillant, laitue, mayo" },
-            { id: 3, name: "Mushroom Swiss", price: 550, category: "burger", img: "JPG 3", desc: "Bœuf, champignons frais, suisse" },
-            { id: 4, name: "Double Cheese", price: 650, category: "burger", img: "JPG 4", desc: "Double bœuf, double fromage" },
+            { id: 3, name: "Mushroom Swiss", price: 550, category: "burger", img: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=400", desc: "Bœuf, champignons frais, suisse" },
+            { id: 4, name: "Double Cheese", price: 650, category: "burger", img: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400", desc: "Double bœuf, double fromage" },
             { id: 5, name: "Zinger Spicy", price: 550, category: "burger", img: "JPG 5", desc: "Poulet épicé, jalapeño" },
-            { id: 6, name: "BBQ Beef", price: 600, category: "burger", img: "JPG 6", desc: "Bœuf, oignons croustillants, BBQ" },
+            { id: 6, name: "BBQ Beef", price: 600, category: "burger", img: "https://images.unsplash.com/photo-1596662951482-0c4ba74a6df6?w=400", desc: "Bœuf, oignons croustillants, BBQ" },
 
             // --- Pizza ---
-            { id: 7, name: "Margherita", price: 600, category: "pizza", img: "JPG 7", desc: "Sauce tomate, mozzarella, basilic" },
-            { id: 8, name: "Pepperoni", price: 750, category: "pizza", img: "JPG 8", desc: "Pepperoni, mozzarella, origan" },
-            { id: 9, name: "4 Saisons", price: 800, category: "pizza", img: "JPG 9", desc: "Mozzarella, champignons, olives" },
-            { id: 10, name: "Végétarienne", price: 650, category: "pizza", img: "JPG 10", desc: "Légumes frais, mozzarella" },
-            { id: 11, name: "Poulet BBQ", price: 850, category: "pizza", img: "JPG 11", desc: "Poulet, sauce BBQ, oignons" },
-            { id: 12, name: "Thon", price: 750, category: "pizza", img: "JPG 12", desc: "Thon, oignons, olives" },
+            { id: 7, name: "Margherita", price: 600, category: "pizza", img: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400", desc: "Sauce tomate, mozzarella, basilic" },
+            { id: 8, name: "Pepperoni", price: 750, category: "pizza", img: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400", desc: "Pepperoni, mozzarella, origan" },
+            { id: 9, name: "4 Saisons", price: 800, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400", desc: "Mozzarella, champignons, olives" },
+            { id: 10, name: "Végétarienne", price: 650, category: "pizza", img: "https://images.unsplash.com/photo-1595708684082-a173bb3a06c5?w=400", desc: "Légumes frais, mozzarella" },
+            { id: 11, name: "Poulet BBQ", price: 850, category: "pizza", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400", desc: "Poulet, sauce BBQ, oignons" },
+            { id: 12, name: "Thon", price: 750, category: "pizza", img: "https://images.unsplash.com/photo-1555072956-7758afb20e8f?w=400", desc: "Thon, oignons, olives" },
 
             // --- Drinks ---
             { id: 13, name: "Hamoud", price: 120, category: "drinks", sub_category: "soda", img: "JPG 13", desc: "33cl" },
@@ -330,14 +324,11 @@
             { id: 23, name: "Rouiba (1L)", price: 140, category: "drinks", sub_category: "juice", img: "JPG 23", desc: "Citronnade" },
             { id: 24, name: "Tazij (1L)", price: 150, category: "drinks", sub_category: "juice", img: "JPG 24", desc: "Mélange de fruits" },
             
-            { id: 25, name: "Ifri (Petit)", price: 50, category: "drinks", sub_category: "water", img: "JPG 25", desc: "0.5 L" },
-            { id: 26, name: "Ifri (Grand)", price: 80, category: "drinks", sub_category: "water", img: "JPG 26", desc: "1.5 L" },
-
             // --- Sides ---
-            { id: 27, name: "Frites", price: 200, category: "sides", sub_category: "", img: "https://images.unsplash.com/photo-1630384031162-91ad75aa397a?w=400", desc: "Croustillantes" },
-            { id: 31, name: "Mayonnaise", price: 0, category: "sides", sub_category: "", img: "JPG 31", desc: "Gratuit" },
-            { id: 32, name: "Harissa", price: 0, category: "sides", sub_category: "", img: "JPG 32", desc: "Gratuit" },
-            { id: 33, name: "Ketchup", price: 0, category: "sides", sub_category: "", img: "JPG 33", desc: "Gratuit" }
+            { id: 27, name: "Frites", price: 200, category: "sides", sub_category: "", img: "JPG 27", desc: "Croustillantes" },
+            { id: 28, name: "Mayonnaise", price: 0, category: "sides", sub_category: "", img: "JPG 28", desc: "Gratuit" },
+            { id: 29, name: "Harissa", price: 0, category: "sides", sub_category: "", img: "JPG 29", desc: "Gratuit" },
+            { id: 30, name: "Ketchup", price: 0, category: "sides", sub_category: "", img: "JPG 30", desc: "Gratuit" }
         ];
 
         let cart = {};
@@ -393,7 +384,7 @@
             }
         }
 
-        // 3. عرض المنتجات (Render All Sections at once for scrolling)
+        // 3. عرض المنتجات
         function renderAllSections() {
             // Burger
             document.getElementById('grid-burger').innerHTML = products
@@ -412,10 +403,6 @@
             
             document.getElementById('grid-drinks-juice').innerHTML = products
                 .filter(p => p.category === 'drinks' && p.sub_category === 'juice')
-                .map(createProductCard).join('');
-
-            document.getElementById('grid-drinks-water').innerHTML = products
-                .filter(p => p.category === 'drinks' && p.sub_category === 'water')
                 .map(createProductCard).join('');
 
             // Sides
