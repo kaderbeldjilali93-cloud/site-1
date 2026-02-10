@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RestoPro | بوابة المطاعم</title>
+    <!-- استدعاء خط "تجوال" لخط عربي احترافي -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- استدعاء Tailwind CSS للتصميم السريع -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Tajawal', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            DEFAULT: '#FF9900', // اللون البرتقالي الخاص بـ RestoPro
+                            dark: '#CC7A00',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #111827; color: #fff; }
+        .hidden-section { display: none; }
+        iframe { border: none; width: 100%; height: 100%; }
+        /* تأثير زجاجي خفيف */
+        .glass {
+            background: rgba(31, 41, 55, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        /* تنسيق التحميل */
+        .loader-container {
+            position: absolute;
+            inset: 0;
+            background: #1f2937;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- ========================================== -->
+    <!-- شاشة تسجيل الدخول (Login Screen) -->
+    <!-- ========================================== -->
+    <section id="login-screen" class="flex-grow flex items-center justify-center p-4 relative">
+        <!-- خلفية زخرفية -->
+        <div class="absolute inset-0 overflow-hidden z-0 opacity-20">
+            <div class="absolute top-0 left-0 w-64 h-64 bg-brand rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
+            <div class="absolute bottom-0 right-0 w-64 h-64 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
+        </div>
+
+        <div class="glass p-8 rounded-2xl shadow-2xl w-full max-w-md z-10 border-t-4 border-brand">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-extrabold text-white mb-2 tracking-wide">Resto<span class="text-brand">Pro</span></h1>
+                <p class="text-gray-400 text-sm">بوابة إدارة المطاعم الذكية</p>
+            </div>
+
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label for="restaurantName" class="block text-sm font-medium text-gray-300 mb-2">اسم المطعم (جرب: demo)</label>
+                    <input type="text" id="restaurantName" required 
+                        class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition text-white placeholder-gray-500"
+                        placeholder="أدخل اسم المستخدم">
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-300 mb-2">كلمة المرور</label>
+                    <input type="password" id="password" required 
+                        class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition text-white placeholder-gray-500"
+                        placeholder="المدير: 123 | المطبخ: k123">
+                </div>
+
+                <button type="submit" 
+                    class="w-full bg-brand hover:bg-brand-dark text-black font-bold py-3 rounded-lg transition transform hover:scale-[1.02] shadow-lg">
+                    تسجيل الدخول
+                </button>
+            </form>
+            <p class="mt-6 text-center text-xs text-gray-500">© 2026 RestoPro Systems</p>
+        </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- لوحة التحكم (The Dashboard) -->
+    <!-- ========================================== -->
+    <section id="dashboard-screen" class="hidden-section h-full flex flex-col">
+        
+        <!-- الشريط العلوي (Header) -->
+        <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center shadow-md z-20">
+            <div class="flex items-center gap-3">
+                <div class="bg-brand text-black font-bold rounded-lg p-2 text-xl">RP</div>
+                <div>
+                    <h2 class="font-bold text-lg leading-tight">Resto<span class="text-brand">Pro</span></h2>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <!-- زر ملء الشاشة الجديد -->
+                <button onclick="toggleFullscreen()" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition" title="ملء الشاشة">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                </button>
+
+                <button onclick="logout()" class="text-sm text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">
+                    خروج
+                </button>
+            </div>
+        </header>
+
+        <!-- المحتوى الرئيسي (Main Layout) -->
+        <div class="flex flex-1 overflow-hidden">
+            
+            <!-- القائمة الجانبية (Sidebar) -->
+            <!-- تم تعديل الكلاسات هنا لجعل العرض ثابتاً (w-64) وإلغاء خاصية responsive -->
+            <aside id="sidebar" class="w-64 bg-gray-900 border-l border-gray-800 flex flex-col justify-between transition-all flex-shrink-0">
+                <nav class="p-2 space-y-2 mt-4">
+                    <!-- زر المطبخ -->
+                    <button onclick="loadView('kds')" id="btn-kds" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
+                        <span class="text-2xl group-hover:scale-110 transition">🍳</span>
+                        <!-- تم إزالة hidden md:block ليظهر النص دائماً -->
+                        <span class="font-medium">الطلبات الحالية (KDS)</span>
+                    </button>
+
+                    <!-- زر الكاشير -->
+                    <button onclick="loadView('cashier')" id="btn-cashier" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
+                        <span class="text-2xl group-hover:scale-110 transition">💰</span>
+                        <span class="font-medium">سجل المبيعات (Cashier)</span>
+                    </button>
+
+                    <!-- زر المنيو -->
+                    <button onclick="loadView('menu')" id="btn-menu" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
+                        <span class="text-2xl group-hover:scale-110 transition">📝</span>
+                        <span class="font-medium">تعديل القائمة (Menu)</span>
+                    </button>
+                </nav>
+
+                <div class="p-4 text-center hidden md:block">
+                    <p class="text-xs text-gray-600">v1.1.0 Pro</p>
+                </div>
+            </aside>
+
+            <!-- منطقة العرض (Iframe Area) -->
+            <main class="flex-1 bg-gray-800 relative">
+                <!-- عنصر التحميل (Spinner) -->
+                <div id="loader" class="loader-container hidden">
+                    <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand"></div>
+                </div>
+
+                <!-- رسالة ترحيب تظهر قبل اختيار أي رابط -->
+                <div id="welcome-state" class="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
+                    <h3 class="text-xl font-bold text-gray-300">مرحباً بك في لوحة التحكم</h3>
+                    <p class="mt-2 text-sm">اختر من القائمة الجانبية للبدء</p>
+                </div>
+
+                <!-- الإطار الذي سيعرض روابط Baserow -->
+                <iframe id="content-frame" class="hidden" src="" allow="clipboard-write"></iframe>
+            </main>
+        </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- نافذة تأكيد الخروج (Custom Modal) -->
+    <!-- ========================================== -->
+    <div id="logout-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
+            <div class="flex items-center gap-3 text-red-500 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <h3 class="text-lg font-bold text-white">تأكيد الخروج</h3>
+            </div>
+            <p class="text-gray-300 mb-6 text-sm leading-relaxed">هل أنت متأكد أنك تريد إغلاق النظام وتسجيل الخروج؟ سيتم إعادتك لشاشة البداية.</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeLogoutModal()" class="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition text-sm">إلغاء</button>
+                <button onclick="confirmLogout()" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition text-sm shadow-lg">نعم، خروج</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- كود الجافاسكربت (JavaScript Logic) -->
+    <!-- ========================================== -->
+    <script>
+        // =========================================================
+        // 🗄️ قاعدة بيانات العملاء (Mock DB)
+        // =========================================================
+        const CLIENTS_DB = {
+            "demo": {
+                adminPass: "123",    // كلمة مرور المدير (تفتح كل شيء)
+                kitchenPass: "k123", // كلمة مرور المطبخ (تفتح KDS فقط)
+                links: {
+                    kds: "https://baserow.io/public/gallery/YOUR_DEMO_KDS_LINK", 
+                    cashier: "https://baserow.io/public/grid/YOUR_DEMO_CASHIER_LINK",
+                    menu: "https://baserow.io/public/form/YOUR_DEMO_MENU_LINK"
+                }
+            },
+            "burger_king": {
+                adminPass: "0000",
+                kitchenPass: "k0000",
+                links: {
+                    kds: "https://baserow.io/public/gallery/BURGER_KDS_LINK", 
+                    cashier: "https://baserow.io/public/grid/BURGER_CASHIER_LINK",
+                    menu: "https://baserow.io/public/form/BURGER_MENU_LINK"
+                }
+            }
+        };
+
+        // =========================================================
+        // ⚙️ إعدادات النظام (Configuration State)
+        // =========================================================
+        const STATE = {
+            currentUser: null,
+            currentRole: null, // 'admin' or 'kitchen'
+            currentLinks: {}, 
+            storageKeys: {
+                username: "rp_username",
+                role: "rp_role",
+                lastView: "rp_last_view"
+            }
+        };
+
+        // =========================================================
+        // 🏗️ عناصر DOM
+        // =========================================================
+        const loginScreen = document.getElementById('login-screen');
+        const dashboardScreen = document.getElementById('dashboard-screen');
+        const loginForm = document.getElementById('loginForm');
+        const contentFrame = document.getElementById('content-frame');
+        const welcomeState = document.getElementById('welcome-state');
+        const loader = document.getElementById('loader');
+        const logoutModal = document.getElementById('logout-modal');
+        const sidebar = document.getElementById('sidebar'); // تعريف القائمة الجانبية
+
+        // =========================================================
+        // 🔄 دورة حياة التطبيق (App Lifecycle)
+        // =========================================================
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUser = localStorage.getItem(STATE.storageKeys.username);
+            const savedRole = localStorage.getItem(STATE.storageKeys.role);
+            const lastView = localStorage.getItem(STATE.storageKeys.lastView);
+
+            // محاولة استعادة الجلسة
+            if (savedUser && savedRole && CLIENTS_DB[savedUser]) {
+                authenticateUser(savedUser, CLIENTS_DB[savedUser].links, savedRole);
+                
+                // استعادة آخر نافذة أو تطبيق منطق المطبخ
+                if (savedRole === 'kitchen') {
+                     // المطبخ دائما يفتح KDS
+                    loadView('kds');
+                } else if (lastView && CLIENTS_DB[savedUser].links[lastView]) {
+                    loadView(lastView);
+                }
+            }
+        });
+
+        // دالة لتهيئة الجلسة والدخول
+        function authenticateUser(username, links, role) {
+            STATE.currentUser = username;
+            STATE.currentLinks = links;
+            STATE.currentRole = role;
+            
+            // تطبيق منطق الصلاحيات على الواجهة
+            if (role === 'kitchen') {
+                // إخفاء القائمة الجانبية تماماً
+                sidebar.classList.remove('flex');
+                sidebar.classList.add('hidden');
+            } else {
+                // إظهار القائمة الجانبية للمدير
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('flex');
+            }
+
+            loginScreen.style.display = 'none';
+            dashboardScreen.classList.remove('hidden-section');
+        }
+
+        // =========================================================
+        // 🎮 المنطق التفاعلي (Interaction Logic)
+        // =========================================================
+
+        // 1. تسجيل الدخول
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('restaurantName').value.trim();
+            const password = document.getElementById('password').value;
+            
+            const clientData = CLIENTS_DB[username];
+
+            // التحقق من نوع المستخدم بناءً على كلمة المرور
+            let role = null;
+
+            if (clientData) {
+                if (password === clientData.adminPass) {
+                    role = 'admin';
+                } else if (password === clientData.kitchenPass) {
+                    role = 'kitchen';
+                }
+            }
+
+            if (role) {
+                // حفظ الجلسة
+                localStorage.setItem(STATE.storageKeys.username, username);
+                localStorage.setItem(STATE.storageKeys.role, role);
+                
+                // الدخول
+                authenticateUser(username, clientData.links, role);
+
+                // توجيه تلقائي
+                if (role === 'kitchen') {
+                    loadView('kds'); // إجبار المطبخ على فتح KDS
+                } else {
+                    // المدير يرى شاشة الترحيب أو آخر صفحة (سيتم التعامل معها يدوياً من قبله)
+                }
+            } else {
+                alert("اسم المستخدم أو كلمة المرور غير صحيحة ❌");
+            }
+        });
+
+        // 2. تحميل الروابط (مع شاشة التحميل)
+        function loadView(viewType) {
+            // منع التنقل للمطبخ إذا حاول بطريقة ما
+            if (STATE.currentRole === 'kitchen' && viewType !== 'kds') {
+                return; 
+            }
+
+            const url = STATE.currentLinks[viewType];
+            
+            // تحديث ستايل الأزرار (فقط إذا كانت القائمة ظاهرة)
+            if (STATE.currentRole === 'admin') {
+                updateNavStyles(viewType);
+            }
+
+            // حفظ آخر حالة (فقط للمدير، المطبخ دائماً kds)
+            if (STATE.currentRole === 'admin') {
+                localStorage.setItem(STATE.storageKeys.lastView, viewType);
+            }
+
+            if (url && url.trim() !== "" && !url.includes("YOUR_DEMO")) {
+                welcomeState.style.display = 'none';
+                
+                // إظهار اللودر
+                loader.style.display = 'flex';
+                loader.classList.remove('hidden');
+                
+                contentFrame.style.display = 'block';
+                contentFrame.src = url;
+
+                // إخفاء اللودر عند انتهاء التحميل
+                contentFrame.onload = () => {
+                    loader.style.display = 'none';
+                };
+
+            } else {
+                loader.style.display = 'none'; 
+                if(url && url.includes("YOUR_DEMO")) {
+                    alert("⚠️ هذا حساب تجريبي (Demo).\nالرجاء استبدال الروابط الوهمية في كود CLIENTS_DB بروابط حقيقية.");
+                } else {
+                    alert("عذراً، لا يوجد رابط معرف لهذا القسم لهذا المطعم.");
+                }
+            }
+        }
+
+        function updateNavStyles(activeView) {
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-brand', 'text-black');
+                btn.classList.add('text-gray-300', 'hover:bg-gray-800');
+            });
+            const activeBtn = document.getElementById(`btn-${activeView}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('text-gray-300', 'hover:bg-gray-800');
+                activeBtn.classList.add('bg-brand', 'text-black');
+            }
+        }
+
+        // 3. ملء الشاشة (Fullscreen)
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // 4. منطق الخروج
+        function logout() {
+            logoutModal.classList.remove('hidden');
+        }
+
+        function closeLogoutModal() {
+            logoutModal.classList.add('hidden');
+        }
+
+        function confirmLogout() {
+            // 1. مسح البيانات
+            localStorage.removeItem(STATE.storageKeys.username);
+            localStorage.removeItem(STATE.storageKeys.role);
+            localStorage.removeItem(STATE.storageKeys.lastView);
+            
+            // 2. تصفية الحالة
+            STATE.currentUser = null;
+            STATE.currentRole = null;
+            STATE.currentLinks = {};
+
+            // 3. إعادة تعيين الواجهة (إظهار القائمة الجانبية للمرة القادمة)
+            sidebar.classList.remove('hidden');
+            sidebar.classList.add('flex');
+
+            // 4. التبديل للشاشات وإخفاء المودال
+            closeLogoutModal();
+            dashboardScreen.classList.add('hidden-section');
+            loginScreen.style.display = 'flex';
+            
+            // 5. تنظيف العناصر
+            contentFrame.src = ''; 
+            contentFrame.style.display = 'none';
+            welcomeState.style.display = 'flex';
+            loader.style.display = 'none';
+            
+            document.getElementById('restaurantName').value = '';
+            document.getElementById('password').value = '';
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-brand', 'text-black');
+                btn.classList.add('text-gray-300');
+            });
+        }
+    </script>
+</body>
+</html>
