@@ -167,7 +167,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v1.4.1 Fix-ID</p>
+                    <p class="text-xs text-gray-600">v1.4.2 Fix-Parsers</p>
                 </div>
             </aside>
 
@@ -342,10 +342,10 @@
                 console.warn("Using Mock Data for API (Failed to fetch from table " + tableId + "):", error.message);
                 // بيانات وهمية للطلبات (تم إضافة السعر هنا للتجربة)
                 return [
-                    { id: 101, Table: "T-5", Details: "2x برجر كلاسيك، 1x بيبسي", Status: "Pending", Time: "12:30", Price: "1150" },
+                    { id: 101, Table: "T-5", Details: "2x برجر كلاسيك، 1x بيبسي", Status: { id:1, value: "Pending" }, Time: "12:30", Price: "1150 DA" },
                     { id: 102, Table: "T-2", Details: "1x بيتزا مارغريتا", Status: "Done", Time: "12:32", Price: "500" },
-                    { id: 103, Table: "Takeaway", Details: "3x شاورما دجاج (سبايسي)", Status: "Pending", Time: "12:35", Price: "900" },
-                    { id: 104, Table: "T-8", Details: "1x قهوة، 1x تشيز كيك", Status: "Done", Time: "12:40", Price: "650" },
+                    { id: 103, Table: "Takeaway", Details: "3x شاورما دجاج (سبايسي)", Status: "Pending", Time: "12:35", Price: "900 دج" },
+                    { id: 104, Table: "T-8", Details: "1x قهوة، 1x تشيز كيك", Status: { id:2, value: "Done" }, Time: "12:40", Price: "650" },
                     { id: 105, Table: "T-1", Details: "1x مشاوي مشكل", Status: "Paid", Time: "12:15", Price: "1800" },
                 ];
             }
@@ -355,8 +355,18 @@
         function renderKDS(orders) {
             dynamicContent.innerHTML = '';
             
+            // دالة مساعدة لاستخراج نص الحالة بشكل آمن
+            const getStatus = (o) => {
+                const s = o.Status || o.status;
+                // إذا كانت الحالة كائن (Object) نعيد قيمته، وإلا نعيد النص كما هو
+                return (typeof s === 'object' && s !== null) ? s.value : s;
+            };
+
             // فلترة الطلبات التي لم تكتمل فقط
-            const activeOrders = orders.filter(o => o.Status !== 'Paid' && o.Status !== 'Done');
+            const activeOrders = orders.filter(o => {
+                const status = getStatus(o);
+                return status !== 'Paid' && status !== 'Done';
+            });
 
             const header = document.createElement('div');
             header.className = "flex justify-between items-center mb-6 sticky top-0 bg-gray-800 py-4 z-10 border-b border-gray-700";
@@ -422,16 +432,29 @@
         function renderCashier(orders) {
             dynamicContent.innerHTML = '';
 
+            // دالة مساعدة لاستخراج السعر وتنظيفه
+            const getPrice = (o) => {
+                // البحث في الحقول المحتملة
+                const rawPrice = o.total || o.Total || o.price || o.Price;
+                if (!rawPrice) return 0;
+                
+                // تحويل لقيمة نصية ثم حذف كل شيء ما عدا الأرقام والنقطة
+                const cleanedString = rawPrice.toString().replace(/[^0-9.]/g, '');
+                return parseFloat(cleanedString) || 0;
+            };
+
+            // دالة مساعدة لاستخراج الحالة (نفس المنطق المستخدم في KDS)
+            const getStatus = (o) => {
+                const s = o.Status || o.status;
+                return (typeof s === 'object' && s !== null) ? s.value : s;
+            };
+
             // حساب الإجماليات
             let totalSales = 0;
             let ordersCount = orders.length;
             
             orders.forEach(order => {
-                // تحويل السعر من نص إلى رقم، مع التعامل مع القيم الفارغة
-                const price = parseFloat(order.Price || 0);
-                if (!isNaN(price)) {
-                    totalSales += price;
-                }
+                totalSales += getPrice(order);
             });
 
             const avgOrderValue = ordersCount > 0 ? (totalSales / ordersCount).toFixed(2) : 0;
@@ -484,13 +507,16 @@
                 tableHTML += `<tr><td colspan="6" class="p-6 text-center text-gray-500">لا توجد بيانات متاحة</td></tr>`;
             } else {
                 orders.forEach(order => {
+                    // استخراج الحالة والقيمة باستخدام الدوال المساعدة
+                    const statusVal = getStatus(order) || 'Unknown';
+                    const priceVal = getPrice(order).toLocaleString();
+
                     const statusColors = {
                         'Pending': 'bg-yellow-900 text-yellow-300 border-yellow-700',
                         'Done': 'bg-blue-900 text-blue-300 border-blue-700',
                         'Paid': 'bg-green-900 text-green-300 border-green-700'
                     };
-                    const statusClass = statusColors[order.Status] || 'bg-gray-700 text-gray-300';
-                    const price = parseFloat(order.Price || 0).toLocaleString();
+                    const statusClass = statusColors[statusVal] || 'bg-gray-700 text-gray-300';
 
                     tableHTML += `
                         <tr class="hover:bg-gray-750 transition duration-150">
@@ -498,9 +524,9 @@
                             <td class="p-4 text-right text-gray-400">${order.Time || '--:--'}</td>
                             <td class="p-4 text-right font-bold">${order.Table || 'Takeaway'}</td>
                             <td class="p-4 text-right truncate max-w-xs" title="${order.Details}">${order.Details || '-'}</td>
-                            <td class="p-4 text-left font-bold text-white">${price} <span class="text-xs text-gray-500">DA</span></td>
+                            <td class="p-4 text-left font-bold text-white">${priceVal} <span class="text-xs text-gray-500">DA</span></td>
                             <td class="p-4 text-center">
-                                <span class="px-2 py-1 rounded-full text-xs border ${statusClass}">${order.Status || 'Unknown'}</span>
+                                <span class="px-2 py-1 rounded-full text-xs border ${statusClass}">${statusVal}</span>
                             </td>
                         </tr>
                     `;
