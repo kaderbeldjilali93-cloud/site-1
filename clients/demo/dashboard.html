@@ -328,7 +328,7 @@
                 // محاكاة الاتصال إذا لم يكن هناك ID حقيقي
                 if (tableId === "000000") throw new Error("Mock Mode");
 
-                const response = await fetch(`https://api.baserow.io/api/database/rows/table/${tableId}/?user_field_names=true`, {
+                const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true`, {
                     method: 'GET',
                     headers: {
                         "Authorization": `Token ${BASEROW_TOKEN}`
