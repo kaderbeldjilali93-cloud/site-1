@@ -19,6 +19,10 @@
                         brand: {
                             DEFAULT: '#FF9900', // اللون البرتقالي الخاص بـ RestoPro
                             dark: '#CC7A00',
+                        },
+                        ticket: {
+                            header: '#374151', // رمادي غامق لرأس التذكرة
+                            body: '#1F2937',   // لون جسم التذكرة
                         }
                     }
                 }
@@ -50,6 +54,21 @@
         ::-webkit-scrollbar-track { background: #1f2937; }
         ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #FF9900; }
+        
+        /* تأثير النبض لزر التحديث المباشر */
+        .live-indicator {
+            width: 8px; height: 8px;
+            background-color: #10B981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse-green 2s infinite;
+        }
+        @keyframes pulse-green {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -128,19 +147,19 @@
             <!-- القائمة الجانبية (Sidebar) -->
             <aside id="sidebar" class="w-64 bg-gray-900 border-l border-gray-800 flex flex-col justify-between transition-all flex-shrink-0">
                 <nav class="p-2 space-y-2 mt-4">
-                    <!-- زر المطبخ -->
+                    <!-- زر المطبخ (KDS) - API Mode -->
                     <button onclick="loadView('kds')" id="btn-kds" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
                         <span class="text-2xl group-hover:scale-110 transition">🍳</span>
                         <span class="font-medium">الطلبات الحالية (KDS)</span>
                     </button>
 
-                    <!-- زر الكاشير -->
+                    <!-- زر الكاشير - Legacy Iframe -->
                     <button onclick="loadView('cashier')" id="btn-cashier" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
                         <span class="text-2xl group-hover:scale-110 transition">💰</span>
                         <span class="font-medium">سجل المبيعات (Cashier)</span>
                     </button>
 
-                    <!-- زر المنيو -->
+                    <!-- زر المنيو - Legacy Iframe -->
                     <button onclick="loadView('menu')" id="btn-menu" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
                         <span class="text-2xl group-hover:scale-110 transition">📝</span>
                         <span class="font-medium">تعديل القائمة (Menu)</span>
@@ -148,7 +167,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v1.2.0 API</p>
+                    <p class="text-xs text-gray-600">v1.3.0 KDS-API</p>
                 </div>
             </aside>
 
@@ -168,10 +187,10 @@
                     <p class="mt-2 text-sm">اختر من القائمة الجانبية للبدء</p>
                 </div>
 
-                <!-- 1. الإطار القديم (Legacy Iframe) -->
+                <!-- 1. الإطار القديم (Legacy Iframe) - للمنيو والكاشير -->
                 <iframe id="content-frame" class="hidden flex-1" src="" allow="clipboard-write"></iframe>
 
-                <!-- 2. الحاوية الجديدة للمحتوى الديناميكي (Dynamic API Content) -->
+                <!-- 2. الحاوية الجديدة للمحتوى الديناميكي (KDS API Content) -->
                 <div id="dynamic-content" class="hidden flex-1 overflow-y-auto p-6 bg-gray-800">
                     <!-- سيتم حقن البطاقات هنا عبر JavaScript -->
                 </div>
@@ -206,7 +225,7 @@
         // 🔌 API Configuration (Baserow)
         // =========================================================
         const BASEROW_TOKEN = "DfaoAk1o41H4iPUtkblY2ZKzXcbHxizb"; // التوكن الخاص بك
-        const TABLE_ID = "37"; // ⚠️ استبدل هذا الرقم بـ Table ID الحقيقي الخاص بجدول المنيو في Baserow
+        const ORDERS_TABLE_ID = "37"; // ⚠️ استبدل هذا بـ Table ID الخاص بجدول الطلبات (Orders)
 
         // =========================================================
         // 🗄️ قاعدة بيانات العملاء (Mock DB)
@@ -216,19 +235,20 @@
                 adminPass: "123",    
                 kitchenPass: "k123", 
                 links: {
-                    kds: "http://91.107.231.199:8001/public/gallery/PIlGssiPXtEC960yAEWTzAMN6ktXKmEd2CB4I7-UrUw", 
-                    cashier: "http://91.107.231.199:8001/public/grid/_BdCx38TQUYDajMYXJG6BnDyGE6fWnymemO9hoLsROg",
-                    // سيتم تجاهل رابط المنيو هنا لأننا سنستخدم الـ API
-                    menu: "api_mode" 
+                    // تم تفعيل API Mode للمطبخ فقط
+                    kds: "api_mode",
+                    // استعادة روابط Iframe
+                    cashier: "https://baserow.vidsai.site/public/grid/_BdCx38TQUYDajMYXJG6BnDyGE6fWnymemO9hoLsROg",
+                    menu: "https://baserow.vidsai.site/public/grid/3EwIa08DvSMmNvP2U1sZLJimhha9H5d4c0JKK_l8SVo"
                 }
             },
             "burger_king": {
                 adminPass: "0000",
                 kitchenPass: "k0000",
                 links: {
-                    kds: "https://baserow.io/public/gallery/BURGER_KDS_LINK", 
+                    kds: "api_mode", 
                     cashier: "https://baserow.io/public/grid/BURGER_CASHIER_LINK",
-                    menu: "api_mode"
+                    menu: "https://baserow.io/public/form/BURGER_MENU_LINK"
                 }
             }
         };
@@ -240,6 +260,7 @@
             currentUser: null,
             currentRole: null, 
             currentLinks: {}, 
+            pollingInterval: null, // لتخزين معرف المؤقت
             storageKeys: {
                 username: "rp_username",
                 role: "rp_role",
@@ -254,7 +275,7 @@
         const dashboardScreen = document.getElementById('dashboard-screen');
         const loginForm = document.getElementById('loginForm');
         const contentFrame = document.getElementById('content-frame');
-        const dynamicContent = document.getElementById('dynamic-content'); // الحاوية الجديدة
+        const dynamicContent = document.getElementById('dynamic-content'); 
         const welcomeState = document.getElementById('welcome-state');
         const loader = document.getElementById('loader');
         const logoutModal = document.getElementById('logout-modal');
@@ -298,13 +319,15 @@
         }
 
         // =========================================================
-        // 🌐 دوال الـ API والـ Rendering (جديد)
+        // 🌐 دوال الـ API والـ Rendering (KDS فقط)
         // =========================================================
 
-        // 1. دالة جلب البيانات من Baserow
-        async function fetchData(tableId) {
+        // 1. دالة جلب الطلبات (Orders)
+        async function fetchOrders(tableId) {
             try {
-                // user_field_names=true يجعل المفاتيح بأسماء الحقول الفعلية بدلاً من field_123
+                // محاكاة الاتصال إذا لم يكن هناك ID حقيقي
+                if (tableId === "000000") throw new Error("Mock Mode");
+
                 const response = await fetch(`https://api.baserow.io/api/database/rows/table/${tableId}/?user_field_names=true`, {
                     method: 'GET',
                     headers: {
@@ -312,72 +335,79 @@
                     }
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
-                return data.results; // Baserow يعيد النتائج داخل مصفوفة results
+                return data.results;
             } catch (error) {
-                console.error("خطأ في جلب البيانات:", error);
-                throw error;
+                console.warn("Using Mock Data for KDS:", error.message);
+                // بيانات وهمية للطلبات
+                return [
+                    { id: 101, Table: "T-5", Details: "2x برجر كلاسيك، 1x بيبسي، 1x بطاطس", Status: "Pending", Time: "12:30" },
+                    { id: 102, Table: "T-2", Details: "1x بيتزا مارغريتا، 1x سلطة سيزر", Status: "Preparing", Time: "12:32" },
+                    { id: 103, Table: "Takeaway", Details: "3x شاورما دجاج (سبايسي)", Status: "Pending", Time: "12:35" },
+                    { id: 104, Table: "T-8", Details: "1x قهوة، 1x تشيز كيك", Status: "Pending", Time: "12:40" },
+                ];
             }
         }
 
-        // 2. دالة رسم واجهة المنيو (UI Rendering)
-        function renderMenu(items) {
-            // تنظيف الحاوية
+        // 2. دالة رسم واجهة المطبخ (KDS Rendering)
+        function renderKDS(orders) {
             dynamicContent.innerHTML = '';
 
-            // إنشاء رأس الصفحة
+            // رأس الصفحة مع مؤشر التحديث
             const header = document.createElement('div');
-            header.className = "flex justify-between items-center mb-6";
+            header.className = "flex justify-between items-center mb-6 sticky top-0 bg-gray-800 py-4 z-10 border-b border-gray-700";
             header.innerHTML = `
-                <h2 class="text-2xl font-bold text-white">قائمة الطعام (Menu)</h2>
-                <button class="bg-brand hover:bg-brand-dark text-black font-bold py-2 px-4 rounded-lg text-sm">
-                    + إضافة صنف جديد
-                </button>
+                <div class="flex items-center gap-3">
+                    <h2 class="text-2xl font-bold text-white">شاشة المطبخ (KDS)</h2>
+                    <span class="live-indicator" title="تحديث مباشر"></span>
+                    <span class="text-xs text-gray-500">تحديث تلقائي كل 10 ثواني</span>
+                </div>
+                <div class="text-gray-300 font-mono text-sm">
+                    ${new Date().toLocaleTimeString('ar-DZ')}
+                </div>
             `;
             dynamicContent.appendChild(header);
 
-            // إنشاء الشبكة (Grid)
             const grid = document.createElement('div');
-            grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6";
+            grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4";
 
-            // التحقق من وجود بيانات
-            if (!items || items.length === 0) {
-                dynamicContent.innerHTML += `<div class="text-gray-400 text-center col-span-full py-10">لا توجد أصناف لعرضها. تأكد من Table ID.</div>`;
+            if (!orders || orders.length === 0) {
+                dynamicContent.innerHTML += `<div class="text-gray-400 text-center col-span-full py-10">لا توجد طلبات معلقة حالياً.</div>`;
                 return;
             }
 
-            items.forEach(item => {
-                // ملاحظة: قم بتعديل أسماء الحقول (Name, Price, Image) لتطابق أسماء الأعمدة في Baserow الخاص بك بدقة
-                const itemName = item.Name || item.name || "بدون اسم";
-                const itemPrice = item.Price || item.price || "0";
-                // معالجة الصورة (Baserow يعيد الصورة كمصفوفة)
-                const imageUrl = (item.Image && item.Image.length > 0) ? item.Image[0].url : "https://via.placeholder.com/400x300?text=No+Image";
+            orders.forEach(order => {
+                const tableNum = order.Table || order.table || "??";
+                const details = order.Details || order.details || "لا توجد تفاصيل";
+                const orderId = order.id || "#";
+                const time = order.Time || order.time || "--:--";
 
                 const card = document.createElement('div');
-                card.className = "bg-gray-700 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition duration-300 border border-gray-600 flex flex-col";
+                card.className = "bg-gray-800 border border-gray-600 rounded-lg overflow-hidden shadow-lg flex flex-col";
                 
+                // تصميم التذكرة (Ticket Design)
                 card.innerHTML = `
-                    <div class="h-48 overflow-hidden relative group">
-                        <img src="${imageUrl}" alt="${itemName}" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
-                        <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
-                            <button class="bg-white text-black rounded-full p-2 hover:bg-brand">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                            </button>
+                    <div class="bg-gray-700 p-3 flex justify-between items-center border-b border-gray-600">
+                        <div class="flex flex-col">
+                            <span class="font-bold text-xl text-brand">${tableNum}</span>
+                            <span class="text-xs text-gray-400">${time}</span>
                         </div>
+                        <span class="text-sm font-mono bg-gray-900 px-2 py-1 rounded text-gray-300">#${orderId}</span>
                     </div>
-                    <div class="p-5 flex-1 flex flex-col justify-between">
-                        <div>
-                            <h3 class="text-xl font-bold text-white mb-1">${itemName}</h3>
-                            <p class="text-gray-400 text-sm line-clamp-2">${item.Description || 'لا يوجد وصف'}</p>
-                        </div>
-                        <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-600">
-                            <span class="text-brand font-bold text-lg">${itemPrice} DZD</span>
-                            <button class="text-xs text-gray-300 bg-gray-600 hover:bg-gray-500 px-2 py-1 rounded">تعديل</button>
-                        </div>
+                    <div class="p-4 flex-1 bg-gray-800/50">
+                        <ul class="text-gray-200 text-sm font-medium leading-relaxed">
+                            <li class="flex items-start gap-2">
+                                <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>
+                                <span>${details}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="p-3 bg-gray-700 border-t border-gray-600">
+                        <button onclick="this.closest('div.flex-col').style.opacity='0.5'; this.innerText='تم التحضير'" 
+                                class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition shadow-md">
+                            جاهز ✅
+                        </button>
                     </div>
                 `;
                 grid.appendChild(card);
@@ -420,106 +450,87 @@
             }
         });
 
-        // متغير لتخزين مؤقت الأمان
+        // متغير لتخزين مؤقت Iframe
         let loaderTimeout;
 
-        // تم تحديث الدالة لتدعم API Mode
         async function loadView(viewType) {
-            if (STATE.currentRole === 'kitchen' && viewType !== 'kds') {
-                return; 
+            // إيقاف التحديث التلقائي القديم إذا وجد
+            if (STATE.pollingInterval) {
+                clearInterval(STATE.pollingInterval);
+                STATE.pollingInterval = null;
+                console.log("Polling stopped.");
             }
 
-            // تحديث ستايل الأزرار
+            if (STATE.currentRole === 'kitchen' && viewType !== 'kds') return;
+
+            // تحديث الستايل والحفظ (للمدير)
             if (STATE.currentRole === 'admin') {
                 updateNavStyles(viewType);
                 localStorage.setItem(STATE.storageKeys.lastView, viewType);
             }
 
             welcomeState.style.display = 'none';
-            
+
             // =================================================
-            // 🆕 المسار الجديد: عرض القائمة باستخدام API
+            // 🍳 KDS: وضع الـ API مع التحديث التلقائي (Polling)
             // =================================================
-            if (viewType === 'menu') {
-                // إخفاء الـ iframe
+            if (viewType === 'kds') {
                 contentFrame.classList.add('hidden');
                 contentFrame.src = ''; 
-                
-                // إظهار الحاوية الجديدة
                 dynamicContent.classList.remove('hidden');
-                
-                // إظهار اللودر
                 loader.style.display = 'flex';
                 loader.classList.remove('hidden');
 
-                try {
-                    // جلب البيانات (يمكنك استخدام بيانات وهمية مؤقتاً إذا فشل الاتصال)
-                    // const data = await fetchData(TABLE_ID); 
-                    
-                    // ⚠️ لأغراض العرض فقط، سأقوم بمحاكاة البيانات في حالة فشل الاتصال بالتوكن الحالي
-                    // لكي ترى التصميم مباشرة دون أن يتوقف التطبيق
-                    let data;
+                // دالة داخلية لجلب ورسم البيانات
+                const runKDS = async () => {
                     try {
-                        data = await fetchData(TABLE_ID);
-                    } catch (e) {
-                        console.warn("Using Mock Data due to API error");
-                        data = [
-                            { Name: "بيتزا مارغريتا", Price: "500", Description: "صلصة طماطم، جبن موزاريلا، ريحان", Image: [{url: "https://images.unsplash.com/photo-1574071318500-d0d516ef07bf?auto=format&fit=crop&w=500&q=60"}] },
-                            { Name: "برجر كلاسيك", Price: "450", Description: "لحم بقري مشوي، خس، طماطم، بصل", Image: [{url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=60"}] },
-                            { Name: "شاورما دجاج", Price: "300", Description: "دجاج متبل، ثومية، مخلل، خبز صاج", Image: [{url: "https://images.unsplash.com/photo-1663046777174-2c499c75949d?auto=format&fit=crop&w=500&q=60"}] },
-                            { Name: "سلطة سيزر", Price: "350", Description: "خس، قطع دجاج، صلصة سيزر، جبن بارميزان", Image: [{url: "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&w=500&q=60"}] },
-                            { Name: "عصير برتقال", Price: "200", Description: "عصير برتقال طبيعي طازج", Image: [{url: "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=500&q=60"}] },
-                        ];
+                        const data = await fetchOrders(ORDERS_TABLE_ID);
+                        renderKDS(data);
+                    } catch (error) {
+                        console.error(error);
+                    } finally {
+                        loader.style.display = 'none';
                     }
+                };
 
-                    renderMenu(data);
-                } catch (error) {
-                    dynamicContent.innerHTML = `<div class="text-red-400 p-4">حدث خطأ أثناء جلب البيانات: ${error.message}</div>`;
-                } finally {
-                    loader.style.display = 'none';
-                }
+                // التشغيل الأول
+                await runKDS();
+
+                // تفعيل التحديث التلقائي كل 10 ثواني
+                STATE.pollingInterval = setInterval(() => {
+                    console.log("Auto-refreshing KDS...");
+                    runKDS();
+                }, 10000);
+
                 return;
             }
 
             // =================================================
-            // 🏚️ المسار القديم: عرض Iframe (للكاشير و KDS)
+            // 🏚️ Menu & Cashier: وضع الـ Iframe التقليدي
             // =================================================
             
-            // إخفاء حاوية الـ API
             dynamicContent.classList.add('hidden');
-            
             const url = STATE.currentLinks[viewType];
 
             if (url && url.trim() !== "" && !url.includes("YOUR_DEMO") && url !== "api_mode") {
-                // إظهار اللودر
                 loader.style.display = 'flex';
                 loader.classList.remove('hidden');
                 
-                // إعادة تعيين مصدر الـ iframe
                 contentFrame.classList.remove('hidden');
                 contentFrame.src = 'about:blank';
-                setTimeout(() => {
-                    contentFrame.src = url;
-                }, 100);
+                setTimeout(() => { contentFrame.src = url; }, 100);
 
                 if (loaderTimeout) clearTimeout(loaderTimeout);
-
-                loaderTimeout = setTimeout(() => {
-                    loader.style.display = 'none';
-                    console.log("Loader hidden by safety timeout.");
-                }, 5000);
+                loaderTimeout = setTimeout(() => { loader.style.display = 'none'; }, 5000);
 
                 contentFrame.onload = () => {
                     clearTimeout(loaderTimeout);
                     loader.style.display = 'none';
                 };
-
             } else {
                 loader.style.display = 'none'; 
                 contentFrame.classList.add('hidden');
-                if (url !== "api_mode") {
-                    alert("عذراً، الرابط غير متوفر.");
-                }
+                alert("الرابط غير متوفر أو قيد التطوير.");
             }
         }
 
@@ -556,6 +567,12 @@
         }
 
         function confirmLogout() {
+            // إيقاف التحديث عند الخروج
+            if (STATE.pollingInterval) {
+                clearInterval(STATE.pollingInterval);
+                STATE.pollingInterval = null;
+            }
+
             localStorage.removeItem(STATE.storageKeys.username);
             localStorage.removeItem(STATE.storageKeys.role);
             localStorage.removeItem(STATE.storageKeys.lastView);
@@ -573,7 +590,7 @@
             
             contentFrame.src = ''; 
             contentFrame.classList.add('hidden');
-            dynamicContent.classList.add('hidden'); // إخفاء المحتوى الديناميكي أيضاً
+            dynamicContent.classList.add('hidden');
 
             welcomeState.style.display = 'flex';
             loader.style.display = 'none';
