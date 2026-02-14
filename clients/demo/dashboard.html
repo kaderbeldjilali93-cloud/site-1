@@ -6,6 +6,8 @@
     <title>RestoPro | بوابة المطاعم</title>
     <!-- استدعاء خط "تجوال" لخط عربي احترافي -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- استدعاء Chart.js للإحصائيات -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- استدعاء Tailwind CSS للتصميم السريع -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -172,21 +174,27 @@
                         <span class="font-medium">الطلبات الحالية (KDS)</span>
                     </button>
 
-                    <!-- زر الكاشير - API Mode (NEW) -->
+                    <!-- زر الكاشير - API Mode -->
                     <button onclick="loadView('cashier')" id="btn-cashier" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
                         <span class="text-2xl group-hover:scale-110 transition">💰</span>
                         <span class="font-medium">سجل المبيعات (Cashier)</span>
                     </button>
 
-                    <!-- زر المنيو - API Mode (NEW) -->
+                    <!-- زر المنيو - API Mode -->
                     <button onclick="loadView('menu')" id="btn-menu" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
                         <span class="text-2xl group-hover:scale-110 transition">📝</span>
                         <span class="font-medium">تعديل القائمة (Menu)</span>
                     </button>
+
+                    <!-- زر الإحصائيات (جديد) -->
+                    <button onclick="loadView('analytics')" id="btn-analytics" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
+                        <span class="text-2xl group-hover:scale-110 transition">📊</span>
+                        <span class="font-medium">إحصائيات المبيعات</span>
+                    </button>
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v2.1.0 Alerts</p>
+                    <p class="text-xs text-gray-600">v2.5.0 POS-Core</p>
                 </div>
             </aside>
 
@@ -206,12 +214,12 @@
                     <p class="mt-2 text-sm">اختر من القائمة الجانبية للبدء</p>
                 </div>
 
-                <!-- 1. الإطار القديم (Legacy Iframe) - (تم تعطيله تقريباً) -->
+                <!-- 1. الإطار القديم (Legacy Iframe) -->
                 <iframe id="content-frame" class="hidden flex-1" src="" allow="clipboard-write"></iframe>
 
-                <!-- 2. الحاوية الجديدة للمحتوى الديناميكي (KDS, Cashier, Menu API Content) -->
+                <!-- 2. الحاوية الجديدة للمحتوى الديناميكي (API Content) -->
                 <div id="dynamic-content" class="hidden flex-1 overflow-y-auto p-6 bg-gray-800">
-                    <!-- سيتم حقن البطاقات هنا عبر JavaScript -->
+                    <!-- سيتم حقن المحتوى هنا -->
                 </div>
             </main>
         </div>
@@ -245,7 +253,7 @@
         // =========================================================
         const BASEROW_TOKEN = "DfaoAk1o41H4iPUtkblY2ZKzXcbHxizb"; 
         const ORDERS_TABLE_ID = "37"; 
-        const MENU_TABLE_ID = "36"; // ID جدول المنيو
+        const MENU_TABLE_ID = "36"; 
 
         // =========================================================
         // 🗄️ قاعدة بيانات العملاء (Mock DB)
@@ -279,11 +287,8 @@
             currentRole: null, 
             currentLinks: {}, 
             pollingInterval: null, 
-            
-            // --- New Alert State ---
-            knownOrders: {}, // لتتبع الطلبات السابقة
-            isFirstFetch: true, // لمنع التنبيه عند الفتح لأول مرة
-
+            knownOrders: {}, 
+            isFirstFetch: true, 
             storageKeys: {
                 username: "rp_username",
                 role: "rp_role",
@@ -315,7 +320,6 @@
 
             if (savedUser && savedRole && CLIENTS_DB[savedUser]) {
                 authenticateUser(savedUser, CLIENTS_DB[savedUser].links, savedRole);
-                
                 if (savedRole === 'kitchen') {
                     loadView('kds');
                 } else if (lastView && CLIENTS_DB[savedUser].links[lastView]) {
@@ -342,14 +346,13 @@
         }
 
         // =========================================================
-        // 🌐 دوال الـ API والـ Rendering
+        // 🌐 دوال الـ API والـ Business Logic (محدث)
         // =========================================================
 
         // دالة مساعدة لتنسيق الوقت
         function formatOrderTime(order) {
             const rawTime = order['Created at'] || order.Time || order.time || order.created_on;
             if (!rawTime) return '--:--';
-            
             try {
                 const date = new Date(rawTime);
                 if (isNaN(date.getTime())) return rawTime; 
@@ -363,35 +366,67 @@
             }
         }
 
-        // --- دالة التنبيهات الجديدة (Alerts Logic) ---
+        // 🆕 دالة فلترة اليوم المفتوح (يبدأ من 8 صباحاً)
+        function isOrderFromToday(rawTime) {
+            if (!rawTime) return false;
+            try {
+                const orderDate = new Date(rawTime);
+                const now = new Date();
+                
+                // تحديد بداية "اليوم التجاري"
+                let businessDayStart = new Date();
+                businessDayStart.setHours(8, 0, 0, 0); // اليوم الساعة 8:00
+
+                // إذا كنا الآن قبل الساعة 8 صباحاً، فإن "اليوم التجاري" بدأ أمس الساعة 8 صباحاً
+                if (now.getHours() < 8) {
+                    businessDayStart.setDate(businessDayStart.getDate() - 1);
+                }
+
+                return orderDate >= businessDayStart;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        // 🆕 دالة حساب الرقم التسلسلي اليومي
+        // تفترض أن الطلبات تمرر إليها وهي مصفوفة تحتوي فقط على طلبات اليوم
+        // الطلبات القادمة من الـ API تكون معكوسة (الأحدث أولاً)، لذا سنعيد الترتيب للحساب
+        function calculateDailySequence(orders) {
+            // 1. إنشاء نسخة وترتيبها تصاعدياً (الأقدم أولاً) للحصول على التسلسل الصحيح
+            const sortedAscending = [...orders].reverse(); // لأن fetchOrders يعيد reverse
+            
+            // 2. تعيين الأرقام التسلسلية
+            const ordersWithSeq = sortedAscending.map((order, index) => {
+                const seqNum = String(index + 1).padStart(3, '0'); // 001, 002...
+                return {
+                    ...order,
+                    dailySequence: `#D-${seqNum}`
+                };
+            });
+
+            // 3. إعادة عكس المصفوفة لتعرض الأحدث أولاً في الشاشة
+            return ordersWithSeq.reverse();
+        }
+
+        // --- دالة التنبيهات ---
         function processOrderAlerts(orders) {
             const newKnownOrders = {};
             const getStatus = (o) => { const s = o.Status || o.status; return (typeof s === 'object' && s !== null) ? s.value : s; };
 
             orders.forEach(order => {
                 newKnownOrders[order.id] = getStatus(order);
-
-                // فحص الطلبات الجديدة
                 if (!STATE.isFirstFetch) {
-                    // إذا لم يكن الطلب معروفاً من قبل
                     if (!STATE.knownOrders[order.id]) {
                         order.isNew = true;
-                        // تشغيل صوت تنبيه للطلب الجديد
-                        new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(e => console.log("Audio play blocked", e));
-                    }
-                    // إذا كان معروفاً وتغيرت حالته إلى "جاهز"
-                    else if (STATE.knownOrders[order.id] !== 'جاهز' && getStatus(order) === 'جاهز') {
+                        new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(e => {});
+                    } else if (STATE.knownOrders[order.id] !== 'جاهز' && getStatus(order) === 'جاهز') {
                         order.justReady = true;
-                        // تشغيل صوت تنبيه للطلب الجاهز
-                        new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(e => console.log("Audio play blocked", e));
+                        new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(e => {});
                     }
                 }
             });
-
-            // تحديث الذاكرة
             STATE.knownOrders = newKnownOrders;
             STATE.isFirstFetch = false;
-
             return orders;
         }
 
@@ -407,14 +442,19 @@
                 return data.results.reverse();
             } catch (error) {
                 console.warn("Using Mock Data for API:", error.message);
+                // استخدام تاريخ اليوم للتجربة
+                const today = new Date();
+                today.setHours(12, 30);
+                const isoToday = today.toISOString();
+                
                 return [
-                    { id: 101, Table: "T-5", Details: "2x برجر كلاسيك", Status: { id:1, value: "قيد التحضير" }, Time: "2024-02-14T12:30:00", Price: "1150" },
-                    { id: 102, Table: "T-2", Details: "1x بيتزا مارغريتا", Status: "جاهز", Time: "2024-02-14T12:32:00", Price: "500" },
+                    { id: 101, Table: "T-5", Details: "2x برجر كلاسيك", Status: { id:1, value: "قيد التحضير" }, "Created at": isoToday, Price: "1150" },
+                    { id: 102, Table: "T-2", Details: "1x بيتزا مارغريتا", Status: "جاهز", "Created at": isoToday, Price: "500" },
                 ].reverse();
             }
         }
 
-        // 2. جلب المنيو (Menu) - جديد
+        // 2. جلب المنيو (Menu)
         async function fetchMenu() {
             try {
                 const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true`, {
@@ -425,21 +465,14 @@
                 const data = await response.json();
                 return data.results;
             } catch (error) {
-                console.warn("Using Mock Data for Menu:", error.message);
-                return [
-                    { id: 1, Name: "برجر دجاج", Category: {value: "سندويشات"}, Price: "450", Availability: {value: "متوفر"}, image: [] },
-                    { id: 2, Name: "بيتزا 4 فصول", Category: {value: "بيتزا"}, Price: "600", Availability: {value: "غير متوفر"}, image: [] }
-                ];
+                return [];
             }
         }
 
-        // 3. تحديث حالة الطلب (KDS)
+        // 3. تحديث حالة الطلب
         async function updateOrderStatus(rowId, newStatus) {
             const btn = document.getElementById(`btn-done-${rowId}`);
-            if(btn) {
-                btn.innerHTML = `<span class="animate-spin inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>`;
-                btn.disabled = true;
-            }
+            if(btn) { btn.innerHTML = `...`; btn.disabled = true; }
             try {
                 await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${rowId}/?user_field_names=true`, {
                     method: 'PATCH',
@@ -450,44 +483,45 @@
                 renderKDS(data);
             } catch (error) {
                 console.error(error);
-                alert("فشل التحديث.");
                 if(btn) { btn.innerHTML = 'جاهز ✅'; btn.disabled = false; }
             }
         }
 
-        // 4. تحديث عنصر المنيو (Menu Update) - جديد
+        // 4. تحديث عنصر المنيو
         async function updateMenuItem(rowId, updateData) {
-            const saveBtn = document.getElementById(`btn-save-${rowId}`);
-            if(saveBtn) {
-                saveBtn.innerText = "جاري الحفظ...";
-                saveBtn.disabled = true;
-            }
             try {
                 await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/${rowId}/?user_field_names=true`, {
                     method: 'PATCH',
                     headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                     body: JSON.stringify(updateData)
                 });
-                // إعادة تحميل القائمة للتأكد من البيانات
                 const data = await fetchMenu();
                 renderMenuEditor(data);
-                alert("تم تحديث العنصر بنجاح ✅");
+                alert("تم التحديث ✅");
             } catch (error) {
                 console.error(error);
-                alert("فشل تحديث العنصر.");
-                if(saveBtn) { saveBtn.innerText = "حفظ التعديلات"; saveBtn.disabled = false; }
+                alert("فشل التحديث.");
             }
         }
 
-        // --- Render Functions ---
+        // --- Render Functions (KDS & Cashier with Filters) ---
 
         function renderKDS(orders) {
-            // معالجة التنبيهات قبل الرسم
-            orders = processOrderAlerts(orders);
+            // 1. فلترة اليوم المفتوح
+            let filteredOrders = orders.filter(o => {
+                const time = o['Created at'] || o.Time || o.time || o.created_on;
+                return isOrderFromToday(time);
+            });
+
+            // 2. تطبيق الترقيم التسلسلي
+            filteredOrders = calculateDailySequence(filteredOrders);
+
+            // 3. معالجة التنبيهات
+            filteredOrders = processOrderAlerts(filteredOrders);
 
             dynamicContent.innerHTML = '';
             const getStatus = (o) => { const s = o.Status || o.status; return (typeof s === 'object' && s !== null) ? s.value : s; };
-            const activeOrders = orders.filter(o => getStatus(o) === 'قيد التحضير');
+            const activeOrders = filteredOrders.filter(o => getStatus(o) === 'قيد التحضير');
 
             const header = document.createElement('div');
             header.className = "flex justify-between items-center mb-6 sticky top-0 bg-gray-800 py-4 z-10 border-b border-gray-700";
@@ -498,20 +532,19 @@
             grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4";
 
             if (activeOrders.length === 0) {
-                dynamicContent.innerHTML += `<div class="text-gray-400 text-center col-span-full py-10 flex flex-col items-center"><div class="text-4xl mb-2">😴</div><div>لا توجد طلبات جديدة.</div></div>`;
+                dynamicContent.innerHTML += `<div class="text-gray-400 text-center col-span-full py-10 flex flex-col items-center"><div class="text-4xl mb-2">😴</div><div>لا توجد طلبات جديدة لليوم.</div></div>`;
                 return;
             }
 
             activeOrders.forEach(order => {
-                const card = document.createElement('div');
-                // إضافة كلاس التنبيه إذا كان الطلب جديداً
                 const alertClass = order.isNew ? 'animate-new-order' : '';
+                const card = document.createElement('div');
                 card.className = `bg-gray-800 border border-gray-600 rounded-lg overflow-hidden shadow-lg flex flex-col ${alertClass}`;
                 
                 card.innerHTML = `
                     <div class="bg-gray-700 p-3 flex justify-between items-center border-b border-gray-600">
                         <div class="flex flex-col"><span class="font-bold text-xl text-brand">${order.Table || '??'}</span><span class="text-xs text-gray-400">${formatOrderTime(order)}</span></div>
-                        <span class="text-sm font-mono bg-gray-900 px-2 py-1 rounded text-gray-300">#${order.id}</span>
+                        <span class="text-lg font-mono font-bold bg-gray-900 px-2 py-1 rounded text-white">${order.dailySequence}</span>
                     </div>
                     <div class="p-4 flex-1 bg-gray-800/50"><ul class="text-gray-200 text-sm font-medium leading-relaxed"><li class="flex items-start gap-2"><span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span><span>${order.Details || '-'}</span></li></ul></div>
                     <div class="p-3 bg-gray-700 border-t border-gray-600"><button id="btn-done-${order.id}" onclick="updateOrderStatus(${order.id}, 'جاهز')" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition shadow-md">جاهز ✅</button></div>
@@ -522,47 +555,59 @@
         }
 
         function renderCashier(orders) {
-            // معالجة التنبيهات قبل الرسم
-            orders = processOrderAlerts(orders);
+            // 1. فلترة اليوم المفتوح
+            let filteredOrders = orders.filter(o => {
+                const time = o['Created at'] || o.Time || o.time || o.created_on;
+                return isOrderFromToday(time);
+            });
+
+            // 2. تطبيق الترقيم التسلسلي
+            filteredOrders = calculateDailySequence(filteredOrders);
+
+            // 3. معالجة التنبيهات
+            filteredOrders = processOrderAlerts(filteredOrders);
 
             dynamicContent.innerHTML = '';
             const getPrice = (o) => { const raw = o.total || o.Total || o.price || o.Price; return parseFloat((raw||0).toString().replace(/[^0-9.]/g, '')) || 0; };
             const getStatus = (o) => { const s = o.Status || o.status; return (typeof s === 'object' && s !== null) ? s.value : s; };
 
-            let totalSales = 0; orders.forEach(o => totalSales += getPrice(o));
-            const avgOrderValue = orders.length > 0 ? (totalSales / orders.length).toFixed(2) : 0;
+            let totalSales = 0; filteredOrders.forEach(o => totalSales += getPrice(o));
+            const avgOrderValue = filteredOrders.length > 0 ? (totalSales / filteredOrders.length).toFixed(2) : 0;
 
             const kpiSection = document.createElement('div');
             kpiSection.className = "grid grid-cols-1 md:grid-cols-3 gap-6 mb-8";
             kpiSection.innerHTML = `
-                <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-brand shadow-lg"><p class="text-gray-400 text-sm mb-1">المبيعات</p><h3 class="text-3xl font-bold text-white">${totalSales.toLocaleString()} <span class="text-sm text-brand">DA</span></h3></div>
-                <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-blue-500 shadow-lg"><p class="text-gray-400 text-sm mb-1">الطلبات</p><h3 class="text-3xl font-bold text-white">${orders.length}</h3></div>
-                <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-green-500 shadow-lg"><p class="text-gray-400 text-sm mb-1">متوسط</p><h3 class="text-3xl font-bold text-white">${avgOrderValue} <span class="text-sm text-green-500">DA</span></h3></div>
+                <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-brand shadow-lg"><p class="text-gray-400 text-sm mb-1">المبيعات (اليوم)</p><h3 class="text-3xl font-bold text-white">${totalSales.toLocaleString()} <span class="text-sm text-brand">DA</span></h3></div>
+                <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-blue-500 shadow-lg"><p class="text-gray-400 text-sm mb-1">الطلبات (اليوم)</p><h3 class="text-3xl font-bold text-white">${filteredOrders.length}</h3></div>
+                <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-green-500 shadow-lg"><p class="text-gray-400 text-sm mb-1">متوسط السلة</p><h3 class="text-3xl font-bold text-white">${avgOrderValue} <span class="text-sm text-green-500">DA</span></h3></div>
             `;
             dynamicContent.appendChild(kpiSection);
 
+            const tableHeader = document.createElement('div');
+            tableHeader.className = "flex justify-between items-center mb-4";
+            tableHeader.innerHTML = `<div class="flex items-center gap-3"><h2 class="text-xl font-bold text-white">سجل العمليات اليومي</h2><span class="live-indicator" title="تحديث مباشر"></span></div>`;
+            dynamicContent.appendChild(tableHeader);
+
             const tableContainer = document.createElement('div');
             tableContainer.className = "overflow-x-auto bg-gray-800 rounded-lg shadow border border-gray-700";
-            let tableHTML = `<table class="w-full text-left border-collapse"><thead><tr class="bg-gray-700 text-gray-300 text-sm"><th class="p-4 text-right">#</th><th class="p-4 text-right">الوقت</th><th class="p-4 text-right">الطاولة</th><th class="p-4 text-right w-1/3">التفاصيل</th><th class="p-4 text-left">السعر</th><th class="p-4 text-center">الحالة</th></tr></thead><tbody class="divide-y divide-gray-700 text-gray-300 text-sm">`;
+            let tableHTML = `<table class="w-full text-left border-collapse"><thead><tr class="bg-gray-700 text-gray-300 text-sm"><th class="p-4 text-right">رقم الطلب</th><th class="p-4 text-right">الوقت</th><th class="p-4 text-right">الطاولة</th><th class="p-4 text-right w-1/3">التفاصيل</th><th class="p-4 text-left">السعر</th><th class="p-4 text-center">الحالة</th></tr></thead><tbody class="divide-y divide-gray-700 text-gray-300 text-sm">`;
             
-            orders.forEach(order => {
+            filteredOrders.forEach(order => {
                 const statusVal = getStatus(order) || 'Unknown';
                 const statusColors = { 'قيد التحضير': 'text-yellow-300 border-yellow-700', 'جاهز': 'text-green-300 border-green-700', 'مدفوع': 'text-blue-300 border-blue-700' };
                 const statusClass = statusColors[statusVal] || 'text-gray-300';
                 
-                // تحديد كلاس التنبيه
                 let rowAlertClass = '';
                 if (order.isNew) rowAlertClass = 'animate-new-order';
                 else if (order.justReady) rowAlertClass = 'animate-ready-order';
 
-                tableHTML += `<tr class="hover:bg-gray-750 transition duration-150 ${rowAlertClass}"><td class="p-4 text-right text-brand">#${order.id}</td><td class="p-4 text-right text-gray-400">${formatOrderTime(order)}</td><td class="p-4 text-right font-bold">${order.Table||'Takeaway'}</td><td class="p-4 text-right truncate max-w-xs">${order.Details||'-'}</td><td class="p-4 text-left font-bold text-white">${getPrice(order).toLocaleString()} DA</td><td class="p-4 text-center"><span class="px-2 py-1 rounded-full text-xs border ${statusClass}">${statusVal}</span></td></tr>`;
+                tableHTML += `<tr class="hover:bg-gray-750 transition duration-150 ${rowAlertClass}"><td class="p-4 text-right font-mono font-bold text-white">${order.dailySequence}</td><td class="p-4 text-right text-gray-400">${formatOrderTime(order)}</td><td class="p-4 text-right font-bold">${order.Table||'Takeaway'}</td><td class="p-4 text-right truncate max-w-xs">${order.Details||'-'}</td><td class="p-4 text-left font-bold text-white">${getPrice(order).toLocaleString()} DA</td><td class="p-4 text-center"><span class="px-2 py-1 rounded-full text-xs border ${statusClass}">${statusVal}</span></td></tr>`;
             });
             tableHTML += `</tbody></table>`;
             tableContainer.innerHTML = tableHTML;
             dynamicContent.appendChild(tableContainer);
         }
 
-        // 5. دالة رسم محرر المنيو (Menu Editor Rendering) - جديد
         function renderMenuEditor(items) {
             dynamicContent.innerHTML = '';
             
@@ -577,18 +622,13 @@
             items.forEach(item => {
                 const name = item.Name || item.name || "بدون اسم";
                 const price = item.Price || item.price || 0;
-                // التعامل مع الصورة
                 const imgUrl = (item.image && item.image.length > 0) ? item.image[0].url : "https://placehold.co/400x300/374151/FFFFFF?text=No+Image";
-                // التعامل مع التصنيف
                 const category = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'عام');
-                // التعامل مع التوفر
                 const availObj = item.Availability || item.availability;
                 const isAvailable = (typeof availObj === 'object' && availObj) ? availObj.value === "متوفر" : availObj === "متوفر";
                 
                 const card = document.createElement('div');
                 card.className = "bg-gray-800 border border-gray-700 rounded-xl overflow-hidden shadow-lg flex flex-col";
-                
-                // حالة الزر
                 const btnClass = isAvailable ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700";
                 const btnText = isAvailable ? "متوفر" : "غير متوفر";
 
@@ -598,26 +638,11 @@
                         <span class="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">${category}</span>
                     </div>
                     <div class="p-4 flex-1 flex flex-col gap-4">
-                        <div>
-                            <h3 class="text-lg font-bold text-white">${name}</h3>
-                        </div>
-                        
-                        <div>
-                            <label class="text-xs text-gray-400 block mb-1">السعر (DA)</label>
-                            <input type="number" id="price-${item.id}" value="${price}" 
-                                class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none">
-                        </div>
-
+                        <div><h3 class="text-lg font-bold text-white">${name}</h3></div>
+                        <div><label class="text-xs text-gray-400 block mb-1">السعر (DA)</label><input type="number" id="price-${item.id}" value="${price}" class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none"></div>
                         <div class="flex items-center justify-between">
-                            <button id="toggle-${item.id}" onclick="toggleAvailability(this)" data-status="${isAvailable ? 'متوفر' : 'غير متوفر'}"
-                                class="text-xs px-3 py-2 rounded text-white transition ${btnClass}">
-                                ${btnText}
-                            </button>
-                            
-                            <button id="btn-save-${item.id}" onclick="saveMenuItem(${item.id})" 
-                                class="bg-brand hover:bg-brand-dark text-black font-bold px-4 py-2 rounded text-sm transition">
-                                حفظ
-                            </button>
+                            <button id="toggle-${item.id}" onclick="toggleAvailability(this)" data-status="${isAvailable ? 'متوفر' : 'غير متوفر'}" class="text-xs px-3 py-2 rounded text-white transition ${btnClass}">${btnText}</button>
+                            <button id="btn-save-${item.id}" onclick="saveMenuItem(${item.id})" class="bg-brand hover:bg-brand-dark text-black font-bold px-4 py-2 rounded text-sm transition">حفظ</button>
                         </div>
                     </div>
                 `;
@@ -626,36 +651,131 @@
             dynamicContent.appendChild(grid);
         }
 
-        // دوال مساعدة للمنيو (داخلية)
+        // 🆕 دالة رسم التحليلات (Analytics Rendering)
+        function renderAnalytics(orders) {
+            dynamicContent.innerHTML = '';
+            
+            // رأس الصفحة
+            const header = document.createElement('div');
+            header.className = "flex justify-between items-center mb-6";
+            header.innerHTML = `
+                <h2 class="text-2xl font-bold text-white">إحصائيات المبيعات</h2>
+                <div class="flex gap-2">
+                    <span class="bg-gray-700 px-3 py-1 rounded text-sm text-gray-300">اليوم</span>
+                </div>
+            `;
+            dynamicContent.appendChild(header);
+
+            // فلترة طلبات اليوم فقط
+            const todayOrders = orders.filter(o => {
+                const time = o['Created at'] || o.Time || o.time || o.created_on;
+                return isOrderFromToday(time);
+            });
+
+            // 1. إعداد بيانات Pie Chart (الأكثر مبيعاً)
+            const itemCounts = {};
+            todayOrders.forEach(order => {
+                const details = order.Details || "";
+                // محاولة استخراج الأصناف. مثال: "2x Burger, 1x Pepsi"
+                // Regex بسيط للبحث عن الكلمات
+                const items = details.split(/,|،/);
+                items.forEach(i => {
+                    const cleanName = i.replace(/^\d+x\s*/, '').trim(); // إزالة "2x "
+                    if(cleanName && cleanName !== 'لا توجد تفاصيل') {
+                        itemCounts[cleanName] = (itemCounts[cleanName] || 0) + 1;
+                    }
+                });
+            });
+
+            const topItems = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0, 5); // أفضل 5
+            
+            // 2. إعداد بيانات Line Chart (المبيعات بالساعة)
+            const salesByHour = {};
+            todayOrders.forEach(order => {
+                const time = order['Created at'] || order.Time;
+                if(time) {
+                    const hour = new Date(time).getHours();
+                    const price = parseFloat((order.Price||0).toString().replace(/[^0-9.]/g, '')) || 0;
+                    salesByHour[hour] = (salesByHour[hour] || 0) + price;
+                }
+            });
+            const hours = Object.keys(salesByHour).sort((a,b) => a-b);
+            const salesData = hours.map(h => salesByHour[h]);
+            const hourLabels = hours.map(h => `${h}:00`);
+
+            // 3. بناء هيكل الـ Grid
+            const grid = document.createElement('div');
+            grid.className = "grid grid-cols-1 lg:grid-cols-2 gap-6";
+            
+            // حاوية Pie Chart
+            const pieContainer = document.createElement('div');
+            pieContainer.className = "bg-gray-800 p-4 rounded-xl border border-gray-700";
+            pieContainer.innerHTML = `<h3 class="text-white font-bold mb-4">الأصناف الأكثر مبيعاً</h3><canvas id="pieChart"></canvas>`;
+            grid.appendChild(pieContainer);
+
+            // حاوية Line Chart
+            const lineContainer = document.createElement('div');
+            lineContainer.className = "bg-gray-800 p-4 rounded-xl border border-gray-700";
+            lineContainer.innerHTML = `<h3 class="text-white font-bold mb-4">المبيعات حسب الساعة</h3><canvas id="lineChart"></canvas>`;
+            grid.appendChild(lineContainer);
+
+            dynamicContent.appendChild(grid);
+
+            // 4. رسم المخططات (بعد إضافة العناصر للـ DOM)
+            if(topItems.length > 0) {
+                new Chart(document.getElementById('pieChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: topItems.map(i => i[0]),
+                        datasets: [{
+                            data: topItems.map(i => i[1]),
+                            backgroundColor: ['#FF9900', '#10B981', '#3B82F6', '#EF4444', '#8B5CF6'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
+                });
+            } else {
+                document.getElementById('pieChart').parentElement.innerHTML += "<p class='text-gray-500 text-center mt-4'>لا توجد بيانات كافية</p>";
+            }
+
+            if(hours.length > 0) {
+                new Chart(document.getElementById('lineChart'), {
+                    type: 'line',
+                    data: {
+                        labels: hourLabels,
+                        datasets: [{
+                            label: 'المبيعات (DA)',
+                            data: salesData,
+                            borderColor: '#FF9900',
+                            backgroundColor: 'rgba(255, 153, 0, 0.2)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: { 
+                        scales: { y: { ticks: { color: '#9CA3AF' }, grid: { color: '#374151' } }, x: { ticks: { color: '#9CA3AF' }, grid: { display: false } } },
+                        plugins: { legend: { labels: { color: '#fff' } } }
+                    }
+                });
+            } else {
+                document.getElementById('lineChart').parentElement.innerHTML += "<p class='text-gray-500 text-center mt-4'>لا توجد بيانات كافية</p>";
+            }
+        }
+
         window.toggleAvailability = function(btn) {
             const currentStatus = btn.getAttribute('data-status');
-            if (currentStatus === 'متوفر') {
-                btn.setAttribute('data-status', 'غير متوفر');
-                btn.innerText = 'غير متوفر';
-                btn.className = "text-xs px-3 py-2 rounded text-white transition bg-red-600 hover:bg-red-700";
-            } else {
-                btn.setAttribute('data-status', 'متوفر');
-                btn.innerText = 'متوفر';
-                btn.className = "text-xs px-3 py-2 rounded text-white transition bg-green-600 hover:bg-green-700";
-            }
+            const newStatus = currentStatus === 'متوفر' ? 'غير متوفر' : 'متوفر';
+            btn.setAttribute('data-status', newStatus);
+            btn.innerText = newStatus;
+            btn.className = `text-xs px-3 py-2 rounded text-white transition ${newStatus === 'متوفر' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`;
         };
 
         window.saveMenuItem = function(id) {
-            const priceInput = document.getElementById(`price-${id}`);
-            const toggleBtn = document.getElementById(`toggle-${id}`);
-            
-            const newPrice = parseFloat(priceInput.value);
-            const newAvailability = toggleBtn.getAttribute('data-status'); // "متوفر" أو "غير متوفر"
-
-            updateMenuItem(id, {
-                "Price": newPrice,
-                "Availability": newAvailability
-            });
+            const price = parseFloat(document.getElementById(`price-${id}`).value);
+            const status = document.getElementById(`toggle-${id}`).getAttribute('data-status');
+            updateMenuItem(id, { "Price": price, "Availability": status });
         };
-
-        // =========================================================
-        // 🎮 المنطق التفاعلي (Interaction Logic)
-        // =========================================================
 
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -702,13 +822,23 @@
                 STATE.pollingInterval = setInterval(runCashier, 10000);
             }
             else if (viewType === 'menu') {
-                // الوضع الجديد للمنيو (API)
                 try {
                     const data = await fetchMenu();
                     renderMenuEditor(data);
                 } catch (e) {
                     console.error(e);
                     dynamicContent.innerHTML = `<div class="text-red-400 p-10 text-center">خطأ في تحميل القائمة.</div>`;
+                } finally {
+                    loader.style.display = 'none';
+                }
+            }
+            else if (viewType === 'analytics') {
+                try {
+                    const data = await fetchOrders(ORDERS_TABLE_ID);
+                    renderAnalytics(data);
+                } catch (e) {
+                    console.error(e);
+                    dynamicContent.innerHTML = `<div class="text-red-400 p-10 text-center">خطأ في تحميل البيانات.</div>`;
                 } finally {
                     loader.style.display = 'none';
                 }
@@ -741,10 +871,7 @@
             localStorage.removeItem(STATE.storageKeys.role);
             localStorage.removeItem(STATE.storageKeys.lastView);
             STATE.currentUser = null; STATE.currentRole = null; STATE.currentLinks = {};
-            // Reset state
-            STATE.knownOrders = {};
-            STATE.isFirstFetch = true;
-            
+            STATE.knownOrders = {}; STATE.isFirstFetch = true;
             sidebar.classList.remove('hidden'); sidebar.classList.add('flex');
             closeLogoutModal();
             dashboardScreen.classList.add('hidden-section');
