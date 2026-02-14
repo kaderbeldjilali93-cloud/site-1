@@ -167,7 +167,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v1.5.0 Sync-Active</p>
+                    <p class="text-xs text-gray-600">v1.5.1 Time-Fix</p>
                 </div>
             </aside>
 
@@ -322,11 +322,28 @@
         // 🌐 دوال الـ API والـ Rendering
         // =========================================================
 
+        // دالة مساعدة لتنسيق الوقت (جديدة)
+        function formatOrderTime(order) {
+            const rawTime = order['Created at'] || order.Time || order.time || order.created_on;
+            if (!rawTime) return '--:--';
+            
+            try {
+                const date = new Date(rawTime);
+                if (isNaN(date.getTime())) return rawTime; // إذا لم يكن تاريخاً صالحاً، أعد النص كما هو
+
+                return date.toLocaleTimeString('ar-DZ', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false // استخدام صيغة 24 ساعة
+                });
+            } catch (e) {
+                return '--:--';
+            }
+        }
+
         // 1. دالة جلب الطلبات (Orders)
         async function fetchOrders(tableId) {
             try {
-                // محاكاة الاتصال إذا لم يكن هناك ID حقيقي
-                
                 const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true`, {
                     method: 'GET',
                     headers: {
@@ -341,18 +358,17 @@
                 console.warn("Using Mock Data for API (Failed to fetch from table " + tableId + "):", error.message);
                 // بيانات وهمية للطلبات (تم تحديث الحالات للغة العربية)
                 return [
-                    { id: 101, Table: "T-5", Details: "2x برجر كلاسيك، 1x بيبسي", Status: { id:1, value: "قيد التحضير" }, Time: "12:30", Price: "1150 DA" },
-                    { id: 102, Table: "T-2", Details: "1x بيتزا مارغريتا", Status: "جاهز", Time: "12:32", Price: "500" },
-                    { id: 103, Table: "Takeaway", Details: "3x شاورما دجاج (سبايسي)", Status: "قيد التحضير", Time: "12:35", Price: "900 دج" },
-                    { id: 104, Table: "T-8", Details: "1x قهوة، 1x تشيز كيك", Status: { id:2, value: "جاهز" }, Time: "12:40", Price: "650" },
-                    { id: 105, Table: "T-1", Details: "1x مشاوي مشكل", Status: "مدفوع", Time: "12:15", Price: "1800" },
+                    { id: 101, Table: "T-5", Details: "2x برجر كلاسيك، 1x بيبسي", Status: { id:1, value: "قيد التحضير" }, Time: "2024-02-14T12:30:00", Price: "1150 DA" },
+                    { id: 102, Table: "T-2", Details: "1x بيتزا مارغريتا", Status: "جاهز", Time: "2024-02-14T12:32:00", Price: "500" },
+                    { id: 103, Table: "Takeaway", Details: "3x شاورما دجاج (سبايسي)", Status: "قيد التحضير", Time: "2024-02-14T12:35:00", Price: "900 دج" },
+                    { id: 104, Table: "T-8", Details: "1x قهوة، 1x تشيز كيك", Status: { id:2, value: "جاهز" }, Time: "2024-02-14T12:40:00", Price: "650" },
+                    { id: 105, Table: "T-1", Details: "1x مشاوي مشكل", Status: "مدفوع", Time: "2024-02-14T12:15:00", Price: "1800" },
                 ];
             }
         }
 
-        // 2. دالة تحديث حالة الطلب (جديدة)
+        // 2. دالة تحديث حالة الطلب
         async function updateOrderStatus(rowId, newStatus) {
-            // إظهار تأثير التحميل البسيط (اختياري)
             const btn = document.getElementById(`btn-done-${rowId}`);
             if(btn) {
                 btn.innerHTML = `<span class="animate-spin inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span> جاري التحديث...`;
@@ -371,14 +387,12 @@
 
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
-                // تحديث الشاشة فوراً بعد النجاح
                 const data = await fetchOrders(ORDERS_TABLE_ID);
                 renderKDS(data);
                 
             } catch (error) {
                 console.error("Error updating status:", error);
                 alert("فشل تحديث الحالة. تأكد من الاتصال بالشبكة.");
-                // إعادة الزر لحالته
                 if(btn) {
                     btn.innerHTML = 'جاهز ✅';
                     btn.disabled = false;
@@ -390,13 +404,11 @@
         function renderKDS(orders) {
             dynamicContent.innerHTML = '';
             
-            // دالة مساعدة لاستخراج نص الحالة بشكل آمن
             const getStatus = (o) => {
                 const s = o.Status || o.status;
                 return (typeof s === 'object' && s !== null) ? s.value : s;
             };
 
-            // فلترة الطلبات: إظهار "قيد التحضير" فقط
             const activeOrders = orders.filter(o => getStatus(o) === 'قيد التحضير');
 
             const header = document.createElement('div');
@@ -425,10 +437,10 @@
                 const tableNum = order.Table || order.table || "??";
                 const details = order.Details || order.details || "لا توجد تفاصيل";
                 const orderId = order.id || "#";
-                const time = order.Time || order.time || "--:--";
+                const time = formatOrderTime(order); // استخدام الدالة الجديدة للوقت
 
                 const card = document.createElement('div');
-                card.className = "bg-gray-800 border border-gray-600 rounded-lg overflow-hidden shadow-lg flex flex-col animate-pulse-once"; // animate-pulse-once is figurative here
+                card.className = "bg-gray-800 border border-gray-600 rounded-lg overflow-hidden shadow-lg flex flex-col animate-pulse-once"; 
                 
                 card.innerHTML = `
                     <div class="bg-gray-700 p-3 flex justify-between items-center border-b border-gray-600">
@@ -459,11 +471,10 @@
             dynamicContent.appendChild(grid);
         }
 
-        // 4. دالة رسم واجهة الكاشير (Cashier Rendering) - معدلة للألوان العربية
+        // 4. دالة رسم واجهة الكاشير (Cashier Rendering) - معدلة للألوان العربية والوقت
         function renderCashier(orders) {
             dynamicContent.innerHTML = '';
 
-            // دالة مساعدة لاستخراج السعر وتنظيفه
             const getPrice = (o) => {
                 const rawPrice = o.total || o.Total || o.price || o.Price;
                 if (!rawPrice) return 0;
@@ -471,13 +482,11 @@
                 return parseFloat(cleanedString) || 0;
             };
 
-            // دالة مساعدة لاستخراج الحالة
             const getStatus = (o) => {
                 const s = o.Status || o.status;
                 return (typeof s === 'object' && s !== null) ? s.value : s;
             };
 
-            // حساب الإجماليات
             let totalSales = 0;
             let ordersCount = orders.length;
             
@@ -487,7 +496,6 @@
 
             const avgOrderValue = ordersCount > 0 ? (totalSales / ordersCount).toFixed(2) : 0;
 
-            // 1. قسم KPIs
             const kpiSection = document.createElement('div');
             kpiSection.className = "grid grid-cols-1 md:grid-cols-3 gap-6 mb-8";
             kpiSection.innerHTML = `
@@ -506,7 +514,6 @@
             `;
             dynamicContent.appendChild(kpiSection);
 
-            // 2. عنوان الجدول
             const tableHeader = document.createElement('div');
             tableHeader.className = "flex justify-between items-center mb-4";
             tableHeader.innerHTML = `
@@ -517,7 +524,6 @@
             `;
             dynamicContent.appendChild(tableHeader);
 
-            // 3. جدول البيانات
             const tableContainer = document.createElement('div');
             tableContainer.className = "overflow-x-auto bg-gray-800 rounded-lg shadow border border-gray-700";
             
@@ -542,13 +548,12 @@
                 orders.forEach(order => {
                     const statusVal = getStatus(order) || 'Unknown';
                     const priceVal = getPrice(order).toLocaleString();
+                    const timeVal = formatOrderTime(order); // استخدام الدالة الجديدة للوقت
 
-                    // تحديث الألوان لتتوافق مع العربية
                     const statusColors = {
                         'قيد التحضير': 'bg-yellow-900 text-yellow-300 border-yellow-700',
                         'جاهز': 'bg-green-900 text-green-300 border-green-700',
                         'مدفوع': 'bg-blue-900 text-blue-300 border-blue-700',
-                        // Fallback للإنجليزية
                         'Pending': 'bg-yellow-900 text-yellow-300 border-yellow-700',
                         'Done': 'bg-green-900 text-green-300 border-green-700',
                         'Paid': 'bg-blue-900 text-blue-300 border-blue-700'
@@ -558,7 +563,7 @@
                     tableHTML += `
                         <tr class="hover:bg-gray-750 transition duration-150">
                             <td class="p-4 text-right font-mono text-brand">#${order.id || '?'}</td>
-                            <td class="p-4 text-right text-gray-400">${order.Time || '--:--'}</td>
+                            <td class="p-4 text-right text-gray-400">${timeVal}</td>
                             <td class="p-4 text-right font-bold">${order.Table || 'Takeaway'}</td>
                             <td class="p-4 text-right truncate max-w-xs" title="${order.Details}">${order.Details || '-'}</td>
                             <td class="p-4 text-left font-bold text-white">${priceVal} <span class="text-xs text-gray-500">DA</span></td>
