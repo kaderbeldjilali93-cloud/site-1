@@ -194,7 +194,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v3.0.3 Fixed</p>
+                    <p class="text-xs text-gray-600">v3.0.4 Analytics-Parse</p>
                 </div>
             </aside>
 
@@ -684,9 +684,10 @@
                     }
 
                     // ج) تحليل محتوى الطلب (Details Parsing)
-                    const details = (order.Details || "").split(/,|،/);
+                    const details = (order.Details || "").split(/[,،▫\-\n]/);
                     details.forEach(itemStr => {
                         // استخراج الكمية والاسم باستخدام Regex
+                        // يدعم الصيغ: "2x Burger", "3 * Pizza", "Burger"
                         const match = itemStr.match(/^(\d+)\s*[xX\*]\s*(.+)/);
                         
                         let qty = 1;
@@ -772,13 +773,13 @@
                 // Food Chart
                 const foodDiv = document.createElement('div');
                 foodDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80";
-                foodDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🍔 نسب المأكولات</h3><div class="relative w-full flex-1"><canvas id="foodChart"></canvas></div>`;
+                foodDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🍔 نسب المأكولات</h3><div class="relative w-full h-40"><canvas id="foodChart"></canvas></div>`;
                 chartsGrid.appendChild(foodDiv);
 
                 // Drink Chart
                 const drinkDiv = document.createElement('div');
                 drinkDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80";
-                drinkDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🥤 نسب المشروبات</h3><div class="relative w-full flex-1"><canvas id="drinkChart"></canvas></div>`;
+                drinkDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🥤 نسب المشروبات</h3><div class="relative w-full h-40"><canvas id="drinkChart"></canvas></div>`;
                 chartsGrid.appendChild(drinkDiv);
 
                 // Line Chart
@@ -837,6 +838,7 @@
                     cutout: '65%',
                     plugins: { legend: { display: false } }, 
                     borderWidth: 3,
+                    layout: { padding: 20 },
                     borderColor: '#1f2937',
                     hoverOffset: 15,
                     animation: { duration: 1500, easing: 'easeOutQuart' }
