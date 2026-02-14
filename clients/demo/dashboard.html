@@ -137,7 +137,8 @@
     <!-- ========================================== -->
     <!-- لوحة التحكم (The Dashboard) -->
     <!-- ========================================== -->
-    <section id="dashboard-screen" class="hidden-section h-full flex flex-col">
+    <!-- تم تعديل السطر التالي لإخفاء العنصر عبر الستايل مباشرة -->
+    <section id="dashboard-screen" class="h-full flex flex-col" style="display: none;">
         
         <!-- الشريط العلوي (Header) -->
         <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center shadow-md z-20">
@@ -194,7 +195,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v3.0.4 Analytics-Parse</p>
+                    <p class="text-xs text-gray-600">v3.0.5 UI-Fix</p>
                 </div>
             </aside>
 
@@ -343,7 +344,8 @@
             }
 
             loginScreen.style.display = 'none';
-            dashboardScreen.classList.remove('hidden-section');
+            // تم التعديل هنا للتحكم بالعرض عبر الستايل
+            dashboardScreen.style.display = 'flex';
         }
 
         // =========================================================
@@ -687,7 +689,6 @@
                     const details = (order.Details || "").split(/[,،▫\-\n]/);
                     details.forEach(itemStr => {
                         // استخراج الكمية والاسم باستخدام Regex
-                        // يدعم الصيغ: "2x Burger", "3 * Pizza", "Burger"
                         const match = itemStr.match(/^(\d+)\s*[xX\*]\s*(.+)/);
                         
                         let qty = 1;
@@ -773,13 +774,13 @@
                 // Food Chart
                 const foodDiv = document.createElement('div');
                 foodDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80";
-                foodDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🍔 نسب المأكولات</h3><div class="relative w-full h-40"><canvas id="foodChart"></canvas></div>`;
+                foodDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🍔 نسب المأكولات</h3><div class="relative w-full flex-1"><canvas id="foodChart"></canvas></div>`;
                 chartsGrid.appendChild(foodDiv);
 
                 // Drink Chart
                 const drinkDiv = document.createElement('div');
                 drinkDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80";
-                drinkDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🥤 نسب المشروبات</h3><div class="relative w-full h-40"><canvas id="drinkChart"></canvas></div>`;
+                drinkDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🥤 نسب المشروبات</h3><div class="relative w-full flex-1"><canvas id="drinkChart"></canvas></div>`;
                 chartsGrid.appendChild(drinkDiv);
 
                 // Line Chart
@@ -1031,7 +1032,8 @@
             STATE.knownOrders = {}; STATE.isFirstFetch = true;
             sidebar.classList.remove('hidden'); sidebar.classList.add('flex');
             closeLogoutModal();
-            dashboardScreen.classList.add('hidden-section');
+            // تم التعديل هنا للتحكم بالعرض عبر الستايل
+            dashboardScreen.style.display = 'none';
             loginScreen.style.display = 'flex';
             contentFrame.src = ''; contentFrame.classList.add('hidden'); dynamicContent.classList.add('hidden');
             welcomeState.style.display = 'flex'; loader.style.display = 'none';
