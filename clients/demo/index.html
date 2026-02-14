@@ -114,6 +114,35 @@
             border-left: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
         }
+
+        /* Loader CSS */
+        #loader-container {
+            position: fixed;
+            inset: 0;
+            background-color: #09090b;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .loader-spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #3f3f46;
+            border-bottom-color: #D4AF37;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
     
     <script>
@@ -130,6 +159,12 @@
     </script>
 </head>
 <body class="bg-dark-950 text-gray-100 pb-28 select-none">
+
+    <!-- شاشة التحميل (Loader) -->
+    <div id="loader-container">
+        <div class="loader-spinner mb-4"></div>
+        <p class="text-brand-500 font-bold text-sm animate-pulse">جاري تحضير القائمة...</p>
+    </div>
 
     <!-- 1. الرأس الثابت -->
     <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center justify-start px-4 shadow-lg">
@@ -286,47 +321,63 @@
     </div>
 
     <script>
-        // 1. البيانات
-        const products = [
-            // --- Burger ---
-            { id: 1, name: "Cheeseburger", price: 450, category: "burger", img: "assets/burger/1.jpg", desc: "Bœuf pur, cheddar, sauce spéciale" },
-            { id: 2, name: "Chicken Crispy", price: 500, category: "burger", img: "assets/burger/2.jpg", desc: "Poulet croustillant, laitue, mayo" },
-            { id: 3, name: "Mushroom Swiss", price: 550, category: "burger", img: "assets/burger/3.jpg", desc: "Bœuf, champignons frais, suisse" },
-            { id: 4, name: "Double Cheese", price: 650, category: "burger", img: "assets/burger/4.jpg", desc: "Double bœuf, double fromage" },
-            { id: 5, name: "Zinger Spicy", price: 550, category: "burger", img: "assets/burger/5.jpg", desc: "Poulet épicé, jalapeño" },
-            { id: 6, name: "BBQ Beef", price: 600, category: "burger", img: "assets/burger/6.jpg", desc: "Bœuf, oignons croustillants, BBQ" },
+        // --- إعدادات Baserow ---
+        const BASEROW_TOKEN = "DfaoAk1o41H4iPUtkblY2ZKzXcbHxizb";
+        const MENU_TABLE_ID = "36";
+        const BASEROW_URL = `https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true`;
 
-            // --- Pizza ---
-            { id: 7, name: "Margherita", price: 600, category: "pizza", img: "assets/pizza/7.jpg", desc: "Sauce tomate, mozzarella, basilic" },
-            { id: 8, name: "Pepperoni", price: 750, category: "pizza", img: "assets/pizza/8.jpg", desc: "Pepperoni, mozzarella, origan" },
-            { id: 9, name: "4 Saisons", price: 800, category: "pizza", img: "assets/pizza/9.jpg", desc: "Mozzarella, champignons, olives" },
-            { id: 10, name: "Végétarienne", price: 650, category: "pizza", img: "assets/pizza/10.jpg", desc: "Légumes frais, mozzarella" },
-            { id: 11, name: "Poulet BBQ", price: 850, category: "pizza", img: "assets/pizza/11.jpg", desc: "Poulet, sauce BBQ, oignons" },
-            { id: 12, name: "Thon", price: 750, category: "pizza", img: "assets/pizza/12.jpg", desc: "Thon, oignons, olives" },
-
-            // --- Drinks ---
-            { id: 13, name: "Hamoud", price: 120, category: "drinks", sub_category: "soda", img: "assets/drinks/13.jpg", desc: "33cl" },
-            { id: 14, name: "Coca-Cola", price: 120, category: "drinks", sub_category: "soda", img: "assets/drinks/14.jpg", desc: "33cl" },
-            { id: 15, name: "Pepsi", price: 120, category: "drinks", sub_category: "soda", img: "assets/drinks/15.jpg", desc: "33cl" },
-            { id: 16, name: "Slim Orange", price: 120, category: "drinks", sub_category: "soda", img: "assets/drinks/16.jpg", desc: "33cl" },
-            { id: 17, name: "Slim Citron", price: 120, category: "drinks", sub_category: "soda", img: "assets/drinks/17.jpg", desc: "33cl" },
-            { id: 18, name: "Selecto", price: 120, category: "drinks", sub_category: "soda", img: "assets/drinks/18.jpg", desc: "33cl" },
-            
-            { id: 19, name: "Tazij", price: 60, category: "drinks", sub_category: "juice", img: "assets/drinks/19.jpg", desc: "Jus d'orange" },
-            { id: 20, name: "Ramy", price: 70, category: "drinks", sub_category: "juice", img: "assets/drinks/20.jpg", desc: "Fraise" },
-            { id: 21, name: "Rouiba", price: 60, category: "drinks", sub_category: "juice", img: "assets/drinks/21.jpg", desc: "Mangue" },
-            { id: 22, name: "Ramy (1L)", price: 180, category: "drinks", sub_category: "juice", img: "assets/drinks/22.jpg", desc: "Pêche avec pulpe" },
-            { id: 23, name: "Rouiba (1L)", price: 140, category: "drinks", sub_category: "juice", img: "assets/drinks/23.jpg", desc: "Citronnade" },
-            { id: 24, name: "Tazij (1L)", price: 150, category: "drinks", sub_category: "juice", img: "assets/drinks/24.jpg", desc: "Mélange de fruits" },
-
-            // --- Sides ---
-            { id: 27, name: "Frites", price: 200, category: "sides", sub_category: "", img: "assets/sides/27.jpg", desc: "Croustillantes" },
-            { id: 28, name: "Mayonnaise", price: 0, category: "sides", sub_category: "", img: "assets/sides/28.jpg", desc: "Gratuit" },
-            { id: 29, name: "Harissa", price: 0, category: "sides", sub_category: "", img: "assets/sides/29.jpg", desc: "Gratuit" },
-            { id: 30, name: "Ketchup", price: 0, category: "sides", sub_category: "", img: "assets/sides/30.jpg", desc: "Gratuit" }
-        ];
-
+        // 1. تعريف المصفوفة فارغة
+        let products = [];
         let cart = {};
+
+        // دالة جلب البيانات من Baserow
+        async function fetchMenuItems() {
+            try {
+                const response = await fetch(BASEROW_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Token ${BASEROW_TOKEN}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // تحويل البيانات (Mapping)
+                products = data.results
+                    // فلترة العناصر المتوفرة فقط
+                    .filter(item => item.Availability && item.Availability.value === 'متوفر')
+                    .map(item => {
+                        // محاولة استخراج التصنيف الفرعي (للمشروبات) إذا وجد، وإلا افتراض قيمة افتراضية
+                        let subCat = '';
+                        if(item.SubCategory && item.SubCategory.value) {
+                            subCat = item.SubCategory.value.toLowerCase();
+                        } else if(item.Category && item.Category.value.toLowerCase() === 'drinks') {
+                            // افتراضي إذا لم يتم تحديد SubCategory للمشروبات لتجنب اختفائها
+                            subCat = 'soda'; 
+                        }
+
+                        return {
+                            id: item.id,
+                            name: item.Name,
+                            price: parseFloat(item.Price) || 0,
+                            category: item.Category ? item.Category.value.toLowerCase() : 'other',
+                            sub_category: subCat,
+                            img: (item.Image && item.Image.length > 0) ? item.Image[0].url : 'https://placehold.co/400x300?text=No+Image',
+                            desc: item.Description || ''
+                        };
+                    });
+
+                console.log("تم جلب المنتجات:", products);
+
+            } catch (error) {
+                console.error("خطأ في جلب قائمة الطعام:", error);
+                alert("حدث خطأ أثناء تحميل القائمة، يرجى تحديث الصفحة.");
+            }
+        }
 
         // 2. دالة توليد بطاقة المنتج (3D Glassy)
         function createProductCard(p) {
@@ -391,16 +442,17 @@
                 .filter(p => p.category === 'pizza')
                 .map(createProductCard).join('');
             
-            // Drinks
+            // Drinks - Soda
             document.getElementById('grid-drinks-soda').innerHTML = products
                 .filter(p => p.category === 'drinks' && p.sub_category === 'soda')
                 .map(createProductCard).join('');
             
+            // Drinks - Juice
             document.getElementById('grid-drinks-juice').innerHTML = products
                 .filter(p => p.category === 'drinks' && p.sub_category === 'juice')
                 .map(createProductCard).join('');
 
-            // Sides
+            // Sides (Suppléments)
             document.getElementById('grid-sides').innerHTML = products
                 .filter(p => p.category === 'sides')
                 .map(createProductCard).join('');
@@ -465,8 +517,8 @@
             if (Object.keys(cart).length === 0) return;
 
             Object.values(cart).forEach(item => {
-                if (item.sub_category === 'soda' || item.sub_category === 'juice') hasDrinks = true;
-                if (item.id === 27) hasFries = true; 
+                if (item.category === 'drinks') hasDrinks = true; // تعديل منطق الفحص
+                if (item.name.toLowerCase().includes('frites') || item.category === 'sides') hasFries = true; 
 
                 list.innerHTML += `
                     <div class="flex justify-between items-center text-sm border-b border-white/10 pb-3 last:border-0 animate-slide-up-smooth">
@@ -486,8 +538,9 @@
             let upsellHTML = '';
             let showUpsell = false;
 
+            // محاولة اقتراح مشروب عشوائي
             if (!hasDrinks) {
-                const drink = products.find(p => p.id === 13);
+                const drink = products.find(p => p.category === 'drinks');
                 if (drink) {
                     upsellHTML += `
                         <div class="relative flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10">
@@ -505,15 +558,16 @@
                 }
             }
 
+            // محاولة اقتراح بطاطس
             if (!hasFries) {
-                const fries = products.find(p => p.id === 27);
+                const fries = products.find(p => p.name.toLowerCase().includes('frites') || (p.category === 'sides' && p.price > 0));
                 if (fries) {
                     upsellHTML += `
                         <div class="relative flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10 ${showUpsell ? 'mt-2' : ''}">
                             <div class="flex items-center gap-3">
                                 <img src="${fries.img}" class="w-10 h-10 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/20" onerror="this.src='https://placehold.co/100x100?text=Fries'">
                                 <div class="text-sm">
-                                    <p class="font-bold text-gray-100">Frites ?</p>
+                                    <p class="font-bold text-gray-100">${fries.name} ?</p>
                                     <p class="text-brand-500 font-bold text-xs">+${fries.price} د.ج</p>
                                 </div>
                             </div>
@@ -656,7 +710,20 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        // --- تهيئة الصفحة (Initialization) ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loader = document.getElementById('loader-container');
+            
+            // 1. جلب البيانات أولاً
+            await fetchMenuItems();
+            
+            // 2. إخفاء اللودر
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+            }, 500);
+
+            // 3. عرض الأقسام
             renderAllSections();
             
             // ScrollSpy Logic (Active button based on scroll)
