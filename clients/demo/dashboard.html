@@ -194,7 +194,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v3.0.0 ERP-Analytics</p>
+                    <p class="text-xs text-gray-600">v3.0.3 Fixed</p>
                 </div>
             </aside>
 
@@ -620,246 +620,300 @@
             dynamicContent.appendChild(grid);
         }
 
-        // 🆕 دالة رسم التحليلات المتقدمة (Enhanced Analytics)
-        function renderAnalytics(orders = STATE.analyticsData, filterType = 'today') {
+        // 🆕 دالة رسم التحليلات المتقدمة (Enhanced Analytics - v2 Data Mapping)
+        async function renderAnalytics(orders = STATE.analyticsData, filterType = 'today') {
             dynamicContent.innerHTML = '';
             
-            // دالة مساعدة لاستخراج السعر (تمت إضافتها هنا لضمان الحساب الصحيح)
-            const getPrice = (o) => { 
-                const raw = o.total || o.Total || o.price || o.Price; 
-                return parseFloat((raw||0).toString().replace(/[^0-9.]/g, '')) || 0; 
-            };
+            // إظهار لودر صغير داخل المحتوى أثناء المعالجة
+            dynamicContent.innerHTML = '<div class="flex h-full items-center justify-center"><div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand"></div></div>';
 
-            // 1. فلترة البيانات حسب الزمن
-            const now = new Date();
-            const filteredOrders = orders.filter(o => {
-                const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
-                if (!rawTime) return false;
-                const t = new Date(rawTime);
-                
-                if (filterType === 'today') return isOrderFromToday(rawTime);
-                if (filterType === 'week') {
-                    const oneWeekAgo = new Date(); oneWeekAgo.setDate(now.getDate() - 7);
-                    return t >= oneWeekAgo;
-                }
-                if (filterType === 'month') {
-                    const oneMonthAgo = new Date(); oneMonthAgo.setDate(now.getDate() - 30);
-                    return t >= oneMonthAgo;
-                }
-                return true;
-            });
+            try {
+                // 1. التجهيز: جلب المنيو لبناء قاموس التصنيفات (Map Name -> Category)
+                const menuItems = await fetchMenu();
+                const categoryMap = {};
+                menuItems.forEach(item => {
+                    const itemName = (item.Name || item.name || '').toLowerCase().trim();
+                    const itemCat = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || '');
+                    if(itemName) categoryMap[itemName] = itemCat.toLowerCase();
+                });
 
-            // 2. تحليل العناصر (فصل المشروبات والأكل)
-            // تحديث الكلمات المفتاحية لتكون أكثر دقة
-            const drinkKeywords = ['hamoud', 'coca', 'pepsi', 'slim', 'selecto', 'tazij', 'ramy', 'rouiba', 'boisson', 'jus', 'soda', 'مشروب', 'عصير', 'ماء'];
-            const foodCounts = {};
-            const drinkCounts = {};
-            let totalSales = 0;
+                // دالة مساعدة لاستخراج السعر
+                const getPrice = (o) => { 
+                    const raw = o.total || o.Total || o.price || o.Price; 
+                    return parseFloat((raw||0).toString().replace(/[^0-9.]/g, '')) || 0; 
+                };
 
-            filteredOrders.forEach(order => {
-                // استخدام getPrice لحساب المبيعات بدقة
-                totalSales += getPrice(order);
-
-                const details = (order.Details || "").split(/,|،/);
-                details.forEach(item => {
-                    // تنظيف الاسم من الكميات (مثل: 2x, 3*, 1 X)
-                    const cleanName = item.replace(/^[\d\s]*[xX\*]\s*/, '').trim();
+                // 2. فلترة البيانات حسب الزمن
+                const now = new Date();
+                const filteredOrders = orders.filter(o => {
+                    const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
+                    if (!rawTime) return false;
+                    const t = new Date(rawTime);
                     
-                    if(cleanName && cleanName !== 'لا توجد تفاصيل') {
-                        const isDrink = drinkKeywords.some(k => cleanName.toLowerCase().includes(k));
-                        if(isDrink) {
-                            drinkCounts[cleanName] = (drinkCounts[cleanName] || 0) + 1;
-                        } else {
-                            foodCounts[cleanName] = (foodCounts[cleanName] || 0) + 1;
-                        }
+                    if (filterType === 'today') return isOrderFromToday(rawTime);
+                    if (filterType === 'week') {
+                        const oneWeekAgo = new Date(); oneWeekAgo.setDate(now.getDate() - 7);
+                        return t >= oneWeekAgo;
                     }
+                    if (filterType === 'month') {
+                        const oneMonthAgo = new Date(); oneMonthAgo.setDate(now.getDate() - 30);
+                        return t >= oneMonthAgo;
+                    }
+                    return true;
                 });
-            });
 
-            const topFoods = Object.entries(foodCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
-            const topDrinks = Object.entries(drinkCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
-            const avgOrder = filteredOrders.length ? (totalSales / filteredOrders.length).toFixed(2) : 0;
+                // 3. تحليل البيانات وتجميعها
+                const foodCounts = {};
+                const drinkCounts = {};
+                let totalSales = 0;
+                const salesByTime = {};
 
-            // 3. بناء الواجهة
-            // أزرار الفلتر
-            const btnClass = (type) => `px-4 py-1.5 rounded-lg text-sm font-medium transition ${filterType === type ? 'bg-brand text-black' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`;
-            
-            const header = document.createElement('div');
-            header.className = "flex flex-col md:flex-row justify-between items-center mb-8 gap-4";
-            header.innerHTML = `
-                <h2 class="text-2xl font-bold text-white flex items-center gap-2">📊 مركز التحليلات</h2>
-                <div class="flex bg-gray-800 p-1 rounded-xl">
-                    <button onclick="renderAnalytics(STATE.analyticsData, 'today')" class="${btnClass('today')}">اليوم</button>
-                    <button onclick="renderAnalytics(STATE.analyticsData, 'week')" class="${btnClass('week')}">الأسبوع</button>
-                    <button onclick="renderAnalytics(STATE.analyticsData, 'month')" class="${btnClass('month')}">الشهر</button>
-                </div>
-            `;
-            dynamicContent.appendChild(header);
-
-            // بطاقات KPI المحسنة
-            const kpiSection = document.createElement('div');
-            kpiSection.className = "grid grid-cols-1 md:grid-cols-3 gap-6 mb-8";
-            kpiSection.innerHTML = `
-                <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group hover:border-brand transition-colors">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">💰</div>
-                    <p class="text-gray-400 text-sm font-medium mb-1">إجمالي المبيعات</p>
-                    <h3 class="text-3xl font-bold text-white tracking-tight">${totalSales.toLocaleString()} <span class="text-lg text-brand font-normal">DZD</span></h3>
-                </div>
-                <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group hover:border-blue-500 transition-colors">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">📦</div>
-                    <p class="text-gray-400 text-sm font-medium mb-1">عدد الطلبات</p>
-                    <h3 class="text-3xl font-bold text-white tracking-tight">${filteredOrders.length}</h3>
-                </div>
-                <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group hover:border-green-500 transition-colors">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🛒</div>
-                    <p class="text-gray-400 text-sm font-medium mb-1">متوسط السلة</p>
-                    <h3 class="text-3xl font-bold text-white tracking-tight">${avgOrder} <span class="text-lg text-green-500 font-normal">DZD</span></h3>
-                </div>
-            `;
-            dynamicContent.appendChild(kpiSection);
-
-            // إعداد قوائم HTML لـ Top 5
-            const generateListHTML = (items, icon) => {
-                if (items.length === 0) return '<p class="text-xs text-gray-500 text-center mt-4">لا توجد بيانات</p>';
-                return `
-                    <ul class="mt-6 w-full space-y-2">
-                        ${items.map(i => `
-                            <li class="flex justify-between items-center text-sm border-b border-gray-700 pb-1 last:border-0">
-                                <span class="text-gray-300 flex items-center gap-2">${icon} ${i[0]}</span>
-                                <span class="font-bold text-brand bg-gray-900 px-2 py-0.5 rounded-full text-xs">${i[1]}</span>
-                            </li>
-                        `).join('')}
-                    </ul>
-                `;
-            };
-
-            // الرسوم البيانية
-            const chartsGrid = document.createElement('div');
-            chartsGrid.className = "grid grid-cols-1 lg:grid-cols-3 gap-6";
-            
-            // Food Chart Container
-            const foodDiv = document.createElement('div');
-            foodDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center";
-            foodDiv.innerHTML = `
-                <h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🍔 المأكولات <span class="text-xs bg-gray-700 px-2 rounded ml-auto text-gray-400">Top 5</span></h3>
-                <div class="relative w-full h-48"><canvas id="foodChart"></canvas></div>
-                ${generateListHTML(topFoods, '🍕')}
-            `;
-            chartsGrid.appendChild(foodDiv);
-
-            // Drink Chart Container
-            const drinkDiv = document.createElement('div');
-            drinkDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center";
-            drinkDiv.innerHTML = `
-                <h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🥤 المشروبات <span class="text-xs bg-gray-700 px-2 rounded ml-auto text-gray-400">Top 5</span></h3>
-                <div class="relative w-full h-48"><canvas id="drinkChart"></canvas></div>
-                ${generateListHTML(topDrinks, '🥤')}
-            `;
-            chartsGrid.appendChild(drinkDiv);
-
-            // Line Chart Container
-            const lineDiv = document.createElement('div');
-            lineDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg lg:col-span-1"; 
-            lineDiv.innerHTML = `<h3 class="text-white font-bold mb-4">📈 النشاط الزمني</h3><div class="relative w-full h-64"><canvas id="lineChart"></canvas></div>`;
-            chartsGrid.appendChild(lineDiv);
-
-            dynamicContent.appendChild(chartsGrid);
-
-            // 4. رسم المخططات (Charts Implementation)
-            const commonOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '65%',
-                plugins: { legend: { display: false } }, // إخفاء Legend لأننا وضعنا القائمة في الأسفل
-                borderWidth: 3,
-                borderColor: '#1f2937',
-                hoverOffset: 15,
-                animation: { duration: 1500, easing: 'easeOutQuart' }
-            };
-
-            // Food Chart
-            if(topFoods.length > 0) {
-                new Chart(document.getElementById('foodChart'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: topFoods.map(i => i[0]),
-                        datasets: [{
-                            data: topFoods.map(i => i[1]),
-                            backgroundColor: ['#FF9900', '#F59E0B', '#D97706', '#B45309', '#78350F'],
-                        }]
-                    },
-                    options: commonOptions
-                });
-            }
-
-            // Drink Chart
-            if(topDrinks.length > 0) {
-                new Chart(document.getElementById('drinkChart'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: topDrinks.map(i => i[0]),
-                        datasets: [{
-                            data: topDrinks.map(i => i[1]),
-                            backgroundColor: ['#3B82F6', '#60A5FA', '#93C5FD', '#2563EB', '#1D4ED8'],
-                        }]
-                    },
-                    options: commonOptions
-                });
-            }
-
-            // Line Chart (Sales over Time)
-            const salesByTime = {};
-            filteredOrders.forEach(order => {
-                const t = order['Created at'] || order.Time;
-                if(t) {
-                    const dateObj = new Date(t);
-                    let key;
-                    if(filterType === 'today') key = dateObj.getHours() + ":00";
-                    else key = dateObj.getDate() + "/" + (dateObj.getMonth()+1);
-                    
-                    // استخدام getPrice هنا أيضاً
+                filteredOrders.forEach(order => {
+                    // أ) تجميع المبيعات
                     const price = getPrice(order);
-                    salesByTime[key] = (salesByTime[key] || 0) + price;
-                }
-            });
-            
-            const timeLabels = Object.keys(salesByTime); 
-            const salesData = timeLabels.map(k => salesByTime[k]);
+                    totalSales += price;
 
-            const ctxLine = document.getElementById('lineChart').getContext('2d');
-            const gradient = ctxLine.createLinearGradient(0, 0, 0, 300);
-            gradient.addColorStop(0, 'rgba(255, 153, 0, 0.5)');
-            gradient.addColorStop(1, 'rgba(255, 153, 0, 0.0)');
-
-            if(timeLabels.length > 0) {
-                new Chart(ctxLine, {
-                    type: 'line',
-                    data: {
-                        labels: timeLabels,
-                        datasets: [{
-                            label: 'المبيعات',
-                            data: salesData,
-                            borderColor: '#FF9900',
-                            backgroundColor: gradient,
-                            fill: true,
-                            tension: 0.4,
-                            pointBackgroundColor: '#fff',
-                            pointBorderColor: '#FF9900',
-                            pointRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: { grid: { color: '#374151' }, ticks: { color: '#9CA3AF' } },
-                            x: { grid: { display: false }, ticks: { color: '#9CA3AF' } }
-                        },
-                        plugins: { legend: { display: false } },
-                        animation: { duration: 1500, easing: 'easeOutQuart' }
+                    // ب) تجميع الخط الزمني
+                    const t = order['Created at'] || order.Time;
+                    if(t) {
+                        const dateObj = new Date(t);
+                        let key;
+                        if(filterType === 'today') key = dateObj.getHours() + ":00";
+                        else key = dateObj.getDate() + "/" + (dateObj.getMonth()+1);
+                        salesByTime[key] = (salesByTime[key] || 0) + price;
                     }
+
+                    // ج) تحليل محتوى الطلب (Details Parsing)
+                    const details = (order.Details || "").split(/,|،/);
+                    details.forEach(itemStr => {
+                        // استخراج الكمية والاسم باستخدام Regex
+                        const match = itemStr.match(/^(\d+)\s*[xX\*]\s*(.+)/);
+                        
+                        let qty = 1;
+                        let name = itemStr.trim();
+
+                        if (match) {
+                            qty = parseInt(match[1]) || 1;
+                            name = match[2].trim();
+                        }
+
+                        const lowerName = name.toLowerCase();
+                        
+                        // تحديد النوع بناءً على المنيو (Source of Truth) - مع تحسين البحث (Fuzzy Matching)
+                        let category = categoryMap[lowerName] || '';
+                        
+                        if (!category) {
+                            // البحث عن تطابق جزئي
+                            const foundKey = Object.keys(categoryMap).find(k => lowerName.includes(k) || k.includes(lowerName));
+                            if (foundKey) category = categoryMap[foundKey];
+                        }
+                        
+                        // كلمات مفتاحية احتياطية للمشروبات
+                        const drinkKeywords = ['boissons', 'drinks', 'mushrubat', 'مشروبات', 'عصائر', 'pepsi', 'coca', 'water'];
+                        const isDrinkCat = drinkKeywords.some(k => category.includes(k));
+                        
+                        if (isDrinkCat) {
+                            drinkCounts[name] = (drinkCounts[name] || 0) + qty;
+                        } else {
+                            foodCounts[name] = (foodCounts[name] || 0) + qty;
+                        }
+                    });
                 });
-            } else { document.getElementById('lineChart').parentNode.innerHTML = "<p class='text-gray-600 text-center py-20'>لا توجد بيانات زمنية</p>"; }
+
+                // ترتيب Top 5
+                const topFoods = Object.entries(foodCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+                const topDrinks = Object.entries(drinkCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+                const avgOrder = filteredOrders.length ? (totalSales / filteredOrders.length).toFixed(2) : 0;
+
+                // 4. بناء الواجهة (DOM Construction)
+                dynamicContent.innerHTML = '';
+
+                // أزرار الفلتر
+                const btnClass = (type) => `px-4 py-1.5 rounded-lg text-sm font-medium transition ${filterType === type ? 'bg-brand text-black' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`;
+                
+                const header = document.createElement('div');
+                header.className = "flex flex-col md:flex-row justify-between items-center mb-8 gap-4";
+                header.innerHTML = `
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">📊 مركز التحليلات</h2>
+                    <div class="flex bg-gray-800 p-1 rounded-xl">
+                        <button onclick="renderAnalytics(STATE.analyticsData, 'today')" class="${btnClass('today')}">اليوم</button>
+                        <button onclick="renderAnalytics(STATE.analyticsData, 'week')" class="${btnClass('week')}">الأسبوع</button>
+                        <button onclick="renderAnalytics(STATE.analyticsData, 'month')" class="${btnClass('month')}">الشهر</button>
+                    </div>
+                `;
+                dynamicContent.appendChild(header);
+
+                // بطاقات KPIs
+                const kpiSection = document.createElement('div');
+                kpiSection.className = "grid grid-cols-1 md:grid-cols-3 gap-6 mb-8";
+                kpiSection.innerHTML = `
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group hover:border-brand transition-colors">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">💰</div>
+                        <p class="text-gray-400 text-sm font-medium mb-1">إجمالي المبيعات</p>
+                        <h3 class="text-3xl font-bold text-white tracking-tight">${totalSales.toLocaleString()} <span class="text-lg text-brand font-normal">DZD</span></h3>
+                    </div>
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group hover:border-blue-500 transition-colors">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">📦</div>
+                        <p class="text-gray-400 text-sm font-medium mb-1">عدد الطلبات</p>
+                        <h3 class="text-3xl font-bold text-white tracking-tight">${filteredOrders.length}</h3>
+                    </div>
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group hover:border-green-500 transition-colors">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🛒</div>
+                        <p class="text-gray-400 text-sm font-medium mb-1">متوسط السلة</p>
+                        <h3 class="text-3xl font-bold text-white tracking-tight">${avgOrder} <span class="text-lg text-green-500 font-normal">DZD</span></h3>
+                    </div>
+                `;
+                dynamicContent.appendChild(kpiSection);
+
+                // شبكة الرسوم البيانية (Charts Grid)
+                const chartsGrid = document.createElement('div');
+                chartsGrid.className = "grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8";
+                
+                // Food Chart
+                const foodDiv = document.createElement('div');
+                foodDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80";
+                foodDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🍔 نسب المأكولات</h3><div class="relative w-full flex-1"><canvas id="foodChart"></canvas></div>`;
+                chartsGrid.appendChild(foodDiv);
+
+                // Drink Chart
+                const drinkDiv = document.createElement('div');
+                drinkDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80";
+                drinkDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🥤 نسب المشروبات</h3><div class="relative w-full flex-1"><canvas id="drinkChart"></canvas></div>`;
+                chartsGrid.appendChild(drinkDiv);
+
+                // Line Chart
+                const lineDiv = document.createElement('div');
+                lineDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg h-80"; 
+                lineDiv.innerHTML = `<h3 class="text-white font-bold mb-4">📈 النشاط الزمني</h3><div class="relative w-full h-64"><canvas id="lineChart"></canvas></div>`;
+                chartsGrid.appendChild(lineDiv);
+
+                dynamicContent.appendChild(chartsGrid);
+
+                // شبكة الجداول (Tables Grid) - NEW
+                const tablesGrid = document.createElement('div');
+                tablesGrid.className = "grid grid-cols-1 md:grid-cols-2 gap-6 pb-10";
+
+                // دالة إنشاء الجدول
+                const createTable = (title, items, icon) => {
+                    if (items.length === 0) return `<div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 text-center text-gray-500">لا توجد بيانات ${title}</div>`;
+                    
+                    const rows = items.map((item, index) => `
+                        <tr class="border-b border-gray-700 last:border-0 hover:bg-gray-750 transition">
+                            <td class="py-3 pl-4 w-12">
+                                <span class="w-6 h-6 flex items-center justify-center bg-brand text-black rounded-full text-xs font-bold shadow">${index + 1}</span>
+                            </td>
+                            <td class="py-3 text-gray-200 font-medium">${item[0]}</td>
+                            <td class="py-3 pr-4 text-right text-gray-400 font-mono">${item[1]}</td>
+                        </tr>
+                    `).join('');
+
+                    return `
+                        <div class="bg-gray-800 rounded-2xl border border-gray-700 shadow-lg overflow-hidden">
+                            <div class="p-4 bg-gray-750 border-b border-gray-700 flex items-center gap-2">
+                                <span class="text-xl">${icon}</span>
+                                <h3 class="text-white font-bold">الأكثر مبيعاً (${title})</h3>
+                            </div>
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-900 text-gray-400 uppercase text-xs">
+                                    <tr>
+                                        <th class="py-3 pl-4">#</th>
+                                        <th class="py-3">المنتج</th>
+                                        <th class="py-3 pr-4 text-right">الكمية</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>
+                    `;
+                };
+
+                tablesGrid.innerHTML = createTable('مأكولات', topFoods, '🍔') + createTable('مشروبات', topDrinks, '🥤');
+                dynamicContent.appendChild(tablesGrid);
+
+                // 5. رسم المخططات (Charts Implementation)
+                const commonOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: { legend: { display: false } }, 
+                    borderWidth: 3,
+                    borderColor: '#1f2937',
+                    hoverOffset: 15,
+                    animation: { duration: 1500, easing: 'easeOutQuart' }
+                };
+
+                if(topFoods.length > 0) {
+                    new Chart(document.getElementById('foodChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: topFoods.map(i => i[0]),
+                            datasets: [{ data: topFoods.map(i => i[1]), backgroundColor: ['#FF9900', '#F59E0B', '#D97706', '#B45309', '#78350F'] }]
+                        },
+                        options: commonOptions
+                    });
+                }
+
+                if(topDrinks.length > 0) {
+                    new Chart(document.getElementById('drinkChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: topDrinks.map(i => i[0]),
+                            datasets: [{ data: topDrinks.map(i => i[1]), backgroundColor: ['#3B82F6', '#60A5FA', '#93C5FD', '#2563EB', '#1D4ED8'] }]
+                        },
+                        options: commonOptions
+                    });
+                }
+
+                // Line Chart Configuration (Sorted)
+                const timeLabels = Object.keys(salesByTime).sort((a, b) => {
+                    if (filterType === 'today') return parseInt(a) - parseInt(b);
+                    const [d1, m1] = a.split('/').map(Number);
+                    const [d2, m2] = b.split('/').map(Number);
+                    return (m1 !== m2) ? m1 - m2 : d1 - d2;
+                });
+                const salesData = timeLabels.map(k => salesByTime[k]);
+
+                const ctxLine = document.getElementById('lineChart').getContext('2d');
+                const gradient = ctxLine.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(255, 153, 0, 0.5)');
+                gradient.addColorStop(1, 'rgba(255, 153, 0, 0.0)');
+
+                if(timeLabels.length > 0) {
+                    new Chart(ctxLine, {
+                        type: 'line',
+                        data: {
+                            labels: timeLabels,
+                            datasets: [{
+                                label: 'المبيعات',
+                                data: salesData,
+                                borderColor: '#FF9900',
+                                backgroundColor: gradient,
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#fff',
+                                pointBorderColor: '#FF9900',
+                                pointRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { grid: { color: '#374151' }, ticks: { color: '#9CA3AF' }, beginAtZero: true },
+                                x: { grid: { display: false }, ticks: { color: '#9CA3AF' } }
+                            },
+                            plugins: { legend: { display: false } },
+                            animation: { duration: 1500, easing: 'easeOutQuart' }
+                        }
+                    });
+                } else {
+                    document.getElementById('lineChart').parentNode.innerHTML = "<p class='text-gray-600 text-center py-20'>لا توجد بيانات زمنية</p>";
+                }
+
+            } catch (error) {
+                console.error("Analytics Error:", error);
+                dynamicContent.innerHTML = `<div class="text-red-400 p-10 text-center border border-red-900 rounded bg-red-900/20">حدث خطأ أثناء معالجة البيانات: ${error.message}</div>`;
+            }
         }
 
         window.toggleAvailability = function(btn) {
@@ -936,7 +990,7 @@
                     // جلب البيانات وتخزينها في STATE للسماح بالفلترة دون إعادة الطلب
                     const data = await fetchOrders(ORDERS_TABLE_ID);
                     STATE.analyticsData = data; 
-                    renderAnalytics(data, 'today'); // العرض الافتراضي
+                    await renderAnalytics(data, 'today'); // العرض الافتراضي
                 } catch (e) {
                     console.error(e);
                     dynamicContent.innerHTML = `<div class="text-red-400 p-10 text-center">خطأ في تحميل البيانات.</div>`;
