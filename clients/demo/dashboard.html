@@ -143,6 +143,11 @@
         <!-- الشريط العلوي (Header) -->
         <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center shadow-md z-20">
             <div class="flex items-center gap-3">
+                <!-- زر القائمة (Hamburger Menu) - يظهر في الهاتف فقط -->
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white p-2 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+
                 <div class="bg-brand text-black font-bold rounded-lg p-2 text-xl">RP</div>
                 <div>
                     <h2 class="font-bold text-lg leading-tight">Resto<span class="text-brand">Pro</span></h2>
@@ -163,11 +168,14 @@
             </div>
         </header>
 
+        <!-- خلفية شفافة للقائمة الجانبية في الهاتف -->
+        <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
         <!-- المحتوى الرئيسي (Main Layout) -->
         <div class="flex flex-1 overflow-hidden">
             
-            <!-- القائمة الجانبية (Sidebar) -->
-            <aside id="sidebar" class="w-64 bg-gray-900 border-l border-gray-800 flex flex-col justify-between transition-all flex-shrink-0">
+            <!-- القائمة الجانبية (Sidebar) - معدلة لتكون متجاوبة -->
+            <aside id="sidebar" class="fixed inset-y-0 right-0 z-40 transform translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-gray-900 border-l border-gray-800 flex flex-col justify-between flex-shrink-0 pt-16 md:pt-0">
                 <nav class="p-2 space-y-2 mt-4">
                     <!-- زر المطبخ (KDS) - API Mode -->
                     <button onclick="loadView('kds')" id="btn-kds" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
@@ -195,7 +203,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v3.0.5 UI-Fix</p>
+                    <p class="text-xs text-gray-600">v3.1.1 Mobile-UX-Fix</p>
                 </div>
             </aside>
 
@@ -351,6 +359,13 @@
         // =========================================================
         // 🌐 دوال الـ API والـ Business Logic
         // =========================================================
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
 
         function formatOrderTime(order) {
             const rawTime = order['Created at'] || order.Time || order.time || order.created_on;
@@ -774,13 +789,13 @@
                 // Food Chart
                 const foodDiv = document.createElement('div');
                 foodDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80";
-                foodDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🍔 نسب المأكولات</h3><div class="relative w-full flex-1"><canvas id="foodChart"></canvas></div>`;
+                foodDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🍔 نسب المأكولات</h3><div class="relative w-full h-40"><canvas id="foodChart"></canvas></div>`;
                 chartsGrid.appendChild(foodDiv);
 
                 // Drink Chart
                 const drinkDiv = document.createElement('div');
                 drinkDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80";
-                drinkDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🥤 نسب المشروبات</h3><div class="relative w-full flex-1"><canvas id="drinkChart"></canvas></div>`;
+                drinkDiv.innerHTML = `<h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🥤 نسب المشروبات</h3><div class="relative w-full h-40"><canvas id="drinkChart"></canvas></div>`;
                 chartsGrid.appendChild(drinkDiv);
 
                 // Line Chart
@@ -956,6 +971,12 @@
         });
 
         async function loadView(viewType) {
+            // إغلاق القائمة الجانبية في الهواتف بعد الاختيار
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('translate-x-full');
+                document.getElementById('sidebar-overlay').classList.add('hidden');
+            }
+
             if (STATE.pollingInterval) { clearInterval(STATE.pollingInterval); STATE.pollingInterval = null; }
             if (STATE.currentRole === 'kitchen' && viewType !== 'kds') return;
             if (STATE.currentRole === 'admin') { updateNavStyles(viewType); localStorage.setItem(STATE.storageKeys.lastView, viewType); }
