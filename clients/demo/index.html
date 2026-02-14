@@ -351,22 +351,39 @@
                     // فلترة العناصر المتوفرة فقط
                     .filter(item => item.Availability && item.Availability.value === 'متوفر')
                     .map(item => {
-                        // محاولة استخراج التصنيف الفرعي (للمشروبات) إذا وجد، وإلا افتراض قيمة افتراضية
+                        // 1. معالجة التصنيف (Category Mapping)
+                        // نتأكد أولاً أن التصنيف موجود لتجنب الأخطاء
+                        let rawCat = item.Category ? item.Category.value.toLowerCase() : 'other';
+                        let category = rawCat;
+
+                        // تحويل القيم الفرنسية إلى القيم المستخدمة في الواجهة
+                        if (rawCat === 'boissons') category = 'drinks';
+                        if (rawCat === 'suppléments' || rawCat === 'supplements') category = 'sides';
+
+                        // 2. معالجة التصنيف الفرعي (SubCategory Logic)
+                        // لا يوجد عمود SubCategory، لذا نستخدم الاسم لتحديد العصائر من المشروبات الغازية
                         let subCat = '';
-                        if(item.SubCategory && item.SubCategory.value) {
-                            subCat = item.SubCategory.value.toLowerCase();
-                        } else if(item.Category && item.Category.value.toLowerCase() === 'drinks') {
-                            // افتراضي إذا لم يتم تحديد SubCategory للمشروبات لتجنب اختفائها
-                            subCat = 'soda'; 
+                        if (category === 'drinks') {
+                            const nameLower = item.Name.toLowerCase();
+                            // كلمات دلالية للعصائر
+                            if (nameLower.includes('jus') || nameLower.includes('ramy') || nameLower.includes('rouiba') || nameLower.includes('tazij')) {
+                                subCat = 'juice';
+                            } else {
+                                subCat = 'soda';
+                            }
                         }
+
+                        // 3. معالجة الصور (Image Field Name Correction)
+                        // التصحيح: Baserow يعيد الصور في مصفوفة باسم 'image' (صغيرة) وليست 'Image'
+                        const imgUrl = (item.image && item.image.length > 0) ? item.image[0].url : 'https://placehold.co/400x300?text=No+Image';
 
                         return {
                             id: item.id,
                             name: item.Name,
                             price: parseFloat(item.Price) || 0,
-                            category: item.Category ? item.Category.value.toLowerCase() : 'other',
+                            category: category,
                             sub_category: subCat,
-                            img: (item.Image && item.Image.length > 0) ? item.Image[0].url : 'https://placehold.co/400x300?text=No+Image',
+                            img: imgUrl,
                             desc: item.Description || ''
                         };
                     });
