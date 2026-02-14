@@ -194,7 +194,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v2.5.0 POS-Core</p>
+                    <p class="text-xs text-gray-600">v3.0.0 ERP-Analytics</p>
                 </div>
             </aside>
 
@@ -289,6 +289,7 @@
             pollingInterval: null, 
             knownOrders: {}, 
             isFirstFetch: true, 
+            analyticsData: [], // تخزين بيانات التحليلات مؤقتاً
             storageKeys: {
                 username: "rp_username",
                 role: "rp_role",
@@ -346,10 +347,9 @@
         }
 
         // =========================================================
-        // 🌐 دوال الـ API والـ Business Logic (محدث)
+        // 🌐 دوال الـ API والـ Business Logic
         // =========================================================
 
-        // دالة مساعدة لتنسيق الوقت
         function formatOrderTime(order) {
             const rawTime = order['Created at'] || order.Time || order.time || order.created_on;
             if (!rawTime) return '--:--';
@@ -366,49 +366,34 @@
             }
         }
 
-        // 🆕 دالة فلترة اليوم المفتوح (يبدأ من 8 صباحاً)
         function isOrderFromToday(rawTime) {
             if (!rawTime) return false;
             try {
                 const orderDate = new Date(rawTime);
                 const now = new Date();
-                
-                // تحديد بداية "اليوم التجاري"
                 let businessDayStart = new Date();
-                businessDayStart.setHours(8, 0, 0, 0); // اليوم الساعة 8:00
-
-                // إذا كنا الآن قبل الساعة 8 صباحاً، فإن "اليوم التجاري" بدأ أمس الساعة 8 صباحاً
+                businessDayStart.setHours(8, 0, 0, 0); 
                 if (now.getHours() < 8) {
                     businessDayStart.setDate(businessDayStart.getDate() - 1);
                 }
-
                 return orderDate >= businessDayStart;
             } catch (e) {
                 return false;
             }
         }
 
-        // 🆕 دالة حساب الرقم التسلسلي اليومي
-        // تفترض أن الطلبات تمرر إليها وهي مصفوفة تحتوي فقط على طلبات اليوم
-        // الطلبات القادمة من الـ API تكون معكوسة (الأحدث أولاً)، لذا سنعيد الترتيب للحساب
         function calculateDailySequence(orders) {
-            // 1. إنشاء نسخة وترتيبها تصاعدياً (الأقدم أولاً) للحصول على التسلسل الصحيح
-            const sortedAscending = [...orders].reverse(); // لأن fetchOrders يعيد reverse
-            
-            // 2. تعيين الأرقام التسلسلية
+            const sortedAscending = [...orders].reverse();
             const ordersWithSeq = sortedAscending.map((order, index) => {
-                const seqNum = String(index + 1).padStart(3, '0'); // 001, 002...
+                const seqNum = String(index + 1).padStart(3, '0'); 
                 return {
                     ...order,
                     dailySequence: `#D-${seqNum}`
                 };
             });
-
-            // 3. إعادة عكس المصفوفة لتعرض الأحدث أولاً في الشاشة
             return ordersWithSeq.reverse();
         }
 
-        // --- دالة التنبيهات ---
         function processOrderAlerts(orders) {
             const newKnownOrders = {};
             const getStatus = (o) => { const s = o.Status || o.status; return (typeof s === 'object' && s !== null) ? s.value : s; };
@@ -430,7 +415,6 @@
             return orders;
         }
 
-        // 1. دالة جلب الطلبات (Orders)
         async function fetchOrders(tableId) {
             try {
                 const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true`, {
@@ -442,11 +426,9 @@
                 return data.results.reverse();
             } catch (error) {
                 console.warn("Using Mock Data for API:", error.message);
-                // استخدام تاريخ اليوم للتجربة
                 const today = new Date();
                 today.setHours(12, 30);
                 const isoToday = today.toISOString();
-                
                 return [
                     { id: 101, Table: "T-5", Details: "2x برجر كلاسيك", Status: { id:1, value: "قيد التحضير" }, "Created at": isoToday, Price: "1150" },
                     { id: 102, Table: "T-2", Details: "1x بيتزا مارغريتا", Status: "جاهز", "Created at": isoToday, Price: "500" },
@@ -454,7 +436,6 @@
             }
         }
 
-        // 2. جلب المنيو (Menu)
         async function fetchMenu() {
             try {
                 const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true`, {
@@ -469,7 +450,6 @@
             }
         }
 
-        // 3. تحديث حالة الطلب
         async function updateOrderStatus(rowId, newStatus) {
             const btn = document.getElementById(`btn-done-${rowId}`);
             if(btn) { btn.innerHTML = `...`; btn.disabled = true; }
@@ -487,7 +467,6 @@
             }
         }
 
-        // 4. تحديث عنصر المنيو
         async function updateMenuItem(rowId, updateData) {
             try {
                 await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/${rowId}/?user_field_names=true`, {
@@ -504,19 +483,14 @@
             }
         }
 
-        // --- Render Functions (KDS & Cashier with Filters) ---
+        // --- Render Functions ---
 
         function renderKDS(orders) {
-            // 1. فلترة اليوم المفتوح
             let filteredOrders = orders.filter(o => {
                 const time = o['Created at'] || o.Time || o.time || o.created_on;
                 return isOrderFromToday(time);
             });
-
-            // 2. تطبيق الترقيم التسلسلي
             filteredOrders = calculateDailySequence(filteredOrders);
-
-            // 3. معالجة التنبيهات
             filteredOrders = processOrderAlerts(filteredOrders);
 
             dynamicContent.innerHTML = '';
@@ -555,16 +529,11 @@
         }
 
         function renderCashier(orders) {
-            // 1. فلترة اليوم المفتوح
             let filteredOrders = orders.filter(o => {
                 const time = o['Created at'] || o.Time || o.time || o.created_on;
                 return isOrderFromToday(time);
             });
-
-            // 2. تطبيق الترقيم التسلسلي
             filteredOrders = calculateDailySequence(filteredOrders);
-
-            // 3. معالجة التنبيهات
             filteredOrders = processOrderAlerts(filteredOrders);
 
             dynamicContent.innerHTML = '';
@@ -651,116 +620,246 @@
             dynamicContent.appendChild(grid);
         }
 
-        // 🆕 دالة رسم التحليلات (Analytics Rendering)
-        function renderAnalytics(orders) {
+        // 🆕 دالة رسم التحليلات المتقدمة (Enhanced Analytics)
+        function renderAnalytics(orders = STATE.analyticsData, filterType = 'today') {
             dynamicContent.innerHTML = '';
             
-            // رأس الصفحة
+            // دالة مساعدة لاستخراج السعر (تمت إضافتها هنا لضمان الحساب الصحيح)
+            const getPrice = (o) => { 
+                const raw = o.total || o.Total || o.price || o.Price; 
+                return parseFloat((raw||0).toString().replace(/[^0-9.]/g, '')) || 0; 
+            };
+
+            // 1. فلترة البيانات حسب الزمن
+            const now = new Date();
+            const filteredOrders = orders.filter(o => {
+                const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
+                if (!rawTime) return false;
+                const t = new Date(rawTime);
+                
+                if (filterType === 'today') return isOrderFromToday(rawTime);
+                if (filterType === 'week') {
+                    const oneWeekAgo = new Date(); oneWeekAgo.setDate(now.getDate() - 7);
+                    return t >= oneWeekAgo;
+                }
+                if (filterType === 'month') {
+                    const oneMonthAgo = new Date(); oneMonthAgo.setDate(now.getDate() - 30);
+                    return t >= oneMonthAgo;
+                }
+                return true;
+            });
+
+            // 2. تحليل العناصر (فصل المشروبات والأكل)
+            // تحديث الكلمات المفتاحية لتكون أكثر دقة
+            const drinkKeywords = ['hamoud', 'coca', 'pepsi', 'slim', 'selecto', 'tazij', 'ramy', 'rouiba', 'boisson', 'jus', 'soda', 'مشروب', 'عصير', 'ماء'];
+            const foodCounts = {};
+            const drinkCounts = {};
+            let totalSales = 0;
+
+            filteredOrders.forEach(order => {
+                // استخدام getPrice لحساب المبيعات بدقة
+                totalSales += getPrice(order);
+
+                const details = (order.Details || "").split(/,|،/);
+                details.forEach(item => {
+                    // تنظيف الاسم من الكميات (مثل: 2x, 3*, 1 X)
+                    const cleanName = item.replace(/^[\d\s]*[xX\*]\s*/, '').trim();
+                    
+                    if(cleanName && cleanName !== 'لا توجد تفاصيل') {
+                        const isDrink = drinkKeywords.some(k => cleanName.toLowerCase().includes(k));
+                        if(isDrink) {
+                            drinkCounts[cleanName] = (drinkCounts[cleanName] || 0) + 1;
+                        } else {
+                            foodCounts[cleanName] = (foodCounts[cleanName] || 0) + 1;
+                        }
+                    }
+                });
+            });
+
+            const topFoods = Object.entries(foodCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            const topDrinks = Object.entries(drinkCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            const avgOrder = filteredOrders.length ? (totalSales / filteredOrders.length).toFixed(2) : 0;
+
+            // 3. بناء الواجهة
+            // أزرار الفلتر
+            const btnClass = (type) => `px-4 py-1.5 rounded-lg text-sm font-medium transition ${filterType === type ? 'bg-brand text-black' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`;
+            
             const header = document.createElement('div');
-            header.className = "flex justify-between items-center mb-6";
+            header.className = "flex flex-col md:flex-row justify-between items-center mb-8 gap-4";
             header.innerHTML = `
-                <h2 class="text-2xl font-bold text-white">إحصائيات المبيعات</h2>
-                <div class="flex gap-2">
-                    <span class="bg-gray-700 px-3 py-1 rounded text-sm text-gray-300">اليوم</span>
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">📊 مركز التحليلات</h2>
+                <div class="flex bg-gray-800 p-1 rounded-xl">
+                    <button onclick="renderAnalytics(STATE.analyticsData, 'today')" class="${btnClass('today')}">اليوم</button>
+                    <button onclick="renderAnalytics(STATE.analyticsData, 'week')" class="${btnClass('week')}">الأسبوع</button>
+                    <button onclick="renderAnalytics(STATE.analyticsData, 'month')" class="${btnClass('month')}">الشهر</button>
                 </div>
             `;
             dynamicContent.appendChild(header);
 
-            // فلترة طلبات اليوم فقط
-            const todayOrders = orders.filter(o => {
-                const time = o['Created at'] || o.Time || o.time || o.created_on;
-                return isOrderFromToday(time);
-            });
+            // بطاقات KPI المحسنة
+            const kpiSection = document.createElement('div');
+            kpiSection.className = "grid grid-cols-1 md:grid-cols-3 gap-6 mb-8";
+            kpiSection.innerHTML = `
+                <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group hover:border-brand transition-colors">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">💰</div>
+                    <p class="text-gray-400 text-sm font-medium mb-1">إجمالي المبيعات</p>
+                    <h3 class="text-3xl font-bold text-white tracking-tight">${totalSales.toLocaleString()} <span class="text-lg text-brand font-normal">DZD</span></h3>
+                </div>
+                <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group hover:border-blue-500 transition-colors">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">📦</div>
+                    <p class="text-gray-400 text-sm font-medium mb-1">عدد الطلبات</p>
+                    <h3 class="text-3xl font-bold text-white tracking-tight">${filteredOrders.length}</h3>
+                </div>
+                <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group hover:border-green-500 transition-colors">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🛒</div>
+                    <p class="text-gray-400 text-sm font-medium mb-1">متوسط السلة</p>
+                    <h3 class="text-3xl font-bold text-white tracking-tight">${avgOrder} <span class="text-lg text-green-500 font-normal">DZD</span></h3>
+                </div>
+            `;
+            dynamicContent.appendChild(kpiSection);
 
-            // 1. إعداد بيانات Pie Chart (الأكثر مبيعاً)
-            const itemCounts = {};
-            todayOrders.forEach(order => {
-                const details = order.Details || "";
-                // محاولة استخراج الأصناف. مثال: "2x Burger, 1x Pepsi"
-                // Regex بسيط للبحث عن الكلمات
-                const items = details.split(/,|،/);
-                items.forEach(i => {
-                    const cleanName = i.replace(/^\d+x\s*/, '').trim(); // إزالة "2x "
-                    if(cleanName && cleanName !== 'لا توجد تفاصيل') {
-                        itemCounts[cleanName] = (itemCounts[cleanName] || 0) + 1;
-                    }
-                });
-            });
+            // إعداد قوائم HTML لـ Top 5
+            const generateListHTML = (items, icon) => {
+                if (items.length === 0) return '<p class="text-xs text-gray-500 text-center mt-4">لا توجد بيانات</p>';
+                return `
+                    <ul class="mt-6 w-full space-y-2">
+                        ${items.map(i => `
+                            <li class="flex justify-between items-center text-sm border-b border-gray-700 pb-1 last:border-0">
+                                <span class="text-gray-300 flex items-center gap-2">${icon} ${i[0]}</span>
+                                <span class="font-bold text-brand bg-gray-900 px-2 py-0.5 rounded-full text-xs">${i[1]}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            };
 
-            const topItems = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0, 5); // أفضل 5
+            // الرسوم البيانية
+            const chartsGrid = document.createElement('div');
+            chartsGrid.className = "grid grid-cols-1 lg:grid-cols-3 gap-6";
             
-            // 2. إعداد بيانات Line Chart (المبيعات بالساعة)
-            const salesByHour = {};
-            todayOrders.forEach(order => {
-                const time = order['Created at'] || order.Time;
-                if(time) {
-                    const hour = new Date(time).getHours();
-                    const price = parseFloat((order.Price||0).toString().replace(/[^0-9.]/g, '')) || 0;
-                    salesByHour[hour] = (salesByHour[hour] || 0) + price;
-                }
-            });
-            const hours = Object.keys(salesByHour).sort((a,b) => a-b);
-            const salesData = hours.map(h => salesByHour[h]);
-            const hourLabels = hours.map(h => `${h}:00`);
+            // Food Chart Container
+            const foodDiv = document.createElement('div');
+            foodDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center";
+            foodDiv.innerHTML = `
+                <h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🍔 المأكولات <span class="text-xs bg-gray-700 px-2 rounded ml-auto text-gray-400">Top 5</span></h3>
+                <div class="relative w-full h-48"><canvas id="foodChart"></canvas></div>
+                ${generateListHTML(topFoods, '🍕')}
+            `;
+            chartsGrid.appendChild(foodDiv);
 
-            // 3. بناء هيكل الـ Grid
-            const grid = document.createElement('div');
-            grid.className = "grid grid-cols-1 lg:grid-cols-2 gap-6";
-            
-            // حاوية Pie Chart
-            const pieContainer = document.createElement('div');
-            pieContainer.className = "bg-gray-800 p-4 rounded-xl border border-gray-700";
-            pieContainer.innerHTML = `<h3 class="text-white font-bold mb-4">الأصناف الأكثر مبيعاً</h3><canvas id="pieChart"></canvas>`;
-            grid.appendChild(pieContainer);
+            // Drink Chart Container
+            const drinkDiv = document.createElement('div');
+            drinkDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center";
+            drinkDiv.innerHTML = `
+                <h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🥤 المشروبات <span class="text-xs bg-gray-700 px-2 rounded ml-auto text-gray-400">Top 5</span></h3>
+                <div class="relative w-full h-48"><canvas id="drinkChart"></canvas></div>
+                ${generateListHTML(topDrinks, '🥤')}
+            `;
+            chartsGrid.appendChild(drinkDiv);
 
-            // حاوية Line Chart
-            const lineContainer = document.createElement('div');
-            lineContainer.className = "bg-gray-800 p-4 rounded-xl border border-gray-700";
-            lineContainer.innerHTML = `<h3 class="text-white font-bold mb-4">المبيعات حسب الساعة</h3><canvas id="lineChart"></canvas>`;
-            grid.appendChild(lineContainer);
+            // Line Chart Container
+            const lineDiv = document.createElement('div');
+            lineDiv.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg lg:col-span-1"; 
+            lineDiv.innerHTML = `<h3 class="text-white font-bold mb-4">📈 النشاط الزمني</h3><div class="relative w-full h-64"><canvas id="lineChart"></canvas></div>`;
+            chartsGrid.appendChild(lineDiv);
 
-            dynamicContent.appendChild(grid);
+            dynamicContent.appendChild(chartsGrid);
 
-            // 4. رسم المخططات (بعد إضافة العناصر للـ DOM)
-            if(topItems.length > 0) {
-                new Chart(document.getElementById('pieChart'), {
+            // 4. رسم المخططات (Charts Implementation)
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: { legend: { display: false } }, // إخفاء Legend لأننا وضعنا القائمة في الأسفل
+                borderWidth: 3,
+                borderColor: '#1f2937',
+                hoverOffset: 15,
+                animation: { duration: 1500, easing: 'easeOutQuart' }
+            };
+
+            // Food Chart
+            if(topFoods.length > 0) {
+                new Chart(document.getElementById('foodChart'), {
                     type: 'doughnut',
                     data: {
-                        labels: topItems.map(i => i[0]),
+                        labels: topFoods.map(i => i[0]),
                         datasets: [{
-                            data: topItems.map(i => i[1]),
-                            backgroundColor: ['#FF9900', '#10B981', '#3B82F6', '#EF4444', '#8B5CF6'],
-                            borderWidth: 0
+                            data: topFoods.map(i => i[1]),
+                            backgroundColor: ['#FF9900', '#F59E0B', '#D97706', '#B45309', '#78350F'],
                         }]
                     },
-                    options: { plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
+                    options: commonOptions
                 });
-            } else {
-                document.getElementById('pieChart').parentElement.innerHTML += "<p class='text-gray-500 text-center mt-4'>لا توجد بيانات كافية</p>";
             }
 
-            if(hours.length > 0) {
-                new Chart(document.getElementById('lineChart'), {
-                    type: 'line',
+            // Drink Chart
+            if(topDrinks.length > 0) {
+                new Chart(document.getElementById('drinkChart'), {
+                    type: 'doughnut',
                     data: {
-                        labels: hourLabels,
+                        labels: topDrinks.map(i => i[0]),
                         datasets: [{
-                            label: 'المبيعات (DA)',
-                            data: salesData,
-                            borderColor: '#FF9900',
-                            backgroundColor: 'rgba(255, 153, 0, 0.2)',
-                            tension: 0.4,
-                            fill: true
+                            data: topDrinks.map(i => i[1]),
+                            backgroundColor: ['#3B82F6', '#60A5FA', '#93C5FD', '#2563EB', '#1D4ED8'],
                         }]
                     },
-                    options: { 
-                        scales: { y: { ticks: { color: '#9CA3AF' }, grid: { color: '#374151' } }, x: { ticks: { color: '#9CA3AF' }, grid: { display: false } } },
-                        plugins: { legend: { labels: { color: '#fff' } } }
+                    options: commonOptions
+                });
+            }
+
+            // Line Chart (Sales over Time)
+            const salesByTime = {};
+            filteredOrders.forEach(order => {
+                const t = order['Created at'] || order.Time;
+                if(t) {
+                    const dateObj = new Date(t);
+                    let key;
+                    if(filterType === 'today') key = dateObj.getHours() + ":00";
+                    else key = dateObj.getDate() + "/" + (dateObj.getMonth()+1);
+                    
+                    // استخدام getPrice هنا أيضاً
+                    const price = getPrice(order);
+                    salesByTime[key] = (salesByTime[key] || 0) + price;
+                }
+            });
+            
+            const timeLabels = Object.keys(salesByTime); 
+            const salesData = timeLabels.map(k => salesByTime[k]);
+
+            const ctxLine = document.getElementById('lineChart').getContext('2d');
+            const gradient = ctxLine.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(255, 153, 0, 0.5)');
+            gradient.addColorStop(1, 'rgba(255, 153, 0, 0.0)');
+
+            if(timeLabels.length > 0) {
+                new Chart(ctxLine, {
+                    type: 'line',
+                    data: {
+                        labels: timeLabels,
+                        datasets: [{
+                            label: 'المبيعات',
+                            data: salesData,
+                            borderColor: '#FF9900',
+                            backgroundColor: gradient,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#FF9900',
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { grid: { color: '#374151' }, ticks: { color: '#9CA3AF' } },
+                            x: { grid: { display: false }, ticks: { color: '#9CA3AF' } }
+                        },
+                        plugins: { legend: { display: false } },
+                        animation: { duration: 1500, easing: 'easeOutQuart' }
                     }
                 });
-            } else {
-                document.getElementById('lineChart').parentElement.innerHTML += "<p class='text-gray-500 text-center mt-4'>لا توجد بيانات كافية</p>";
-            }
+            } else { document.getElementById('lineChart').parentNode.innerHTML = "<p class='text-gray-600 text-center py-20'>لا توجد بيانات زمنية</p>"; }
         }
 
         window.toggleAvailability = function(btn) {
@@ -834,8 +933,10 @@
             }
             else if (viewType === 'analytics') {
                 try {
+                    // جلب البيانات وتخزينها في STATE للسماح بالفلترة دون إعادة الطلب
                     const data = await fetchOrders(ORDERS_TABLE_ID);
-                    renderAnalytics(data);
+                    STATE.analyticsData = data; 
+                    renderAnalytics(data, 'today'); // العرض الافتراضي
                 } catch (e) {
                     console.error(e);
                     dynamicContent.innerHTML = `<div class="text-red-400 p-10 text-center">خطأ في تحميل البيانات.</div>`;
