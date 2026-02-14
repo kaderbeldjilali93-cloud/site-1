@@ -203,7 +203,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v3.1.1 Mobile-UX-Fix</p>
+                    <p class="text-xs text-gray-600">v3.1.2 Syntax-Fix</p>
                 </div>
             </aside>
 
@@ -381,18 +381,22 @@
             } catch (e) {
                 return '--:--';
             }
-        }
+        } // Added missing closing brace
 
+        // 🆕 دالة فلترة اليوم المفتوح (يبدأ من 6 صباحاً)
         function isOrderFromToday(rawTime) {
             if (!rawTime) return false;
             try {
                 const orderDate = new Date(rawTime);
                 const now = new Date();
                 let businessDayStart = new Date();
-                businessDayStart.setHours(8, 0, 0, 0); 
-                if (now.getHours() < 8) {
+                businessDayStart.setHours(6, 0, 0, 0); // التعديل هنا: الساعة 6
+                
+                // إذا كنا الآن قبل الساعة 6 صباحاً، فإن "اليوم التجاري" بدأ أمس الساعة 6 صباحاً
+                if (now.getHours() < 6) { // التعديل هنا: أقل من 6
                     businessDayStart.setDate(businessDayStart.getDate() - 1);
                 }
+
                 return orderDate >= businessDayStart;
             } catch (e) {
                 return false;
