@@ -330,8 +330,9 @@
         </div>
     </div>
 
-    <!-- 4. نافذة عرض المجسم 3D Modal (AR) -->
-    <div id="ar-modal" class="fixed inset-0 bg-black/90 z-[100] hidden backdrop-blur-md flex flex-col justify-center items-center animate-zoom-in">
+    <!-- 4. نافذة عرض المجسم 3D Modal (AR) المعدلة للأداء -->
+    <!-- تم حذف backdrop-blur-md وتغميق الخلفية إلى bg-black/98 لتحسين الأداء -->
+    <div id="ar-modal" class="fixed inset-0 bg-black/98 z-[100] hidden flex flex-col justify-center items-center animate-zoom-in">
         <!-- زر إغلاق -->
         <button onclick="close3DModal()" class="absolute top-6 right-6 w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition z-[101]">✕</button>
         
@@ -474,7 +475,7 @@
             `;
         }
 
-        // 5. دوال التحكم بنافذة العرض 3D
+        // 5. دوال التحكم بنافذة العرض 3D (معدلة للأداء)
         function open3DModal(url, name) {
             const modal = document.getElementById('ar-modal');
             const title = document.getElementById('ar-model-title');
@@ -482,7 +483,7 @@
             
             title.innerText = name;
             
-            // حقن الـ model-viewer ديناميكياً لتوفير الموارد
+            // حقن الـ model-viewer ديناميكياً مع تحسينات الأداء (disable-pan, touch-action: none)
             container.innerHTML = `
                 <model-viewer 
                     src="${url}" 
@@ -490,9 +491,11 @@
                     ar-modes="webxr scene-viewer quick-look" 
                     camera-controls 
                     auto-rotate
+                    disable-pan
+                    style="touch-action: none;"
                     shadow-intensity="1"
                     environment-image="neutral"
-                    class="w-full h-full bg-transparent"
+                    class="w-full h-full bg-transparent outline-none"
                     alt="مجسم ثلاثي الأبعاد لـ ${name}">
                     
                     <button slot="ar-button" style="background-color: #D4AF37; border-radius: 8px; border: none; position: absolute; bottom: 16px; right: 16px; padding: 8px 16px; font-weight: bold; color: #09090b; display: flex; align-items: center; gap: 8px;">
