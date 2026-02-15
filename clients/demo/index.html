@@ -469,6 +469,21 @@
                 </model-viewer>
             `;
             
+            // --- الذكاء الاصطناعي لتعويض الإضاءة في الكاميرا ---
+            const viewer = container.querySelector('model-viewer');
+            viewer.addEventListener('ar-status', (event) => {
+                if (event.detail.status === 'session-started') {
+                    // المستخدم فتح الكاميرا: رفع الإضاءة لتعويض تقدير إضاءة الغرفة
+                    viewer.setAttribute('exposure', '2.5'); 
+                    viewer.setAttribute('shadow-intensity', '0.3'); // تخفيف الظل الداكن
+                } else if (event.detail.status === 'not-presenting') {
+                    // عاد لوضع الـ 3D العادي: إرجاع الإعدادات الأصلية
+                    viewer.setAttribute('exposure', '1.2');
+                    viewer.setAttribute('shadow-intensity', '1');
+                }
+            });
+            // ----------------------------------------------------
+            
             modal.classList.remove('hidden');
         }
 
@@ -479,7 +494,7 @@
             // إيقاف وتفريغ الـ viewer بشكل آمن قبل الإخفاء
             const viewer = container.querySelector('model-viewer');
             if (viewer) {
-                try { viewer.dismissPoster(); } catch(e){} // Safety
+                viewer.dismissPoster();
                 container.innerHTML = ''; // إزالة الـ DOM لتنظيف الـ WebGL Context
             }
             
