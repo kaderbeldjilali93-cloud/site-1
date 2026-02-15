@@ -230,59 +230,18 @@
         <div class="sticky top-[60px] z-40 bg-dark-950/95 backdrop-blur-md border-b border-dark-800/50 py-3 mb-6 shadow-md transition-all">
             <div class="px-2 overflow-x-auto hide-scrollbar flex justify-center">
                 <div class="flex gap-2 min-w-max px-2">
-                    <button onclick="scrollToSection('burger')" id="btn-burger" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block">Burger</button>
+                    <!-- تم تعديل الترتيب: بيتزا أولاً -->
                     <button onclick="scrollToSection('pizza')" id="btn-pizza" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block">Pizza</button>
+                    <button onclick="scrollToSection('burger')" id="btn-burger" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block">Burger</button>
                     <button onclick="scrollToSection('drinks')" id="btn-drinks" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block">Boissons</button>
                     <button onclick="scrollToSection('sides')" id="btn-sides" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block">Suppléments</button>
                 </div>
             </div>
         </div>
 
-        <!-- 4. المنتجات (عرض في صفحة واحدة) -->
-        <div id="main-container" class="px-3 space-y-12 pb-8 min-h-[500px]">
-            
-            <!-- قسم البرغر -->
-            <section id="section-burger" class="scroll-mt-44 reveal-on-scroll">
-                <div class="text-center mb-4">
-                    <h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim">Burger</h2>
-                </div>
-                <div class="grid grid-cols-2 gap-3" id="grid-burger"></div>
-            </section>
-
-            <!-- قسم البيتزا -->
-            <section id="section-pizza" class="scroll-mt-44 reveal-on-scroll">
-                <div class="text-center mb-4">
-                    <h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim">Pizza</h2>
-                </div>
-                <div class="grid grid-cols-2 gap-3" id="grid-pizza"></div>
-            </section>
-
-            <!-- قسم المشروبات -->
-            <section id="section-drinks" class="scroll-mt-44 reveal-on-scroll">
-                <div class="text-center mb-4">
-                    <h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim">Boissons</h2>
-                </div>
-                
-                <div class="space-y-8">
-                    <div>
-                        <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 opacity-80 text-center">Sodas</h3>
-                        <div class="grid grid-cols-2 gap-3" id="grid-drinks-soda"></div>
-                    </div>
-                    <div>
-                        <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 opacity-80 text-center">Jus</h3>
-                        <div class="grid grid-cols-2 gap-3" id="grid-drinks-juice"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- قسم الجانبي -->
-            <section id="section-sides" class="scroll-mt-44 reveal-on-scroll">
-                <div class="text-center mb-4">
-                    <h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim">Suppléments</h2>
-                </div>
-                <div class="grid grid-cols-2 gap-3" id="grid-sides"></div>
-            </section>
-        </div>
+        <!-- 4. المنتجات (عرض في صفحة واحدة - ديناميكي) -->
+        <!-- تم استبدال الأقسام الثابتة بهذه الحاوية الفارغة -->
+        <div id="dynamic-menu-container" class="px-3 space-y-12 pb-8 min-h-[500px]"></div>
 
     </div>
 
@@ -355,7 +314,8 @@
         // --- إعدادات Baserow ---
         const BASEROW_TOKEN = "DfaoAk1o41H4iPUtkblY2ZKzXcbHxizb";
         const MENU_TABLE_ID = "36";
-        const BASEROW_URL = `https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true`;
+        // تحديث الرابط ليشمل الترتيب بناءً على العمود "Sort"
+        const BASEROW_URL = `https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true&order_by=Sort`;
 
         // 1. تعريف المصفوفة فارغة
         let products = [];
@@ -370,6 +330,7 @@
         // دالة جلب البيانات من Baserow
         async function fetchMenuItems() {
             try {
+                // جلب البيانات مباشرة مع الترتيب
                 const response = await fetch(BASEROW_URL, {
                     method: 'GET',
                     headers: {
@@ -537,32 +498,86 @@
             }
         }
 
-        // 3. عرض المنتجات
+        // 3. عرض المنتجات - دالة ديناميكية جديدة
         function renderAllSections() {
-            // Burger
-            document.getElementById('grid-burger').innerHTML = products
-                .filter(p => p.category === 'burger')
-                .map(createProductCard).join('');
-            
-            // Pizza
-            document.getElementById('grid-pizza').innerHTML = products
-                .filter(p => p.category === 'pizza')
-                .map(createProductCard).join('');
-            
-            // Drinks - Soda
-            document.getElementById('grid-drinks-soda').innerHTML = products
-                .filter(p => p.category === 'drinks' && p.sub_category === 'soda')
-                .map(createProductCard).join('');
-            
-            // Drinks - Juice
-            document.getElementById('grid-drinks-juice').innerHTML = products
-                .filter(p => p.category === 'drinks' && p.sub_category === 'juice')
-                .map(createProductCard).join('');
+            const container = document.getElementById('dynamic-menu-container');
+            container.innerHTML = '';
 
-            // Sides (Suppléments)
-            document.getElementById('grid-sides').innerHTML = products
-                .filter(p => p.category === 'sides')
-                .map(createProductCard).join('');
+            // تعريف الفئات والعناوين بالترتيب المطلوب
+            // سيتم توليد القسم فقط إذا كان يحتوي على منتجات
+            // تم تعديل الترتيب ليصبح Pizza أولاً ثم Burger
+            const categoriesConfig = [
+                { id: 'pizza', title: 'Pizza' },
+                { id: 'burger', title: 'Burger' },
+                { id: 'drinks', title: 'Boissons', subSections: [
+                    { id: 'soda', title: 'Sodas' },
+                    { id: 'juice', title: 'Jus' }
+                ]},
+                { id: 'sides', title: 'Suppléments' }
+            ];
+
+            categoriesConfig.forEach(cat => {
+                const catProducts = products.filter(p => p.category === cat.id);
+                if (catProducts.length === 0) return;
+
+                // إنشاء عنصر القسم (بدون حدود أو توهج)
+                const section = document.createElement('section');
+                section.id = `section-${cat.id}`;
+                section.className = "scroll-mt-44"; // لضبط التمرير
+
+                // الرأس (Header)
+                const headerDiv = document.createElement('div');
+                headerDiv.className = "text-center mb-4";
+                headerDiv.innerHTML = `<h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim">${cat.title}</h2>`;
+                section.appendChild(headerDiv);
+
+                // المحتوى
+                if (cat.subSections) {
+                    const subContainer = document.createElement('div');
+                    subContainer.className = "space-y-8";
+                    
+                    cat.subSections.forEach(sub => {
+                        const subProducts = catProducts.filter(p => p.sub_category === sub.id);
+                        if (subProducts.length === 0) return;
+
+                        const subWrapper = document.createElement('div');
+                        subWrapper.innerHTML = `
+                            <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 opacity-80 text-center">${sub.title}</h3>
+                            <div class="grid grid-cols-2 gap-3">
+                                ${subProducts.map(createProductCard).join('')}
+                            </div>
+                        `;
+                        subContainer.appendChild(subWrapper);
+                    });
+                    section.appendChild(subContainer);
+                } else {
+                    const grid = document.createElement('div');
+                    grid.className = "grid grid-cols-2 gap-3";
+                    grid.innerHTML = catProducts.map(createProductCard).join('');
+                    section.appendChild(grid);
+                }
+
+                container.appendChild(section);
+            });
+            
+            // إعادة تفعيل مراقب الأنيميشن للعناصر الجديدة
+            initRevealObserver();
+        }
+
+        // دالة جديدة لتشغيل مراقب الظهور (Animation Observer)
+        function initRevealObserver() {
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.classList.add('reveal-visible');
+                        }, index * 50); 
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '50px' });
+
+            document.querySelectorAll('.reveal-on-scroll').forEach(el => revealObserver.observe(el));
         }
 
         // --- Scroll To Section Logic ---
@@ -830,11 +845,13 @@
                 loader.style.display = 'none';
             }, 500);
 
-            // 3. عرض الأقسام
+            // 3. عرض الأقسام ديناميكياً
             renderAllSections();
             
             // ScrollSpy Logic (Active button based on scroll)
-            const sections = ['burger', 'pizza', 'drinks', 'sides'];
+            // الآن سيعمل مع الـ IDs المولدة ديناميكياً (section-burger, section-pizza, etc.)
+            // تم تحديث المصفوفة لتتبع الترتيب الجديد: بيتزا ثم برجر
+            const sections = ['pizza', 'burger', 'drinks', 'sides'];
             window.addEventListener('scroll', () => {
                 const scrollY = window.scrollY;
                 const offset = 250; // Activate a bit earlier
@@ -865,24 +882,12 @@
             });
 
             // Initial trigger
-            const firstBtn = document.getElementById('btn-burger');
+            // تم تحديث الزر الافتراضي ليكون بيتزا
+            const firstBtn = document.getElementById('btn-pizza');
             if(firstBtn) {
                  firstBtn.classList.add('nav-active', 'text-dark-950');
                  firstBtn.classList.remove('bg-white/5', 'text-gray-400');
             }
-
-            const revealObserver = new IntersectionObserver((entries) => {
-                entries.forEach((entry, index) => {
-                    if (entry.isIntersecting) {
-                        setTimeout(() => {
-                            entry.target.classList.add('reveal-visible');
-                        }, index * 50); 
-                        revealObserver.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.1, rootMargin: '50px' });
-
-            document.querySelectorAll('.reveal-on-scroll').forEach(el => revealObserver.observe(el));
         });
 
     </script>
