@@ -445,7 +445,7 @@
             title.innerText = name;
             
             // حقن الـ model-viewer ديناميكياً مع تحسينات الأداء (disable-pan, touch-action: none)
-            // + تحسينات الإضاءة والنص الجديد
+            // + تحسينات الإضاءة والنص الجديد + تحسينات التفاعل والحجم (interaction-prompt, ar-scale, bounds)
             container.innerHTML = `
                 <model-viewer 
                     src="${url}" 
@@ -454,6 +454,9 @@
                     camera-controls 
                     auto-rotate
                     disable-pan
+                    interaction-prompt="none"
+                    ar-scale="auto"
+                    bounds="tight"
                     style="touch-action: none;"
                     shadow-intensity="1"
                     environment-image="neutral"
@@ -494,7 +497,7 @@
             // إيقاف وتفريغ الـ viewer بشكل آمن قبل الإخفاء
             const viewer = container.querySelector('model-viewer');
             if (viewer) {
-                viewer.dismissPoster();
+                try { viewer.dismissPoster(); } catch(e){} // Safety
                 container.innerHTML = ''; // إزالة الـ DOM لتنظيف الـ WebGL Context
             }
             
