@@ -253,6 +253,9 @@
         </div>
     </div>
 
+    <!-- حاوية الإشعارات (Toast Container) - أسفل اليسار -->
+    <div id="toast-container" class="fixed bottom-5 left-5 z-[60] flex flex-col gap-3 pointer-events-none"></div>
+
     <!-- ========================================== -->
     <!-- كود الجافاسكربت (JavaScript Logic) -->
     <!-- ========================================== -->
@@ -359,6 +362,43 @@
         // =========================================================
         // 🌐 دوال الـ API والـ Business Logic
         // =========================================================
+
+        // 🔔 نظام الإشعارات الحديث (Toast System)
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            // تحديد الألوان والأيقونة حسب النوع
+            const isSuccess = type === 'success';
+            const borderColor = isSuccess ? 'border-green-500' : 'border-red-500';
+            const iconColor = isSuccess ? 'text-green-500' : 'text-red-500';
+            const iconSvg = isSuccess 
+                ? '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                : '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+
+            // تصميم الإشعار (Tailwind CSS)
+            // translate-x-[-100%] يبدأ من خارج الشاشة (يسار) لأننا في وضع RTL وموقعه absolute left
+            // لكن مع fixed left-5 نحتاج لـ translate-x-[-120%] للبداية من الخارج
+            toast.className = `bg-gray-800 text-white px-4 py-3 rounded-lg shadow-2xl border-r-4 ${borderColor} flex items-center gap-3 transform -translate-x-[120%] opacity-0 transition-all duration-500 ease-out pointer-events-auto min-w-[300px] z-50`;
+            
+            toast.innerHTML = `
+                <div class="${iconColor} flex-shrink-0">${iconSvg}</div>
+                <div class="font-medium text-sm leading-snug">${message}</div>
+            `;
+
+            container.appendChild(toast);
+
+            // تفعيل الأنيميشن (الدخول)
+            requestAnimationFrame(() => {
+                toast.classList.remove('-translate-x-[120%]', 'opacity-0');
+            });
+
+            // الإخفاء التلقائي بعد 3 ثواني
+            setTimeout(() => {
+                toast.classList.add('-translate-x-[120%]', 'opacity-0');
+                setTimeout(() => toast.remove(), 500); // حذف العنصر بعد انتهاء الحركة
+            }, 3000);
+        }
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -482,8 +522,10 @@
                 });
                 const data = await fetchOrders(ORDERS_TABLE_ID);
                 renderKDS(data);
+                showToast("تم تحديث حالة الطلب بنجاح ✅", "success");
             } catch (error) {
                 console.error(error);
+                showToast("فشل تحديث الحالة. تأكد من الاتصال.", "error");
                 if(btn) { btn.innerHTML = 'جاهز ✅'; btn.disabled = false; }
             }
         }
@@ -497,10 +539,10 @@
                 });
                 const data = await fetchMenu();
                 renderMenuEditor(data);
-                alert("تم التحديث ✅");
+                showToast("تم تحديث العنصر بنجاح ✅", "success");
             } catch (error) {
                 console.error(error);
-                alert("فشل التحديث.");
+                showToast("فشل تحديث العنصر.", "error");
             }
         }
 
@@ -969,8 +1011,9 @@
                 localStorage.setItem(STATE.storageKeys.role, role);
                 authenticateUser(username, clientData.links, role);
                 if (role === 'kitchen') loadView('kds');
+                showToast(`مرحباً بك! تم تسجيل الدخول بصلاحية ${role === 'admin' ? 'المدير' : 'المطبخ'}`, "success");
             } else {
-                alert("بيانات خاطئة");
+                showToast("اسم المستخدم أو كلمة المرور غير صحيحة ❌", "error");
             }
         });
 
@@ -1025,6 +1068,17 @@
                 } finally {
                     loader.style.display = 'none';
                 }
+            }
+            
+            // التعامل مع الروابط القديمة (Fallback)
+            const url = STATE.currentLinks[viewType];
+            if (url && url !== "api_mode" && !dynamicContent.innerHTML) {
+                 if (url.includes("YOUR_DEMO")) {
+                     showToast("⚠️ هذا حساب تجريبي. البيانات غير حقيقية.", "error");
+                 } else {
+                     showToast("الرابط غير متوفر أو قيد التطوير.", "error");
+                 }
+                 loader.style.display = 'none';
             }
         }
 
