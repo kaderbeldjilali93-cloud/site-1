@@ -1033,18 +1033,28 @@
                     }
 
                     // ج) تحليل محتوى الطلب (Details Parsing)
-                    const details = (order.Details || "").split(/[,،▫\-\n]/);
+                    const details = (order.Details || "").split(/[,،\n]/); 
                     details.forEach(itemStr => {
-                        // استخراج الكمية والاسم باستخدام Regex
-                        const match = itemStr.match(/^(\d+)\s*[xX\*]\s*(.+)/);
-                        
-                        let qty = 1;
                         let name = itemStr.trim();
+                        if (!name) return; // تجاهل الأسطر الفارغة
 
-                        if (match) {
-                            qty = parseInt(match[1]) || 1;
-                            name = match[2].trim();
+                        let qty = 1;
+
+                        // الاحتمال 1: الرقم في البداية (مثال: 5x برجر أو 5 برجر)
+                        const matchStart = name.match(/^(\d+)\s*[xX\*]?\s*(.+)/);
+                        // الاحتمال 2: الرقم في النهاية (مثال: برجر x5 أو برجر (5))
+                        const matchEnd = name.match(/(.+)\s+[xX\*\(]\s*(\d+)\)?$/);
+
+                        if (matchStart) {
+                            qty = parseInt(matchStart[1], 10);
+                            name = matchStart[2].trim();
+                        } else if (matchEnd) {
+                            name = matchEnd[1].trim();
+                            qty = parseInt(matchEnd[2], 10);
                         }
+
+                        // تنظيف الاسم من أي رموز زائدة في البداية مثل (-)
+                        name = name.replace(/^[-▫▪•]\s*/, '').trim();
 
                         const lowerName = name.toLowerCase();
                         
