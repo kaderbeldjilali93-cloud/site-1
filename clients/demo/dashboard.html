@@ -992,9 +992,9 @@
                         const isDrinkCat = drinkKeywords.some(k => category.includes(k) || lowerName.includes(k)); // أضفت البحث في الاسم أيضًا للأمان
                         
                         if (isDrinkCat) {
-                            drinkCounts[name] = (drinkCounts[name] || 0) + qty;
+                            drinkCounts[cleanName] = (drinkCounts[cleanName] || 0) + qty;
                         } else {
-                            foodCounts[name] = (foodCounts[name] || 0) + qty;
+                            foodCounts[cleanName] = (foodCounts[cleanName] || 0) + qty;
                         }
                     });
                 });
