@@ -166,29 +166,6 @@
             </div>
             
             <div class="flex items-center gap-2">
-                <!-- زر جرس التنبيهات (Waiter Call Bell) -->
-                <!-- يظهر فقط للـ Admin/Cashier -->
-                <div class="relative" id="waiter-bell-container" style="display: none;">
-                    <button id="btn-bell" onclick="toggleCallDropdown()" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition relative">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                        <!-- شارة العدد -->
-                        <span id="call-badge" class="absolute top-0 right-0 -mt-1 -mr-1 px-1.5 py-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full hidden border border-gray-900">0</span>
-                    </button>
-                    <!-- القائمة المنسدلة للنداءات -->
-                    <div id="call-dropdown" class="absolute left-0 mt-2 w-72 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 hidden overflow-hidden origin-top-left">
-                         <div class="p-3 border-b border-gray-700 font-bold text-sm text-gray-300 flex justify-between items-center">
-                             <span>🔔 نداءات الطاولات</span>
-                             <button onclick="toggleCallDropdown()" class="text-xs text-gray-500 hover:text-white">إغلاق</button>
-                         </div>
-                         <div id="call-list" class="max-h-64 overflow-y-auto">
-                             <!-- سيتم إضافة النداءات هنا ديناميكياً -->
-                             <div class="p-4 text-center text-xs text-gray-500">لا توجد نداءات نشطة</div>
-                         </div>
-                    </div>
-                </div>
-
                 <!-- زر ملء الشاشة الجديد -->
                 <button onclick="toggleFullscreen()" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition" title="ملء الشاشة">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -223,13 +200,24 @@
                         <span class="font-medium">سجل المبيعات (Cashier)</span>
                     </button>
 
+                    <!-- زر نداءات الطاولات (جديد) -->
+                    <button onclick="loadView('tables')" id="btn-tables" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group relative">
+                        <span class="text-2xl group-hover:scale-110 transition">🔔</span>
+                        <span class="font-medium">نداءات الطاولات</span>
+                        <!-- Badge -->
+                        <span id="tables-badge" class="absolute top-3 left-4 flex h-3 w-3 hidden">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        </span>
+                    </button>
+
                     <!-- زر المنيو - API Mode -->
                     <button onclick="loadView('menu')" id="btn-menu" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
                         <span class="text-2xl group-hover:scale-110 transition">📝</span>
                         <span class="font-medium">تعديل القائمة (Menu)</span>
                     </button>
 
-                    <!-- زر الإحصائيات (جديد) -->
+                    <!-- زر الإحصائيات -->
                     <button onclick="loadView('analytics')" id="btn-analytics" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
                         <span class="text-2xl group-hover:scale-110 transition">📊</span>
                         <span class="font-medium">إحصائيات المبيعات</span>
@@ -237,7 +225,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v3.2.0 Waiter-Alert</p>
+                    <p class="text-xs text-gray-600">v3.3.0 Table-View</p>
                 </div>
             </aside>
 
@@ -337,7 +325,7 @@
             isFirstFetch: true, 
             analyticsData: [], // تخزين بيانات التحليلات مؤقتاً
             // --- Waiter Call State ---
-            waiterCalls: [],
+            activeCalls: [3, 7], // بيانات وهمية للطاولات التي تطلب مساعدة
             waiterInterval: null,
             
             storageKeys: {
@@ -384,21 +372,19 @@
             STATE.currentLinks = links;
             STATE.currentRole = role;
             
-            // التحكم بظهور الجرس حسب الصلاحية
-            const bellContainer = document.getElementById('waiter-bell-container');
+            const tablesBtn = document.getElementById('btn-tables');
             if (role === 'kitchen') {
                 sidebar.classList.remove('flex');
                 sidebar.classList.add('hidden');
-                bellContainer.style.display = 'none'; // إخفاء الجرس للمطبخ
+                if(tablesBtn) tablesBtn.style.display = 'none'; // إخفاء زر الطاولات للمطبخ
             } else {
                 sidebar.classList.remove('hidden');
                 sidebar.classList.add('flex');
-                bellContainer.style.display = 'relative'; // إظهار الجرس للإدارة/الكاشير
+                if(tablesBtn) tablesBtn.style.display = 'flex';
                 startWaiterMock(); // بدء محاكاة النداءات
             }
 
             loginScreen.style.display = 'none';
-            // تم التعديل هنا للتحكم بالعرض عبر الستايل
             dashboardScreen.style.display = 'flex';
         }
 
@@ -406,73 +392,103 @@
         // 🌐 دوال الـ API والـ Business Logic
         // =========================================================
 
-        // --- Waiter Call System (Mock) ---
-        function toggleCallDropdown() {
-            const dropdown = document.getElementById('call-dropdown');
-            dropdown.classList.toggle('hidden');
-        }
-
+        // --- Waiter Call System (Table View Logic) ---
+        
         function startWaiterMock() {
             if(STATE.waiterInterval) clearInterval(STATE.waiterInterval);
             
-            // محاكاة وصول نداء جديد كل 30-60 ثانية إذا كانت القائمة فارغة للتجربة
-            STATE.waiterInterval = setInterval(() => {
-                if(STATE.waiterCalls.length < 3 && Math.random() > 0.5) {
-                    const tableNum = Math.floor(Math.random() * 20) + 1;
-                    const newCall = {
-                        id: Date.now(),
-                        table: `T-${tableNum}`,
-                        time: new Date().toLocaleTimeString('ar-DZ', {hour:'2-digit', minute:'2-digit'})
-                    };
-                    STATE.waiterCalls.push(newCall);
-                    renderWaiterCalls();
-                    
-                    // تشغيل صوت وتأثير الجرس
-                    const bellBtn = document.getElementById('btn-bell');
-                    bellBtn.classList.add('animate-bell');
-                    setTimeout(() => bellBtn.classList.remove('animate-bell'), 1000);
-                    
-                    new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(e => {});
-                    showToast(`نداء جديد من طاولة ${newCall.table}`, "success");
+            // تحديث الشارة في القائمة الجانبية
+            const updateBadge = () => {
+                const badge = document.getElementById('tables-badge');
+                if (badge) {
+                    if (STATE.activeCalls.length > 0) badge.classList.remove('hidden');
+                    else badge.classList.add('hidden');
                 }
-            }, 15000); // كل 15 ثانية يحاول
-        }
-
-        function renderWaiterCalls() {
-            const list = document.getElementById('call-list');
-            const badge = document.getElementById('call-badge');
+            };
             
-            // تحديث الشارة
-            if(STATE.waiterCalls.length > 0) {
-                badge.innerText = STATE.waiterCalls.length;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
+            updateBadge(); // تشغيل فوري
 
-            // تحديث القائمة
-            if(STATE.waiterCalls.length === 0) {
-                list.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">لا توجد نداءات نشطة</div>';
-                return;
-            }
-
-            list.innerHTML = STATE.waiterCalls.map(call => `
-                <div class="p-3 border-b border-gray-700 flex justify-between items-center hover:bg-gray-700 transition animate-new-order">
-                    <div>
-                        <div class="text-sm font-bold text-white">طاولة ${call.table}</div>
-                        <div class="text-xs text-gray-400">تطلب النادل - ${call.time}</div>
-                    </div>
-                    <button onclick="resolveCall(${call.id})" class="text-xs bg-brand text-black px-2 py-1 rounded hover:bg-brand-dark font-bold">
-                        ✔ تم
-                    </button>
-                </div>
-            `).join('');
+            // محاكاة وصول نداء جديد عشوائي
+            STATE.waiterInterval = setInterval(() => {
+                if(STATE.activeCalls.length < 5 && Math.random() > 0.6) {
+                    const tableNum = Math.floor(Math.random() * 10) + 1;
+                    if(!STATE.activeCalls.includes(tableNum)) {
+                        STATE.activeCalls.push(tableNum);
+                        updateBadge();
+                        new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(e => {});
+                        showToast(`نداء جديد من طاولة ${tableNum}`, "success");
+                        
+                        // إذا كانت الصفحة مفتوحة، أعد رسمها
+                        // (طريقة بسيطة: نتحقق من العنوان الحالي)
+                        const currentTitle = document.querySelector('#dynamic-content h2');
+                        if (currentTitle && currentTitle.textContent.includes('نداءات')) {
+                            renderTableView();
+                        }
+                    }
+                }
+            }, 10000); 
         }
 
-        window.resolveCall = function(id) {
-            STATE.waiterCalls = STATE.waiterCalls.filter(c => c.id !== id);
-            renderWaiterCalls();
-        };
+        function resolveTableCall(tableNum) {
+            STATE.activeCalls = STATE.activeCalls.filter(t => t !== tableNum);
+            // تحديث الواجهة
+            renderTableView();
+            // تحديث الشارة
+            const badge = document.getElementById('tables-badge');
+            if (badge) {
+                if (STATE.activeCalls.length > 0) badge.classList.remove('hidden');
+                else badge.classList.add('hidden');
+            }
+            showToast(`تمت الاستجابة للطاولة ${tableNum}`, 'success');
+        }
+
+        function renderTableView() {
+            dynamicContent.innerHTML = '';
+            
+            const header = document.createElement('div');
+            header.className = "flex justify-between items-center mb-8";
+            header.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <h2 class="text-2xl font-bold text-white">🔔 نداءات الطاولات</h2>
+                    <span class="live-indicator" title="تحديث مباشر"></span>
+                </div>
+                <div class="text-gray-400 text-sm">اضغط على الطاولة الحمراء لإلغاء النداء</div>
+            `;
+            dynamicContent.appendChild(header);
+
+            const grid = document.createElement('div');
+            grid.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6";
+
+            for (let i = 1; i <= 10; i++) {
+                const isActive = STATE.activeCalls.includes(i);
+                const card = document.createElement('div');
+                
+                // Styling Logic
+                const baseClass = "h-40 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all duration-300 relative overflow-hidden border-2";
+                const activeClass = "bg-red-600 border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.6)] animate-pulse text-white";
+                const normalClass = "bg-gray-800 border-gray-700 hover:border-gray-500 text-gray-400 hover:bg-gray-750";
+                
+                card.className = `${baseClass} ${isActive ? activeClass : normalClass}`;
+                
+                if (isActive) {
+                    card.onclick = () => resolveTableCall(i);
+                    card.innerHTML = `
+                        <div class="text-4xl mb-2 animate-bounce">⚠️</div>
+                        <div class="text-xl font-bold">طاولة ${i}</div>
+                        <div class="text-xs mt-1 bg-red-800 px-2 py-1 rounded text-red-100">تطلب مساعدة</div>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="text-4xl mb-2 opacity-50">🍽️</div>
+                        <div class="text-lg font-medium">طاولة ${i}</div>
+                    `;
+                }
+                
+                grid.appendChild(card);
+            }
+
+            dynamicContent.appendChild(grid);
+        }
 
 
         // 🔔 نظام الإشعارات الحديث (Toast System)
@@ -1178,6 +1194,10 @@
                 } finally {
                     loader.style.display = 'none';
                 }
+            }
+            else if (viewType === 'tables') {
+                renderTableView();
+                loader.style.display = 'none';
             }
             
             // التعامل مع الروابط القديمة (Fallback)
