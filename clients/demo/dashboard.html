@@ -439,24 +439,43 @@
 
                 const data = await response.json();
                 const results = data.results;
+                
+                // 1. إضافة سجل للتصحيح (Debugging) لرؤية البيانات القادمة في الكونسول
+                console.log("Baserow Calls Data:", results);
 
                 const currentActiveCalls = [];
                 const currentActiveRows = {};
                 const newCallIds = [];
 
                 results.forEach(row => {
-                    // التحقق من الحالة باستخدام "status" (بحروف صغيرة)
-                    const status = (typeof row.status === 'object' && row.status) ? row.status.value : row.status;
+                    // 2. استخراج الحالة (Status) بمرونة (Robust Parsing)
+                    // البحث في الحقول المحتملة (status أو Status) كخطة بديلة (Fallback)
+                    let rawStatus = row.status || row.Status;
                     
-                    // التحقق من القيمة "قيد الانتظار"
-                    if (status === 'قيد الانتظار') {
-                        // استخراج رقم الطاولة من عمود "table"
-                        const tableNum = parseInt(row.table); 
+                    // إذا كانت الحالة كائن (مثل حقل Single Select)، نستخرج القيمة منه
+                    if (typeof rawStatus === 'object' && rawStatus !== null && rawStatus.value) {
+                        rawStatus = rawStatus.value;
+                    }
+                    
+                    // تحويل القيمة إلى نص وتنظيف المسافات الزائدة
+                    const statusVal = String(rawStatus || '').trim();
+
+                    // 3. التحقق من الشرط "قيد الانتظار" بدقة
+                    if (statusVal === 'قيد الانتظار') {
+                        
+                        // 4. استخراج رقم الطاولة (Table) بمرونة
+                        // البحث في الحقول المحتملة (table أو Table)
+                        const rawTable = row.table || row.Table;
+                        
+                        // تحويل إلى نص، تنظيف، ثم تحويل لرقم صحيح
+                        const tableNum = parseInt(String(rawTable || '').trim()); 
+                        
+                        // التأكد من أن الرقم صالح
                         if (!isNaN(tableNum)) {
                             currentActiveCalls.push(tableNum);
                             currentActiveRows[tableNum] = row.id;
                             
-                            // هل هو نداء جديد؟
+                            // هل هو نداء جديد؟ (لم يكن موجوداً في الذاكرة المحلية)
                             if (!STATE.activeCalls.includes(tableNum)) {
                                  newCallIds.push(tableNum);
                             }
@@ -477,18 +496,18 @@
                     }
                 }
 
-                // تحديث الحالة
+                // تحديث الحالة المحلية
                 STATE.activeCalls = currentActiveCalls;
                 STATE.activeCallRows = currentActiveRows;
 
-                // تحديث الشارة (Badge)
+                // تحديث الشارة (Badge) في القائمة الجانبية
                 const badge = document.getElementById('tables-badge');
                 if (badge) {
                     if (STATE.activeCalls.length > 0) badge.classList.remove('hidden');
                     else badge.classList.add('hidden');
                 }
                 
-                // تحديث شارة الجرس العلوي أيضاً
+                // تحديث شارة الجرس العلوي
                 const bellBadge = document.getElementById('call-badge');
                 if (bellBadge) {
                     if (STATE.activeCalls.length > 0) {
@@ -499,7 +518,7 @@
                     }
                 }
                 
-                // تحديث قائمة النداءات في الجرس
+                // تحديث قائمة النداءات المنسدلة في الجرس
                 const callList = document.getElementById('call-list');
                 if(callList) {
                     if(STATE.activeCalls.length === 0) {
@@ -514,7 +533,7 @@
                     }
                 }
 
-                // إعادة رسم شاشة الطاولات إذا كانت مفتوحة
+                // إعادة رسم شاشة الطاولات إذا كانت هي المفتوحة حالياً
                 const currentTitle = document.querySelector('#dynamic-content h2');
                 if (currentTitle && currentTitle.textContent.includes('نداءات')) {
                     renderTableView();
