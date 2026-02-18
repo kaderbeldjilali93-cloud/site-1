@@ -166,6 +166,29 @@
             </div>
             
             <div class="flex items-center gap-2">
+                <!-- زر جرس التنبيهات (Waiter Call Bell) -->
+                <!-- يظهر فقط للـ Admin/Cashier -->
+                <div class="relative" id="waiter-bell-container" style="display: none;">
+                    <button id="btn-bell" onclick="toggleCallDropdown()" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <!-- شارة العدد -->
+                        <span id="call-badge" class="absolute top-0 right-0 -mt-1 -mr-1 px-1.5 py-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full hidden border border-gray-900">0</span>
+                    </button>
+                    <!-- القائمة المنسدلة للنداءات -->
+                    <div id="call-dropdown" class="absolute left-0 mt-2 w-72 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 hidden overflow-hidden origin-top-left">
+                         <div class="p-3 border-b border-gray-700 font-bold text-sm text-gray-300 flex justify-between items-center">
+                             <span>🔔 نداءات الطاولات</span>
+                             <button onclick="toggleCallDropdown()" class="text-xs text-gray-500 hover:text-white">إغلاق</button>
+                         </div>
+                         <div id="call-list" class="max-h-64 overflow-y-auto">
+                             <!-- سيتم إضافة النداءات هنا ديناميكياً -->
+                             <div class="p-4 text-center text-xs text-gray-500">لا توجد نداءات نشطة</div>
+                         </div>
+                    </div>
+                </div>
+
                 <!-- زر ملء الشاشة الجديد -->
                 <button onclick="toggleFullscreen()" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition" title="ملء الشاشة">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -225,7 +248,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v3.3.1 Real-Calls</p>
+                    <p class="text-xs text-gray-600">v3.3.2 Fix-Call-API</p>
                 </div>
             </aside>
 
@@ -327,7 +350,7 @@
             analyticsData: [], // تخزين بيانات التحليلات مؤقتاً
             // --- Waiter Call State ---
             activeCalls: [], // قائمة أرقام الطاولات النشطة
-            activeCallRows: {}, // خريطة { tableNum: rowId }
+            activeCallRows: {}, // خريطة { tableNum: rowId } لتخزين معرف السطر
             waiterInterval: null,
             
             storageKeys: {
@@ -400,7 +423,11 @@
         // =========================================================
 
         // --- Waiter Call System (Real API) ---
-        
+        function toggleCallDropdown() {
+            const dropdown = document.getElementById('call-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
         async function fetchWaiterCalls() {
             try {
                 const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${CALLS_TABLE_ID}/?user_field_names=true`, {
@@ -418,11 +445,13 @@
                 const newCallIds = [];
 
                 results.forEach(row => {
-                    // التحقق من الحالة (معالجة سواء كانت كائن أو نص)
-                    const status = (typeof row.Status === 'object' && row.Status) ? row.Status.value : row.Status;
+                    // التحقق من الحالة باستخدام "status" (بحروف صغيرة)
+                    const status = (typeof row.status === 'object' && row.status) ? row.status.value : row.status;
                     
-                    if (status === 'Active') {
-                        const tableNum = parseInt(row.Table); // افترضنا اسم العمود Table
+                    // التحقق من القيمة "قيد الانتظار"
+                    if (status === 'قيد الانتظار') {
+                        // استخراج رقم الطاولة من عمود "table"
+                        const tableNum = parseInt(row.table); 
                         if (!isNaN(tableNum)) {
                             currentActiveCalls.push(tableNum);
                             currentActiveRows[tableNum] = row.id;
@@ -439,6 +468,13 @@
                 if (newCallIds.length > 0) {
                     new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(e => {});
                     newCallIds.forEach(t => showToast(`نداء جديد من طاولة ${t}`, "success"));
+                    
+                    // تحريك الجرس
+                    const bellBtn = document.getElementById('btn-bell');
+                    if(bellBtn) {
+                        bellBtn.classList.add('animate-bell');
+                        setTimeout(() => bellBtn.classList.remove('animate-bell'), 1000);
+                    }
                 }
 
                 // تحديث الحالة
@@ -450,6 +486,32 @@
                 if (badge) {
                     if (STATE.activeCalls.length > 0) badge.classList.remove('hidden');
                     else badge.classList.add('hidden');
+                }
+                
+                // تحديث شارة الجرس العلوي أيضاً
+                const bellBadge = document.getElementById('call-badge');
+                if (bellBadge) {
+                    if (STATE.activeCalls.length > 0) {
+                        bellBadge.innerText = STATE.activeCalls.length;
+                        bellBadge.classList.remove('hidden');
+                    } else {
+                        bellBadge.classList.add('hidden');
+                    }
+                }
+                
+                // تحديث قائمة النداءات في الجرس
+                const callList = document.getElementById('call-list');
+                if(callList) {
+                    if(STATE.activeCalls.length === 0) {
+                        callList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">لا توجد نداءات نشطة</div>';
+                    } else {
+                        callList.innerHTML = STATE.activeCalls.map(t => `
+                            <div class="p-3 border-b border-gray-700 flex justify-between items-center hover:bg-gray-700 transition">
+                                <div><div class="text-sm font-bold text-white">طاولة ${t}</div></div>
+                                <button onclick="resolveTableCall(${t})" class="text-xs bg-brand text-black px-2 py-1 rounded hover:bg-brand-dark font-bold">✔ تم</button>
+                            </div>
+                        `).join('');
+                    }
                 }
 
                 // إعادة رسم شاشة الطاولات إذا كانت مفتوحة
@@ -477,7 +539,8 @@
                         "Authorization": `Token ${BASEROW_TOKEN}`,
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({ "Status": "Resolved" })
+                    // تحديث "status" إلى "تمت الاستجابة"
+                    body: JSON.stringify({ "status": "تمت الاستجابة" })
                 });
 
                 if (!response.ok) throw new Error("API Error");
@@ -487,13 +550,23 @@
                 STATE.activeCalls = STATE.activeCalls.filter(t => t !== tableNum);
                 delete STATE.activeCallRows[tableNum];
                 
+                // تحديث الواجهات
                 renderTableView();
                 
-                // تحديث الشارة
                 const badge = document.getElementById('tables-badge');
                 if (badge) {
                     if (STATE.activeCalls.length > 0) badge.classList.remove('hidden');
                     else badge.classList.add('hidden');
+                }
+                
+                const bellBadge = document.getElementById('call-badge');
+                if (bellBadge) {
+                    if (STATE.activeCalls.length > 0) {
+                         bellBadge.innerText = STATE.activeCalls.length;
+                         bellBadge.classList.remove('hidden');
+                    } else {
+                         bellBadge.classList.add('hidden');
+                    }
                 }
 
                 showToast(`تمت الاستجابة للطاولة ${tableNum}`, 'success');
