@@ -336,10 +336,7 @@
 
     <script>
         // --- إعدادات Baserow ---
-        const BASEROW_TOKEN = "DfaoAk1o41H4iPUtkblY2ZKzXcbHxizb";
-        const MENU_TABLE_ID = "36";
-        // تحديث الرابط ليشمل الترتيب بناءً على العمود "Sort"
-        const BASEROW_URL = `https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true&order_by=Sort`;
+        const MENU_API_URL = "https://n8n.vidsai.site/webhook/get-menu";
 
         // 1. تعريف المصفوفة فارغة
         let products = [];
@@ -369,12 +366,9 @@
         // دالة جلب البيانات من Baserow
         async function fetchMenuItems() {
             try {
-                // جلب البيانات مباشرة مع الترتيب
-                const response = await fetch(BASEROW_URL, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Token ${BASEROW_TOKEN}`
-                    }
+                // جلب البيانات من Webhook
+                const response = await fetch(MENU_API_URL, {
+                    method: 'GET'
                 });
 
                 if (!response.ok) {
@@ -382,13 +376,37 @@
                 }
 
                 const data = await response.json();
+                console.log("Raw API Data:", data); // Debugging
+
+                // تحديد مصدر المصفوفة بناءً على هيكلية الاستجابة
+                let itemsArray = [];
+                if (Array.isArray(data)) {
+                    itemsArray = data;
+                } else if (data && Array.isArray(data.results)) {
+                    itemsArray = data.results;
+                } else {
+                    console.error("Unexpected data structure:", data);
+                    throw new Error("Invalid data format received from API");
+                }
                 
                 // تحويل البيانات (Mapping)
-                products = data.results
+                products = itemsArray
                     // فلترة العناصر المتوفرة فقط
-                    .filter(item => item.Availability && item.Availability.value === 'متوفر')
+                    .filter(item => {
+                         // التحقق من التوفر بمرونة
+                         const availability = item.Availability && item.Availability.value ? item.Availability.value : item.Availability;
+                         return availability === 'متوفر' || availability === 'Available' || availability === true;
+                    })
                     .map(item => {
-                        let rawCat = item.Category ? item.Category.value.toLowerCase().trim() : 'other';
+                        // معالجة التصنيف
+                        let rawCat = 'other';
+                        if (item.Category && item.Category.value) {
+                             rawCat = item.Category.value;
+                        } else if (typeof item.Category === 'string') {
+                             rawCat = item.Category;
+                        }
+                        rawCat = rawCat ? rawCat.toLowerCase().trim() : 'other';
+
                         let category = rawCat;
 
                         if (rawCat === 'boissons' || rawCat === 'drinks') category = 'drinks';
@@ -396,7 +414,7 @@
 
                         let subCat = '';
                         if (category === 'drinks') {
-                            const nameLower = item.Name.toLowerCase();
+                            const nameLower = (item.Name || '').toLowerCase();
                             if (nameLower.includes('jus') || nameLower.includes('ramy') || nameLower.includes('rouiba') || nameLower.includes('tazij')) {
                                 subCat = 'juice';
                             } else {
@@ -404,15 +422,24 @@
                             }
                         }
 
-                        const imgUrl = (item.image && item.image.length > 0) ? item.image[0].url : 'https://placehold.co/400x300?text=No+Image';
+                        // معالجة الصور
+                        let imgUrl = 'https://placehold.co/400x300?text=No+Image';
+                        // التحقق من حقل 'image' أو 'Image'
+                        const imgField = item.image || item.Image;
+                        if (Array.isArray(imgField) && imgField.length > 0) {
+                            imgUrl = imgField[0].url;
+                        } else if (typeof imgField === 'string') {
+                            imgUrl = imgField;
+                        }
 
-                        // استخراج رابط الـ 3D من عمود "Model 3D"
+                        // معالجة المجسمات ثلاثية الأبعاد
+                        let modelField = item["Model 3D"] || item["Model3D"] || item["model_3d"];
                         let modelUrl = null;
-                        if (item["Model 3D"]) {
-                            if (typeof item["Model 3D"] === 'string') {
-                                modelUrl = item["Model 3D"]; // إذا كان نص/رابط مباشر
-                            } else if (Array.isArray(item["Model 3D"]) && item["Model 3D"].length > 0) {
-                                modelUrl = item["Model 3D"][0].url; // إذا كان ملف مرفوع
+                        if (modelField) {
+                            if (typeof modelField === 'string') {
+                                modelUrl = modelField; 
+                            } else if (Array.isArray(modelField) && modelField.length > 0) {
+                                modelUrl = modelField[0].url; 
                             }
                         }
 
@@ -423,18 +450,20 @@
                             category: category,
                             sub_category: subCat,
                             img: imgUrl,
-                            model3d: modelUrl, // تمرير الرابط المعالج هنا
+                            model3d: modelUrl, 
                             desc: item.Description || ''
                         };
                     });
 
                 console.log("تم جلب المنتجات بنجاح:", products);
+                
+                if (products.length === 0) {
+                    console.warn("No products found after filtering. Check availability field.");
+                }
 
             } catch (error) {
                 console.error("فشل الاتصال بقاعدة البيانات:", error);
-                // استخدام showErrorModal بدلاً من alert
-                // لكن هنا سنكتفي باستخدام البيانات الاحتياطية بصمت أو إظهار تنبيه خفيف
-                // showErrorModal("تعذر تحميل القائمة من السيرفر. سيتم عرض قائمة احتياطية.");
+                showErrorModal("تعذر تحميل القائمة. يرجى المحاولة لاحقاً.");
                 products = fallbackProducts;
             }
         }
