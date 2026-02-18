@@ -435,7 +435,10 @@
                     headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
                 });
                 
-                if (!response.ok) return; // فشل صامت في الخلفية
+                if (!response.ok) {
+    console.error("🛑 Baserow API Rejected! Status Code:", response.status);
+    return;
+}
 
                 const data = await response.json();
                 const results = data.results;
