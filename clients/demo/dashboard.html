@@ -1032,52 +1032,48 @@
                         salesByTime[key] = (salesByTime[key] || 0) + price;
                     }
 
-                    // ج) تحليل محتوى الطلب (Details Parsing)
-                    const details = (order.Details || "").split(/[,،\n]/); 
-                    details.forEach(itemStr => {
-                        let name = itemStr.trim();
-                        if (!name) return; // تجاهل الأسطر الفارغة
+                   // ج) تحليل محتوى الطلب (Details Parsing) المطور لحساب الكميات
+                 const details = (order.Details || "").split(/[,،\n]/);
+                 details.forEach(itemStr => {
+                  let originalStr = itemStr.trim();
+                  if (!originalStr) return; 
 
-                        let qty = 1;
+                   let qty = 1;
+                  let cleanName = originalStr;
 
-                        // الاحتمال 1: الرقم في البداية (مثال: 5x برجر أو 5 برجر)
-                        const matchStart = name.match(/^(\d+)\s*[xX\*]?\s*(.+)/);
-                        // الاحتمال 2: الرقم في النهاية (مثال: برجر x5 أو برجر (5))
-                        const matchEnd = name.match(/(.+)\s+[xX\*\(]\s*(\d+)\)?$/);
+                  // استخراج الرقم بذكاء وين ما كان
+                  const startMatch = cleanName.match(/^[-▫▪•]?\s*(\d+)\s*[xX\*]?\s+(.+)/i) || cleanName.match(/^[-▫▪•]?\s*(\d+)[xX\*]\s*(.+)/i);
+                  const endMatch = cleanName.match(/(.+)\s+[xX\*]\s*(\d+)$/i) || cleanName.match(/(.+)\s*\((\d+)\)$/i);
 
-                        if (matchStart) {
-                            qty = parseInt(matchStart[1], 10);
-                            name = matchStart[2].trim();
-                        } else if (matchEnd) {
-                            name = matchEnd[1].trim();
-                            qty = parseInt(matchEnd[2], 10);
-                        }
+                  if (startMatch) {
+                  qty = parseInt(startMatch[1], 10);
+                  cleanName = startMatch[2].trim();
+                  } else if (endMatch) {
+                  cleanName = endMatch[1].trim();
+                  qty = parseInt(endMatch[2], 10);
+                 }
 
-                        // تنظيف الاسم من أي رموز زائدة في البداية مثل (-)
-                        name = name.replace(/^[-▫▪•]\s*/, '').trim();
+                 // تنظيف الاسم باش تتجمع الأطباق المتشابهة
+                cleanName = cleanName.replace(/^[-▫▪•]\s*/, '').trim();
 
-                        const lowerName = name.toLowerCase();
-                        
-                        // تحديد النوع بناءً على المنيو (Source of Truth) - مع تحسين البحث (Fuzzy Matching)
-                        let category = categoryMap[lowerName] || '';
-                        
-                        if (!category) {
-                            // البحث عن تطابق جزئي
-                            const foundKey = Object.keys(categoryMap).find(k => lowerName.includes(k) || k.includes(lowerName));
-                            if (foundKey) category = categoryMap[foundKey];
-                        }
-                        
-                        // كلمات مفتاحية احتياطية للمشروبات
-                        const drinkKeywords = ['boissons', 'drinks', 'mushrubat', 'مشروبات', 'عصائر', 'pepsi', 'coca', 'water'];
-                        const isDrinkCat = drinkKeywords.some(k => category.includes(k));
-                        
-                        if (isDrinkCat) {
-                            drinkCounts[name] = (drinkCounts[name] || 0) + qty;
-                        } else {
-                            foodCounts[name] = (foodCounts[name] || 0) + qty;
-                        }
-                    });
-                });
+                  const lowerName = cleanName.toLowerCase();
+                let category = categoryMap[lowerName] || '';
+    
+                if (!category) {
+                const foundKey = Object.keys(categoryMap).find(k => lowerName.includes(k) || k.includes(lowerName));
+                if (foundKey) category = categoryMap[foundKey];
+                }
+    
+                 // تصنيف المشروبات
+                 const drinkKeywords = ['boissons', 'drinks', 'mushrubat', 'مشروبات', 'عصائر', 'pepsi', 'coca', 'water', 'slim', 'jus'];
+                 const isDrinkCat = drinkKeywords.some(k => category.includes(k) || lowerName.includes(k));
+    
+                if (isDrinkCat) {
+                drinkCounts[cleanName] = (drinkCounts[cleanName] || 0) + qty;
+                } else {
+                 foodCounts[cleanName] = (foodCounts[cleanName] || 0) + qty;
+                }
+                 }); 
 
                 // ترتيب Top 5
                 const topFoods = Object.entries(foodCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
