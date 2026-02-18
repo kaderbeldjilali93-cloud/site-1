@@ -953,27 +953,25 @@
                         let cleanStr = itemStr.trim();
                         if (!cleanStr) return; // تجاهل الأسطر الفارغة
 
-                        let qty = 1;
-                        let name = cleanStr;
-
-                        // محاولة استخراج الكمية من البداية: "2x Burger", "2 * Burger", "2 Burger"
-                        // Regex: بداية السطر، أرقام، مسافات اختيارية، حرف x اختياري، مسافات، باقي النص
-                        const startMatch = cleanStr.match(/^(\d+)\s*(?:[xX\*]|\s)\s*(.+)/);
+                       let qty = 1;
                         
-                        // محاولة استخراج الكمية من النهاية: "Burger x2", "Burger (2)"
-                        const endMatch = cleanStr.match(/(.+)\s*(?:[xX\*]|\()(\d+)\)?$/);
+                        // 1. التنظيف أولاً: نحذفو المطات والرموز من البداية باش الرقم يولي هو الأول
+                        let name = cleanStr.replace(/^[-▫▪•\.]+\s*/, '').trim();
+
+                        // 2. درك نطبقو الـ Regex للبحث عن الرقم في البداية
+                        const startMatch = name.match(/^(\d+)\s*(?:[xX\*]|\s)\s*(.+)/);
+                        
+                        // 3. أو البحث عن الرقم في النهاية
+                        const endMatch = name.match(/(.+)\s*(?:[xX\*]|\()(\d+)\)?$/);
 
                         if (startMatch) {
                             qty = parseInt(startMatch[1]) || 1;
-                            name = startMatch[2].trim();
+                            name = startMatch[2].trim(); // استخراج الاسم الصافي
                         } else if (endMatch) {
-                            name = endMatch[1].trim();
+                            name = endMatch[1].trim(); // استخراج الاسم الصافي
                             qty = parseInt(endMatch[2]) || 1;
                         }
-
-                        // تنظيف الاسم من الرموز الزائدة في البداية (مثل المطات أو النقاط)
-                        name = name.replace(/^[-▫▪•\.]+\s*/, '').trim();
-
+                        
                         if (!name || name === 'لا توجد تفاصيل') return;
 
                         const lowerName = name.toLowerCase();
