@@ -643,36 +643,36 @@
             }
         } 
 
-        function isOrderFromToday(rawTime) {
-            if (!rawTime) return false;
+        // 🆕 دوال حساب الوقت الحي للطلبات (Live Timer)
+        function calculateElapsedMinutes(rawTime) {
+            if (!rawTime) return 0;
             try {
                 const orderDate = new Date(rawTime);
+                if (isNaN(orderDate.getTime())) return 0;
                 const now = new Date();
-                let businessDayStart = new Date();
-                businessDayStart.setHours(6, 0, 0, 0); 
-                
-                if (now.getHours() < 6) { 
-                    businessDayStart.setDate(businessDayStart.getDate() - 1);
-                }
-
-                return orderDate >= businessDayStart;
+                const diffMs = now - orderDate;
+                const diffMins = Math.floor(diffMs / 60000);
+                return diffMins >= 0 ? diffMins : 0;
             } catch (e) {
-                return false;
+                return 0;
             }
         }
 
-        function calculateDailySequence(orders) {
-            const sortedAscending = [...orders].reverse();
-            const ordersWithSeq = sortedAscending.map((order, index) => {
-                const seqNum = String(index + 1).padStart(3, '0'); 
-                return {
-                    ...order,
-                    dailySequence: `#D-${seqNum}`
-                };
-            });
-            return ordersWithSeq.reverse();
+        function getTimerStyle(minutes) {
+            if (minutes <= 1) return "text-green-400";
+            if (minutes <= 3) return "text-yellow-400";
+            return "text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse font-bold";
         }
 
+        function formatTimerText(minutes) {
+            if (minutes <= 0) return 'الآن';
+            if (minutes === 1) return 'دقيقة واحدة';
+            if (minutes === 2) return 'دقيقتين';
+            if (minutes >= 3 && minutes <= 10) return `${minutes} دقائق`;
+            return `${minutes} دقيقة`;
+        }
+
+        // 🆕 دالة فلترة اليوم المفتوح (يبدأ من 6 صباحاً)
         function processOrderAlerts(orders) {
             const newKnownOrders = {};
             const getStatus = (o) => { const s = o.Status || o.status; return (typeof s === 'object' && s !== null) ? s.value : s; };
@@ -823,19 +823,28 @@
                     const hasNew = tOrders.some(o => o.isNew);
                     card.className = `bg-gray-800 border-2 border-brand shadow-[0_0_20px_rgba(255,153,0,0.15)] rounded-2xl flex flex-col overflow-hidden ${hasNew ? 'animate-new-order' : ''}`;
                     
-                    // تكديس طلبات نفس الطاولة
-                    let ordersHTML = tOrders.map(o => `
+                    // تكديس طلبات نفس الطاولة مع العداد الزمني الحي
+                    let ordersHTML = tOrders.map(o => {
+                        const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
+                        const elapsedMins = calculateElapsedMinutes(rawTime);
+                        const timerStyle = getTimerStyle(elapsedMins);
+                        const timerText = formatTimerText(elapsedMins);
+
+                        return `
                         <div class="bg-gray-900 rounded-xl p-3 border border-gray-700 mb-3 last:mb-0">
-                            <div class="flex justify-between items-center mb-3 border-b border-gray-700 pb-2">
-                                <span class="font-mono text-brand font-bold bg-gray-800 px-2 py-0.5 rounded border border-gray-600 shadow-sm">${o.dailySequence}</span>
-                                <span class="text-xs text-gray-400 flex items-center gap-1">⏱️ ${formatOrderTime(o)}</span>
+                            <div class="flex justify-between items-center mb-2 border-b border-gray-700 pb-2">
+                                <span class="text-xs text-gray-500 opacity-60 font-mono">الطلب ${o.dailySequence}</span>
+                                <span class="text-sm flex items-center gap-1 transition-colors duration-300 ${timerStyle}">
+                                    ⏱️ ${timerText}
+                                </span>
                             </div>
                             <div class="text-sm text-gray-200 mb-4 leading-relaxed pl-3 border-l-2 border-brand whitespace-pre-line">${o.Details || '-'}</div>
                             <button id="btn-done-${o.id}" onclick="updateOrderStatus(${o.id}, 'جاهز')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg transition shadow-md flex justify-center items-center gap-2">
                                 <span>جاهز</span> ✅
                             </button>
                         </div>
-                    `).join('');
+                        `;
+                    }).join('');
 
                     card.innerHTML = `
                         <div class="bg-brand text-black font-bold p-3 text-center text-lg flex justify-between items-center">
@@ -865,11 +874,19 @@
                 const hasNew = tkOrders.some(o => o.isNew);
                 tkCard.className = `bg-gray-800 border-2 border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.15)] rounded-2xl flex flex-col overflow-hidden ${hasNew ? 'animate-new-order' : ''}`;
                 
-                let ordersHTML = tkOrders.map(o => `
+                let ordersHTML = tkOrders.map(o => {
+                    const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
+                    const elapsedMins = calculateElapsedMinutes(rawTime);
+                    const timerStyle = getTimerStyle(elapsedMins);
+                    const timerText = formatTimerText(elapsedMins);
+
+                    return `
                     <div class="bg-gray-900 rounded-xl p-3 border border-gray-700 mb-3 last:mb-0">
-                        <div class="flex justify-between items-center mb-3 border-b border-gray-700 pb-2">
-                            <span class="font-mono text-blue-400 font-bold bg-gray-800 px-2 py-0.5 rounded border border-gray-600 shadow-sm">${o.dailySequence}</span>
-                            <span class="text-xs text-gray-400 flex items-center gap-1">⏱️ ${formatOrderTime(o)}</span>
+                        <div class="flex justify-between items-center mb-2 border-b border-gray-700 pb-2">
+                            <span class="text-xs text-gray-500 opacity-60 font-mono">الطلب ${o.dailySequence}</span>
+                            <span class="text-sm flex items-center gap-1 transition-colors duration-300 ${timerStyle}">
+                                ⏱️ ${timerText}
+                            </span>
                         </div>
                         <div class="text-xs text-gray-400 mb-2 bg-gray-800 inline-block px-2 py-1 rounded border border-gray-700">الوجهة: <span class="text-white font-bold">${o.Table || o.table || 'غير محدد'}</span></div>
                         <div class="text-sm text-gray-200 mb-4 leading-relaxed pl-3 border-l-2 border-blue-500 whitespace-pre-line">${o.Details || '-'}</div>
@@ -877,7 +894,8 @@
                             <span>جاهز</span> ✅
                         </button>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 tkCard.innerHTML = `
                     <div class="bg-blue-600 text-white font-bold p-3 text-center text-lg flex justify-between items-center">
