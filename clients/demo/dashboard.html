@@ -101,6 +101,17 @@
             animation: bellRing 1s ease-in-out;
             color: #FF9900 !important; 
         }
+
+        /* --- خدعة توسيع مساحة النقر لزر التقويم (CSS Hack) --- */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -964,8 +975,13 @@
                     <h2 class="text-xl font-bold text-white">سجل العمليات</h2>
                     <span class="live-indicator" title="تحديث مباشر"></span>
                 </div>
-                <div>
-                    <input type="date" value="${STATE.selectedCashierDate}" onchange="handleCashierDateChange(event)" onclick="this.showPicker()" class="bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand outline-none text-sm cursor-pointer">
+                <div class="relative flex items-center bg-gray-800 border border-gray-600 rounded-lg hover:border-brand focus-within:border-brand focus-within:ring-2 focus-within:ring-brand transition-all overflow-hidden group">
+                    <div class="absolute right-3 text-brand pointer-events-none z-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <input type="date" value="${STATE.selectedCashierDate}" onchange="handleCashierDateChange(event)" onclick="if(this.showPicker) this.showPicker()" class="w-full bg-transparent text-white pl-4 pr-10 py-2 outline-none text-sm cursor-pointer relative font-mono z-10" style="color-scheme: dark;">
                 </div>
             `;
             dynamicContent.appendChild(tableHeader);
