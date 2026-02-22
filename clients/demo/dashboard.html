@@ -377,6 +377,7 @@
             waiterInterval: null,
             isMuted: false, // ميزة كتم الصوت
             selectedCashierDate: getLocalYYYYMMDD(), // ميزة فلترة تاريخ الكاشير
+            selectedAnalyticsDate: getLocalYYYYMMDD(), // ميزة فلترة تاريخ الإحصائيات
             lastFetchedOrders: [], // لتخزين الطلبات للفلترة المحلية
             storageKeys: {
                 username: "rp_username",
@@ -939,6 +940,12 @@
             STATE.selectedCashierDate = e.target.value;
             renderCashier(STATE.lastFetchedOrders);
         };
+        
+        // 🆕 حدث لتغيير تاريخ الإحصائيات
+        window.handleAnalyticsDateChange = function(e) {
+            STATE.selectedAnalyticsDate = e.target.value;
+            renderAnalytics(STATE.analyticsData, 'custom');
+        };
 
         function renderCashier(orders) {
             // حفظ الطلبات في الـ State لتمكين الفلترة المحلية السريعة
@@ -981,7 +988,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <input type="date" value="${STATE.selectedCashierDate}" onchange="handleCashierDateChange(event)" onclick="if(this.showPicker) this.showPicker()" class="w-full bg-transparent text-white pl-4 pr-10 py-2 outline-none text-sm cursor-pointer relative font-mono z-10" style="color-scheme: dark;">
+                    <input type="date" value="${STATE.selectedCashierDate}" onchange="handleCashierDateChange(event)" class="w-full bg-transparent text-white pl-4 pr-10 py-2 outline-none text-sm cursor-pointer relative font-mono z-10" style="color-scheme: dark;">
                 </div>
             `;
             dynamicContent.appendChild(tableHeader);
@@ -1059,6 +1066,7 @@
                     const t = new Date(rawTime);
                     const now = new Date();
                     if (filterType === 'today') return isOrderFromToday(rawTime);
+                    if (filterType === 'custom') return isOrderFromSelectedDate(rawTime, STATE.selectedAnalyticsDate);
                     if (filterType === 'week') { const oneWeekAgo = new Date(); oneWeekAgo.setDate(now.getDate() - 7); return t >= oneWeekAgo; }
                     if (filterType === 'month') { const oneMonthAgo = new Date(); oneMonthAgo.setDate(now.getDate() - 30); return t >= oneMonthAgo; }
                     return true;
@@ -1075,7 +1083,7 @@
                     const t = order['Created at'] || order.Time;
                     if(t) {
                         const dateObj = new Date(t);
-                        let key = filterType === 'today' ? dateObj.getHours() + ":00" : dateObj.getDate() + "/" + (dateObj.getMonth()+1);
+                        let key = (filterType === 'today' || filterType === 'custom') ? dateObj.getHours() + ":00" : dateObj.getDate() + "/" + (dateObj.getMonth()+1);
                         salesByTime[key] = (salesByTime[key] || 0) + price;
                     }
 
@@ -1115,14 +1123,25 @@
 
                 dynamicContent.innerHTML = '';
                 const btnClass = (type) => `px-4 py-1.5 rounded-lg text-sm font-medium transition ${filterType === type ? 'bg-brand text-black' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`;
+                const datePickerBorderClass = filterType === 'custom' ? 'border-brand ring-2 ring-brand' : 'border-gray-600 hover:border-brand focus-within:border-brand focus-within:ring-2 focus-within:ring-brand';
                 
                 dynamicContent.innerHTML += `
-                    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                         <h2 class="text-2xl font-bold text-white flex items-center gap-2">📊 مركز التحليلات</h2>
-                        <div class="flex bg-gray-800 p-1 rounded-xl">
-                            <button onclick="renderAnalytics(STATE.analyticsData, 'today')" class="${btnClass('today')}">اليوم</button>
-                            <button onclick="renderAnalytics(STATE.analyticsData, 'week')" class="${btnClass('week')}">الأسبوع</button>
-                            <button onclick="renderAnalytics(STATE.analyticsData, 'month')" class="${btnClass('month')}">الشهر</button>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="flex bg-gray-800 p-1 rounded-xl">
+                                <button onclick="renderAnalytics(STATE.analyticsData, 'today')" class="${btnClass('today')}">اليوم</button>
+                                <button onclick="renderAnalytics(STATE.analyticsData, 'week')" class="${btnClass('week')}">الأسبوع</button>
+                                <button onclick="renderAnalytics(STATE.analyticsData, 'month')" class="${btnClass('month')}">الشهر</button>
+                            </div>
+                            <div class="relative flex items-center bg-gray-800 border ${datePickerBorderClass} rounded-xl transition-all overflow-hidden group">
+                                <div class="absolute right-3 text-brand pointer-events-none z-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <input type="date" value="${STATE.selectedAnalyticsDate}" onchange="handleAnalyticsDateChange(event)" class="w-full bg-transparent text-white pl-3 pr-9 py-1.5 outline-none text-sm cursor-pointer relative font-mono z-10" style="color-scheme: dark;">
+                            </div>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -1153,7 +1172,7 @@
                 if(topDrinks.length > 0) new Chart(document.getElementById('drinkChart'), { type: 'doughnut', data: { labels: topDrinks.map(i => i[0]), datasets: [{ data: topDrinks.map(i => i[1]), backgroundColor: ['#3B82F6', '#60A5FA', '#93C5FD', '#2563EB', '#1D4ED8'] }] }, options: commonOptions });
 
                 const timeLabels = Object.keys(salesByTime).sort((a, b) => {
-                    if (filterType === 'today') return parseInt(a) - parseInt(b);
+                    if (filterType === 'today' || filterType === 'custom') return parseInt(a) - parseInt(b);
                     const [d1, m1] = a.split('/').map(Number);
                     const [d2, m2] = b.split('/').map(Number);
                     return (m1 !== m2) ? m1 - m2 : d1 - d2;
