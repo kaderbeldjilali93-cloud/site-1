@@ -229,20 +229,17 @@
             <aside id="sidebar" class="fixed inset-y-0 right-0 z-40 transform translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-gray-900 border-l border-gray-800 flex flex-col justify-between flex-shrink-0 pt-16 md:pt-0">
                 <nav class="p-2 space-y-2 mt-4">
                     <!-- زر المطبخ -->
-                    <button onclick="loadView('kds')" id="btn-kds" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
-                        <span class="text-2xl group-hover:scale-110 transition">🍳</span>
+                    <button onclick="loadView('kds')" id="btn-kds" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">الطلبات الحالية (KDS)</span>
                     </button>
 
                     <!-- زر الكاشير -->
-                    <button onclick="loadView('cashier')" id="btn-cashier" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
-                        <span class="text-2xl group-hover:scale-110 transition">💰</span>
+                    <button onclick="loadView('cashier')" id="btn-cashier" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">سجل المبيعات (Cashier)</span>
                     </button>
 
                     <!-- زر نداءات الطاولات -->
-                    <button onclick="loadView('tables')" id="btn-tables" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group relative">
-                        <span class="text-2xl group-hover:scale-110 transition">🔔</span>
+                    <button onclick="loadView('tables')" id="btn-tables" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">نداءات الطاولات</span>
                         <span id="tables-badge" class="absolute top-3 left-4 flex h-3 w-3 hidden">
                           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -251,20 +248,18 @@
                     </button>
 
                     <!-- زر المنيو -->
-                    <button onclick="loadView('menu')" id="btn-menu" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
-                        <span class="text-2xl group-hover:scale-110 transition">📝</span>
+                    <button onclick="loadView('menu')" id="btn-menu" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">تعديل القائمة (Menu)</span>
                     </button>
 
                     <!-- زر الإحصائيات -->
-                    <button onclick="loadView('analytics')" id="btn-analytics" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
-                        <span class="text-2xl group-hover:scale-110 transition">📊</span>
+                    <button onclick="loadView('analytics')" id="btn-analytics" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">إحصائيات المبيعات</span>
                     </button>
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v4.9.0 Modal-UI</p>
+                    <p class="text-xs text-gray-600">v4.10.0 Minimalist-UI</p>
                 </div>
             </aside>
 
@@ -1397,9 +1392,9 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group hover:border-brand transition-colors"><div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">💰</div><p class="text-gray-400 text-sm font-medium mb-1">إجمالي المبيعات</p><h3 class="text-3xl font-bold text-white tracking-tight">${totalSales.toLocaleString()} <span class="text-lg text-brand font-normal">DZD</span></h3></div>
-                        <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group hover:border-blue-500 transition-colors"><div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">📦</div><p class="text-gray-400 text-sm font-medium mb-1">عدد الطلبات</p><h3 class="text-3xl font-bold text-white tracking-tight">${filteredOrders.length}</h3></div>
-                        <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group hover:border-green-500 transition-colors"><div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🛒</div><p class="text-gray-400 text-sm font-medium mb-1">متوسط السلة</p><h3 class="text-3xl font-bold text-white tracking-tight">${avgOrder} <span class="text-lg text-green-500 font-normal">DZD</span></h3></div>
+                        <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden hover:border-brand transition-colors"><p class="text-gray-400 text-sm font-medium mb-1">إجمالي المبيعات</p><h3 class="text-3xl font-bold text-white tracking-tight">${totalSales.toLocaleString()} <span class="text-lg text-brand font-normal">DZD</span></h3></div>
+                        <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden hover:border-blue-500 transition-colors"><p class="text-gray-400 text-sm font-medium mb-1">عدد الطلبات</p><h3 class="text-3xl font-bold text-white tracking-tight">${filteredOrders.length}</h3></div>
+                        <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden hover:border-green-500 transition-colors"><p class="text-gray-400 text-sm font-medium mb-1">متوسط السلة</p><h3 class="text-3xl font-bold text-white tracking-tight">${avgOrder} <span class="text-lg text-green-500 font-normal">DZD</span></h3></div>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                         <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80"><h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🍔 نسب المأكولات</h3><div class="relative w-full h-40"><canvas id="foodChart"></canvas></div></div>
