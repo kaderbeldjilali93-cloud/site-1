@@ -101,9 +101,37 @@
             opacity: 0;
             cursor: pointer;
         }
+
+        /* --- إعدادات الطباعة الحرارية (Thermal Receipt 80mm) --- */
+        @media print {
+            body { 
+                background-color: #fff !important; 
+                color: #000 !important; 
+                margin: 0 !important; 
+                padding: 0 !important;
+                font-family: 'Courier New', Courier, monospace, sans-serif !important;
+            }
+            /* إخفاء كل عناصر الواجهة باستثناء قسم الطباعة */
+            body > *:not(#print-section) { 
+                display: none !important; 
+            }
+            #print-section { 
+                display: block !important; 
+                width: 80mm !important; 
+                margin: 0 auto !important;
+                padding: 5mm !important;
+                font-size: 12px !important;
+                line-height: 1.4 !important;
+                color: #000 !important;
+            }
+            @page { margin: 0; }
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- حاوية الطباعة الحرارية المخفية -->
+    <div id="print-section" class="hidden"></div>
 
     <!-- ========================================== -->
     <!-- شاشة تسجيل الدخول (Login Screen) -->
@@ -233,7 +261,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v4.7.0 Smart-KPIs</p>
+                    <p class="text-xs text-gray-600">v4.8.0 POS-Receipt</p>
                 </div>
             </aside>
 
@@ -260,7 +288,39 @@
     </section>
 
     <!-- ========================================== -->
-    <!-- نافذة تأكيد الخروج (Custom Modal) -->
+    <!-- نافذة تأكيد الدفع والتحصيل (Checkout Modal) -->
+    <!-- ========================================== -->
+    <div id="checkout-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md transition-opacity">
+        <div class="bg-gray-800 border-t-4 border-brand rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.8)] p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
+            <div class="flex items-center gap-3 mb-6 border-b border-gray-700 pb-4">
+                <div class="bg-brand text-black p-2 rounded-full shadow-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                </div>
+                <h3 id="checkout-title" class="text-xl font-bold text-white">تأكيد الدفع</h3>
+            </div>
+            
+            <div class="bg-gray-900 rounded-xl p-6 text-center mb-6 border border-gray-700 shadow-inner relative overflow-hidden">
+                <div class="absolute inset-0 bg-brand opacity-5 mix-blend-overlay"></div>
+                <p class="text-gray-400 text-sm mb-2 relative z-10">المبلغ المطلوب تحصيله</p>
+                <div id="checkout-amount" class="text-4xl font-extrabold text-brand tracking-wider drop-shadow-md relative z-10">0 DA</div>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button onclick="confirmPayment(true)" class="w-full bg-brand hover:bg-brand-dark text-black font-bold py-3 rounded-lg transition shadow-[0_0_15px_rgba(255,153,0,0.3)] flex justify-center items-center gap-2 transform hover:scale-[1.02]">
+                    <span>تأكيد وطباعة التذكرة</span> <span class="text-lg">🖨️</span>
+                </button>
+                <button onclick="confirmPayment(false)" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition shadow-lg flex justify-center items-center gap-2 transform hover:scale-[1.02]">
+                    <span>تأكيد بدون طباعة</span> <span class="text-lg">✅</span>
+                </button>
+                <button onclick="closeCheckoutModal()" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg transition flex justify-center items-center gap-2 mt-2">
+                    <span>إلغاء</span> <span class="text-lg">❌</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- نافذة تأكيد الخروج (Logout Modal) -->
     <!-- ========================================== -->
     <div id="logout-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity">
         <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
@@ -350,7 +410,8 @@
             lastFetchedOrders: [], 
             latestKdsOrders: [], 
             kdsActiveTab: 'tables',
-            cashierStatusFilter: 'جاهز', // تم التغيير إلى 'جاهز' ليكون الفلتر الافتراضي الأهم
+            cashierStatusFilter: 'جاهز',
+            currentCheckoutOrder: null, // تخزين مؤقت للطلب المراد دفعه
             storageKeys: {
                 username: "rp_username",
                 role: "rp_role",
@@ -369,6 +430,7 @@
         const welcomeState = document.getElementById('welcome-state');
         const loader = document.getElementById('loader');
         const logoutModal = document.getElementById('logout-modal');
+        const checkoutModal = document.getElementById('checkout-modal');
         const sidebar = document.getElementById('sidebar');
 
         // =========================================================
@@ -913,101 +975,188 @@
         };
 
         // =========================================================
-        // التحديث المتفائل المزدوج للمدفوعات (Double Optimistic UI)
+        // Checkout & Payment Logic (Optimistic UI & Printing)
         // =========================================================
-        window.handlePaymentToggle = async function(rowId) {
-            if (confirm('هل تم استلام المبلغ من الزبون؟')) {
-                const payBtn = document.getElementById(`btn-pay-${rowId}`);
-                let originalHTML = '';
-                let originalClassName = '';
-                
-                // 1. التحديث البصري الفوري للعنصر في الـ DOM
-                if (payBtn) {
-                    originalHTML = payBtn.innerHTML;
-                    originalClassName = payBtn.className;
-                    
-                    payBtn.innerHTML = 'مدفوع 💸';
-                    payBtn.className = 'px-3 py-1 rounded-full text-xs border border-blue-700 bg-blue-800 text-white font-bold transition shadow-lg pointer-events-none whitespace-nowrap';
-                }
+        
+        // 1. فتح نافذة التحصيل بدلاً من Confirm
+        window.handlePaymentToggle = function(rowId) {
+            const order = STATE.lastFetchedOrders.find(o => o.id === rowId);
+            if (!order) return;
+            
+            STATE.currentCheckoutOrder = order;
+            
+            const price = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
+            const tableStr = order.Table || order.table || 'سفري';
+            
+            document.getElementById('checkout-title').innerText = `تأكيد الدفع: الطلب ${order.dailySequence} - ${tableStr}`;
+            document.getElementById('checkout-amount').innerText = `${price.toLocaleString()} DA`;
+            
+            document.getElementById('checkout-modal').classList.remove('hidden');
+        };
 
-                // 2. تحديث الذاكرة المحلية (State Mutation) فوراً قبل الاتصال بالسيرفر
-                const updateLocalStatus = (ordersArray) => {
+        window.closeCheckoutModal = function() {
+            document.getElementById('checkout-modal').classList.add('hidden');
+            STATE.currentCheckoutOrder = null;
+        };
+
+        // 2. معالجة التأكيد من النافذة
+        window.confirmPayment = function(shouldPrint) {
+            const order = STATE.currentCheckoutOrder;
+            if (!order) return;
+            
+            closeCheckoutModal();
+            processPayment(order.id, shouldPrint);
+        };
+
+        // 3. التحديث المتفائل وإنشاء التذكرة
+        window.processPayment = async function(rowId, shouldPrint) {
+            const payBtn = document.getElementById(`btn-pay-${rowId}`);
+            let originalHTML = '';
+            let originalClassName = '';
+            
+            // التحديث البصري الفوري للعنصر في الـ DOM
+            if (payBtn) {
+                originalHTML = payBtn.innerHTML;
+                originalClassName = payBtn.className;
+                
+                payBtn.innerHTML = 'مدفوع 💸';
+                payBtn.className = 'px-3 py-1 rounded-full text-xs border border-blue-700 bg-blue-800 text-white font-bold transition shadow-lg pointer-events-none whitespace-nowrap';
+            }
+
+            // تحديث الذاكرة المحلية (State Mutation) فوراً قبل الاتصال بالسيرفر
+            const updateLocalStatus = (ordersArray) => {
+                const order = ordersArray.find(o => o.id === rowId);
+                if (order) {
+                    if (typeof order.Status === 'object' && order.Status !== null) {
+                        order.Status.value = 'مدفوع';
+                    } else {
+                        order.Status = 'مدفوع';
+                    }
+                }
+            };
+            updateLocalStatus(STATE.lastFetchedOrders);
+            updateLocalStatus(STATE.latestKdsOrders);
+
+            // استدعاء الطباعة إذا طلبها المستخدم
+            if (shouldPrint) {
+                const orderToPrint = STATE.lastFetchedOrders.find(o => o.id === rowId);
+                if(orderToPrint) printReceipt(orderToPrint);
+            }
+
+            try {
+                // الاتصال بالخادم في الخلفية (API Call)
+                await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${rowId}/?user_field_names=true`, {
+                    method: 'PATCH',
+                    headers: { 
+                        "Authorization": `Token ${BASEROW_TOKEN}`, 
+                        "Content-Type": "application/json" 
+                    },
+                    body: JSON.stringify({ "Status": 'مدفوع' })
+                });
+                
+                showToast("تم تأكيد الدفع بنجاح ✅", "success");
+                
+                // تأخير إعادة الرسم (The 2-Second Delay) مع الاعتماد على الذاكرة المحلية
+                setTimeout(async () => {
+                    try {
+                        const currentView = localStorage.getItem(STATE.storageKeys.lastView);
+                        if (currentView === 'cashier') {
+                            renderCashier(STATE.lastFetchedOrders);
+                        } else if (currentView === 'analytics') {
+                            renderAnalytics(STATE.analyticsData, 'today');
+                        }
+                        
+                        // جلب البيانات الجديدة من الخادم في الخلفية لضمان المزامنة التامة
+                        const freshData = await fetchOrders(ORDERS_TABLE_ID);
+                        STATE.latestKdsOrders = freshData;
+                        STATE.lastFetchedOrders = freshData;
+                        
+                    } catch (e) {
+                        console.warn("حدث خطأ أثناء المزامنة بعد التأخير:", e);
+                    }
+                }, 2000);
+
+            } catch (error) {
+                console.warn("API Error:", error.message);
+                showToast("فشل تأكيد الدفع. تأكد من الاتصال.", "error");
+                
+                // التراجع عن التحديث المحلي (Fallback)
+                const revertLocalStatus = (ordersArray) => {
                     const order = ordersArray.find(o => o.id === rowId);
                     if (order) {
                         if (typeof order.Status === 'object' && order.Status !== null) {
-                            order.Status.value = 'مدفوع';
+                            order.Status.value = 'جاهز';
                         } else {
-                            order.Status = 'مدفوع';
+                            order.Status = 'جاهز';
                         }
                     }
                 };
-                updateLocalStatus(STATE.lastFetchedOrders);
-                updateLocalStatus(STATE.latestKdsOrders);
+                revertLocalStatus(STATE.lastFetchedOrders);
+                revertLocalStatus(STATE.latestKdsOrders);
 
-                try {
-                    // 3. الاتصال بالخادم في الخلفية (API Call)
-                    await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${rowId}/?user_field_names=true`, {
-                        method: 'PATCH',
-                        headers: { 
-                            "Authorization": `Token ${BASEROW_TOKEN}`, 
-                            "Content-Type": "application/json" 
-                        },
-                        body: JSON.stringify({ "Status": 'مدفوع' })
-                    });
-                    
-                    showToast("تم تأكيد الدفع بنجاح ✅", "success");
-                    
-                    // 4. تأخير إعادة الرسم (The 2-Second Delay) مع الاعتماد على الذاكرة المحلية
-                    setTimeout(async () => {
-                        try {
-                            // إعادة رسم الشاشة بناءً على التحديث المحلي أولاً لضمان الانتقال السلس
-                            const currentView = localStorage.getItem(STATE.storageKeys.lastView);
-                            if (currentView === 'cashier') {
-                                renderCashier(STATE.lastFetchedOrders);
-                            } else if (currentView === 'analytics') {
-                                renderAnalytics(STATE.analyticsData, 'today');
-                            }
-                            
-                            // 5. جلب البيانات الجديدة من الخادم في الخلفية لضمان المزامنة التامة
-                            const freshData = await fetchOrders(ORDERS_TABLE_ID);
-                            STATE.latestKdsOrders = freshData;
-                            STATE.lastFetchedOrders = freshData;
-                            
-                        } catch (e) {
-                            console.warn("حدث خطأ أثناء المزامنة بعد التأخير:", e);
-                        }
-                    }, 2000);
-
-                } catch (error) {
-                    console.warn("API Error:", error.message);
-                    showToast("فشل تأكيد الدفع. تأكد من الاتصال.", "error");
-                    
-                    // التراجع عن التحديث المحلي (Fallback)
-                    const revertLocalStatus = (ordersArray) => {
-                        const order = ordersArray.find(o => o.id === rowId);
-                        if (order) {
-                            if (typeof order.Status === 'object' && order.Status !== null) {
-                                order.Status.value = 'جاهز';
-                            } else {
-                                order.Status = 'جاهز';
-                            }
-                        }
-                    };
-                    revertLocalStatus(STATE.lastFetchedOrders);
-                    revertLocalStatus(STATE.latestKdsOrders);
-
-                    // استرجاع شكل الزر الأصلي
-                    if (payBtn) {
-                        payBtn.innerHTML = originalHTML;
-                        payBtn.className = originalClassName;
-                    }
+                // استرجاع شكل الزر الأصلي
+                if (payBtn) {
+                    payBtn.innerHTML = originalHTML;
+                    payBtn.className = originalClassName;
                 }
             }
         };
 
-        window.handleAnalyticsDateChange = function(e) {
-            STATE.selectedAnalyticsDate = e.target.value;
-            renderAnalytics(STATE.analyticsData, 'custom');
+        // 4. توليد تذكرة الطباعة الحرارية
+        window.printReceipt = function(order) {
+            const printSec = document.getElementById('print-section');
+            const price = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
+            const tableStr = order.Table || order.table || 'سفري';
+            const dateStr = new Date().toLocaleString('ar-DZ');
+            
+            // تفكيك تفاصيل الطلب لطباعتها في صفوف
+            const detailsList = (order.Details || "").split(/[\n]/).filter(i => i.trim() !== "");
+            let itemsHtml = '';
+            detailsList.forEach(item => {
+                // تقسيم السطر إذا كان يحتوي على فاصلة لمعالجة العناصر المتعددة في نفس السطر
+                const subItems = item.split('،');
+                subItems.forEach(subItem => {
+                    if(subItem.trim() !== '') {
+                        itemsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 11px;">
+                            <span>${subItem.trim()}</span>
+                        </div>`;
+                    }
+                });
+            });
+
+            printSec.innerHTML = `
+                <div style="text-align: center; margin-bottom: 12px;">
+                    <h2 style="margin: 0; font-size: 20px; font-weight: bold;">RestoPro</h2>
+                    <div style="font-size: 11px; color: #333; margin-top: 4px;">إدارة المطاعم الذكية</div>
+                </div>
+                <div style="border-top: 1px dashed #000; margin: 12px 0;"></div>
+                <div style="font-size: 12px; margin-bottom: 12px; line-height: 1.6;">
+                    <div style="display:flex; justify-content:space-between;"><span>رقم الطلب:</span> <b>${order.dailySequence}</b></div>
+                    <div style="display:flex; justify-content:space-between;"><span>الطاولة:</span> <b>${tableStr}</b></div>
+                    <div style="display:flex; justify-content:space-between;"><span>التاريخ:</span> <span>${dateStr}</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>طريقة الدفع:</span> <span>نقداً</span></div>
+                </div>
+                <div style="border-top: 1px dashed #000; margin: 12px 0;"></div>
+                <div style="margin-bottom: 12px;">
+                    <div style="font-weight: bold; margin-bottom: 8px; font-size: 13px; border-bottom: 1px solid #000; padding-bottom: 4px;">تفاصيل الطلب:</div>
+                    ${itemsHtml}
+                </div>
+                <div style="border-top: 1px dashed #000; margin: 12px 0;"></div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 16px; margin-bottom: 12px; background-color: #f0f0f0; padding: 4px;">
+                    <span>المجموع:</span>
+                    <span>${price.toLocaleString()} DA</span>
+                </div>
+                <div style="border-top: 1px dashed #000; margin: 12px 0;"></div>
+                <div style="text-align: center; font-size: 11px; margin-top: 15px; font-weight: bold;">
+                    <div>شكراً لزيارتكم!</div>
+                    <div style="margin-top: 2px;">Thank you for your visit</div>
+                </div>
+            `;
+            
+            // استدعاء نافذة الطباعة بعد حقن المحتوى مباشرة
+            setTimeout(() => {
+                window.print();
+            }, 100);
         };
 
         function renderCashier(orders) {
@@ -1090,10 +1239,10 @@
                 if (order.isNew) rowAlertClass = 'animate-new-order';
                 else if (order.justReady) rowAlertClass = 'animate-ready-order';
 
-                // تحويل شارة "جاهز" إلى زر قابل للنقر
+                // تحويل شارة "جاهز" إلى زر لفتح نافذة التحصيل
                 let statusHTML = `<span class="px-3 py-1 rounded-full text-xs border ${statusClass} inline-block">${statusVal}</span>`;
                 if (statusVal === 'جاهز') {
-                    statusHTML = `<button id="btn-pay-${order.id}" onclick="handlePaymentToggle(${order.id})" class="px-3 py-1 rounded-full text-xs border border-brand bg-brand text-black font-bold hover:bg-brand-dark transition shadow-[0_0_10px_rgba(255,153,0,0.4)] animate-pulse hover:animate-none whitespace-nowrap">جاهز (تأكيد الدفع؟)</button>`;
+                    statusHTML = `<button id="btn-pay-${order.id}" onclick="handlePaymentToggle(${order.id})" class="px-3 py-1 rounded-full text-xs border border-brand bg-brand text-black font-bold hover:bg-brand-dark transition shadow-[0_0_10px_rgba(255,153,0,0.4)] animate-pulse hover:animate-none whitespace-nowrap">جاهز (تحصيل)</button>`;
                 }
 
                 tableHTML += `<tr class="hover:bg-gray-750 transition duration-150 ${rowAlertClass}"><td class="p-4 text-right font-mono font-bold text-white">${order.dailySequence}</td><td class="p-4 text-right text-gray-400">${formatOrderTime(order)}</td><td class="p-4 text-right font-bold">${order.Table||'Takeaway'}</td><td class="p-4 text-right truncate max-w-xs">${order.Details||'-'}</td><td class="p-4 text-left font-bold text-white">${getPrice(order).toLocaleString()} DA</td><td class="p-4 text-center">${statusHTML}</td></tr>`;
