@@ -233,7 +233,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v4.5.0 Optimistic-UX</p>
+                    <p class="text-xs text-gray-600">v4.6.0 Optimistic-Sync</p>
                 </div>
             </aside>
 
@@ -913,7 +913,7 @@
         };
 
         // =========================================================
-        // التحديث المتفائل المؤجل للمدفوعات (Optimistic UI with Delay)
+        // التحديث المتفائل المزدوج للمدفوعات (Double Optimistic UI)
         // =========================================================
         window.handlePaymentToggle = async function(rowId) {
             if (confirm('هل تم استلام المبلغ من الزبون؟')) {
@@ -921,7 +921,7 @@
                 let originalHTML = '';
                 let originalClassName = '';
                 
-                // 1. التحديث البصري الفوري (Immediate DOM Update)
+                // 1. التحديث البصري الفوري للعنصر في الـ DOM
                 if (payBtn) {
                     originalHTML = payBtn.innerHTML;
                     originalClassName = payBtn.className;
@@ -930,8 +930,22 @@
                     payBtn.className = 'px-3 py-1 rounded-full text-xs border border-blue-700 bg-blue-800 text-white font-bold transition shadow-lg pointer-events-none whitespace-nowrap';
                 }
 
+                // 2. تحديث الذاكرة المحلية (State Mutation) فوراً قبل الاتصال بالسيرفر
+                const updateLocalStatus = (ordersArray) => {
+                    const order = ordersArray.find(o => o.id === rowId);
+                    if (order) {
+                        if (typeof order.Status === 'object' && order.Status !== null) {
+                            order.Status.value = 'مدفوع';
+                        } else {
+                            order.Status = 'مدفوع';
+                        }
+                    }
+                };
+                updateLocalStatus(STATE.lastFetchedOrders);
+                updateLocalStatus(STATE.latestKdsOrders);
+
                 try {
-                    // 2. الاتصال بالخادم في الخلفية (API Call)
+                    // 3. الاتصال بالخادم في الخلفية (API Call)
                     await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${rowId}/?user_field_names=true`, {
                         method: 'PATCH',
                         headers: { 
@@ -943,21 +957,24 @@
                     
                     showToast("تم تأكيد الدفع بنجاح ✅", "success");
                     
-                    // 3. تأخير إعادة الرسم (The 2-Second Delay)
+                    // 4. تأخير إعادة الرسم (The 2-Second Delay) مع الاعتماد على الذاكرة المحلية
                     setTimeout(async () => {
                         try {
-                            const data = await fetchOrders(ORDERS_TABLE_ID);
-                            STATE.latestKdsOrders = data;
-                            STATE.lastFetchedOrders = data;
-                            
+                            // إعادة رسم الشاشة بناءً على التحديث المحلي أولاً لضمان الانتقال السلس
                             const currentView = localStorage.getItem(STATE.storageKeys.lastView);
                             if (currentView === 'cashier') {
-                                renderCashier(data);
+                                renderCashier(STATE.lastFetchedOrders);
                             } else if (currentView === 'analytics') {
-                                renderAnalytics(data, 'today');
+                                renderAnalytics(STATE.analyticsData, 'today');
                             }
+                            
+                            // 5. جلب البيانات الجديدة من الخادم في الخلفية لضمان المزامنة التامة
+                            const freshData = await fetchOrders(ORDERS_TABLE_ID);
+                            STATE.latestKdsOrders = freshData;
+                            STATE.lastFetchedOrders = freshData;
+                            
                         } catch (e) {
-                            console.warn("حدث خطأ أثناء جلب البيانات بعد التأخير:", e);
+                            console.warn("حدث خطأ أثناء المزامنة بعد التأخير:", e);
                         }
                     }, 2000);
 
@@ -965,7 +982,21 @@
                     console.warn("API Error:", error.message);
                     showToast("فشل تأكيد الدفع. تأكد من الاتصال.", "error");
                     
-                    // 4. التعامل مع الأخطاء (Fallback)
+                    // التراجع عن التحديث المحلي (Fallback)
+                    const revertLocalStatus = (ordersArray) => {
+                        const order = ordersArray.find(o => o.id === rowId);
+                        if (order) {
+                            if (typeof order.Status === 'object' && order.Status !== null) {
+                                order.Status.value = 'جاهز';
+                            } else {
+                                order.Status = 'جاهز';
+                            }
+                        }
+                    };
+                    revertLocalStatus(STATE.lastFetchedOrders);
+                    revertLocalStatus(STATE.latestKdsOrders);
+
+                    // استرجاع شكل الزر الأصلي
                     if (payBtn) {
                         payBtn.innerHTML = originalHTML;
                         payBtn.className = originalClassName;
