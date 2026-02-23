@@ -233,7 +233,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v4.4.0 Interactive-POS</p>
+                    <p class="text-xs text-gray-600">v4.5.0 Optimistic-UX</p>
                 </div>
             </aside>
 
@@ -642,8 +642,6 @@
         async function updateOrderStatus(rowId, newStatus) {
             const btn = document.getElementById(`btn-done-${rowId}`);
             if(btn) { btn.innerHTML = `...`; btn.disabled = true; }
-            const payBtn = document.getElementById(`btn-pay-${rowId}`);
-            if(payBtn) { payBtn.innerHTML = `...`; payBtn.disabled = true; }
 
             try {
                 await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${rowId}/?user_field_names=true`, {
@@ -670,7 +668,6 @@
                 console.warn("API Error:", error.message);
                 showToast("فشل تحديث الحالة. تأكد من الاتصال.", "error");
                 if(btn) { btn.innerHTML = 'جاهز ✅'; btn.disabled = false; }
-                if(payBtn) { payBtn.innerHTML = 'جاهز (تأكيد الدفع؟)'; payBtn.disabled = false; }
             }
         }
 
@@ -915,9 +912,65 @@
             renderCashier(STATE.lastFetchedOrders);
         };
 
-        window.handlePaymentToggle = function(rowId) {
+        // =========================================================
+        // التحديث المتفائل المؤجل للمدفوعات (Optimistic UI with Delay)
+        // =========================================================
+        window.handlePaymentToggle = async function(rowId) {
             if (confirm('هل تم استلام المبلغ من الزبون؟')) {
-                updateOrderStatus(rowId, 'مدفوع');
+                const payBtn = document.getElementById(`btn-pay-${rowId}`);
+                let originalHTML = '';
+                let originalClassName = '';
+                
+                // 1. التحديث البصري الفوري (Immediate DOM Update)
+                if (payBtn) {
+                    originalHTML = payBtn.innerHTML;
+                    originalClassName = payBtn.className;
+                    
+                    payBtn.innerHTML = 'مدفوع 💸';
+                    payBtn.className = 'px-3 py-1 rounded-full text-xs border border-blue-700 bg-blue-800 text-white font-bold transition shadow-lg pointer-events-none whitespace-nowrap';
+                }
+
+                try {
+                    // 2. الاتصال بالخادم في الخلفية (API Call)
+                    await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${rowId}/?user_field_names=true`, {
+                        method: 'PATCH',
+                        headers: { 
+                            "Authorization": `Token ${BASEROW_TOKEN}`, 
+                            "Content-Type": "application/json" 
+                        },
+                        body: JSON.stringify({ "Status": 'مدفوع' })
+                    });
+                    
+                    showToast("تم تأكيد الدفع بنجاح ✅", "success");
+                    
+                    // 3. تأخير إعادة الرسم (The 2-Second Delay)
+                    setTimeout(async () => {
+                        try {
+                            const data = await fetchOrders(ORDERS_TABLE_ID);
+                            STATE.latestKdsOrders = data;
+                            STATE.lastFetchedOrders = data;
+                            
+                            const currentView = localStorage.getItem(STATE.storageKeys.lastView);
+                            if (currentView === 'cashier') {
+                                renderCashier(data);
+                            } else if (currentView === 'analytics') {
+                                renderAnalytics(data, 'today');
+                            }
+                        } catch (e) {
+                            console.warn("حدث خطأ أثناء جلب البيانات بعد التأخير:", e);
+                        }
+                    }, 2000);
+
+                } catch (error) {
+                    console.warn("API Error:", error.message);
+                    showToast("فشل تأكيد الدفع. تأكد من الاتصال.", "error");
+                    
+                    // 4. التعامل مع الأخطاء (Fallback)
+                    if (payBtn) {
+                        payBtn.innerHTML = originalHTML;
+                        payBtn.className = originalClassName;
+                    }
+                }
             }
         };
 
