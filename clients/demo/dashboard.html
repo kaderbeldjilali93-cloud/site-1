@@ -233,7 +233,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v4.6.0 Optimistic-Sync</p>
+                    <p class="text-xs text-gray-600">v4.7.0 Smart-KPIs</p>
                 </div>
             </aside>
 
@@ -350,7 +350,7 @@
             lastFetchedOrders: [], 
             latestKdsOrders: [], 
             kdsActiveTab: 'tables',
-            cashierStatusFilter: 'الكل', // متغير فلتر الحالات السريع للكاشير
+            cashierStatusFilter: 'جاهز', // تم التغيير إلى 'جاهز' ليكون الفلتر الافتراضي الأهم
             storageKeys: {
                 username: "rp_username",
                 role: "rp_role",
@@ -1015,7 +1015,7 @@
             const getPrice = (o) => parseFloat((o.total || o.Total || o.price || o.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
             const getStatus = (o) => (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
 
-            // 1. فلترة الطلبات حسب التاريخ المحدد
+            // 1. فلترة الطلبات حسب التاريخ المحدد (baseOrders تُستخدم للإحصائيات العلوية)
             let baseOrders = orders.filter(o => {
                 const time = o['Created at'] || o.Time || o.time || o.created_on;
                 return isOrderFromSelectedDate(time, STATE.selectedCashierDate);
@@ -1024,22 +1024,20 @@
             baseOrders = calculateDailySequence(baseOrders);
             baseOrders = processOrderAlerts(baseOrders);
 
-            // 2. فلترة الطلبات حسب الحالة (Status Filter) للعرض والحسابات
-            let filteredOrders = baseOrders;
-            if (STATE.cashierStatusFilter !== 'الكل') {
-                filteredOrders = baseOrders.filter(o => getStatus(o) === STATE.cashierStatusFilter);
-            }
+            // 2. فلترة الطلبات حسب الحالة (Status Filter) لرسم الجدول فقط
+            let filteredOrders = baseOrders.filter(o => getStatus(o) === STATE.cashierStatusFilter);
 
             dynamicContent.innerHTML = '';
 
-            let totalSales = 0; filteredOrders.forEach(o => totalSales += getPrice(o));
-            const avgOrderValue = filteredOrders.length > 0 ? (totalSales / filteredOrders.length).toFixed(2) : 0;
+            // حساب الإحصائيات العلوية بالاعتماد على (كل طلبات اليوم) baseOrders
+            let totalSales = 0; baseOrders.forEach(o => totalSales += getPrice(o));
+            const avgOrderValue = baseOrders.length > 0 ? (totalSales / baseOrders.length).toFixed(2) : 0;
 
             const kpiSection = document.createElement('div');
             kpiSection.className = "grid grid-cols-1 md:grid-cols-3 gap-6 mb-8";
             kpiSection.innerHTML = `
-                <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-brand shadow-lg"><p class="text-gray-400 text-sm mb-1">المبيعات (المحددة)</p><h3 class="text-3xl font-bold text-white">${totalSales.toLocaleString()} <span class="text-sm text-brand">DA</span></h3></div>
-                <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-blue-500 shadow-lg"><p class="text-gray-400 text-sm mb-1">الطلبات (المحددة)</p><h3 class="text-3xl font-bold text-white">${filteredOrders.length}</h3></div>
+                <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-brand shadow-lg"><p class="text-gray-400 text-sm mb-1">إجمالي المبيعات</p><h3 class="text-3xl font-bold text-white">${totalSales.toLocaleString()} <span class="text-sm text-brand">DA</span></h3></div>
+                <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-blue-500 shadow-lg"><p class="text-gray-400 text-sm mb-1">إجمالي الطلبات</p><h3 class="text-3xl font-bold text-white">${baseOrders.length}</h3></div>
                 <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-green-500 shadow-lg"><p class="text-gray-400 text-sm mb-1">متوسط السلة</p><h3 class="text-3xl font-bold text-white">${avgOrderValue} <span class="text-sm text-green-500">DA</span></h3></div>
             `;
             dynamicContent.appendChild(kpiSection);
@@ -1062,10 +1060,10 @@
             `;
             dynamicContent.appendChild(tableHeader);
 
-            // إضافة أزرار الفلترة السريعة
+            // إضافة أزرار الفلترة السريعة (بدون خيار 'الكل')
             const filtersContainer = document.createElement('div');
             filtersContainer.className = "flex gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar";
-            const statuses = ['الكل', 'قيد التحضير', 'جاهز', 'مدفوع'];
+            const statuses = ['قيد التحضير', 'جاهز', 'مدفوع'];
             filtersContainer.innerHTML = statuses.map(status => {
                 const isActive = STATE.cashierStatusFilter === status;
                 const btnClass = isActive 
