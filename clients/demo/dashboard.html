@@ -104,6 +104,10 @@
 
         /* --- إعدادات الطباعة الحرارية (Thermal Receipt 80mm) --- */
         @media print {
+            @page {
+                size: 80mm auto;
+                margin: 0;
+            }
             body { 
                 background-color: #fff !important; 
                 color: #000 !important; 
@@ -124,7 +128,6 @@
                 line-height: 1.4 !important;
                 color: #000 !important;
             }
-            @page { margin: 0; }
         }
     </style>
 </head>
@@ -261,7 +264,7 @@
                 </nav>
 
                 <div class="p-4 text-center hidden md:block">
-                    <p class="text-xs text-gray-600">v4.8.0 POS-Receipt</p>
+                    <p class="text-xs text-gray-600">v4.9.0 Modal-UI</p>
                 </div>
             </aside>
 
@@ -291,8 +294,13 @@
     <!-- نافذة تأكيد الدفع والتحصيل (Checkout Modal) -->
     <!-- ========================================== -->
     <div id="checkout-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md transition-opacity">
-        <div class="bg-gray-800 border-t-4 border-brand rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.8)] p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
-            <div class="flex items-center gap-3 mb-6 border-b border-gray-700 pb-4">
+        <div class="relative bg-gray-800 border-t-4 border-brand rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.8)] p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
+            <!-- زر الإغلاق X -->
+            <button onclick="closeCheckoutModal()" class="absolute top-4 left-4 text-gray-500 hover:text-white transition focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div class="flex items-center gap-3 mb-6 border-b border-gray-700 pb-4 pr-6">
                 <div class="bg-brand text-black p-2 rounded-full shadow-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                 </div>
@@ -307,13 +315,10 @@
 
             <div class="flex flex-col gap-3">
                 <button onclick="confirmPayment(true)" class="w-full bg-brand hover:bg-brand-dark text-black font-bold py-3 rounded-lg transition shadow-[0_0_15px_rgba(255,153,0,0.3)] flex justify-center items-center gap-2 transform hover:scale-[1.02]">
-                    <span>تأكيد وطباعة التذكرة</span> <span class="text-lg">🖨️</span>
+                    <span>تأكيد وطباعة التذكرة</span>
                 </button>
                 <button onclick="confirmPayment(false)" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition shadow-lg flex justify-center items-center gap-2 transform hover:scale-[1.02]">
-                    <span>تأكيد بدون طباعة</span> <span class="text-lg">✅</span>
-                </button>
-                <button onclick="closeCheckoutModal()" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg transition flex justify-center items-center gap-2 mt-2">
-                    <span>إلغاء</span> <span class="text-lg">❌</span>
+                    <span>تأكيد بدون طباعة</span>
                 </button>
             </div>
         </div>
@@ -409,6 +414,7 @@
             selectedAnalyticsDate: getLocalYYYYMMDD(), 
             lastFetchedOrders: [], 
             latestKdsOrders: [], 
+            processedCashierOrders: [], // حفظ الطلبات المعالجة برقم التسلسل
             kdsActiveTab: 'tables',
             cashierStatusFilter: 'جاهز',
             currentCheckoutOrder: null, // تخزين مؤقت للطلب المراد دفعه
@@ -980,7 +986,8 @@
         
         // 1. فتح نافذة التحصيل بدلاً من Confirm
         window.handlePaymentToggle = function(rowId) {
-            const order = STATE.lastFetchedOrders.find(o => o.id === rowId);
+            // استخدام المصفوفة المعالجة (التي تحتوي على أرقام التسلسل) للبحث عن الطلب
+            const order = STATE.processedCashierOrders.find(o => o.id === rowId);
             if (!order) return;
             
             STATE.currentCheckoutOrder = order;
@@ -1025,6 +1032,7 @@
 
             // تحديث الذاكرة المحلية (State Mutation) فوراً قبل الاتصال بالسيرفر
             const updateLocalStatus = (ordersArray) => {
+                if(!ordersArray) return;
                 const order = ordersArray.find(o => o.id === rowId);
                 if (order) {
                     if (typeof order.Status === 'object' && order.Status !== null) {
@@ -1036,10 +1044,11 @@
             };
             updateLocalStatus(STATE.lastFetchedOrders);
             updateLocalStatus(STATE.latestKdsOrders);
+            updateLocalStatus(STATE.processedCashierOrders);
 
             // استدعاء الطباعة إذا طلبها المستخدم
             if (shouldPrint) {
-                const orderToPrint = STATE.lastFetchedOrders.find(o => o.id === rowId);
+                const orderToPrint = STATE.processedCashierOrders.find(o => o.id === rowId);
                 if(orderToPrint) printReceipt(orderToPrint);
             }
 
@@ -1082,6 +1091,7 @@
                 
                 // التراجع عن التحديث المحلي (Fallback)
                 const revertLocalStatus = (ordersArray) => {
+                    if(!ordersArray) return;
                     const order = ordersArray.find(o => o.id === rowId);
                     if (order) {
                         if (typeof order.Status === 'object' && order.Status !== null) {
@@ -1093,6 +1103,7 @@
                 };
                 revertLocalStatus(STATE.lastFetchedOrders);
                 revertLocalStatus(STATE.latestKdsOrders);
+                revertLocalStatus(STATE.processedCashierOrders);
 
                 // استرجاع شكل الزر الأصلي
                 if (payBtn) {
@@ -1172,6 +1183,7 @@
             
             baseOrders = calculateDailySequence(baseOrders);
             baseOrders = processOrderAlerts(baseOrders);
+            STATE.processedCashierOrders = baseOrders; // حفظ الطلبات المعالجة برقم التسلسل للاستخدام في نافذة الدفع
 
             // 2. فلترة الطلبات حسب الحالة (Status Filter) لرسم الجدول فقط
             let filteredOrders = baseOrders.filter(o => getStatus(o) === STATE.cashierStatusFilter);
