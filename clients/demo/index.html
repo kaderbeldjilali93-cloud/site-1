@@ -431,12 +431,10 @@
             let mediaContent = '';
             
             if (p.model3d) {
-                // استخدام model-viewer مع poster للتحميل الذكي والتخفيف عن الرام
+                // استخدام model-viewer للتحميل المباشر
                 mediaContent = `
                     <model-viewer 
                         src="${p.model3d}" 
-                        poster="${p.img}" 
-                        reveal="interaction"
                         ar 
                         ar-modes="webxr scene-viewer quick-look" 
                         environment-image="neutral" 
@@ -445,8 +443,8 @@
                         class="w-full h-full object-cover"
                         alt="${p.name}">
                         
-                        <button slot="ar-button" class="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md border border-brand-500/50 text-brand-500 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:scale-105 transition z-20 whitespace-nowrap">
-                            <span class="text-sm">👁️</span> عرض على طاولتك
+                        <button slot="ar-button" class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-dark-950/80 backdrop-blur border border-brand-500 text-brand-500 px-4 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-2 shadow-[0_0_10px_rgba(212,175,55,0.3)] whitespace-nowrap">
+                            👆 عرض على طاولتك
                         </button>
                     </model-viewer>
                 `;
