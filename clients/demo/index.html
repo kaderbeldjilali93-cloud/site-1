@@ -104,7 +104,7 @@
             animation: titleGlow 3s infinite ease-in-out;
         }
 
-        /* تم تخفيف توهج العنوان الرئيسي */
+        /* توهج العنوان الرئيسي */
         @keyframes welcomeGlow {
             0%, 100% { text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
             50% { text-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
@@ -174,47 +174,47 @@
         <p class="text-brand-500 font-bold text-sm animate-pulse" data-i18n="loading">جاري تحضير القائمة...</p>
     </div>
 
-    <!-- 1. الرأس الثابت -->
-    <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center justify-start px-4 shadow-lg">
-        <div class="flex items-center gap-2 animate-zoom-in">
-            <div class="relative leading-none flex items-center">
-                <span class="text-xl font-black tracking-tighter text-white font-sans drop-shadow-lg">
+    <!-- 1. الرأس الثابت (Header) مع توزيع احترافي للعناصر -->
+    <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center px-4 shadow-lg">
+        <div class="flex justify-between items-center w-full relative">
+            
+            <!-- زر اختيار اللغة (أقصى اليمين في RTL / أقصى اليسار في LTR) -->
+            <div class="relative z-10 order-first">
+                <button onclick="toggleLangMenu()" id="lang-btn" class="flex items-center gap-2 bg-dark-900/50 border border-white/10 text-white px-2.5 py-1.5 rounded-lg active:scale-95 transition-all text-sm font-bold">
+                    <span id="current-lang-flag">🇩🇿</span>
+                    <span id="current-lang-code" class="uppercase">AR</span>
+                </button>
+                <!-- قائمة اللغات المنسدلة -->
+                <div id="lang-menu" class="hidden absolute top-12 left-0 bg-dark-900 border border-white/10 rounded-2xl shadow-2xl p-2 min-w-[140px] animate-zoom-in glass-3d">
+                    <button onclick="setLanguage('ar')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
+                        <span>🇩🇿</span> العربية
+                    </button>
+                    <button onclick="setLanguage('fr')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
+                        <span>🇫🇷</span> Français
+                    </button>
+                    <button onclick="setLanguage('en')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
+                        <span>🇺🇸</span> English
+                    </button>
+                </div>
+            </div>
+
+            <!-- اسم المطعم (في الوسط تماماً) -->
+            <div class="absolute left-1/2 -translate-x-1/2 flex items-center pointer-events-none">
+                <span class="text-xl font-black tracking-tighter text-white font-sans drop-shadow-lg whitespace-nowrap">
                     <span data-i18n="restaurantNamePrefix">مطعم</span> <span class="text-brand-500" data-i18n="restaurantNameSuffix">الفخامة</span>
                 </span>
             </div>
-        </div>
-    </div>
 
-    <!-- مجموعة أزرار التحكم الثابتة (النادل + اللغة) -->
-    <div class="fixed top-3 left-4 z-[60] flex gap-2">
-        <!-- زر اختيار اللغة -->
-        <div class="relative">
-            <button onclick="toggleLangMenu()" class="flex items-center justify-center w-10 h-10 bg-dark-900/90 backdrop-blur-md border border-white/10 text-white rounded-full shadow-lg active:scale-95 transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            </button>
-            <!-- قائمة اللغات المنسدلة -->
-            <div id="lang-menu" class="hidden absolute top-12 left-0 bg-dark-900 border border-white/10 rounded-2xl shadow-2xl p-2 min-w-[140px] animate-zoom-in glass-3d">
-                <button onclick="setLanguage('ar')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
-                    <span>🇩🇿</span> العربية
-                </button>
-                <button onclick="setLanguage('fr')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
-                    <span>🇫🇷</span> Français
-                </button>
-                <button onclick="setLanguage('en')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
-                    <span>🇺🇸</span> English
+            <!-- زر استدعاء النادل (أقصى اليسار في RTL / أقصى اليمين في LTR) -->
+            <div class="order-last z-10">
+                <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center gap-2 px-3 py-1.5 bg-dark-900/90 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] active:scale-95 transition-all duration-300 group logo-glow">
+                    <span class="font-bold text-[10px]" data-i18n="callWaiter">إستدعي النادل</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C10.3431 2 9 3.34315 9 5V6.05202C6.73318 6.92484 5.2323 9.27891 5.62024 11.9939L6.19169 15.9939C6.26252 16.4897 6.03759 16.9855 5.61746 17.2656L4.2886 18.1515C3.76672 18.4994 3.86433 19.324 4.45331 19.5298C6.91896 20.3916 9.53917 20.7302 12 20.7302C14.4608 20.7302 17.081 20.3916 19.5467 19.5298C20.1357 19.324 20.2333 18.4994 19.7114 18.1515L18.3825 17.2656C17.9624 16.9855 17.7375 16.4897 17.8083 15.9939L18.3798 11.9939C18.7677 9.27891 17.2668 6.92484 15 6.05202V5C15 3.34315 13.6569 2 12 2ZM14 22C14 23.1046 13.1046 24 12 24C10.8954 24 10 23.1046 10 22H14Z"></path>
+                    </svg>
                 </button>
             </div>
         </div>
-
-        <!-- زر استدعاء النادل -->
-        <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center gap-2 px-3 py-1.5 bg-dark-900/90 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] active:scale-95 transition-all duration-300 group logo-glow">
-            <span class="font-bold text-xs" data-i18n="callWaiter">إستدعي النادل</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C10.3431 2 9 3.34315 9 5V6.05202C6.73318 6.92484 5.2323 9.27891 5.62024 11.9939L6.19169 15.9939C6.26252 16.4897 6.03759 16.9855 5.61746 17.2656L4.2886 18.1515C3.76672 18.4994 3.86433 19.324 4.45331 19.5298C6.91896 20.3916 9.53917 20.7302 12 20.7302C14.4608 20.7302 17.081 20.3916 19.5467 19.5298C20.1357 19.324 20.2333 18.4994 19.7114 18.1515L18.3825 17.2656C17.9624 16.9855 17.7375 16.4897 17.8083 15.9939L18.3798 11.9939C18.7677 9.27891 17.2668 6.92484 15 6.05202V5C15 3.34315 13.6569 2 12 2ZM14 22C14 23.1046 13.1046 24 12 24C10.8954 24 10 23.1046 10 22H14Z"></path>
-            </svg>
-        </button>
     </div>
 
     <!-- حاوية المحتوى -->
@@ -331,7 +331,8 @@
                 orderWait: "المطبخ يقوم بتحضير وجبتك الآن.",
                 backHome: "الرجوع لصفحة الرئيسية",
                 contactKitchen: "جارٍ الاتصال بالمطبخ...",
-                connError: "عذراً، حدث خطأ في الاتصال بالمطبخ!"
+                connError: "عذراً، حدث خطأ في الاتصال بالمطبخ!",
+                flag: "🇩🇿", code: "AR"
             },
             fr: {
                 welcomeMsg: "Bienvenue dans votre restaurant",
@@ -353,7 +354,8 @@
                 orderWait: "La cuisine prépare votre repas.",
                 backHome: "Retour à l'accueil",
                 contactKitchen: "Contact cuisine...",
-                connError: "Erreur de connexion cuisine !"
+                connError: "Erreur de connexion cuisine !",
+                flag: "🇫🇷", code: "FR"
             },
             en: {
                 welcomeMsg: "Welcome to your restaurant",
@@ -375,7 +377,8 @@
                 orderWait: "The kitchen is preparing your meal.",
                 backHome: "Back to Home",
                 contactKitchen: "Contacting kitchen...",
-                connError: "Kitchen connection error!"
+                connError: "Kitchen connection error!",
+                flag: "🇺🇸", code: "EN"
             }
         };
 
@@ -387,11 +390,15 @@
             document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
             document.documentElement.lang = lang;
             
-            // تحديث النصوص الثابتة
+            // تحديث نصوص الواجهة الثابتة
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (translations[lang][key]) el.textContent = translations[lang][key];
             });
+
+            // تحديث العلم ورمز اللغة في الهيدر
+            document.getElementById('current-lang-flag').textContent = translations[lang].flag;
+            document.getElementById('current-lang-code').textContent = translations[lang].code;
 
             // إخفاء قائمة اللغات
             document.getElementById('lang-menu').classList.add('hidden');
@@ -524,7 +531,7 @@
                 return `
                 <button onclick="updateCart(${p.id}, 1)" class="w-[85%] mx-auto bg-brand-500 text-dark-950 py-2.5 px-5 rounded-full font-bold flex justify-between items-center shadow-lg active:scale-95 transition-transform">
                     <span class="text-base leading-none">${priceVal}</span>
-                    <span class="text-2xl font-black leading-none mb-1">+</span>
+                    <span class="text-2xl font-black leading-none mb-1 text-dark-950">+</span>
                 </button>`;
             }
         }
@@ -640,6 +647,7 @@
             btn.disabled = true;
             try {
                 const WH_URL = "https://n8n.vidsai.site/webhook/146e5a16-fe2c-4d4e-8284-4f6900a40931"; 
+                // إرسال رقم طاولة ثابت "5"
                 await fetch(WH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ table: '5', type: 'help', lang: currentLang }) });
                 btn.classList.replace('text-brand-500', 'text-green-500');
                 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
@@ -655,7 +663,13 @@
             btn.disabled = true;
             try {
                 const WEBHOOK_URL = "https://n8n.vidsai.site/webhook/c25c8a4a-e633-4ae8-80f0-adece675548b"; 
-                const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: Object.values(cart), lang: currentLang }) });
+                // إرسال كائن كامل يتضمن رقم الطاولة واللغة لضمان فرزها في تبويب الطاولات
+                const orderPayload = { 
+                    items: Object.values(cart), 
+                    table: "5", 
+                    lang: currentLang 
+                };
+                const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderPayload) });
                 if (response.ok) {
                     new Audio('assets/sound_effect/success.mp3').play().catch(e => {});
                     closeCartModal();
@@ -681,7 +695,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await fetchMenuItems();
-            setLanguage(currentLang); // ضبط اللغة والاتجاه عند البديل
+            setLanguage(currentLang); 
             document.getElementById('loader-container').style.display = 'none';
         });
     </script>
