@@ -176,13 +176,13 @@
 
     <!-- 1. الرأس الثابت (Header) مع توزيع احترافي للعناصر -->
     <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center px-4 shadow-lg">
-        <div class="flex justify-between items-center w-full relative">
+        <div class="flex justify-between items-center w-full relative h-full">
             
             <!-- زر اختيار اللغة (أقصى اليمين في RTL / أقصى اليسار في LTR) -->
-            <div class="relative z-10 order-first">
-                <button onclick="toggleLangMenu()" id="lang-btn" class="flex items-center gap-2 bg-dark-900/50 border border-white/10 text-white px-2.5 py-1.5 rounded-lg active:scale-95 transition-all text-sm font-bold">
+            <div class="relative z-10">
+                <button onclick="toggleLangMenu()" id="lang-btn" class="flex items-center gap-2 bg-dark-900/50 border border-white/10 text-white px-3 py-1.5 rounded-lg active:scale-95 transition-all text-xs font-bold uppercase tracking-tight">
                     <span id="current-lang-flag">🇩🇿</span>
-                    <span id="current-lang-code" class="uppercase">AR</span>
+                    <span id="current-lang-code">AR</span>
                 </button>
                 <!-- قائمة اللغات المنسدلة -->
                 <div id="lang-menu" class="hidden absolute top-12 left-0 bg-dark-900 border border-white/10 rounded-2xl shadow-2xl p-2 min-w-[140px] animate-zoom-in glass-3d">
@@ -198,15 +198,15 @@
                 </div>
             </div>
 
-            <!-- اسم المطعم (في الوسط تماماً) -->
+            <!-- اسم المطعم (توسيط مطلق) -->
             <div class="absolute left-1/2 -translate-x-1/2 flex items-center pointer-events-none">
                 <span class="text-xl font-black tracking-tighter text-white font-sans drop-shadow-lg whitespace-nowrap">
                     <span data-i18n="restaurantNamePrefix">مطعم</span> <span class="text-brand-500" data-i18n="restaurantNameSuffix">الفخامة</span>
                 </span>
             </div>
 
-            <!-- زر استدعاء النادل (أقصى اليسار في RTL / أقصى اليمين في LTR) -->
-            <div class="order-last z-10">
+            <!-- زر استدعاء النادل -->
+            <div class="z-10">
                 <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center gap-2 px-3 py-1.5 bg-dark-900/90 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] active:scale-95 transition-all duration-300 group logo-glow">
                     <span class="font-bold text-[10px]" data-i18n="callWaiter">إستدعي النادل</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
@@ -272,14 +272,16 @@
             
             <div id="cart-items-list" class="flex-1 overflow-y-auto mb-2 space-y-3 hide-scrollbar pr-1"></div>
 
-            <!-- الفوتر -->
+            <!-- الفوتر مع ميزة الـ Upsell -->
             <div class="mt-auto space-y-4 pt-4 border-t border-white/10">
+                
+                <!-- حاوية الـ Upsell الذكية -->
+                <div id="upsell-section" class="hidden mb-4 animate-zoom-in"></div>
+
                 <div class="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5 shadow-inner">
                     <span class="text-gray-400 font-bold" data-i18n="total">Total</span>
                     <span class="text-3xl font-black text-brand-500" id="final-price">0 د.ج</span>
                 </div>
-
-                <div id="upsell-section" class="flex flex-col gap-3 hidden"></div>
 
                 <button onclick="submitOrder()" class="w-full bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#20bd5a] hover:to-[#0e7a6d] text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(37,211,102,0.3)] flex justify-center items-center gap-3 transition-transform active:scale-95 border-t border-white/20">
                     <span data-i18n="confirmOrder">تأكيد وإرسال الطلب</span>
@@ -326,7 +328,8 @@
                 ok: "حسناً",
                 currency: "د.ج",
                 loading: "جاري تحضير القائمة...",
-                upsellTitle: "✨ ما رأيك في إضافة بعض الانتعاش؟",
+                upsellTitle: "✨ تكتمل اللذة مع..",
+                upsellSubtitle: "🥤 هل نسيت المشروب المنعش؟",
                 orderSent: "تم إرسال طلبك!",
                 orderWait: "المطبخ يقوم بتحضير وجبتك الآن.",
                 backHome: "الرجوع لصفحة الرئيسية",
@@ -349,7 +352,8 @@
                 ok: "OK",
                 currency: "DA",
                 loading: "Chargement du menu...",
-                upsellTitle: "✨ Envie d'une touche de fraîcheur ?",
+                upsellTitle: "✨ Complétez votre plaisir..",
+                upsellSubtitle: "🥤 Avez-vous oublié une boisson ?",
                 orderSent: "Commande envoyée !",
                 orderWait: "La cuisine prépare votre repas.",
                 backHome: "Retour à l'accueil",
@@ -372,7 +376,8 @@
                 ok: "OK",
                 currency: "DA",
                 loading: "Preparing menu...",
-                upsellTitle: "✨ How about something refreshing?",
+                upsellTitle: "✨ Complete the taste with..",
+                upsellSubtitle: "🥤 Did you forget a refreshing drink?",
                 orderSent: "Order Sent!",
                 orderWait: "The kitchen is preparing your meal.",
                 backHome: "Back to Home",
@@ -418,10 +423,6 @@
         let products = [];
         let cart = {};
 
-        const fallbackProducts = [
-             { id: 1, name: {ar: "تشيز برغر", fr: "Cheeseburger", en: "Cheeseburger"}, price: 450, category: "burger", img: "assets/burger/1.jpg", desc: {ar: "بقر صافي، شيدر", fr: "Bœuf pur, cheddar", en: "Pure beef, cheddar"} },
-        ];
-
         async function fetchMenuItems() {
             try {
                 const response = await fetch(MENU_API_URL, { method: 'GET' });
@@ -440,8 +441,8 @@
                         rawCat = rawCat.toString().toLowerCase().trim();
 
                         let category = rawCat;
-                        if (rawCat === 'boissons' || rawCat === 'drinks') category = 'drinks';
-                        if (rawCat.includes('suppl') || rawCat === 'sides') category = 'sides';
+                        if (rawCat === 'boissons' || rawCat === 'drinks' || rawCat === 'drink') category = 'drinks';
+                        if (rawCat.includes('suppl') || rawCat === 'sides' || rawCat === 'side') category = 'sides';
 
                         let subCat = '';
                         if (category === 'drinks') {
@@ -478,7 +479,6 @@
                     });
             } catch (error) {
                 console.error("فشل الاتصال بقاعدة البيانات:", error);
-                products = fallbackProducts;
             }
         }
 
@@ -531,7 +531,7 @@
                 return `
                 <button onclick="updateCart(${p.id}, 1)" class="w-[85%] mx-auto bg-brand-500 text-dark-950 py-2.5 px-5 rounded-full font-bold flex justify-between items-center shadow-lg active:scale-95 transition-transform">
                     <span class="text-base leading-none">${priceVal}</span>
-                    <span class="text-2xl font-black leading-none mb-1 text-dark-950">+</span>
+                    <span class="font-black text-2xl leading-none mb-1 text-dark-950">+</span>
                 </button>`;
             }
         }
@@ -584,15 +584,24 @@
         }
 
         function updateCart(id, change) {
-            if (!cart[id]) cart[id] = { ...products.find(p => p.id === id), qty: 0 };
+            if (!cart[id]) {
+                const p = products.find(p => p.id === id);
+                if (!p) return;
+                cart[id] = { ...p, qty: 0 };
+            }
             cart[id].qty += change;
             if (cart[id].qty <= 0) delete cart[id];
+            
             const controlsDiv = document.getElementById(`controls-${id}`);
             if (controlsDiv) {
                 const p = products.find(x => x.id === id);
                 controlsDiv.innerHTML = generateControlsHTML(p, cart[id] ? cart[id].qty : 0);
             }
             updateCartBar();
+            // تحديث نافذة السلة المفتوحة إذا لزم الأمر لإعادة حساب الـ Upsell
+            if (!document.getElementById('cart-modal').classList.contains('hidden')) {
+                openCartModal();
+            }
             if(navigator.vibrate) navigator.vibrate(40);
         }
 
@@ -606,6 +615,54 @@
             const cartBar = document.getElementById('cart-bar');
             if (totalQty > 0) cartBar.classList.remove('translate-y-[150%]');
             else cartBar.classList.add('translate-y-[150%]');
+        }
+
+        // --- ميزة الـ Upsell الذكية (Smart Upsell) ---
+        function checkAndShowUpsell() {
+            const upsellContainer = document.getElementById('upsell-section');
+            upsellContainer.innerHTML = '';
+            
+            const items = Object.values(cart);
+            if (items.length === 0) {
+                upsellContainer.classList.add('hidden');
+                return;
+            }
+
+            const hasMainDish = items.some(i => i.category === 'pizza' || i.category === 'burger');
+            const hasDrinkOrSide = items.some(i => i.category === 'drinks' || i.category === 'sides');
+
+            if (hasMainDish && !hasDrinkOrSide) {
+                // اقتراح مشروب أو بطاطس بشكل عشوائي من المنتجات المتاحة
+                const suggestions = products.filter(p => p.category === 'drinks' || p.category === 'sides').slice(0, 2);
+                
+                if (suggestions.length > 0) {
+                    upsellContainer.classList.remove('hidden');
+                    let html = `
+                        <div class="bg-brand-500/10 border border-brand-500/30 rounded-2xl p-3 mb-2">
+                            <h4 class="text-brand-500 font-bold text-xs mb-1">${translations[currentLang].upsellTitle}</h4>
+                            <p class="text-white font-bold text-[10px] mb-3 opacity-80">${translations[currentLang].upsellSubtitle}</p>
+                            <div class="flex gap-2">
+                    `;
+                    
+                    suggestions.forEach(p => {
+                        html += `
+                            <div class="flex-1 bg-dark-800/80 rounded-xl p-2 flex items-center gap-2 border border-white/5 shadow-lg">
+                                <img src="${p.img}" class="w-8 h-8 rounded-lg object-cover">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-white text-[9px] font-bold truncate">${p.name[currentLang]}</p>
+                                    <p class="text-brand-500 text-[9px] font-bold">${p.price} ${translations[currentLang].currency}</p>
+                                </div>
+                                <button onclick="updateCart(${p.id}, 1)" class="w-6 h-6 bg-brand-500 text-dark-950 rounded-full flex items-center justify-center font-black text-lg">+</button>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div></div>`;
+                    upsellContainer.innerHTML = html;
+                }
+            } else {
+                upsellContainer.classList.add('hidden');
+            }
         }
 
         function openCartModal() {
@@ -625,10 +682,13 @@
                         </div>
                     </div>`;
             });
+            
+            checkAndShowUpsell();
             document.getElementById('cart-modal').classList.remove('hidden');
         }
 
         function closeCartModal() { document.getElementById('cart-modal').classList.add('hidden'); }
+        
         function removeFromCart(id) {
             delete cart[id];
             const p = products.find(x => x.id === id);
@@ -661,15 +721,29 @@
             const originalText = btn.innerHTML;
             btn.innerHTML = translations[currentLang].contactKitchen;
             btn.disabled = true;
+            
+            const totalPrice = Object.values(cart).reduce((a, b) => a + (b.price * b.qty), 0);
+            
             try {
                 const WEBHOOK_URL = "https://n8n.vidsai.site/webhook/c25c8a4a-e633-4ae8-80f0-adece675548b"; 
-                // إرسال كائن كامل يتضمن رقم الطاولة واللغة لضمان فرزها في تبويب الطاولات
+                // إرسال كائن JSON منظم بدقة لضمان ظهور أسماء الوجبات ورقم الطاولة
                 const orderPayload = { 
-                    items: Object.values(cart), 
-                    table: "5", 
+                    table: "5",
+                    items: Object.values(cart).map(i => ({
+                        name: i.name[currentLang],
+                        qty: i.qty,
+                        price: i.price
+                    })),
+                    total: totalPrice,
                     lang: currentLang 
                 };
-                const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderPayload) });
+                
+                const response = await fetch(WEBHOOK_URL, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(orderPayload) 
+                });
+                
                 if (response.ok) {
                     new Audio('assets/sound_effect/success.mp3').play().catch(e => {});
                     closeCartModal();
