@@ -178,14 +178,16 @@
     <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center px-4 shadow-lg">
         <div class="flex justify-between items-center w-full relative h-full">
             
-            <!-- زر اختيار اللغة (أقصى اليمين في RTL / أقصى اليسار في LTR) -->
-            <div class="relative z-10">
-                <button onclick="toggleLangMenu()" id="lang-btn" class="flex items-center gap-2 bg-dark-900/50 border border-white/10 text-white px-3 py-1.5 rounded-lg active:scale-95 transition-all text-xs font-bold uppercase tracking-tight">
+            <!-- زر اختيار اللغة (Global Standard Style) -->
+            <div class="relative z-10 flex items-center">
+                <button onclick="toggleLangMenu()" id="lang-btn" class="flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-1 rounded-full hover:bg-white/10 transition-all active:scale-95 text-sm font-bold">
                     <span id="current-lang-flag">🇩🇿</span>
-                    <span id="current-lang-code">AR</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+                    </svg>
                 </button>
-                <!-- قائمة اللغات المنسدلة -->
-                <div id="lang-menu" class="hidden absolute top-12 left-0 bg-dark-900 border border-white/10 rounded-2xl shadow-2xl p-2 min-w-[140px] animate-zoom-in glass-3d">
+                <!-- قائمة اللغات المنسدلة (Dropdown Fix) -->
+                <div id="lang-menu" class="hidden absolute top-12 right-0 origin-top-right mt-2 bg-dark-900 border border-white/10 rounded-2xl shadow-2xl p-2 min-w-[140px] animate-zoom-in glass-3d z-[100]">
                     <button onclick="setLanguage('ar')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
                         <span>🇩🇿</span> العربية
                     </button>
@@ -198,15 +200,15 @@
                 </div>
             </div>
 
-            <!-- اسم المطعم (توسيط مطلق) -->
+            <!-- اسم المطعم (في الوسط تماماً) -->
             <div class="absolute left-1/2 -translate-x-1/2 flex items-center pointer-events-none">
-                <span class="text-xl font-black tracking-tighter text-white font-sans drop-shadow-lg whitespace-nowrap">
+                <span class="text-lg sm:text-xl font-black tracking-tighter text-white font-sans drop-shadow-lg whitespace-nowrap">
                     <span data-i18n="restaurantNamePrefix">مطعم</span> <span class="text-brand-500" data-i18n="restaurantNameSuffix">الفخامة</span>
                 </span>
             </div>
 
             <!-- زر استدعاء النادل -->
-            <div class="z-10">
+            <div class="z-10 flex items-center">
                 <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center gap-2 px-3 py-1.5 bg-dark-900/90 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] active:scale-95 transition-all duration-300 group logo-glow">
                     <span class="font-bold text-[10px]" data-i18n="callWaiter">إستدعي النادل</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
@@ -401,9 +403,18 @@
                 if (translations[lang][key]) el.textContent = translations[lang][key];
             });
 
-            // تحديث العلم ورمز اللغة في الهيدر
+            // تحديث العلم في الهيدر
             document.getElementById('current-lang-flag').textContent = translations[lang].flag;
-            document.getElementById('current-lang-code').textContent = translations[lang].code;
+
+            // تحديث تموضع القائمة المنسدلة بناءً على الاتجاه
+            const langMenu = document.getElementById('lang-menu');
+            if (lang === 'ar') {
+                langMenu.classList.remove('left-0', 'origin-top-left');
+                langMenu.classList.add('right-0', 'origin-top-right');
+            } else {
+                langMenu.classList.remove('right-0', 'origin-top-right');
+                langMenu.classList.add('left-0', 'origin-top-left');
+            }
 
             // إخفاء قائمة اللغات
             document.getElementById('lang-menu').classList.add('hidden');
@@ -482,6 +493,7 @@
             }
         }
 
+        // 2. دالة توليد بطاقة المنتج
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             const localizedName = p.name[currentLang];
@@ -517,6 +529,7 @@
             </div>`;
         }
 
+        // أداة التحكم الذكية للإضافة إلى السلة
         function generateControlsHTML(p, qty) {
             const priceVal = p.price === 0 ? "Gratuit" : `${p.price} <span class="text-[10px] font-normal opacity-70">${translations[currentLang].currency}</span>`;
 
@@ -530,7 +543,7 @@
             } else {
                 return `
                 <button onclick="updateCart(${p.id}, 1)" class="w-[85%] mx-auto bg-brand-500 text-dark-950 py-2.5 px-5 rounded-full font-bold flex justify-between items-center shadow-lg active:scale-95 transition-transform">
-                    <span class="text-base leading-none">${priceVal}</span>
+                    <span class="text-base leading-none text-dark-950">${priceVal}</span>
                     <span class="font-black text-2xl leading-none mb-1 text-dark-950">+</span>
                 </button>`;
             }
@@ -598,7 +611,6 @@
                 controlsDiv.innerHTML = generateControlsHTML(p, cart[id] ? cart[id].qty : 0);
             }
             updateCartBar();
-            // تحديث نافذة السلة المفتوحة إذا لزم الأمر لإعادة حساب الـ Upsell
             if (!document.getElementById('cart-modal').classList.contains('hidden')) {
                 openCartModal();
             }
@@ -617,7 +629,7 @@
             else cartBar.classList.add('translate-y-[150%]');
         }
 
-        // --- ميزة الـ Upsell الذكية (Smart Upsell) ---
+        // ميزة الـ Upsell الذكية
         function checkAndShowUpsell() {
             const upsellContainer = document.getElementById('upsell-section');
             upsellContainer.innerHTML = '';
@@ -632,9 +644,7 @@
             const hasDrinkOrSide = items.some(i => i.category === 'drinks' || i.category === 'sides');
 
             if (hasMainDish && !hasDrinkOrSide) {
-                // اقتراح مشروب أو بطاطس بشكل عشوائي من المنتجات المتاحة
                 const suggestions = products.filter(p => p.category === 'drinks' || p.category === 'sides').slice(0, 2);
-                
                 if (suggestions.length > 0) {
                     upsellContainer.classList.remove('hidden');
                     let html = `
@@ -643,20 +653,17 @@
                             <p class="text-white font-bold text-[10px] mb-3 opacity-80">${translations[currentLang].upsellSubtitle}</p>
                             <div class="flex gap-2">
                     `;
-                    
                     suggestions.forEach(p => {
                         html += `
                             <div class="flex-1 bg-dark-800/80 rounded-xl p-2 flex items-center gap-2 border border-white/5 shadow-lg">
                                 <img src="${p.img}" class="w-8 h-8 rounded-lg object-cover">
-                                <div class="flex-1 min-w-0">
+                                <div class="flex-1 min-w-0 text-right">
                                     <p class="text-white text-[9px] font-bold truncate">${p.name[currentLang]}</p>
                                     <p class="text-brand-500 text-[9px] font-bold">${p.price} ${translations[currentLang].currency}</p>
                                 </div>
                                 <button onclick="updateCart(${p.id}, 1)" class="w-6 h-6 bg-brand-500 text-dark-950 rounded-full flex items-center justify-center font-black text-lg">+</button>
-                            </div>
-                        `;
+                            </div>`;
                     });
-
                     html += `</div></div>`;
                     upsellContainer.innerHTML = html;
                 }
@@ -682,7 +689,6 @@
                         </div>
                     </div>`;
             });
-            
             checkAndShowUpsell();
             document.getElementById('cart-modal').classList.remove('hidden');
         }
@@ -707,7 +713,6 @@
             btn.disabled = true;
             try {
                 const WH_URL = "https://n8n.vidsai.site/webhook/146e5a16-fe2c-4d4e-8284-4f6900a40931"; 
-                // إرسال رقم طاولة ثابت "5"
                 await fetch(WH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ table: '5', type: 'help', lang: currentLang }) });
                 btn.classList.replace('text-brand-500', 'text-green-500');
                 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
@@ -721,12 +726,9 @@
             const originalText = btn.innerHTML;
             btn.innerHTML = translations[currentLang].contactKitchen;
             btn.disabled = true;
-            
             const totalPrice = Object.values(cart).reduce((a, b) => a + (b.price * b.qty), 0);
-            
             try {
                 const WEBHOOK_URL = "https://n8n.vidsai.site/webhook/c25c8a4a-e633-4ae8-80f0-adece675548b"; 
-                // إرسال كائن JSON منظم بدقة لضمان ظهور أسماء الوجبات ورقم الطاولة
                 const orderPayload = { 
                     table: "5",
                     items: Object.values(cart).map(i => ({
@@ -737,13 +739,7 @@
                     total: totalPrice,
                     lang: currentLang 
                 };
-                
-                const response = await fetch(WEBHOOK_URL, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify(orderPayload) 
-                });
-                
+                const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderPayload) });
                 if (response.ok) {
                     new Audio('assets/sound_effect/success.mp3').play().catch(e => {});
                     closeCartModal();
