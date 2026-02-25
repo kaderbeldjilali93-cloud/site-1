@@ -8,6 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     
+    <!-- استدعاء مكتبة model-viewer -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+
     <style>
         html {
             scroll-behavior: smooth;
@@ -277,26 +280,6 @@
         </div>
     </div>
 
-    <!-- 4. نافذة عرض المجسم 3D Modal (AR) المعزولة بإطار (Iframe) لتوفير الـ RAM -->
-    <div id="ar-modal" class="fixed inset-0 z-[100] hidden flex flex-col justify-center items-center animate-zoom-in bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900 via-[#09090b] to-black">
-        <!-- زر إغلاق -->
-        <button onclick="close3DModal()" class="absolute top-6 right-6 w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition z-[101]">✕</button>
-        
-        <!-- عنوان الوجبة -->
-        <h3 id="ar-model-title" class="text-2xl font-black text-brand-500 mb-6 text-center px-4 relative z-[101] drop-shadow-md"></h3>
-        
-        <!-- حاوية المجسم المعزولة باستخدام iframe مخفي -->
-        <div id="ar-container" class="relative w-full h-[60vh] max-w-lg bg-transparent">
-            <iframe id="ar-iframe" class="w-full h-full border-none rounded-xl" allow="xr-spatial-tracking; autoplay; encrypted-media"></iframe>
-        </div>
-        
-        <!-- نص توجيهي -->
-        <div class="mt-6 text-center space-y-2 relative z-[101] px-4">
-            <p class="text-white font-bold text-sm">👆 حرك بإصبعك لتدوير الوجبة</p>
-            <p class="text-gray-400 text-xs">أو اضغط على زر AR لرؤيتها على طاولتك!</p>
-        </div>
-    </div>
-
     <!-- نافذة عرض الأخطاء (Error Modal) -->
     <div id="error-modal" class="fixed inset-0 bg-black/80 z-[110] hidden flex items-center justify-center backdrop-blur-sm p-4 animate-zoom-in">
         <div class="bg-dark-900 border border-red-500/30 rounded-2xl p-6 shadow-2xl w-full max-w-sm text-center relative overflow-hidden glass-3d">
@@ -360,7 +343,6 @@
                 }
 
                 const data = await response.json();
-                console.log("Raw API Data:", data); 
 
                 let itemsArray = [];
                 if (Array.isArray(data)) {
@@ -430,8 +412,6 @@
                             desc: item.Description || ''
                         };
                     });
-
-                console.log("تم جلب المنتجات بنجاح:", products);
                 
                 if (products.length === 0) {
                     console.warn("No products found after filtering. Check availability field.");
@@ -443,35 +423,56 @@
             }
         }
 
-        // 2. دالة توليد بطاقة المنتج
+        // 2. دالة توليد بطاقة المنتج (مُدمج بها الـ 3D لتحسين الـ UX والأداء)
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             const priceDisplay = p.price === 0 ? "Gratuit" : `${p.price} <span class="text-[9px] font-normal text-gray-500">DA</span>`;
             
-            // 3. زر الـ 3D في بطاقة المنتج
-            const arButton = p.model3d 
-                ? `<button onclick="open3DModal('${p.model3d}', '${p.name}')" class="absolute top-2 left-2 bg-black/60 backdrop-blur-md border border-brand-500/50 text-brand-500 px-2.5 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow-[0_0_15px_rgba(212,175,55,0.2)] hover:scale-105 hover:bg-black/80 transition z-20 animate-pulse">
-                    <span class="text-sm">👁️</span> 3D / AR
-                   </button>` 
-                : '';
+            let mediaContent = '';
+            
+            if (p.model3d) {
+                // استخدام model-viewer مع poster للتحميل الذكي والتخفيف عن الرام
+                mediaContent = `
+                    <model-viewer 
+                        src="${p.model3d}" 
+                        poster="${p.img}" 
+                        reveal="interaction"
+                        ar 
+                        ar-modes="webxr scene-viewer quick-look" 
+                        environment-image="neutral" 
+                        auto-rotate 
+                        camera-controls 
+                        class="w-full h-full object-cover"
+                        alt="${p.name}">
+                        
+                        <button slot="ar-button" class="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md border border-brand-500/50 text-brand-500 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:scale-105 transition z-20 whitespace-nowrap">
+                            <span class="text-sm">👁️</span> عرض على طاولتك
+                        </button>
+                    </model-viewer>
+                `;
+            } else {
+                // إرجاع الصورة العادية في حال عدم وجود مجسم
+                mediaContent = `
+                    <img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 group-hover:scale-105 transition duration-500" alt="${p.name}">
+                `;
+            }
 
             return `
             <div class="glass-3d rounded-2xl overflow-hidden reveal-on-scroll h-full flex flex-col relative group">
-                <!-- 1. القسم العلوي -->
-                <div class="aspect-square w-full relative overflow-hidden bg-gray-800">
-                    <img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 group-hover:scale-105 transition duration-500" alt="${p.name}">
-                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-60"></div>
-                    ${arButton}
+                <!-- 1. القسم العلوي (صورة أو مجسم) -->
+                <div class="aspect-square w-full relative overflow-hidden bg-gray-800 flex items-center justify-center">
+                    ${mediaContent}
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-60 pointer-events-none z-10"></div>
                 </div>
                 
                 <!-- 2. القسم الأوسط -->
-                <div class="p-3 text-center flex-1 flex flex-col justify-center border-t border-white/5">
+                <div class="p-3 text-center flex-1 flex flex-col justify-center border-t border-white/5 relative z-20">
                     <h3 class="font-bold text-gray-100 text-sm mb-1 leading-tight tracking-wide">${p.name}</h3>
                     <p class="text-[10px] text-gray-400 line-clamp-2 leading-relaxed font-light">${p.desc}</p>
                 </div>
                 
                 <!-- 3. القسم السفلي -->
-                <div class="p-3 pt-0 flex justify-center items-center gap-3">
+                <div class="p-3 pt-0 flex justify-center items-center gap-3 relative z-20">
                     <span class="font-black text-brand-500 text-base drop-shadow-sm">${priceDisplay}</span>
                     
                     <div id="controls-${p.id}" class="h-8 flex items-center">
@@ -480,65 +481,6 @@
                 </div>
             </div>
             `;
-        }
-
-        // 5. دوال التحكم بنافذة العرض 3D - العزل بواسطة Iframe لحماية سياق WebGL
-        function open3DModal(url, name) {
-            const modal = document.getElementById('ar-modal');
-            const title = document.getElementById('ar-model-title');
-            const iframe = document.getElementById('ar-iframe');
-            
-            title.innerText = name;
-            
-            // توليد صفحة HTML نظيفة ومعزولة تحتوي على المجسم فقط
-            const htmlContent = `
-            <!DOCTYPE html>
-            <html lang="ar" dir="rtl">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-                <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"><\/script>
-                <style>
-                    body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: transparent; overflow: hidden; font-family: sans-serif; }
-                    model-viewer { width: 100%; height: 100%; outline: none; }
-                    .ar-btn { background-color: #D4AF37; border-radius: 8px; border: none; position: absolute; bottom: 16px; right: 16px; padding: 8px 16px; font-weight: bold; color: #09090b; display: flex; align-items: center; gap: 8px; font-family: inherit; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; }
-                </style>
-            </head>
-            <body>
-                <model-viewer 
-                    src="${url}" 
-                    ar 
-                    camera-controls 
-                    auto-rotate 
-                    shadow-intensity="1"
-                    alt="مجسم ثلاثي الأبعاد لـ ${name}">
-                    <button slot="ar-button" class="ar-btn">
-                        <span>عرض على طاولتك</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0z" fill="none"/><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
-                    </button>
-                </model-viewer>
-            </body>
-            </html>
-            `;
-            
-            // تحويل الكود إلى Blob URL وحقنه في الـ Iframe
-            const blob = new Blob([htmlContent], { type: 'text/html' });
-            iframe.src = URL.createObjectURL(blob);
-            
-            modal.classList.remove('hidden');
-        }
-
-        function close3DModal() {
-            const modal = document.getElementById('ar-modal');
-            const iframe = document.getElementById('ar-iframe');
-            
-            modal.classList.add('hidden');
-            
-            // تدمير الـ Blob URL وتفريغ الـ Iframe إجبارياً لمسح الذاكرة
-            if (iframe.src) {
-                URL.revokeObjectURL(iframe.src);
-                iframe.src = '';
-            }
         }
 
         function generateControlsHTML(id, qty) {
