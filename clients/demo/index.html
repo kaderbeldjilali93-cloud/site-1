@@ -146,6 +146,12 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Marquee Animation */
+        @keyframes marquee { 
+            0% { transform: translateX(100%); } 
+            100% { transform: translateX(-100%); } 
+        }
     </style>
     
     <script>
@@ -200,22 +206,13 @@
             </h1>
         </div>
 
-        <!-- 2. إطار الترحيب والشرح -->
-        <div class="px-6 mb-6 animate-zoom-in" style="animation-delay: 0.1s;">
-            <div class="bg-dark-900 border border-white/10 rounded-2xl p-5 shadow-lg relative overflow-hidden">
-                <div class="space-y-3 text-center relative z-10">
-                    <h3 class="text-white font-bold text-lg w-fit mx-auto">طريقة الطلب</h3>
-                    
-                    <p class="text-white text-sm leading-relaxed flex items-center justify-center gap-2 whitespace-nowrap overflow-x-auto hide-scrollbar">
-                        اختر وجبتك <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white inline-block mb-1" viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>، اضغط "تأكيد الطلب" ✅، وسيتم تحضيره فوراً.
-                    </p>
-                    
-                    <div class="text-xs text-gray-300 font-medium pt-2 mt-2">
-                        <span class="text-brand-500 font-bold text-sm">ملاحظة:</span> إذا احتجت مساعدة إضغط على الجرس 🔔 وسنكون عندك.
-                    </div>
-                </div>
-                
-                <div class="absolute -top-10 -right-10 w-24 h-24 bg-white/5 rounded-full blur-xl pointer-events-none"></div>
+        <!-- 2. شريط التعليمات المتحرك (Ticker Marquee) -->
+        <div class="mb-6 overflow-hidden bg-white/5 border-y border-white/10 py-2.5 animate-zoom-in relative flex items-center w-full shadow-inner" style="animation-delay: 0.1s;">
+            <div class="absolute inset-0 bg-gradient-to-r from-dark-950 via-transparent to-dark-950 z-10 pointer-events-none"></div>
+            <div class="whitespace-nowrap flex text-sm text-brand-500 font-bold" style="animation: marquee 20s linear infinite;">
+                <span class="mx-4">✨ اختر وجبتك المفضلة 🍔 ➔ اضغط على الإضافة للسلة 🛒 ➔ أكد طلبك وسنقوم بتحضيره فوراً 👨‍🍳</span>
+                <span class="mx-4">✨ اختر وجبتك المفضلة 🍔 ➔ اضغط على الإضافة للسلة 🛒 ➔ أكد طلبك وسنقوم بتحضيره فوراً 👨‍🍳</span>
+                <span class="mx-4">✨ اختر وجبتك المفضلة 🍔 ➔ اضغط على الإضافة للسلة 🛒 ➔ أكد طلبك وسنقوم بتحضيره فوراً 👨‍🍳</span>
             </div>
         </div>
 
@@ -289,7 +286,7 @@
             <!-- أيقونة الخطأ -->
             <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192 3 1.732 3z" />
                 </svg>
             </div>
             
@@ -426,13 +423,14 @@
         // 2. دالة توليد بطاقة المنتج (مُدمج بها الـ 3D لتحسين الـ UX والأداء)
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
-            const priceDisplay = p.price === 0 ? "Gratuit" : `${p.price} <span class="text-[9px] font-normal text-gray-500">DA</span>`;
             
             let mediaContent = '';
             
             if (p.model3d) {
-                // استخدام model-viewer للتحميل المباشر
+                // استخدام model-viewer للتحميل المباشر مع الظل السفلي والزر المطفو
                 mediaContent = `
+                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
+                    
                     <model-viewer 
                         src="${p.model3d}" 
                         ar 
@@ -440,10 +438,10 @@
                         environment-image="neutral" 
                         auto-rotate 
                         camera-controls 
-                        class="w-full h-full object-cover"
+                        class="w-full h-full object-cover relative z-10"
                         alt="${p.name}">
                         
-                        <button slot="ar-button" class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-dark-950/80 backdrop-blur border border-brand-500 text-brand-500 px-4 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-2 shadow-[0_0_10px_rgba(212,175,55,0.3)] whitespace-nowrap">
+                        <button slot="ar-button" class="absolute bottom-0 translate-y-1/2 left-1/2 -translate-x-1/2 bg-dark-950/90 backdrop-blur border border-brand-500 text-brand-500 px-4 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(212,175,55,0.4)] whitespace-nowrap z-30">
                             👆 عرض على طاولتك
                         </button>
                     </model-viewer>
@@ -458,7 +456,7 @@
             return `
             <div class="glass-3d rounded-2xl overflow-hidden reveal-on-scroll h-full flex flex-col relative group">
                 <!-- 1. القسم العلوي (صورة أو مجسم) -->
-                <div class="aspect-square w-full relative overflow-hidden bg-gray-800 flex items-center justify-center">
+                <div class="aspect-square w-full relative bg-gray-800 flex items-center justify-center">
                     ${mediaContent}
                     <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-60 pointer-events-none z-10"></div>
                 </div>
@@ -469,33 +467,32 @@
                     <p class="text-[10px] text-gray-400 line-clamp-2 leading-relaxed font-light">${p.desc}</p>
                 </div>
                 
-                <!-- 3. القسم السفلي -->
-                <div class="p-3 pt-0 flex justify-center items-center gap-3 relative z-20">
-                    <span class="font-black text-brand-500 text-base drop-shadow-sm">${priceDisplay}</span>
-                    
-                    <div id="controls-${p.id}" class="h-8 flex items-center">
-                        ${generateControlsHTML(p.id, qty)}
+                <!-- 3. القسم السفلي (زر الإضافة الذكي) -->
+                <div class="p-3 pt-0 flex justify-center items-center relative z-20 w-full">
+                    <div id="controls-${p.id}" class="w-full flex items-center justify-center">
+                        ${generateControlsHTML(p, qty)}
                     </div>
                 </div>
             </div>
             `;
         }
 
-        function generateControlsHTML(id, qty) {
+        function generateControlsHTML(p, qty) {
+            const priceDisplay = p.price === 0 ? "Gratuit" : `${p.price} <span class="text-[10px] font-normal opacity-70">DA</span>`;
+
             if (qty > 0) {
                 return `
-                <div class="flex items-center bg-white/5 rounded-lg p-0.5 gap-1 border border-white/10 h-full animate-zoom-in backdrop-blur-sm">
-                    <button onclick="updateCart(${id}, -1)" class="w-7 h-full bg-white/5 rounded-md text-gray-300 font-bold flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 border border-white/5 transition text-xs">-</button>
-                    <span class="font-bold text-sm w-5 text-center text-white">${qty}</span>
-                    <button onclick="updateCart(${id}, 1)" class="w-7 h-full bg-brand-500 rounded-md text-dark-950 font-bold flex items-center justify-center hover:bg-brand-600 active:scale-95 transition-transform text-xs">+</button>
+                <div class="w-full flex justify-between items-center bg-white/10 rounded-full p-1 border border-brand-500/50 h-11 animate-zoom-in backdrop-blur-sm">
+                    <button onclick="updateCart(${p.id}, -1)" class="w-10 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition text-xl shadow-inner pb-1">-</button>
+                    <span class="font-black text-lg w-8 text-center text-white">${qty}</span>
+                    <button onclick="updateCart(${p.id}, 1)" class="w-10 h-full bg-brand-500 rounded-full text-dark-950 font-black flex items-center justify-center hover:bg-brand-400 active:scale-95 transition-transform text-xl shadow-md pb-1">+</button>
                 </div>
                 `;
             } else {
                 return `
-                <button onclick="updateCart(${id}, 1)" class="w-8 h-8 bg-white/5 border border-white/10 text-brand-500 rounded-lg shadow-sm font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition-all active:scale-90 backdrop-blur-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                    </svg>
+                <button onclick="updateCart(${p.id}, 1)" class="w-full bg-brand-500 text-dark-950 rounded-full py-2.5 px-5 flex justify-between items-center font-black shadow-[0_4px_15px_rgba(212,175,55,0.3)] hover:scale-[1.02] active:scale-95 transition-all">
+                    <span class="flex items-center gap-1.5">إضافة <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg></span>
+                    <span class="text-base">${priceDisplay}</span>
                 </button>
                 `;
             }
@@ -600,9 +597,10 @@
             const controlsDiv = document.getElementById(`controls-${id}`);
             if (controlsDiv) {
                 const newQty = cart[id] ? cart[id].qty : 0;
-                controlsDiv.innerHTML = generateControlsHTML(id, newQty);
+                const p = products.find(x => x.id === id); // الحصول على المنتج
+                controlsDiv.innerHTML = generateControlsHTML(p, newQty);
                 if (change > 0 && newQty > 0) {
-                    const span = controlsDiv.querySelector('span');
+                    const span = controlsDiv.querySelector('span.text-center');
                     if(span) span.classList.add('pop-anim');
                 }
             }
@@ -716,7 +714,8 @@
         function removeFromCart(id) {
             delete cart[id];
             const controlsDiv = document.getElementById(`controls-${id}`);
-            if(controlsDiv) controlsDiv.innerHTML = generateControlsHTML(id, 0);
+            const p = products.find(x => x.id === id); // الحصول على المنتج
+            if(controlsDiv && p) controlsDiv.innerHTML = generateControlsHTML(p, 0);
             updateCartBar();
             openCartModal();
             if(Object.keys(cart).length === 0) closeCartModal();
