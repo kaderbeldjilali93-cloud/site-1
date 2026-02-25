@@ -8,9 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     
-    <!-- 1. استدعاء مكتبة model-viewer -->
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
-
     <style>
         html {
             scroll-behavior: smooth;
@@ -146,13 +143,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        /* Custom Model Viewer Styles */
-        model-viewer {
-            width: 100%;
-            height: 100%;
-            --poster-color: transparent;
-        }
     </style>
     
     <script>
@@ -287,8 +277,7 @@
         </div>
     </div>
 
-    <!-- 4. نافذة عرض المجسم 3D Modal (AR) -->
-    <!-- تم النقل المعماري: مكون model-viewer أصبح ثابتاً في HTML لدعم إعادة التدوير وحفظ الذاكرة -->
+    <!-- 4. نافذة عرض المجسم 3D Modal (AR) المعزولة بإطار (Iframe) لتوفير الـ RAM -->
     <div id="ar-modal" class="fixed inset-0 z-[100] hidden flex flex-col justify-center items-center animate-zoom-in bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900 via-[#09090b] to-black">
         <!-- زر إغلاق -->
         <button onclick="close3DModal()" class="absolute top-6 right-6 w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition z-[101]">✕</button>
@@ -296,36 +285,9 @@
         <!-- عنوان الوجبة -->
         <h3 id="ar-model-title" class="text-2xl font-black text-brand-500 mb-6 text-center px-4 relative z-[101] drop-shadow-md"></h3>
         
-        <!-- حاوية المجسم مع المكون الثابت -->
+        <!-- حاوية المجسم المعزولة باستخدام iframe مخفي -->
         <div id="ar-container" class="relative w-full h-[60vh] max-w-lg bg-transparent">
-            <model-viewer 
-                id="main-model-viewer"
-                src="" 
-                ar 
-                ar-modes="webxr scene-viewer quick-look" 
-                camera-controls 
-                auto-rotate
-                reveal="auto"
-                poster=""
-                camera-orbit="0deg 75deg 105%"
-                rotation-per-second="30deg"
-                disable-pan
-                interaction-prompt="none"
-                ar-scale="auto"
-                bounds="tight"
-                style="touch-action: none;"
-                shadow-intensity="1"
-                environment-image="neutral"
-                exposure="1.2"
-                tone-mapping="commerce"
-                class="w-full h-full bg-transparent outline-none"
-                alt="مجسم ثلاثي الأبعاد">
-                
-                <button slot="ar-button" style="background-color: #D4AF37; border-radius: 8px; border: none; position: absolute; bottom: 16px; right: 16px; padding: 8px 16px; font-weight: bold; color: #09090b; display: flex; align-items: center; gap: 8px;">
-                    <span>عرض على طاولتك</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0z" fill="none"/><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
-                </button>
-            </model-viewer>
+            <iframe id="ar-iframe" class="w-full h-full border-none rounded-xl" allow="xr-spatial-tracking; autoplay; encrypted-media"></iframe>
         </div>
         
         <!-- نص توجيهي -->
@@ -520,52 +482,64 @@
             `;
         }
 
-        // 5. دوال التحكم بنافذة العرض 3D (معدلة للأداء وإعادة التدوير)
+        // 5. دوال التحكم بنافذة العرض 3D - العزل بواسطة Iframe لحماية سياق WebGL
         function open3DModal(url, name) {
             const modal = document.getElementById('ar-modal');
             const title = document.getElementById('ar-model-title');
-            const viewer = document.getElementById('main-model-viewer');
+            const iframe = document.getElementById('ar-iframe');
             
             title.innerText = name;
             
-            // تحديث رابط المجسم والاسم فقط بدلاً من إعادة حقن المكون بالكامل
-            if (viewer) {
-                viewer.src = url;
-                viewer.alt = `مجسم ثلاثي الأبعاد لـ ${name}`;
-            }
+            // توليد صفحة HTML نظيفة ومعزولة تحتوي على المجسم فقط
+            const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"><\/script>
+                <style>
+                    body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: transparent; overflow: hidden; font-family: sans-serif; }
+                    model-viewer { width: 100%; height: 100%; outline: none; }
+                    .ar-btn { background-color: #D4AF37; border-radius: 8px; border: none; position: absolute; bottom: 16px; right: 16px; padding: 8px 16px; font-weight: bold; color: #09090b; display: flex; align-items: center; gap: 8px; font-family: inherit; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; }
+                </style>
+            </head>
+            <body>
+                <model-viewer 
+                    src="${url}" 
+                    ar 
+                    camera-controls 
+                    auto-rotate 
+                    shadow-intensity="1"
+                    alt="مجسم ثلاثي الأبعاد لـ ${name}">
+                    <button slot="ar-button" class="ar-btn">
+                        <span>عرض على طاولتك</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0z" fill="none"/><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
+                    </button>
+                </model-viewer>
+            </body>
+            </html>
+            `;
+            
+            // تحويل الكود إلى Blob URL وحقنه في الـ Iframe
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            iframe.src = URL.createObjectURL(blob);
             
             modal.classList.remove('hidden');
         }
 
         function close3DModal() {
             const modal = document.getElementById('ar-modal');
-            const viewer = document.getElementById('main-model-viewer');
-            
-            if (viewer) {
-                try { viewer.dismissPoster(); } catch(e){} // Safety
-                viewer.src = ''; // إزالة الـ src لتنظيف الذاكرة دون تدمير المكون
-            }
+            const iframe = document.getElementById('ar-iframe');
             
             modal.classList.add('hidden');
-        }
-
-        // --- الذكاء الاصطناعي لتعويض الإضاءة في الكاميرا ---
-        // تم نقل مراقب الأحداث خارج دالة الفتح لكي لا يتكرر بناءه في الذاكرة
-        document.addEventListener('DOMContentLoaded', () => {
-            const globalViewer = document.getElementById('main-model-viewer');
-            if (globalViewer) {
-                globalViewer.addEventListener('ar-status', (event) => {
-                    if (event.detail.status === 'session-started') {
-                        globalViewer.setAttribute('exposure', '2.5'); 
-                        globalViewer.setAttribute('shadow-intensity', '0.3');
-                    } else if (event.detail.status === 'not-presenting') {
-                        globalViewer.setAttribute('exposure', '1.2');
-                        globalViewer.setAttribute('shadow-intensity', '1');
-                    }
-                });
+            
+            // تدمير الـ Blob URL وتفريغ الـ Iframe إجبارياً لمسح الذاكرة
+            if (iframe.src) {
+                URL.revokeObjectURL(iframe.src);
+                iframe.src = '';
             }
-        });
-        // ----------------------------------------------------
+        }
 
         function generateControlsHTML(id, qty) {
             if (qty > 0) {
