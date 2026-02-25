@@ -20,6 +20,11 @@
             -webkit-tap-highlight-color: transparent; 
         }
         
+        /* ضبط الخطوط للغات اللاتينية */
+        html[dir="ltr"] body {
+            font-family: sans-serif;
+        }
+
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
@@ -166,7 +171,7 @@
     <!-- شاشة التحميل (Loader) -->
     <div id="loader-container">
         <div class="loader-spinner mb-4"></div>
-        <p class="text-brand-500 font-bold text-sm animate-pulse">جاري تحضير القائمة...</p>
+        <p class="text-brand-500 font-bold text-sm animate-pulse" data-i18n="loading">جاري تحضير القائمة...</p>
     </div>
 
     <!-- 1. الرأس الثابت -->
@@ -174,16 +179,38 @@
         <div class="flex items-center gap-2 animate-zoom-in">
             <div class="relative leading-none flex items-center">
                 <span class="text-xl font-black tracking-tighter text-white font-sans drop-shadow-lg">
-                    مطعم <span class="text-brand-500">الفخامة</span>
+                    <span data-i18n="restaurantNamePrefix">مطعم</span> <span class="text-brand-500" data-i18n="restaurantNameSuffix">الفخامة</span>
                 </span>
             </div>
         </div>
     </div>
 
-    <!-- زر استدعاء النادل (الوحيد) -->
-    <div class="fixed top-3 left-4 z-[60]">
+    <!-- مجموعة أزرار التحكم الثابتة (النادل + اللغة) -->
+    <div class="fixed top-3 left-4 z-[60] flex gap-2">
+        <!-- زر اختيار اللغة -->
+        <div class="relative">
+            <button onclick="toggleLangMenu()" class="flex items-center justify-center w-10 h-10 bg-dark-900/90 backdrop-blur-md border border-white/10 text-white rounded-full shadow-lg active:scale-95 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </button>
+            <!-- قائمة اللغات المنسدلة -->
+            <div id="lang-menu" class="hidden absolute top-12 left-0 bg-dark-900 border border-white/10 rounded-2xl shadow-2xl p-2 min-w-[140px] animate-zoom-in glass-3d">
+                <button onclick="setLanguage('ar')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
+                    <span>🇩🇿</span> العربية
+                </button>
+                <button onclick="setLanguage('fr')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
+                    <span>🇫🇷</span> Français
+                </button>
+                <button onclick="setLanguage('en')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
+                    <span>🇺🇸</span> English
+                </button>
+            </div>
+        </div>
+
+        <!-- زر استدعاء النادل -->
         <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center gap-2 px-3 py-1.5 bg-dark-900/90 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] active:scale-95 transition-all duration-300 group logo-glow">
-            <span class="font-bold text-xs">إستدعي النادل</span>
+            <span class="font-bold text-xs" data-i18n="callWaiter">إستدعي النادل</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2C10.3431 2 9 3.34315 9 5V6.05202C6.73318 6.92484 5.2323 9.27891 5.62024 11.9939L6.19169 15.9939C6.26252 16.4897 6.03759 16.9855 5.61746 17.2656L4.2886 18.1515C3.76672 18.4994 3.86433 19.324 4.45331 19.5298C6.91896 20.3916 9.53917 20.7302 12 20.7302C14.4608 20.7302 17.081 20.3916 19.5467 19.5298C20.1357 19.324 20.2333 18.4994 19.7114 18.1515L18.3825 17.2656C17.9624 16.9855 17.7375 16.4897 17.8083 15.9939L18.3798 11.9939C18.7677 9.27891 17.2668 6.92484 15 6.05202V5C15 3.34315 13.6569 2 12 2ZM14 22C14 23.1046 13.1046 24 12 24C10.8954 24 10 23.1046 10 22H14Z"></path>
             </svg>
@@ -193,9 +220,9 @@
     <!-- حاوية المحتوى -->
     <div class="pt-[80px]">
 
-        <!-- عنوان ترحيبي مبسط بدون صندوق التعليمات -->
+        <!-- عنوان ترحيبي -->
         <div class="text-center px-4 mb-6 mt-2 animate-zoom-in">
-            <h1 class="text-3xl sm:text-4xl font-black text-white leading-tight welcome-title-anim whitespace-nowrap">
+            <h1 class="text-3xl sm:text-4xl font-black text-white leading-tight welcome-title-anim whitespace-nowrap" data-i18n="welcomeMsg">
                 مرحبا بيك في مطعمك<br>
             </h1>
         </div>
@@ -222,12 +249,12 @@
         <div class="flex items-center gap-3">
             <div class="bg-dark-950 text-brand-500 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shadow-inner border border-brand-600" id="total-count">0</div>
             <div class="flex flex-col leading-none">
-                <span class="text-[10px] text-dark-900 font-bold uppercase tracking-wider">Total</span>
+                <span class="text-[10px] text-dark-900 font-bold uppercase tracking-wider" data-i18n="total">Total</span>
                 <span class="font-black text-xl" id="total-price">0 د.ج</span>
             </div>
         </div>
         <div class="flex items-center gap-2 text-dark-950 font-bold bg-white/20 px-4 py-2 rounded-xl hover:bg-white/30 transition backdrop-blur-md border border-white/10 text-sm">
-            <span>تأكد من طلبك</span>
+            <span data-i18n="checkCart">تأكد من طلبك</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rtl:rotate-180" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
         </div>
     </div>
@@ -238,7 +265,7 @@
             
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold text-white flex items-center gap-2">
-                    <span class="text-brand-500">🛒</span> سلة المشتريات
+                    <span class="text-brand-500">🛒</span> <span data-i18n="cartTitle">سلة المشتريات</span>
                 </h2>
                 <button onclick="closeCartModal()" class="w-9 h-9 bg-white/5 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition">✕</button>
             </div>
@@ -248,14 +275,14 @@
             <!-- الفوتر -->
             <div class="mt-auto space-y-4 pt-4 border-t border-white/10">
                 <div class="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5 shadow-inner">
-                    <span class="text-gray-400 font-bold">Total</span>
+                    <span class="text-gray-400 font-bold" data-i18n="total">Total</span>
                     <span class="text-3xl font-black text-brand-500" id="final-price">0 د.ج</span>
                 </div>
 
                 <div id="upsell-section" class="flex flex-col gap-3 hidden"></div>
 
                 <button onclick="submitOrder()" class="w-full bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#20bd5a] hover:to-[#0e7a6d] text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(37,211,102,0.3)] flex justify-center items-center gap-3 transition-transform active:scale-95 border-t border-white/20">
-                    <span>تأكيد وإرسال الطلب</span>
+                    <span data-i18n="confirmOrder">تأكيد وإرسال الطلب</span>
                 </button>
             </div>
         </div>
@@ -272,64 +299,129 @@
                 </svg>
             </div>
             
-            <h3 class="text-xl font-bold text-white mb-2">تنبيه</h3>
+            <h3 class="text-xl font-bold text-white mb-2" data-i18n="alertTitle">تنبيه</h3>
             <p id="error-message" class="text-gray-400 text-sm mb-6 leading-relaxed">حدث خطأ غير متوقع.</p>
             
-            <button onclick="closeErrorModal()" class="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-500 font-bold py-3 rounded-xl transition-all active:scale-95">
+            <button onclick="closeErrorModal()" class="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-500 font-bold py-3 rounded-xl transition-all active:scale-95" data-i18n="ok">
                 حسناً
             </button>
         </div>
     </div>
 
     <script>
+        // --- إدارة الترجمة (Localization System) ---
+        const translations = {
+            ar: {
+                welcomeMsg: "مرحبا بيك في مطعمك",
+                restaurantNamePrefix: "مطعم",
+                restaurantNameSuffix: "الفخامة",
+                callWaiter: "إستدعي النادل",
+                viewOnTable: "عرض على طاولتك",
+                add: "أضف",
+                cartTitle: "سلة المشتريات",
+                total: "Total",
+                checkCart: "تأكد من طلبك",
+                confirmOrder: "تأكيد وإرسال الطلب",
+                alertTitle: "تنبيه",
+                ok: "حسناً",
+                currency: "د.ج",
+                loading: "جاري تحضير القائمة...",
+                upsellTitle: "✨ ما رأيك في إضافة بعض الانتعاش؟",
+                orderSent: "تم إرسال طلبك!",
+                orderWait: "المطبخ يقوم بتحضير وجبتك الآن.",
+                backHome: "الرجوع لصفحة الرئيسية",
+                contactKitchen: "جارٍ الاتصال بالمطبخ...",
+                connError: "عذراً، حدث خطأ في الاتصال بالمطبخ!"
+            },
+            fr: {
+                welcomeMsg: "Bienvenue dans votre restaurant",
+                restaurantNamePrefix: "Restaurant",
+                restaurantNameSuffix: "Luxe",
+                callWaiter: "Appeler Serveur",
+                viewOnTable: "Voir sur votre table",
+                add: "Ajouter",
+                cartTitle: "Votre Panier",
+                total: "Total",
+                checkCart: "Vérifier commande",
+                confirmOrder: "Confirmer la commande",
+                alertTitle: "Alerte",
+                ok: "OK",
+                currency: "DA",
+                loading: "Chargement du menu...",
+                upsellTitle: "✨ Envie d'une touche de fraîcheur ?",
+                orderSent: "Commande envoyée !",
+                orderWait: "La cuisine prépare votre repas.",
+                backHome: "Retour à l'accueil",
+                contactKitchen: "Contact cuisine...",
+                connError: "Erreur de connexion cuisine !"
+            },
+            en: {
+                welcomeMsg: "Welcome to your restaurant",
+                restaurantNamePrefix: "Restaurant",
+                restaurantNameSuffix: "Luxury",
+                callWaiter: "Call Waiter",
+                viewOnTable: "View on your table",
+                add: "Add",
+                cartTitle: "Your Cart",
+                total: "Total",
+                checkCart: "Check Order",
+                confirmOrder: "Confirm & Send Order",
+                alertTitle: "Alert",
+                ok: "OK",
+                currency: "DA",
+                loading: "Preparing menu...",
+                upsellTitle: "✨ How about something refreshing?",
+                orderSent: "Order Sent!",
+                orderWait: "The kitchen is preparing your meal.",
+                backHome: "Back to Home",
+                contactKitchen: "Contacting kitchen...",
+                connError: "Kitchen connection error!"
+            }
+        };
+
+        let currentLang = localStorage.getItem('user_lang') || 'ar';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('user_lang', lang);
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = lang;
+            
+            // تحديث النصوص الثابتة
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) el.textContent = translations[lang][key];
+            });
+
+            // إخفاء قائمة اللغات
+            document.getElementById('lang-menu').classList.add('hidden');
+
+            // إعادة بناء القائمة والسلة لترجمة المحتوى الديناميكي
+            renderAllSections();
+            updateCartBar();
+        }
+
+        function toggleLangMenu() {
+            document.getElementById('lang-menu').classList.toggle('hidden');
+        }
+
         // --- إعدادات API ---
         const MENU_API_URL = "https://n8n.vidsai.site/webhook/get-menu";
 
-        // 1. تعريف المصفوفة فارغة
         let products = [];
         let cart = {};
 
-        // بيانات احتياطية
         const fallbackProducts = [
-             { id: 1, name: "Cheeseburger", price: 450, category: "burger", img: "assets/burger/1.jpg", desc: "Bœuf pur, cheddar, sauce spéciale" },
+             { id: 1, name: {ar: "تشيز برغر", fr: "Cheeseburger", en: "Cheeseburger"}, price: 450, category: "burger", img: "assets/burger/1.jpg", desc: {ar: "بقر صافي، شيدر", fr: "Bœuf pur, cheddar", en: "Pure beef, cheddar"} },
         ];
 
-        // --- دوال عرض الأخطاء ---
-        function showErrorModal(message) {
-            const modal = document.getElementById('error-modal');
-            const msgElement = document.getElementById('error-message');
-            msgElement.textContent = message;
-            modal.classList.remove('hidden');
-            
-            if(navigator.vibrate) navigator.vibrate([50, 50, 50]);
-        }
-
-        function closeErrorModal() {
-            document.getElementById('error-modal').classList.add('hidden');
-        }
-
-        // دالة جلب البيانات من API
         async function fetchMenuItems() {
             try {
-                const response = await fetch(MENU_API_URL, {
-                    method: 'GET'
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
+                const response = await fetch(MENU_API_URL, { method: 'GET' });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
 
-                let itemsArray = [];
-                if (Array.isArray(data)) {
-                    itemsArray = data;
-                } else if (data && Array.isArray(data.results)) {
-                    itemsArray = data.results;
-                } else {
-                    console.error("Unexpected data structure:", data);
-                    throw new Error("Invalid data format received from API");
-                }
+                let itemsArray = Array.isArray(data) ? data : (data && data.results ? data.results : []);
                 
                 products = itemsArray
                     .filter(item => {
@@ -337,201 +429,133 @@
                          return availability === 'متوفر' || availability === 'Available' || availability === true;
                     })
                     .map(item => {
-                        let rawCat = 'other';
-                        if (item.Category && item.Category.value) {
-                             rawCat = item.Category.value;
-                        } else if (typeof item.Category === 'string') {
-                             rawCat = item.Category;
-                        }
-                        rawCat = rawCat ? rawCat.toLowerCase().trim() : 'other';
+                        let rawCat = (item.Category && item.Category.value) || item.Category || 'other';
+                        rawCat = rawCat.toString().toLowerCase().trim();
 
                         let category = rawCat;
-
                         if (rawCat === 'boissons' || rawCat === 'drinks') category = 'drinks';
                         if (rawCat.includes('suppl') || rawCat === 'sides') category = 'sides';
 
                         let subCat = '';
                         if (category === 'drinks') {
                             const nameLower = (item.Name || '').toLowerCase();
-                            if (nameLower.includes('jus') || nameLower.includes('ramy') || nameLower.includes('rouiba') || nameLower.includes('tazij')) {
-                                subCat = 'juice';
-                            } else {
-                                subCat = 'soda';
-                            }
+                            subCat = (nameLower.includes('jus') || nameLower.includes('ramy')) ? 'juice' : 'soda';
                         }
 
                         let imgUrl = 'https://placehold.co/400x300?text=No+Image';
                         const imgField = item.image || item.Image;
-                        if (Array.isArray(imgField) && imgField.length > 0) {
-                            imgUrl = imgField[0].url;
-                        } else if (typeof imgField === 'string') {
-                            imgUrl = imgField;
-                        }
+                        if (Array.isArray(imgField) && imgField.length > 0) imgUrl = imgField[0].url;
+                        else if (typeof imgField === 'string') imgUrl = imgField;
 
                         let modelField = item["Model 3D"] || item["Model3D"] || item["model_3d"];
-                        let modelUrl = null;
-                        if (modelField) {
-                            if (typeof modelField === 'string') {
-                                modelUrl = modelField; 
-                            } else if (Array.isArray(modelField) && modelField.length > 0) {
-                                modelUrl = modelField[0].url; 
-                            }
-                        }
+                        let modelUrl = (Array.isArray(modelField) && modelField.length > 0) ? modelField[0].url : (typeof modelField === 'string' ? modelField : null);
 
                         return {
                             id: item.id,
-                            name: item.Name,
+                            name: {
+                                ar: item.Name || item.name_ar || "بدون اسم",
+                                fr: item.Name_FR || item.name_fr || item.Name,
+                                en: item.Name_EN || item.name_en || item.Name
+                            },
                             price: parseFloat(item.Price) || 0,
                             category: category,
                             sub_category: subCat,
                             img: imgUrl,
                             model3d: modelUrl, 
-                            desc: item.Description || ''
+                            desc: {
+                                ar: item.Description || item.desc_ar || "",
+                                fr: item.Description_FR || item.desc_fr || item.Description || "",
+                                en: item.Description_EN || item.desc_en || item.Description || ""
+                            }
                         };
                     });
-                
-                if (products.length === 0) {
-                    console.warn("No products found after filtering. Check availability field.");
-                }
-
             } catch (error) {
                 console.error("فشل الاتصال بقاعدة البيانات:", error);
                 products = fallbackProducts;
             }
         }
 
-        // 2. دالة توليد بطاقة المنتج
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
+            const localizedName = p.name[currentLang];
+            const localizedDesc = p.desc[currentLang];
             
-            let mediaContent = '';
-            
-            if (p.model3d) {
-                mediaContent = `
-                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
-                    <model-viewer 
-                        src="${p.model3d}" 
-                        ar 
-                        ar-modes="webxr scene-viewer quick-look" 
-                        environment-image="neutral" 
-                        auto-rotate 
-                        camera-controls 
-                        class="w-full h-full object-cover relative z-10"
-                        alt="${p.name}">
-                    </model-viewer>
-                `;
-            } else {
-                mediaContent = `
-                    <img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 group-hover:scale-105 transition duration-500 relative z-10" alt="${p.name}">
-                `;
-            }
+            let mediaContent = p.model3d 
+                ? `<div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
+                   <model-viewer src="${p.model3d}" ar ar-modes="webxr scene-viewer quick-look" environment-image="neutral" auto-rotate camera-controls class="w-full h-full object-cover relative z-10" alt="${localizedName}"></model-viewer>`
+                : `<img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 group-hover:scale-105 transition duration-500 relative z-10" alt="${localizedName}">`;
 
             const arButtonHTML = p.model3d 
                 ? `<button onclick="const mv = this.closest('.glass-3d').querySelector('model-viewer'); if(mv) mv.activateAR();" class="w-[85%] mx-auto bg-dark-800 border border-brand-500/30 text-brand-500 py-1.5 rounded-full text-xs font-bold mb-3 flex justify-center items-center gap-2 active:scale-95 transition-transform">
-                        <span class="text-sm">👁️</span> عرض على طاولتك
+                        <span class="text-sm">👁️</span> ${translations[currentLang].viewOnTable}
                    </button>` 
                 : '';
 
             return `
             <div class="glass-3d rounded-2xl overflow-hidden reveal-on-scroll h-full flex flex-col relative group">
                 <div class="pt-4 px-3 pb-2 text-center relative z-20">
-                    <h3 class="font-bold text-gray-100 text-sm mb-1 leading-tight tracking-wide">${p.name}</h3>
-                    <p class="text-[10px] text-gray-400 line-clamp-2 leading-relaxed font-light">${p.desc}</p>
+                    <h3 class="font-bold text-gray-100 text-sm mb-1 leading-tight tracking-wide">${localizedName}</h3>
+                    <p class="text-[10px] text-gray-400 line-clamp-2 leading-relaxed font-light">${localizedDesc}</p>
                 </div>
-                
                 <div class="h-48 w-full relative bg-gray-800 flex items-center justify-center overflow-hidden">
                     ${mediaContent}
                     <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-60 pointer-events-none z-10"></div>
                 </div>
-                
                 <div class="p-3 pt-3 flex flex-col justify-center items-center relative z-20 w-full mt-auto">
                     ${arButtonHTML}
                     <div id="controls-${p.id}" class="w-full flex items-center justify-center">
                         ${generateControlsHTML(p, qty)}
                     </div>
                 </div>
-            </div>
-            `;
+            </div>`;
         }
 
-        // أداة التحكم الذكية للإضافة إلى السلة (Ultra-Minimal CTA)
         function generateControlsHTML(p, qty) {
-            const priceDisplay = p.price === 0 ? "Gratuit" : `${p.price} <span class="text-[10px] font-normal opacity-70">DA</span>`;
+            const priceVal = p.price === 0 ? "Gratuit" : `${p.price} <span class="text-[10px] font-normal opacity-70">${translations[currentLang].currency}</span>`;
 
             if (qty > 0) {
                 return `
                 <div class="w-[85%] mx-auto flex justify-between items-center bg-white/10 rounded-full p-1 border border-brand-500/50 h-12 animate-zoom-in backdrop-blur-sm">
-                    <button onclick="updateCart(${p.id}, -1)" class="w-10 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition text-xl shadow-inner pb-1">-</button>
+                    <button onclick="updateCart(${p.id}, -1)" class="w-12 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition text-xl shadow-inner">-</button>
                     <span class="font-black text-lg w-8 text-center text-white">${qty}</span>
-                    <button onclick="updateCart(${p.id}, 1)" class="w-10 h-full bg-brand-500 rounded-full text-dark-950 font-black flex items-center justify-center hover:bg-brand-400 active:scale-95 transition-transform text-xl shadow-md pb-1">+</button>
-                </div>
-                `;
+                    <button onclick="updateCart(${p.id}, 1)" class="w-12 h-full bg-brand-500 rounded-full text-dark-950 font-black flex items-center justify-center hover:bg-brand-400 active:scale-95 transition-transform text-xl shadow-md">+</button>
+                </div>`;
             } else {
                 return `
                 <button onclick="updateCart(${p.id}, 1)" class="w-[85%] mx-auto bg-brand-500 text-dark-950 py-2.5 px-5 rounded-full font-bold flex justify-between items-center shadow-lg active:scale-95 transition-transform">
-                    <span class="text-base leading-none">${priceDisplay}</span>
+                    <span class="text-base leading-none">${priceVal}</span>
                     <span class="text-2xl font-black leading-none mb-1">+</span>
-                </button>
-                `;
+                </button>`;
             }
         }
 
-        // 3. عرض المنتجات - دالة ديناميكية جديدة
         function renderAllSections() {
             const container = document.getElementById('dynamic-menu-container');
             container.innerHTML = '';
-
             const categoriesConfig = [
                 { id: 'pizza', title: 'Pizza' },
                 { id: 'burger', title: 'Burger' },
-                { id: 'drinks', title: 'Boissons', subSections: [
-                    { id: 'soda', title: 'Sodas' },
-                    { id: 'juice', title: 'Jus' }
-                ]},
+                { id: 'drinks', title: 'Boissons', subSections: [{ id: 'soda', title: 'Sodas' }, { id: 'juice', title: 'Jus' }] },
                 { id: 'sides', title: 'Suppléments' }
             ];
-
             categoriesConfig.forEach(cat => {
                 const catProducts = products.filter(p => p.category === cat.id);
                 if (catProducts.length === 0) return;
-
                 const section = document.createElement('section');
                 section.id = `section-${cat.id}`;
-                section.className = "scroll-mt-44"; 
-
-                const headerDiv = document.createElement('div');
-                headerDiv.className = "text-center mb-4";
-                headerDiv.innerHTML = `<h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim">${cat.title}</h2>`;
-                section.appendChild(headerDiv);
-
+                section.className = "scroll-mt-44 text-center mb-4";
+                section.innerHTML = `<h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim mb-4">${cat.title}</h2>`;
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-2 gap-3";
                 if (cat.subSections) {
-                    const subContainer = document.createElement('div');
-                    subContainer.className = "space-y-8";
-                    
                     cat.subSections.forEach(sub => {
                         const subProducts = catProducts.filter(p => p.sub_category === sub.id);
-                        if (subProducts.length === 0) return;
-
-                        const subWrapper = document.createElement('div');
-                        subWrapper.innerHTML = `
-                            <h3 class="text-xs text-brand-500 font-bold mb-2 px-1 opacity-80 text-center">${sub.title}</h3>
-                            <div class="grid grid-cols-2 gap-3">
-                                ${subProducts.map(createProductCard).join('')}
-                            </div>
-                        `;
-                        subContainer.appendChild(subWrapper);
+                        if (subProducts.length > 0) grid.innerHTML += subProducts.map(createProductCard).join('');
                     });
-                    section.appendChild(subContainer);
-                } else {
-                    const grid = document.createElement('div');
-                    grid.className = "grid grid-cols-2 gap-3";
-                    grid.innerHTML = catProducts.map(createProductCard).join('');
-                    section.appendChild(grid);
-                }
-
+                } else { grid.innerHTML = catProducts.map(createProductCard).join(''); }
+                section.appendChild(grid);
                 container.appendChild(section);
             });
-            
             initRevealObserver();
         }
 
@@ -539,45 +563,27 @@
             const revealObserver = new IntersectionObserver((entries) => {
                 entries.forEach((entry, index) => {
                     if (entry.isIntersecting) {
-                        setTimeout(() => {
-                            entry.target.classList.add('reveal-visible');
-                        }, index * 50); 
+                        setTimeout(() => { entry.target.classList.add('reveal-visible'); }, index * 50); 
                         revealObserver.unobserve(entry.target);
                     }
                 });
             }, { threshold: 0.1, rootMargin: '50px' });
-
             document.querySelectorAll('.reveal-on-scroll').forEach(el => revealObserver.observe(el));
         }
 
         function scrollToSection(sectionId) {
             const element = document.getElementById('section-' + sectionId);
-            if (element) {
-                const headerOffset = 140;
-                const elementPosition = element.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: "smooth"
-                });
-            }
+            if (element) window.scrollTo({ top: element.offsetTop - 140, behavior: "smooth" });
         }
 
         function updateCart(id, change) {
             if (!cart[id]) cart[id] = { ...products.find(p => p.id === id), qty: 0 };
             cart[id].qty += change;
             if (cart[id].qty <= 0) delete cart[id];
-            
             const controlsDiv = document.getElementById(`controls-${id}`);
             if (controlsDiv) {
-                const newQty = cart[id] ? cart[id].qty : 0;
                 const p = products.find(x => x.id === id);
-                controlsDiv.innerHTML = generateControlsHTML(p, newQty);
-                if (change > 0 && newQty > 0) {
-                    const span = controlsDiv.querySelector('span.text-center');
-                    if(span) span.classList.add('pop-anim');
-                }
+                controlsDiv.innerHTML = generateControlsHTML(p, cart[id] ? cart[id].qty : 0);
             }
             updateCartBar();
             if(navigator.vibrate) navigator.vibrate(40);
@@ -586,11 +592,10 @@
         function updateCartBar() {
             const totalQty = Object.values(cart).reduce((a, b) => a + b.qty, 0);
             const totalPrice = Object.values(cart).reduce((a, b) => a + (b.price * b.qty), 0);
-
             document.getElementById('total-count').innerText = totalQty;
-            document.getElementById('total-price').innerText = totalPrice + ' د.ج';
-            document.getElementById('final-price').innerText = totalPrice + ' د.ج';
-
+            const formattedPrice = `${totalPrice} ${translations[currentLang].currency}`;
+            document.getElementById('total-price').innerText = formattedPrice;
+            document.getElementById('final-price').innerText = formattedPrice;
             const cartBar = document.getElementById('cart-bar');
             if (totalQty > 0) cartBar.classList.remove('translate-y-[150%]');
             else cartBar.classList.add('translate-y-[150%]');
@@ -599,279 +604,92 @@
         function openCartModal() {
             const list = document.getElementById('cart-items-list');
             list.innerHTML = '';
-            
-            let hasDrinks = false; 
-            let hasFries = false;
-            
             if (Object.keys(cart).length === 0) return;
-
             Object.values(cart).forEach(item => {
-                if (item.category === 'drinks') hasDrinks = true; 
-                if (item.name.toLowerCase().includes('frites') || item.category === 'sides') hasFries = true; 
-
                 list.innerHTML += `
                     <div class="flex justify-between items-center text-sm border-b border-white/10 pb-3 last:border-0 animate-slide-up-smooth">
                         <div class="flex items-center gap-3">
                             <span class="bg-white/10 text-brand-500 px-2.5 py-1 rounded text-xs font-bold border border-white/10">x${item.qty}</span>
-                            <span class="font-medium text-gray-200">${item.name}</span>
+                            <span class="font-medium text-gray-200">${item.name[currentLang]}</span>
                         </div>
                         <div class="flex items-center gap-3">
-                             <span class="font-bold text-brand-500">${item.price === 0 ? 'Gratuit' : item.price * item.qty}</span>
+                             <span class="font-bold text-brand-500">${item.price === 0 ? 'Free' : (item.price * item.qty) + ' ' + translations[currentLang].currency}</span>
                              <button onclick="removeFromCart(${item.id})" class="text-red-400 text-xs px-2 py-1 bg-red-500/10 rounded hover:bg-red-500/30 transition">✕</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
-
-            const upsellSection = document.getElementById('upsell-section');
-            let upsellHTML = '';
-            let showUpsell = false;
-
-            if (!hasDrinks) {
-                const drink = products.find(p => p.category === 'drinks');
-                if (drink) {
-                    upsellHTML += `
-                        <div class="relative flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10">
-                            <div class="flex items-center gap-3">
-                                <img src="${drink.img}" class="w-10 h-10 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/20">
-                                <div class="text-sm">
-                                    <p class="font-bold text-gray-100 flex items-center gap-1">${drink.name} <span class="text-[9px] bg-brand-500 text-dark-950 px-1 rounded">منعش!</span></p>
-                                    <p class="text-brand-500 font-bold text-xs">+${drink.price} د.ج</p>
-                                </div>
-                            </div>
-                            <button onclick="addUpsell(${drink.id})" class="bg-brand-500 text-dark-950 w-8 h-8 rounded-lg flex items-center justify-center font-bold hover:bg-brand-400 transition-all shadow-sm text-lg leading-none">+</button>
-                        </div>
-                    `;
-                    showUpsell = true;
-                }
-            }
-
-            if (!hasFries) {
-                const fries = products.find(p => p.name.toLowerCase().includes('frites') || (p.category === 'sides' && p.price > 0));
-                if (fries) {
-                    upsellHTML += `
-                        <div class="relative flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10 ${showUpsell ? 'mt-2' : ''}">
-                            <div class="flex items-center gap-3">
-                                <img src="${fries.img}" class="w-10 h-10 rounded-lg object-cover shadow-sm grayscale-[20%] border border-brand-500/20" onerror="this.src='https://placehold.co/100x100?text=Fries'">
-                                <div class="text-sm">
-                                    <p class="font-bold text-gray-100">${fries.name} ?</p>
-                                    <p class="text-brand-500 font-bold text-xs">+${fries.price} د.ج</p>
-                                </div>
-                            </div>
-                            <button onclick="addUpsell(${fries.id})" class="bg-brand-500 text-dark-950 w-8 h-8 rounded-lg flex items-center justify-center font-bold hover:bg-brand-400 transition-all shadow-sm text-lg leading-none">+</button>
-                        </div>
-                    `;
-                    showUpsell = true;
-                }
-            }
-
-            if (showUpsell) {
-                upsellSection.innerHTML = `
-                    <div class="absolute inset-0 bg-brand-500/5 animate-pulse pointer-events-none"></div>
-                    <p class="text-xs text-brand-500 font-bold mb-2 px-1">✨ ما رأيك في إضافة بعض الانتعاش؟</p>
-                    ${upsellHTML}
-                `;
-                upsellSection.classList.remove('hidden');
-                upsellSection.classList.add('flex', 'flex-col');
-            } else {
-                upsellSection.classList.add('hidden');
-                upsellSection.classList.remove('flex', 'flex-col');
-            }
-
             document.getElementById('cart-modal').classList.remove('hidden');
         }
 
-        function closeCartModal() {
-            document.getElementById('cart-modal').classList.add('hidden');
-        }
-
+        function closeCartModal() { document.getElementById('cart-modal').classList.add('hidden'); }
         function removeFromCart(id) {
             delete cart[id];
+            const p = products.find(x => x.id === id);
             const controlsDiv = document.getElementById(`controls-${id}`);
-            const p = products.find(x => x.id === id); 
             if(controlsDiv && p) controlsDiv.innerHTML = generateControlsHTML(p, 0);
             updateCartBar();
             openCartModal();
             if(Object.keys(cart).length === 0) closeCartModal();
         }
 
-        function addUpsell(id) {
-            updateCart(id, 1);
-            openCartModal(); 
-        }
-
-        function getTableNumber() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('table') || '5';
-        }
-
         async function callWaiter() {
             const btn = document.getElementById('waiter-btn');
             const originalContent = btn.innerHTML;
-            
-            const bellSound = new Audio('assets/sound_effect/wiater.mp3'); 
-            bellSound.play().catch(e => console.log("الصوت يحتاج تفاعل"));
-
-            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+            new Audio('assets/sound_effect/wiater.mp3').play().catch(e => {});
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-brand-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
             btn.disabled = true;
-
             try {
-                const tableNum = getTableNumber();
                 const WH_URL = "https://n8n.vidsai.site/webhook/146e5a16-fe2c-4d4e-8284-4f6900a40931"; 
-
-                await fetch(WH_URL, { 
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ table: tableNum, type: 'help' })
-                });
-
-                btn.classList.remove('border-brand-500', 'text-brand-500');
-                btn.classList.add('border-green-500', 'text-green-500');
+                await fetch(WH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ table: '5', type: 'help', lang: currentLang }) });
+                btn.classList.replace('text-brand-500', 'text-green-500');
                 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
-
-            } catch (error) {
-                console.error(error);
-                showErrorModal("فشل الاتصال، حاول مرة أخرى.");
-            } finally {
-                setTimeout(() => {
-                    btn.classList.add('border-brand-500', 'text-brand-500');
-                    btn.classList.remove('border-green-500', 'text-green-500');
-                    btn.innerHTML = originalContent;
-                    btn.disabled = false;
-                }, 3000);
-            }
+            } catch (error) { showErrorModal(translations[currentLang].connError); }
+            finally { setTimeout(() => { btn.classList.replace('text-green-500', 'text-brand-500'); btn.innerHTML = originalContent; btn.disabled = false; }, 3000); }
         }
-
-        const WEBHOOK_URL = "https://n8n.vidsai.site/webhook/c25c8a4a-e633-4ae8-80f0-adece675548b"; 
 
         async function submitOrder() {
             if (Object.keys(cart).length === 0) return;
-
             const btn = document.querySelector('#cart-modal button:last-child');
             const originalText = btn.innerHTML;
-            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white ml-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> جارٍ الاتصال بالمطبخ...`;
+            btn.innerHTML = translations[currentLang].contactKitchen;
             btn.disabled = true;
-
-            const orderData = {
-                order_id: Math.floor(1000 + Math.random() * 9000), 
-                table: getTableNumber(),
-                total: document.getElementById('final-price').innerText,
-                items: Object.values(cart).map(item => ({
-                    name: item.name,
-                    qty: item.qty,
-                    price: item.price
-                })),
-                time: new Date().toLocaleString('ar-DZ')
-            };
-
             try {
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(orderData)
-                });
-
+                const WEBHOOK_URL = "https://n8n.vidsai.site/webhook/c25c8a4a-e633-4ae8-80f0-adece675548b"; 
+                const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: Object.values(cart), lang: currentLang }) });
                 if (response.ok) {
-                    const successSound = new Audio('assets/sound_effect/success.mp3'); 
-                    successSound.play().catch(e => console.log("الصوت يحتاج تفاعل"));
-
+                    new Audio('assets/sound_effect/success.mp3').play().catch(e => {});
                     closeCartModal();
-                    
-                    const successModal = document.getElementById('success-modal');
-                    successModal.classList.remove('hidden');
-                    successModal.classList.add('flex');
+                    showSuccessOrderModal();
+                    cart = {}; updateCartBar();
+                } else throw new Error();
+            } catch (error) { showErrorModal(translations[currentLang].connError); }
+            finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
 
-                    cart = {};
-                    updateCartBar();
-                } else {
-                    throw new Error('فشل الاتصال بالسيرفر');
-                }
-
-            } catch (error) {
-                console.error(error);
-                showErrorModal("عذراً، حدث خطأ في الاتصال بالمطبخ! يرجى المحاولة مرة أخرى.");
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+        function showSuccessOrderModal() {
+            const modal = document.createElement('div');
+            modal.className = "fixed inset-0 bg-dark-950/95 z-[70] flex flex-col items-center justify-center p-4 text-center animate-zoom-in";
+            modal.innerHTML = `
+                <div class="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mb-6 border border-green-500/20 shadow-[0_0_30px_rgba(34,197,94,0.2)]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <h2 class="text-3xl font-black text-white mb-2">${translations[currentLang].orderSent}</h2>
+                <p class="text-gray-400 mb-8 max-w-xs leading-relaxed">${translations[currentLang].orderWait}</p>
+                <button onclick="location.reload()" class="bg-dark-800 text-white px-8 py-4 rounded-xl font-bold border border-dark-700 w-full max-w-xs shadow-lg">${translations[currentLang].backHome}</button>`;
+            document.body.appendChild(modal);
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            const loader = document.getElementById('loader-container');
-            
             await fetchMenuItems();
-            
-            loader.style.opacity = '0';
-            setTimeout(() => {
-                loader.style.display = 'none';
-            }, 500);
-
-            renderAllSections();
-            
-            const sections = ['pizza', 'burger', 'drinks', 'sides'];
-            window.addEventListener('scroll', () => {
-                const scrollY = window.scrollY;
-                const offset = 250;
-
-                sections.forEach(secId => {
-                    const section = document.getElementById('section-' + secId);
-                    const btn = document.getElementById('btn-' + secId);
-                    
-                    if (section && btn) {
-                        const top = section.offsetTop - offset;
-                        const bottom = top + section.offsetHeight;
-
-                        if (scrollY >= top && scrollY < bottom) {
-                            document.querySelectorAll('.nav-btn').forEach(b => {
-                                b.classList.remove('nav-active', 'text-dark-950');
-                                b.classList.add('bg-white/5', 'text-gray-400');
-                            });
-                            btn.classList.remove('bg-white/5', 'text-gray-400');
-                            btn.classList.add('nav-active', 'text-dark-950');
-                            
-                            btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                        }
-                    }
-                });
-            });
-
-            const firstBtn = document.getElementById('btn-pizza');
-            if(firstBtn) {
-                 firstBtn.classList.add('nav-active', 'text-dark-950');
-                 firstBtn.classList.remove('bg-white/5', 'text-gray-400');
-            }
+            setLanguage(currentLang); // ضبط اللغة والاتجاه عند البديل
+            document.getElementById('loader-container').style.display = 'none';
         });
-
     </script>
-    <div id="success-modal" class="fixed inset-0 bg-dark-950/95 z-[70] hidden flex flex-col items-center justify-center p-4 text-center animate-zoom-in">
-        <div class="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mb-6 border border-green-500/20 shadow-[0_0_30px_rgba(34,197,94,0.2)]">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-            </svg>
-        </div>
-        <h2 class="text-3xl font-black text-white mb-2">تم استلام طلبك!</h2>
-        <p class="text-gray-400 mb-8 max-w-xs leading-relaxed">المطبخ يقوم بتحضير وجبتك الآن.</p>
-        
-        <button onclick="location.reload()" class="bg-dark-800 text-white px-8 py-4 rounded-xl font-bold border border-dark-700 hover:bg-dark-700 hover:border-brand-500/50 transition-all w-full max-w-xs shadow-lg">
-            الرجوع لصفحة الرئيسية
-        </button>
-    </div>
     
     <style>
-    @keyframes swing {
-        0%, 100% { transform: rotate(0deg); }
-        20% { transform: rotate(15deg); }
-        40% { transform: rotate(-10deg); }
-        60% { transform: rotate(5deg); }
-        80% { transform: rotate(-5deg); }
-    }
-    .group-hover\:animate-swing:hover {
-        animation: swing 1s ease-in-out infinite;
-    }
-    /* جعل الزر يتوهج باستمرار */
-    .logo-glow {
-        animation: logoPulse 2s infinite;
-    }
+    @keyframes swing { 0%, 100% { transform: rotate(0deg); } 20% { transform: rotate(15deg); } 40% { transform: rotate(-10deg); } 60% { transform: rotate(5deg); } 80% { transform: rotate(-5deg); } }
+    .group-hover\:animate-swing:hover { animation: swing 1s ease-in-out infinite; }
+    .logo-glow { animation: logoPulse 2s infinite; }
     </style>
 </body>
 </html>
