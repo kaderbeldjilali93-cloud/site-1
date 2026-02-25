@@ -199,8 +199,8 @@
     <!-- حاوية المحتوى -->
     <div class="pt-[80px]">
 
-        <!-- عنوان ترحيبي -->
-        <div class="text-center px-4 mb-4 mt-2 animate-zoom-in">
+        <!-- عنوان ترحيبي مبسط بدون صندوق التعليمات -->
+        <div class="text-center px-4 mb-6 mt-2 animate-zoom-in">
             <h1 class="text-3xl sm:text-4xl font-black text-white leading-tight welcome-title-anim whitespace-nowrap">
                 مرحبا بيك في مطعمك<br>
             </h1>
@@ -248,7 +248,7 @@
         </div>
     </div>
 
-    <!-- نافذة المودال -->
+    <!-- نافذة المودال للسلة -->
     <div id="cart-modal" class="fixed inset-0 bg-dark-950/90 z-[60] hidden backdrop-blur-md flex items-end sm:items-center justify-center transition-opacity duration-300">
         <div class="bg-dark-900 border border-white/10 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 relative animate-slide-up-smooth shadow-2xl h-[85vh] sm:h-auto flex flex-col glass-3d">
             
@@ -280,21 +280,17 @@
     <!-- نافذة عرض الأخطاء (Error Modal) -->
     <div id="error-modal" class="fixed inset-0 bg-black/80 z-[110] hidden flex items-center justify-center backdrop-blur-sm p-4 animate-zoom-in">
         <div class="bg-dark-900 border border-red-500/30 rounded-2xl p-6 shadow-2xl w-full max-w-sm text-center relative overflow-hidden glass-3d">
-            <!-- خلفية حمراء خفيفة -->
             <div class="absolute inset-0 bg-red-500/5 pointer-events-none"></div>
             
-            <!-- أيقونة الخطأ -->
             <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192 3 1.732 3z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
             </div>
             
-            <!-- عنوان ونص الخطأ -->
             <h3 class="text-xl font-bold text-white mb-2">تنبيه</h3>
             <p id="error-message" class="text-gray-400 text-sm mb-6 leading-relaxed">حدث خطأ غير متوقع.</p>
             
-            <!-- زر الإغلاق -->
             <button onclick="closeErrorModal()" class="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-500 font-bold py-3 rounded-xl transition-all active:scale-95">
                 حسناً
             </button>
@@ -309,7 +305,7 @@
         let products = [];
         let cart = {};
 
-        // بيانات احتياطية (تم تقصيرها للعرض)
+        // بيانات احتياطية
         const fallbackProducts = [
              { id: 1, name: "Cheeseburger", price: 450, category: "burger", img: "assets/burger/1.jpg", desc: "Bœuf pur, cheddar, sauce spéciale" },
         ];
@@ -420,17 +416,17 @@
             }
         }
 
-        // 2. دالة توليد بطاقة المنتج (مُدمج بها الـ 3D لتحسين الـ UX والأداء)
+        // 2. دالة توليد بطاقة المنتج بعد إعادة الهيكلة الشاملة للـ UX/UI
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             
             let mediaContent = '';
             
             if (p.model3d) {
-                // استخدام model-viewer للتحميل المباشر مع الظل السفلي والزر المطفو
+                // إدراج مباشر للمجسم مع ظل سفلي للمسة واقعية
+                // تم إزالة poster و reveal ليعمل ويتحرك فوراً كما هو مطلوب
                 mediaContent = `
                     <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
-                    
                     <model-viewer 
                         src="${p.model3d}" 
                         ar 
@@ -440,35 +436,39 @@
                         camera-controls 
                         class="w-full h-full object-cover relative z-10"
                         alt="${p.name}">
-                        
-                        <button slot="ar-button" class="absolute bottom-0 translate-y-1/2 left-1/2 -translate-x-1/2 bg-dark-950/90 backdrop-blur border border-brand-500 text-brand-500 px-4 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(212,175,55,0.4)] whitespace-nowrap z-30">
-                            👆 عرض على طاولتك
-                        </button>
                     </model-viewer>
                 `;
             } else {
-                // إرجاع الصورة العادية في حال عدم وجود مجسم
+                // صورة عادية للمنتجات التي لا تملك 3D
                 mediaContent = `
-                    <img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 group-hover:scale-105 transition duration-500" alt="${p.name}">
+                    <img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 group-hover:scale-105 transition duration-500 relative z-10" alt="${p.name}">
                 `;
             }
 
+            // زر منفصل لتقنية الواقع المعزز لتجنب تداخل الـ interactions
+            const arButtonHTML = p.model3d 
+                ? `<button onclick="const mv = this.closest('.glass-3d').querySelector('model-viewer'); if(mv) mv.activateAR();" class="w-[85%] mx-auto bg-dark-800 border border-brand-500/30 text-brand-500 py-1.5 rounded-full text-xs font-bold mb-3 flex justify-center items-center gap-2 active:scale-95 transition-transform">
+                        <span class="text-sm">👁️</span> عرض على طاولتك
+                   </button>` 
+                : '';
+
             return `
             <div class="glass-3d rounded-2xl overflow-hidden reveal-on-scroll h-full flex flex-col relative group">
-                <!-- 1. القسم العلوي (صورة أو مجسم) -->
-                <div class="aspect-square w-full relative bg-gray-800 flex items-center justify-center">
-                    ${mediaContent}
-                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-60 pointer-events-none z-10"></div>
-                </div>
-                
-                <!-- 2. القسم الأوسط -->
-                <div class="p-3 text-center flex-1 flex flex-col justify-center border-t border-white/5 relative z-20">
+                <!-- 1. الجزء الأول (الأعلى): حاوية النصوص -->
+                <div class="pt-4 px-3 pb-2 text-center relative z-20">
                     <h3 class="font-bold text-gray-100 text-sm mb-1 leading-tight tracking-wide">${p.name}</h3>
                     <p class="text-[10px] text-gray-400 line-clamp-2 leading-relaxed font-light">${p.desc}</p>
                 </div>
                 
-                <!-- 3. القسم السفلي (زر الإضافة الذكي) -->
-                <div class="p-3 pt-0 flex justify-center items-center relative z-20 w-full">
+                <!-- 2. الجزء الثاني (الوسط): حاوية الوسائط (صورة أو 3D) -->
+                <div class="h-48 w-full relative bg-gray-800 flex items-center justify-center overflow-hidden">
+                    ${mediaContent}
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-60 pointer-events-none z-10"></div>
+                </div>
+                
+                <!-- 3. الجزء الثالث (الأسفل): حاوية الإجراءات (زر الـ AR + زر الإضافة) -->
+                <div class="p-3 pt-3 flex flex-col justify-center items-center relative z-20 w-full mt-auto">
+                    ${arButtonHTML}
                     <div id="controls-${p.id}" class="w-full flex items-center justify-center">
                         ${generateControlsHTML(p, qty)}
                     </div>
@@ -477,22 +477,25 @@
             `;
         }
 
+        // أداة التحكم الذكية للإضافة إلى السلة (Smart CTA Button) بتصميم RTL
         function generateControlsHTML(p, qty) {
             const priceDisplay = p.price === 0 ? "Gratuit" : `${p.price} <span class="text-[10px] font-normal opacity-70">DA</span>`;
 
             if (qty > 0) {
+                // حالة تواجد المنتج في السلة (التحكم بالكمية) - Pill Shape
                 return `
-                <div class="w-full flex justify-between items-center bg-white/10 rounded-full p-1 border border-brand-500/50 h-11 animate-zoom-in backdrop-blur-sm">
+                <div class="w-[85%] mx-auto flex justify-between items-center bg-white/10 rounded-full p-1 border border-brand-500/50 h-12 animate-zoom-in backdrop-blur-sm">
                     <button onclick="updateCart(${p.id}, -1)" class="w-10 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition text-xl shadow-inner pb-1">-</button>
                     <span class="font-black text-lg w-8 text-center text-white">${qty}</span>
                     <button onclick="updateCart(${p.id}, 1)" class="w-10 h-full bg-brand-500 rounded-full text-dark-950 font-black flex items-center justify-center hover:bg-brand-400 active:scale-95 transition-transform text-xl shadow-md pb-1">+</button>
                 </div>
                 `;
             } else {
+                // زر الإضافة الافتراضي (Pill Shape)
                 return `
-                <button onclick="updateCart(${p.id}, 1)" class="w-full bg-brand-500 text-dark-950 rounded-full py-2.5 px-5 flex justify-between items-center font-black shadow-[0_4px_15px_rgba(212,175,55,0.3)] hover:scale-[1.02] active:scale-95 transition-all">
-                    <span class="flex items-center gap-1.5">إضافة <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg></span>
-                    <span class="text-base">${priceDisplay}</span>
+                <button onclick="updateCart(${p.id}, 1)" class="w-[85%] mx-auto bg-brand-500 text-dark-950 py-2.5 px-5 rounded-full font-bold flex justify-between items-center shadow-lg active:scale-95 transition-transform">
+                    <span class="text-base leading-none">${priceDisplay}</span>
+                    <span class="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg> أضف</span>
                 </button>
                 `;
             }
@@ -714,7 +717,7 @@
         function removeFromCart(id) {
             delete cart[id];
             const controlsDiv = document.getElementById(`controls-${id}`);
-            const p = products.find(x => x.id === id); // الحصول على المنتج
+            const p = products.find(x => x.id === id); 
             if(controlsDiv && p) controlsDiv.innerHTML = generateControlsHTML(p, 0);
             updateCartBar();
             openCartModal();
