@@ -146,12 +146,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        /* Marquee Animation */
-        @keyframes marquee { 
-            0% { transform: translateX(100%); } 
-            100% { transform: translateX(-100%); } 
-        }
     </style>
     
     <script>
@@ -206,17 +200,7 @@
             </h1>
         </div>
 
-        <!-- 2. شريط التعليمات المتحرك (Ticker Marquee) -->
-        <div class="mb-6 overflow-hidden bg-white/5 border-y border-white/10 py-2.5 animate-zoom-in relative flex items-center w-full shadow-inner" style="animation-delay: 0.1s;">
-            <div class="absolute inset-0 bg-gradient-to-r from-dark-950 via-transparent to-dark-950 z-10 pointer-events-none"></div>
-            <div class="whitespace-nowrap flex text-sm text-brand-500 font-bold" style="animation: marquee 20s linear infinite;">
-                <span class="mx-4">✨ اختر وجبتك المفضلة 🍔 ➔ اضغط على الإضافة للسلة 🛒 ➔ أكد طلبك وسنقوم بتحضيره فوراً 👨‍🍳</span>
-                <span class="mx-4">✨ اختر وجبتك المفضلة 🍔 ➔ اضغط على الإضافة للسلة 🛒 ➔ أكد طلبك وسنقوم بتحضيره فوراً 👨‍🍳</span>
-                <span class="mx-4">✨ اختر وجبتك المفضلة 🍔 ➔ اضغط على الإضافة للسلة 🛒 ➔ أكد طلبك وسنقوم بتحضيره فوراً 👨‍🍳</span>
-            </div>
-        </div>
-
-        <!-- 3. شريط التصنيفات (Sticky) - روابط Anchor -->
+        <!-- 2. شريط التصنيفات (Sticky) - روابط Anchor -->
         <div class="sticky top-[60px] z-40 bg-dark-950/95 backdrop-blur-md border-b border-dark-800/50 py-3 mb-6 shadow-md transition-all">
             <div class="px-2 overflow-x-auto hide-scrollbar flex justify-center">
                 <div class="flex gap-2 min-w-max px-2">
@@ -228,7 +212,7 @@
             </div>
         </div>
 
-        <!-- 4. المنتجات (عرض في صفحة واحدة - ديناميكي) -->
+        <!-- 3. المنتجات (عرض في صفحة واحدة - ديناميكي) -->
         <div id="dynamic-menu-container" class="px-3 space-y-12 pb-8 min-h-[500px]"></div>
 
     </div>
@@ -416,15 +400,13 @@
             }
         }
 
-        // 2. دالة توليد بطاقة المنتج بعد إعادة الهيكلة الشاملة للـ UX/UI
+        // 2. دالة توليد بطاقة المنتج
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             
             let mediaContent = '';
             
             if (p.model3d) {
-                // إدراج مباشر للمجسم مع ظل سفلي للمسة واقعية
-                // تم إزالة poster و reveal ليعمل ويتحرك فوراً كما هو مطلوب
                 mediaContent = `
                     <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
                     <model-viewer 
@@ -439,13 +421,11 @@
                     </model-viewer>
                 `;
             } else {
-                // صورة عادية للمنتجات التي لا تملك 3D
                 mediaContent = `
                     <img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 group-hover:scale-105 transition duration-500 relative z-10" alt="${p.name}">
                 `;
             }
 
-            // زر منفصل لتقنية الواقع المعزز لتجنب تداخل الـ interactions
             const arButtonHTML = p.model3d 
                 ? `<button onclick="const mv = this.closest('.glass-3d').querySelector('model-viewer'); if(mv) mv.activateAR();" class="w-[85%] mx-auto bg-dark-800 border border-brand-500/30 text-brand-500 py-1.5 rounded-full text-xs font-bold mb-3 flex justify-center items-center gap-2 active:scale-95 transition-transform">
                         <span class="text-sm">👁️</span> عرض على طاولتك
@@ -454,19 +434,16 @@
 
             return `
             <div class="glass-3d rounded-2xl overflow-hidden reveal-on-scroll h-full flex flex-col relative group">
-                <!-- 1. الجزء الأول (الأعلى): حاوية النصوص -->
                 <div class="pt-4 px-3 pb-2 text-center relative z-20">
                     <h3 class="font-bold text-gray-100 text-sm mb-1 leading-tight tracking-wide">${p.name}</h3>
                     <p class="text-[10px] text-gray-400 line-clamp-2 leading-relaxed font-light">${p.desc}</p>
                 </div>
                 
-                <!-- 2. الجزء الثاني (الوسط): حاوية الوسائط (صورة أو 3D) -->
                 <div class="h-48 w-full relative bg-gray-800 flex items-center justify-center overflow-hidden">
                     ${mediaContent}
                     <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-60 pointer-events-none z-10"></div>
                 </div>
                 
-                <!-- 3. الجزء الثالث (الأسفل): حاوية الإجراءات (زر الـ AR + زر الإضافة) -->
                 <div class="p-3 pt-3 flex flex-col justify-center items-center relative z-20 w-full mt-auto">
                     ${arButtonHTML}
                     <div id="controls-${p.id}" class="w-full flex items-center justify-center">
@@ -477,12 +454,11 @@
             `;
         }
 
-        // أداة التحكم الذكية للإضافة إلى السلة (Smart CTA Button) بتصميم RTL
+        // أداة التحكم الذكية للإضافة إلى السلة (Ultra-Minimal CTA)
         function generateControlsHTML(p, qty) {
             const priceDisplay = p.price === 0 ? "Gratuit" : `${p.price} <span class="text-[10px] font-normal opacity-70">DA</span>`;
 
             if (qty > 0) {
-                // حالة تواجد المنتج في السلة (التحكم بالكمية) - Pill Shape
                 return `
                 <div class="w-[85%] mx-auto flex justify-between items-center bg-white/10 rounded-full p-1 border border-brand-500/50 h-12 animate-zoom-in backdrop-blur-sm">
                     <button onclick="updateCart(${p.id}, -1)" class="w-10 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition text-xl shadow-inner pb-1">-</button>
@@ -491,11 +467,10 @@
                 </div>
                 `;
             } else {
-                // زر الإضافة الافتراضي (Pill Shape)
                 return `
                 <button onclick="updateCart(${p.id}, 1)" class="w-[85%] mx-auto bg-brand-500 text-dark-950 py-2.5 px-5 rounded-full font-bold flex justify-between items-center shadow-lg active:scale-95 transition-transform">
                     <span class="text-base leading-none">${priceDisplay}</span>
-                    <span class="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg> أضف</span>
+                    <span class="text-2xl font-black leading-none mb-1">+</span>
                 </button>
                 `;
             }
@@ -560,7 +535,6 @@
             initRevealObserver();
         }
 
-        // دالة جديدة لتشغيل مراقب الظهور
         function initRevealObserver() {
             const revealObserver = new IntersectionObserver((entries) => {
                 entries.forEach((entry, index) => {
@@ -576,7 +550,6 @@
             document.querySelectorAll('.reveal-on-scroll').forEach(el => revealObserver.observe(el));
         }
 
-        // --- Scroll To Section Logic ---
         function scrollToSection(sectionId) {
             const element = document.getElementById('section-' + sectionId);
             if (element) {
@@ -591,7 +564,6 @@
             }
         }
 
-        // 4. تحديث السلة
         function updateCart(id, change) {
             if (!cart[id]) cart[id] = { ...products.find(p => p.id === id), qty: 0 };
             cart[id].qty += change;
@@ -600,7 +572,7 @@
             const controlsDiv = document.getElementById(`controls-${id}`);
             if (controlsDiv) {
                 const newQty = cart[id] ? cart[id].qty : 0;
-                const p = products.find(x => x.id === id); // الحصول على المنتج
+                const p = products.find(x => x.id === id);
                 controlsDiv.innerHTML = generateControlsHTML(p, newQty);
                 if (change > 0 && newQty > 0) {
                     const span = controlsDiv.querySelector('span.text-center');
@@ -624,7 +596,6 @@
             else cartBar.classList.add('translate-y-[150%]');
         }
 
-        // 5. المودال مع منطق Upsell
         function openCartModal() {
             const list = document.getElementById('cart-items-list');
             list.innerHTML = '';
@@ -825,7 +796,6 @@
             }
         }
 
-        // --- تهيئة الصفحة ---
         document.addEventListener('DOMContentLoaded', async () => {
             const loader = document.getElementById('loader-container');
             
