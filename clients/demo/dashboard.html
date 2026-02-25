@@ -326,7 +326,7 @@
         <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
             <div class="flex items-center gap-3 text-red-500 mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192 3 1.732 3z" />
                 </svg>
                 <h3 class="text-lg font-bold text-white">تأكيد الخروج</h3>
             </div>
@@ -879,7 +879,7 @@
             });
 
             const header = document.createElement('div');
-            header.className = "flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 sticky top-0 bg-gray-800 py-4 z-10 border-b border-gray-700 gap-4";
+            header.className = "flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700 gap-4";
             
             const hasNewQuick = groupedOrders.quick.some(o => o.isNew);
             const hasNewDelivery = groupedOrders.delivery.some(o => o.isNew);
@@ -1240,6 +1240,24 @@
             let totalSales = 0; baseOrders.forEach(o => totalSales += getPrice(o));
             const avgOrderValue = baseOrders.length > 0 ? (totalSales / baseOrders.length).toFixed(2) : 0;
 
+            const tableHeader = document.createElement('div');
+            tableHeader.className = "flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700 gap-4";
+            tableHeader.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <h2 class="text-xl font-bold text-white">سجل العمليات</h2>
+                    <span class="live-indicator" title="تحديث مباشر"></span>
+                </div>
+                <div class="relative flex items-center bg-gray-800 border border-gray-600 rounded-lg hover:border-brand focus-within:border-brand focus-within:ring-2 focus-within:ring-brand transition-all overflow-hidden group">
+                    <div class="absolute right-3 text-brand pointer-events-none z-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <input type="date" value="${STATE.selectedCashierDate}" onchange="handleCashierDateChange(event)" class="w-full bg-transparent text-white pl-3 pr-9 py-1.5 outline-none text-sm cursor-pointer relative font-mono z-10" style="color-scheme: dark;">
+                </div>
+            `;
+            dynamicContent.appendChild(tableHeader);
+
             const kpiSection = document.createElement('div');
             kpiSection.className = "grid grid-cols-1 md:grid-cols-3 gap-6 mb-8";
             kpiSection.innerHTML = `
@@ -1248,24 +1266,6 @@
                 <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-green-500 shadow-lg"><p class="text-gray-400 text-sm mb-1">متوسط السلة</p><h3 class="text-3xl font-bold text-white">${avgOrderValue} <span class="text-sm text-green-500">DA</span></h3></div>
             `;
             dynamicContent.appendChild(kpiSection);
-
-            const tableHeader = document.createElement('div');
-            tableHeader.className = "flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4";
-            tableHeader.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <h2 class="text-xl font-bold text-white">سجل العمليات</h2>
-                    <span class="live-indicator" title="تحديث مباشر"></span>
-                </div>
-                <div class="relative flex items-center bg-gray-800 border border-gray-600 rounded-lg hover:border-brand focus-within:border-brand focus-within:ring-2 focus-within:ring-brand transition-all overflow-hidden group">
-                    <div class="absolute right-3 text-brand pointer-events-none z-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </div>
-                    <input type="date" value="${STATE.selectedCashierDate}" onchange="handleCashierDateChange(event)" class="w-full bg-transparent text-white pl-4 pr-10 py-2 outline-none text-sm cursor-pointer relative font-mono z-10" style="color-scheme: dark;">
-                </div>
-            `;
-            dynamicContent.appendChild(tableHeader);
 
             // إضافة أزرار الفلترة السريعة (بدون خيار 'الكل')
             const filtersContainer = document.createElement('div');
@@ -1313,7 +1313,7 @@
         function renderMenuEditor(items) {
             dynamicContent.innerHTML = '';
             const header = document.createElement('div');
-            header.className = "flex justify-between items-center mb-6";
+            header.className = "flex justify-between items-center mb-6 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700";
             header.innerHTML = `<h2 class="text-2xl font-bold text-white">إدارة القائمة (Menu Editor)</h2>`;
             dynamicContent.appendChild(header);
 
@@ -1424,8 +1424,8 @@
                 const datePickerBorderClass = filterType === 'custom' ? 'border-brand ring-2 ring-brand' : 'border-gray-600 hover:border-brand focus-within:border-brand focus-within:ring-2 focus-within:ring-brand';
                 
                 dynamicContent.innerHTML += `
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                        <h2 class="text-2xl font-bold text-white flex items-center gap-2">📊 مركز التحليلات</h2>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700 gap-4">
+                        <h2 class="text-2xl font-bold text-white flex items-center gap-2">مركز التحليلات</h2>
                         <div class="flex flex-wrap items-center gap-3">
                             <div class="flex bg-gray-800 p-1 rounded-xl">
                                 <button onclick="renderAnalytics(STATE.analyticsData, 'today')" class="${btnClass('today')}">اليوم</button>
@@ -1448,21 +1448,21 @@
                         <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden hover:border-green-500 transition-colors"><p class="text-gray-400 text-sm font-medium mb-1">متوسط السلة</p><h3 class="text-3xl font-bold text-white tracking-tight">${avgOrder} <span class="text-lg text-green-500 font-normal">DZD</span></h3></div>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80"><h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🍔 نسب المأكولات</h3><div class="relative w-full h-40"><canvas id="foodChart"></canvas></div></div>
-                        <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80"><h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">🥤 نسب المشروبات</h3><div class="relative w-full h-40"><canvas id="drinkChart"></canvas></div></div>
-                        <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg h-80"><h3 class="text-white font-bold mb-4">📈 النشاط الزمني</h3><div class="relative w-full h-64"><canvas id="lineChart"></canvas></div></div>
+                        <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80"><h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">نسب المأكولات</h3><div class="relative w-full h-40"><canvas id="foodChart"></canvas></div></div>
+                        <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80"><h3 class="text-white font-bold mb-4 w-full flex items-center gap-2">نسب المشروبات</h3><div class="relative w-full h-40"><canvas id="drinkChart"></canvas></div></div>
+                        <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg h-80"><h3 class="text-white font-bold mb-4">النشاط الزمني</h3><div class="relative w-full h-64"><canvas id="lineChart"></canvas></div></div>
                     </div>
                 `;
 
-                const createTable = (title, items, icon) => {
+                const createTable = (title, items) => {
                     if (items.length === 0) return `<div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 text-center text-gray-500">لا توجد بيانات ${title}</div>`;
                     const rows = items.map((item, index) => `<tr class="border-b border-gray-700 last:border-0 hover:bg-gray-750 transition"><td class="py-3 pl-4 w-12"><span class="w-6 h-6 flex items-center justify-center bg-brand text-black rounded-full text-xs font-bold shadow">${index + 1}</span></td><td class="py-3 text-gray-200 font-medium">${item[0]}</td><td class="py-3 pr-4 text-right text-gray-400 font-mono">${item[1]}</td></tr>`).join('');
-                    return `<div class="bg-gray-800 rounded-2xl border border-gray-700 shadow-lg overflow-hidden"><div class="p-4 bg-gray-750 border-b border-gray-700 flex items-center gap-2"><span class="text-xl">${icon}</span><h3 class="text-white font-bold">الأكثر مبيعاً (${title})</h3></div><table class="w-full text-left text-sm"><thead class="bg-gray-900 text-gray-400 uppercase text-xs"><tr><th class="py-3 pl-4">#</th><th class="py-3">المنتج</th><th class="py-3 pr-4 text-right">الكمية</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+                    return `<div class="bg-gray-800 rounded-2xl border border-gray-700 shadow-lg overflow-hidden"><div class="p-4 bg-gray-750 border-b border-gray-700 flex items-center gap-2"><h3 class="text-white font-bold">الأكثر مبيعاً (${title})</h3></div><table class="w-full text-left text-sm"><thead class="bg-gray-900 text-gray-400 uppercase text-xs"><tr><th class="py-3 pl-4">#</th><th class="py-3">المنتج</th><th class="py-3 pr-4 text-right">الكمية</th></tr></thead><tbody>${rows}</tbody></table></div>`;
                 };
 
                 const tablesGrid = document.createElement('div');
                 tablesGrid.className = "grid grid-cols-1 md:grid-cols-2 gap-6 pb-10";
-                tablesGrid.innerHTML = createTable('مأكولات', topFoods, '🍔') + createTable('مشروبات', topDrinks, '🥤');
+                tablesGrid.innerHTML = createTable('مأكولات', topFoods) + createTable('مشروبات', topDrinks);
                 dynamicContent.appendChild(tablesGrid);
 
                 const commonOptions = { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } }, borderWidth: 3, layout: { padding: 20 }, borderColor: '#1f2937', hoverOffset: 15, animation: { duration: 1500, easing: 'easeOutQuart' } };
@@ -1492,7 +1492,7 @@
         }
 
         function renderTableView() {
-            dynamicContent.innerHTML = `<div class="flex justify-between items-center mb-8"><div class="flex items-center gap-3"><h2 class="text-2xl font-bold text-white">🔔 نداءات الطاولات</h2><span class="live-indicator" title="تحديث مباشر"></span></div><div class="text-gray-400 text-sm">اضغط على الطاولة الحمراء لإلغاء النداء</div></div>`;
+            dynamicContent.innerHTML = `<div class="flex justify-between items-center mb-8 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700"><div class="flex items-center gap-3"><h2 class="text-2xl font-bold text-white">نداءات الطاولات</h2><span class="live-indicator" title="تحديث مباشر"></span></div><div class="text-gray-400 text-sm">اضغط على الطاولة الحمراء لإلغاء النداء</div></div>`;
             const grid = document.createElement('div');
             grid.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6";
 
