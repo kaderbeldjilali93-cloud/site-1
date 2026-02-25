@@ -104,7 +104,7 @@
             animation: titleGlow 3s infinite ease-in-out;
         }
 
-        /* توهج العنوان الرئيسي */
+        /* تم تخفيف توهج العنوان الرئيسي */
         @keyframes welcomeGlow {
             0%, 100% { text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
             50% { text-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
@@ -730,7 +730,7 @@
             try {
                 const WEBHOOK_URL = "https://n8n.vidsai.site/webhook/c25c8a4a-e633-4ae8-80f0-adece675548b"; 
                 const orderPayload = { 
-                    table: "5",
+                    table: getTableNumber(),
                     items: Object.values(cart).map(i => ({
                         name: i.name[currentLang],
                         qty: i.qty,
