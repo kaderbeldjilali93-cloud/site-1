@@ -263,6 +263,21 @@
     <!-- حاوية التوست -->
     <div id="toast-container" class="fixed bottom-5 left-5 z-[60] flex flex-col gap-3 pointer-events-none"></div>
 
+    <!-- نافذة تأكيد الخروج -->
+    <div id="logout-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
+            <div class="flex items-center gap-3 text-red-500 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <h3 class="text-lg font-bold text-white">تأكيد الخروج</h3>
+            </div>
+            <p class="text-gray-300 mb-6 text-sm leading-relaxed">هل أنت متأكد أنك تريد إغلاق النظام وتسجيل الخروج؟</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeLogoutModal()" class="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition text-sm">إلغاء</button>
+                <button onclick="confirmLogout()" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition text-sm shadow-lg">نعم، خروج</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // العناصر الرئيسية لضمان عدم حدوث ReferenceError
         const sidebar = document.getElementById('sidebar');
@@ -451,6 +466,154 @@
 
         function t(key) {
             return translations[STATE.currentLang][key] || key;
+        }
+
+        // =========================================================
+        // 🔄 إدارة الدخول والمصادقة (Authentication Logic)
+        // =========================================================
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setLanguage(STATE.currentLang);
+            const savedUser = localStorage.getItem(STATE.storageKeys.username);
+            const savedRole = localStorage.getItem(STATE.storageKeys.role);
+            const lastView = localStorage.getItem(STATE.storageKeys.lastView);
+
+            if (savedUser && savedRole && CLIENTS_DB[savedUser]) {
+                authenticateUser(savedUser, CLIENTS_DB[savedUser].links, savedRole);
+                if (savedRole === 'kitchen') {
+                    loadView('kds');
+                } else if (lastView) {
+                    loadView(lastView);
+                } else {
+                    loadView('kds');
+                }
+            }
+        });
+
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('restaurantName').value.trim();
+                const password = document.getElementById('password').value;
+                const clientData = CLIENTS_DB[username];
+                let role = null;
+
+                if (clientData) {
+                    if (password === clientData.adminPass) role = 'admin';
+                    else if (password === clientData.kitchenPass) role = 'kitchen';
+                }
+
+                if (role) {
+                    localStorage.setItem(STATE.storageKeys.username, username);
+                    localStorage.setItem(STATE.storageKeys.role, role);
+                    authenticateUser(username, clientData.links, role);
+                    
+                    if (role === 'kitchen') {
+                        loadView('kds');
+                    } else {
+                        loadView('kds');
+                    }
+                    showToast(t('success_msg'), 'success');
+                } else {
+                    showToast(t('error_msg'), 'error');
+                }
+            });
+        }
+
+        function authenticateUser(username, links, role) {
+            STATE.currentUser = username;
+            STATE.currentLinks = links;
+            STATE.currentRole = role;
+            
+            const tablesBtn = document.getElementById('btn-tables');
+            const dashboardScreen = document.getElementById('dashboard-screen');
+            const loginScreen = document.getElementById('login-screen');
+
+            if (role === 'kitchen') {
+                if(sidebar) {
+                    sidebar.classList.remove('flex');
+                    sidebar.classList.add('hidden');
+                }
+                if(tablesBtn) tablesBtn.style.display = 'none'; 
+            } else {
+                if(sidebar) {
+                    sidebar.classList.remove('hidden');
+                    sidebar.classList.add('flex');
+                }
+                if(tablesBtn) tablesBtn.style.display = 'block';
+                
+                fetchWaiterCalls(); 
+                if (STATE.waiterInterval) clearInterval(STATE.waiterInterval);
+                STATE.waiterInterval = setInterval(fetchWaiterCalls, 5000); 
+            }
+
+            if(loginScreen) loginScreen.style.display = 'none';
+            if(dashboardScreen) {
+                dashboardScreen.classList.remove('hidden');
+                dashboardScreen.style.display = 'flex';
+            }
+        }
+
+        function logout() { 
+            const modal = document.getElementById('logout-modal');
+            if(modal) modal.classList.remove('hidden'); 
+        }
+
+        function closeLogoutModal() { 
+            const modal = document.getElementById('logout-modal');
+            if(modal) modal.classList.add('hidden'); 
+        }
+
+        function confirmLogout() {
+            if (STATE.pollingInterval) clearInterval(STATE.pollingInterval);
+            if (STATE.waiterInterval) clearInterval(STATE.waiterInterval);
+            
+            localStorage.removeItem(STATE.storageKeys.username);
+            localStorage.removeItem(STATE.storageKeys.role);
+            localStorage.removeItem(STATE.storageKeys.lastView);
+            
+            STATE.currentUser = null; 
+            STATE.currentRole = null; 
+            STATE.currentLinks = {};
+            STATE.knownOrders = {}; 
+            STATE.isFirstFetch = true;
+            STATE.activeCalls = [];
+            STATE.activeCallRows = {};
+            
+            closeLogoutModal();
+            
+            const loginScreen = document.getElementById('login-screen');
+            const dashboardScreen = document.getElementById('dashboard-screen');
+            const contentFrame = document.getElementById('content-frame');
+            const dynamicContent = document.getElementById('dynamic-content');
+            
+            if (dashboardScreen) {
+                dashboardScreen.style.display = 'none';
+                dashboardScreen.classList.add('hidden');
+            }
+            if (loginScreen) {
+                loginScreen.style.display = 'flex';
+                loginScreen.classList.remove('hidden');
+            }
+            
+            if (contentFrame) {
+                contentFrame.src = ''; 
+                contentFrame.classList.add('hidden'); 
+            }
+            if (dynamicContent) {
+                dynamicContent.classList.add('hidden');
+                dynamicContent.innerHTML = '';
+            }
+            if (welcomeState) {
+                welcomeState.style.display = 'flex';
+                welcomeState.classList.remove('hidden');
+            }
+            if (loader) loader.classList.add('hidden');
+            
+            document.getElementById('restaurantName').value = ''; 
+            document.getElementById('password').value = '';
+            
+            updateNavStyles('');
         }
 
         // =========================================================
@@ -1007,6 +1170,7 @@
                     const card = document.createElement('div');
 
                     if(tOrders.length === 0) {
+                        // الحالة 1: فارغة - أخضر داكن
                         card.className = "bg-green-900/10 border-2 border-green-800/50 rounded-2xl flex flex-col items-center justify-center h-48 text-green-600/70 transition-all opacity-80";
                         card.innerHTML = `<div class="text-4xl mb-3 opacity-50">🍽️</div><div class="text-lg font-bold text-green-600">${t('table')} ${i}</div><div class="text-xs mt-1 bg-green-900/30 px-3 py-1 rounded-full border border-green-800/50">${t('table_empty')}</div>`;
                     } else {
@@ -1042,6 +1206,7 @@
                 } else {
                     targetOrders.forEach(o => {
                         const card = document.createElement('div');
+                        const hasNew = o.isNew;
                         const s = getStatus(o);
                         const tableStr = o.Table || o.table || o['رقم الطاولة'] || 'سفري';
                         
@@ -1049,7 +1214,7 @@
                             ? `${themeBorder} shadow-[0_0_15px_rgba(100,100,255,0.3)]` 
                             : 'border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]';
 
-                        card.className = `bg-gray-800 border-2 ${borderColorClass} rounded-2xl flex flex-col overflow-hidden ${o.isNew ? 'animate-pulse' : ''} h-full`;
+                        card.className = `bg-gray-800 border-2 ${borderColorClass} rounded-2xl flex flex-col overflow-hidden ${hasNew ? 'animate-pulse' : ''} h-full`;
                         
                         const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
                         const elapsedMins = calculateElapsedMinutes(rawTime);
