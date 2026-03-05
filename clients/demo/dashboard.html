@@ -267,7 +267,7 @@
     <div id="logout-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity">
         <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
             <div class="flex items-center gap-3 text-red-500 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192 3 1.732 3z" /></svg>
                 <h3 class="text-lg font-bold text-white">تأكيد الخروج</h3>
             </div>
             <p class="text-gray-300 mb-6 text-sm leading-relaxed">هل أنت متأكد أنك تريد إغلاق النظام وتسجيل الخروج؟</p>
@@ -896,6 +896,12 @@
             STATE.knownOrders = newKnown;
             STATE.isFirstFetch = false;
             return orders;
+        }
+
+        function updateNavStyles(view) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('bg-brand', 'text-black', 'shadow-lg'));
+            const active = document.getElementById(`btn-${view}`);
+            if (active) active.classList.add('bg-brand', 'text-black', 'shadow-lg');
         }
 
         // =========================================================
@@ -1594,6 +1600,12 @@
                         if (!name || name === 'لا توجد تفاصيل') return;
 
                         const lowerName = name.toLowerCase();
+                        let category = categoryMap[lowerName] || '';
+                        if (!category) {
+                            const foundKey = Object.keys(categoryMap).find(k => lowerName.includes(k) || k.includes(lowerName));
+                            if (foundKey) category = categoryMap[foundKey];
+                        }
+                        
                         const drinkKeywords = ['boissons', 'drinks', 'mushrubat', 'مشروبات', 'عصائر', 'pepsi', 'coca', 'water', 'jus', 'soda', 'gazouz', 'hamoud', 'rouiba', 'ramy'];
                         if (drinkKeywords.some(k => lowerName.includes(k))) drinkCounts[name] = (drinkCounts[name] || 0) + qty;
                         else foodCounts[name] = (foodCounts[name] || 0) + qty;
@@ -1633,9 +1645,9 @@
                         <div class="bg-gray-900 p-6 rounded-2xl border-l-4 border-green-500 shadow-xl"><p class="text-gray-400 text-sm mb-1 uppercase font-bold">${t('avg_cart')}</p><h3 class="text-3xl font-black">${avgOrder} DA</h3></div>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 shadow-lg flex flex-col items-center h-80"><h3 class="text-white font-bold mb-4 w-full">Food Trends</h3><div class="relative w-full h-40"><canvas id="foodChart"></canvas></div></div>
-                        <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 shadow-lg flex flex-col items-center h-80"><h3 class="text-white font-bold mb-4 w-full">Drink Trends</h3><div class="relative w-full h-40"><canvas id="drinkChart"></canvas></div></div>
-                        <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 shadow-lg h-80"><h3 class="text-white font-bold mb-4">Timeline</h3><div class="relative w-full h-64"><canvas id="lineChart"></canvas></div></div>
+                        <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80"><h3 class="text-white font-bold mb-4 w-full">Food Trends</h3><div class="relative w-full h-40"><canvas id="foodChart"></canvas></div></div>
+                        <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col items-center h-80"><h3 class="text-white font-bold mb-4 w-full">Drink Trends</h3><div class="relative w-full h-40"><canvas id="drinkChart"></canvas></div></div>
+                        <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg h-80"><h3 class="text-white font-bold mb-4">Timeline</h3><div class="relative w-full h-64"><canvas id="lineChart"></canvas></div></div>
                     </div>
                 `;
 
@@ -1757,7 +1769,11 @@
             }
             if (STATE.pollingInterval) clearInterval(STATE.pollingInterval);
             localStorage.setItem(STATE.storageKeys.lastView, view);
-            updateNavStyles(view);
+            
+            // Move updateNavStyles call out of loadView directly, call it after functions define it if needed.
+            // But it's defined right here below this function. Let's just make sure it exists.
+            if(typeof updateNavStyles === 'function') updateNavStyles(view);
+            
             if(welcomeState) welcomeState.style.display = 'none';
             if(loader) loader.classList.remove('hidden');
             const content = document.getElementById('dynamic-content');
@@ -1787,6 +1803,12 @@
             } finally { 
                 if(loader) loader.classList.add('hidden'); 
             }
+        }
+        
+        function updateNavStyles(view) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('bg-brand', 'text-black', 'shadow-lg'));
+            const active = document.getElementById(`btn-${view}`);
+            if (active) active.classList.add('bg-brand', 'text-black', 'shadow-lg');
         }
     </script>
 </body>
