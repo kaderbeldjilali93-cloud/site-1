@@ -577,6 +577,31 @@
         // =========================================================
         // 🛠️ Utilities
         // =========================================================
+
+        // دالة ذكية لتحليل التواريخ (Date Parser) تحل مشكلة التواريخ بصيغة DD/MM/YYYY HH:mm
+        function parseCustomDate(dateStr) {
+            if (!dateStr) return new Date(NaN);
+            
+            // 1. محاولة التحليل القياسي أولاً (يعمل مع ISO 8601 وغيرها)
+            let date = new Date(dateStr);
+            if (!isNaN(date.getTime())) return date;
+
+            // 2. التحليل الذكي لصيغة DD/MM/YYYY HH:mm أو DD/MM/YYYY HH:mm:ss
+            if (typeof dateStr === 'string') {
+                const parts = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+                if (parts) {
+                    const day = parseInt(parts[1], 10);
+                    const month = parseInt(parts[2], 10) - 1; // الأشهر في جافاسكريبت تبدأ من 0
+                    const year = parseInt(parts[3], 10);
+                    const hour = parts[4] ? parseInt(parts[4], 10) : 0;
+                    const minute = parts[5] ? parseInt(parts[5], 10) : 0;
+                    const second = parts[6] ? parseInt(parts[6], 10) : 0;
+                    return new Date(year, month, day, hour, minute, second);
+                }
+            }
+            return new Date(NaN);
+        }
+
         function toggleMute() {
             STATE.isMuted = !STATE.isMuted;
             const iconOn = document.getElementById('icon-sound-on');
@@ -628,7 +653,7 @@
             const rawTime = order['Created at'] || order.Time || order.time || order.created_on;
             if (!rawTime) return '--:--';
             try {
-                const date = new Date(rawTime);
+                const date = parseCustomDate(rawTime); // استخدام الدالة الذكية الجديدة
                 if (isNaN(date.getTime())) return rawTime; 
                 return date.toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit', hour12: false });
             } catch (e) { return '--:--'; }
@@ -637,7 +662,7 @@
         function calculateElapsedMinutes(rawTime) {
             if (!rawTime) return 0;
             try {
-                const orderDate = new Date(rawTime);
+                const orderDate = parseCustomDate(rawTime); // استخدام الدالة الذكية الجديدة
                 if (isNaN(orderDate.getTime())) return 0;
                 const diffMins = Math.floor((new Date() - orderDate) / 60000);
                 return diffMins >= 0 ? diffMins : 0;
@@ -661,7 +686,8 @@
         function isOrderFromToday(rawTime) {
             if (!rawTime) return false;
             try {
-                const orderDate = new Date(rawTime);
+                const orderDate = parseCustomDate(rawTime); // استخدام الدالة الذكية الجديدة
+                if (isNaN(orderDate.getTime())) return false;
                 const now = new Date();
                 let businessDayStart = new Date();
                 businessDayStart.setHours(6, 0, 0, 0); 
@@ -673,7 +699,7 @@
         function isOrderFromSelectedDate(rawTime, dateString) {
             if (!rawTime || !dateString) return false;
             try {
-                const orderDate = new Date(rawTime);
+                const orderDate = parseCustomDate(rawTime); // استخدام الدالة الذكية الجديدة
                 if (isNaN(orderDate.getTime())) return false;
 
                 const [year, month, day] = dateString.split('-').map(Number);
@@ -901,7 +927,9 @@
         };
 
         function renderKDS(orders) {
-            let filteredOrders = orders.filter(o => isOrderFromToday(o['Created at'] || o.Time || o.time || o.created_on));
+            // تم تعطيل فلتر التاريخ مؤقتاً لأغراض التجربة حسب طلبك، وبالتالي ستظهر كافة الطلبات
+            let filteredOrders = [...orders]; 
+            
             filteredOrders = calculateDailySequence(filteredOrders);
             filteredOrders = processOrderAlerts(filteredOrders);
 
@@ -1414,7 +1442,7 @@
                 const filteredOrders = orders.filter(o => {
                     const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
                     if (!rawTime) return false;
-                    const t = new Date(rawTime);
+                    const t = parseCustomDate(rawTime); // استخدام الدالة الذكية
                     const now = new Date();
                     if (filterType === 'today') return isOrderFromToday(rawTime);
                     if (filterType === 'custom') return isOrderFromSelectedDate(rawTime, STATE.selectedAnalyticsDate);
@@ -1433,7 +1461,7 @@
                     totalSales += price;
                     const t = order['Created at'] || order.Time;
                     if(t) {
-                        const dateObj = new Date(t);
+                        const dateObj = parseCustomDate(t); // استخدام الدالة الذكية
                         let key = (filterType === 'today' || filterType === 'custom') ? dateObj.getHours() + ":00" : dateObj.getDate() + "/" + (dateObj.getMonth()+1);
                         salesByTime[key] = (salesByTime[key] || 0) + price;
                     }
