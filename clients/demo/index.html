@@ -724,7 +724,7 @@
             btn.disabled = true;
             try {
                 const WH_URL = "https://n8n.vidsai.site/webhook/146e5a16-fe2c-4d4e-8284-4f6900a40931"; 
-                await fetch(WH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ table: '5', type: 'help', lang: currentLang }) });
+                await fetch(WH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ table: getTableNumber(), type: 'help', lang: currentLang }) });
                 btn.classList.replace('text-brand-500', 'text-green-500');
                 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
             } catch (error) { showErrorModal(translations[currentLang].connError); }
