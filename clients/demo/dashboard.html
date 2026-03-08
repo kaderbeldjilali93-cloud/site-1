@@ -247,10 +247,25 @@
                         </span>
                     </button>
 
-                    <!-- زر المنيو -->
-                    <button onclick="loadView('menu')" id="btn-menu" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
-                        <span class="font-medium">تعديل القائمة (Menu)</span>
-                    </button>
+                    <!-- زر المنيو (قائمة منسدلة) -->
+                    <div class="relative">
+                        <button onclick="toggleMenuAccordion()" id="btn-menu-parent" class="nav-btn w-full flex justify-between items-center text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition">
+                            <span class="font-medium">إدارة القائمة (Menu)</span>
+                            <svg id="menu-accordion-icon" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <!-- الخيارات الفرعية (مخفية افتراضياً) -->
+                        <div id="menu-submenu" class="hidden flex-col gap-1 pl-2 pr-6 py-2 mt-1 bg-gray-800/50 rounded-lg border-r-2 border-gray-700">
+                            <button onclick="loadView('menu_quick')" id="btn-menu_quick" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                                التعديل السريع
+                            </button>
+                            <button onclick="loadView('menu_add')" id="btn-menu_add" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                                إضافة طبق
+                            </button>
+                            <button onclick="loadView('menu_promo')" id="btn-menu_promo" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                                إدارة الخصومات
+                            </button>
+                        </div>
+                    </div>
 
                     <!-- زر الإحصائيات -->
                     <button onclick="loadView('analytics')" id="btn-analytics" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
@@ -363,7 +378,9 @@
                 links: {
                     kds: "api_mode",
                     cashier: "api_mode",
-                    menu: "api_mode"
+                    menu_quick: "api_mode",
+                    menu_add: "api_mode",
+                    menu_promo: "api_mode"
                 }
             },
             "burger_king": {
@@ -372,7 +389,9 @@
                 links: {
                     kds: "api_mode", 
                     cashier: "api_mode",
-                    menu: "api_mode"
+                    menu_quick: "api_mode",
+                    menu_add: "api_mode",
+                    menu_promo: "api_mode"
                 }
             }
         };
@@ -577,6 +596,21 @@
         // =========================================================
         // 🛠️ Utilities
         // =========================================================
+
+        // التحكم في قائمة المنيو المنسدلة (Accordion)
+        window.toggleMenuAccordion = function() {
+            const submenu = document.getElementById('menu-submenu');
+            const icon = document.getElementById('menu-accordion-icon');
+            if (submenu.classList.contains('hidden')) {
+                submenu.classList.remove('hidden');
+                submenu.classList.add('flex');
+                icon.classList.add('rotate-180');
+            } else {
+                submenu.classList.add('hidden');
+                submenu.classList.remove('flex');
+                icon.classList.remove('rotate-180');
+            }
+        };
 
         // دالة ذكية لتحليل التواريخ (Date Parser) تحل مشكلة التواريخ بصيغة DD/MM/YYYY HH:mm
         function parseCustomDate(dateStr) {
@@ -813,6 +847,7 @@
             }
         }
 
+        // دالة التحديث العامة للوجبات
         async function updateMenuItem(rowId, updateData) {
             try {
                 await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/${rowId}/?user_field_names=true`, {
@@ -821,7 +856,15 @@
                     body: JSON.stringify(updateData)
                 });
                 const data = await fetchMenu();
-                renderMenuEditor(data);
+                
+                // توجيه التحديث بناءً على الشاشة المفتوحة حالياً
+                const currentView = localStorage.getItem(STATE.storageKeys.lastView);
+                if (currentView === 'menu_promo') {
+                    renderPromoEditor(data);
+                } else {
+                    renderMenuEditor(data);
+                }
+                
                 showToast("تم تحديث العنصر بنجاح ✅", "success");
             } catch (error) {
                 console.warn("API Error:", error.message);
@@ -1395,11 +1438,11 @@
             dynamicContent.innerHTML = '';
             const header = document.createElement('div');
             header.className = "flex justify-between items-center mb-6 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700";
-            header.innerHTML = `<h2 class="text-2xl font-bold text-white">إدارة القائمة (Menu Editor)</h2>`;
+            header.innerHTML = `<h2 class="text-2xl font-bold text-white">التعديل السريع للقائمة</h2>`;
             dynamicContent.appendChild(header);
 
             const grid = document.createElement('div');
-            grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6";
+            grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-10";
 
             items.forEach(item => {
                 const name = item.Name || item.name || "بدون اسم";
@@ -1417,9 +1460,72 @@
                 card.innerHTML = `
                     <div class="h-40 overflow-hidden relative"><img src="${imgUrl}" class="w-full h-full object-cover"><span class="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">${category}</span></div>
                     <div class="p-4 flex-1 flex flex-col gap-4">
-                        <div><h3 class="text-lg font-bold text-white">${name}</h3></div>
-                        <div><label class="text-xs text-gray-400 block mb-1">السعر (DA)</label><input type="number" id="price-${item.id}" value="${price}" class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none"></div>
-                        <div class="flex items-center justify-between"><button id="toggle-${item.id}" onclick="toggleAvailability(this)" data-status="${isAvailable ? 'متوفر' : 'غير متوفر'}" class="text-xs px-3 py-2 rounded text-white transition ${btnClass}">${btnText}</button><button id="btn-save-${item.id}" onclick="saveMenuItem(${item.id})" class="bg-brand hover:bg-brand-dark text-black font-bold px-4 py-2 rounded text-sm transition">حفظ</button></div>
+                        <div><h3 class="text-lg font-bold text-white truncate" title="${name}">${name}</h3></div>
+                        <div><label class="text-xs text-gray-400 block mb-1">السعر (DA)</label><input type="number" id="price-${item.id}" value="${price}" class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition"></div>
+                        <div class="flex items-center justify-between mt-auto pt-2"><button id="toggle-${item.id}" onclick="toggleAvailability(this)" data-status="${isAvailable ? 'متوفر' : 'غير متوفر'}" class="text-xs px-3 py-2.5 rounded text-white transition ${btnClass}">${btnText}</button><button id="btn-save-${item.id}" onclick="saveMenuItem(${item.id})" class="bg-brand hover:bg-brand-dark text-black font-bold px-4 py-2.5 rounded text-sm transition shadow-md">حفظ السعر</button></div>
+                    </div>`;
+                grid.appendChild(card);
+            });
+            dynamicContent.appendChild(grid);
+        }
+
+        // دالة إنشاء وعرض شاشة الخصومات
+        function renderPromoEditor(items) {
+            dynamicContent.innerHTML = '';
+            const header = document.createElement('div');
+            header.className = "flex justify-between items-center mb-6 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700";
+            header.innerHTML = `<h2 class="text-2xl font-bold text-white">إدارة الخصومات (Promotions)</h2>`;
+            dynamicContent.appendChild(header);
+
+            const grid = document.createElement('div');
+            grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-10";
+
+            items.forEach(item => {
+                const name = item.Name || item.name || "بدون اسم";
+                const price = parseFloat(item.Price || item.price || 0);
+                const promoPrice = parseFloat(item.PromoPrice || item.promoprice);
+                const imgUrl = (item.image && item.image.length > 0) ? item.image[0].url : "https://placehold.co/400x300/374151/FFFFFF?text=No+Image";
+                const category = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'عام');
+                
+                // حساب النسبة المئوية للخصم إن وجد
+                let hasPromo = !isNaN(promoPrice) && promoPrice > 0 && promoPrice < price;
+                let discountPercent = 0;
+                if (hasPromo) {
+                    discountPercent = Math.round(((price - promoPrice) / price) * 100);
+                }
+
+                const card = document.createElement('div');
+                card.className = `bg-gray-800 border ${hasPromo ? 'border-brand shadow-[0_0_15px_rgba(255,153,0,0.2)]' : 'border-gray-700'} rounded-xl overflow-hidden shadow-lg flex flex-col transition-all`;
+                
+                let badgeHtml = hasPromo ? `<span class="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg animate-pulse">-${discountPercent}% 🔥</span>` : '';
+
+                card.innerHTML = `
+                    <div class="h-40 overflow-hidden relative">
+                        <img src="${imgUrl}" class="w-full h-full object-cover">
+                        <span class="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">${category}</span>
+                        ${badgeHtml}
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col gap-3">
+                        <div><h3 class="text-lg font-bold text-white truncate" title="${name}">${name}</h3></div>
+                        
+                        <div class="flex justify-between items-center bg-gray-900 px-3 py-2 rounded border border-gray-700">
+                            <span class="text-xs text-gray-400">السعر الأصلي</span>
+                            <span class="text-sm font-bold text-gray-200 ${hasPromo ? 'line-through decoration-red-500 opacity-60' : ''}">${price} DA</span>
+                        </div>
+
+                        <div>
+                            <label class="text-xs text-brand block mb-1 font-bold">السعر الترويجي (DA)</label>
+                            <input type="number" id="promo-${item.id}" value="${hasPromo ? promoPrice : ''}" placeholder="أدخل سعر العرض..." class="w-full bg-gray-900 border border-brand text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition">
+                        </div>
+
+                        <div class="flex items-center gap-2 mt-auto pt-2">
+                            <button onclick="savePromoPrice(${item.id})" class="flex-1 bg-brand hover:bg-brand-dark text-black font-bold py-2.5 rounded transition shadow-md flex justify-center items-center gap-2">
+                                <span>حفظ العرض</span>
+                            </button>
+                            <button onclick="clearPromoPrice(${item.id})" class="bg-red-600 hover:bg-red-700 text-white p-2.5 rounded transition" title="إلغاء العرض">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
                     </div>`;
                 grid.appendChild(card);
             });
@@ -1610,6 +1716,25 @@
             updateMenuItem(id, { "Price": price, "Availability": status });
         };
 
+        // حفظ السعر الترويجي
+        window.savePromoPrice = function(id) {
+            const promoInput = document.getElementById(`promo-${id}`).value;
+            const promoPrice = parseFloat(promoInput);
+            if (isNaN(promoPrice) || promoPrice <= 0) {
+                showToast("الرجاء إدخال سعر ترويجي صحيح أكبر من صفر.", "error");
+                return;
+            }
+            updateMenuItem(id, { "PromoPrice": promoPrice });
+        };
+
+        // إلغاء مسح السعر الترويجي
+        window.clearPromoPrice = function(id) {
+            const promoInput = document.getElementById(`promo-${id}`);
+            if(promoInput) promoInput.value = '';
+            // تحديث السعر الترويجي إلى Null لإلغاء العرض
+            updateMenuItem(id, { "PromoPrice": null }); 
+        };
+
         async function loadView(viewType) {
             if (window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.add('translate-x-full');
@@ -1646,10 +1771,19 @@
                 await runCashier();
                 STATE.pollingInterval = setInterval(runCashier, 10000);
             }
-            else if (viewType === 'menu') {
+            else if (viewType === 'menu_quick') {
                 try { const data = await fetchMenu(); renderMenuEditor(data); } 
                 catch (e) { console.warn(e); dynamicContent.innerHTML = `<div class="text-red-400 p-10 text-center">خطأ في تحميل القائمة.</div>`; } 
                 finally { loader.style.display = 'none'; }
+            }
+            else if (viewType === 'menu_promo') {
+                try { const data = await fetchMenu(); renderPromoEditor(data); } 
+                catch (e) { console.warn(e); dynamicContent.innerHTML = `<div class="text-red-400 p-10 text-center">خطأ في تحميل بيانات الخصومات.</div>`; } 
+                finally { loader.style.display = 'none'; }
+            }
+            else if (viewType === 'menu_add') {
+                dynamicContent.innerHTML = `<div class='flex items-center justify-center h-full text-gray-500 text-2xl font-bold'>شاشة قيد التطوير 🚧</div>`;
+                loader.style.display = 'none';
             }
             else if (viewType === 'analytics') {
                 try {
@@ -1673,14 +1807,44 @@
         }
 
         function updateNavStyles(activeView) {
+            // إعادة ضبط الأزرار الرئيسية
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-brand', 'text-black');
+                btn.classList.remove('bg-brand', 'text-black', 'text-white');
                 btn.classList.add('text-gray-300', 'hover:bg-gray-800');
             });
+            // إعادة ضبط الأزرار الفرعية
+            document.querySelectorAll('.sub-nav-btn').forEach(btn => {
+                btn.classList.remove('text-brand', 'bg-gray-700', 'font-bold');
+                btn.classList.add('text-gray-400', 'hover:text-white', 'hover:bg-gray-700');
+            });
+
             const activeBtn = document.getElementById(`btn-${activeView}`);
-            if(activeBtn) {
-                activeBtn.classList.remove('text-gray-300', 'hover:bg-gray-800');
-                activeBtn.classList.add('bg-brand', 'text-black');
+            if (activeBtn) {
+                if (activeBtn.classList.contains('sub-nav-btn')) {
+                    // تفعيل الزر الفرعي
+                    activeBtn.classList.remove('text-gray-400', 'hover:text-white', 'hover:bg-gray-700');
+                    activeBtn.classList.add('text-brand', 'bg-gray-700', 'font-bold');
+                    
+                    // تمييز الزر الأب (تعديل القائمة)
+                    const parentBtn = document.getElementById('btn-menu-parent');
+                    if (parentBtn) {
+                        parentBtn.classList.remove('text-gray-300', 'hover:bg-gray-800');
+                        parentBtn.classList.add('text-white');
+                        
+                        // التأكد من أن القائمة المنسدلة مفتوحة عند إعادة التحميل
+                        const submenu = document.getElementById('menu-submenu');
+                        const icon = document.getElementById('menu-accordion-icon');
+                        if (submenu && submenu.classList.contains('hidden')) {
+                            submenu.classList.remove('hidden');
+                            submenu.classList.add('flex');
+                            icon.classList.add('rotate-180');
+                        }
+                    }
+                } else {
+                    // تفعيل الزر الرئيسي العادي
+                    activeBtn.classList.remove('text-gray-300', 'hover:bg-gray-800');
+                    activeBtn.classList.add('bg-brand', 'text-black');
+                }
             }
         }
     </script>
