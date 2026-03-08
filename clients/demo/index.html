@@ -475,6 +475,11 @@
                         let modelField = item["Model 3D"] || item["Model3D"] || item["model_3d"];
                         let modelUrl = (Array.isArray(modelField) && modelField.length > 0) ? modelField[0].url : (typeof modelField === 'string' ? modelField : null);
 
+                        const price = parseFloat(item.Price) || 0;
+                        const promo_price = item.PromoPrice ? parseFloat(item.PromoPrice) : null;
+                        const hasPromo = promo_price !== null && promo_price < price;
+                        const finalPrice = hasPromo ? promo_price : price;
+
                         return {
                             id: item.id,
                             name: {
@@ -482,7 +487,10 @@
                                 fr: item.Name_FR || item.name_fr || item.Name,
                                 en: item.Name_EN || item.name_en || item.Name
                             },
-                            price: parseFloat(item.Price) || 0,
+                            price: price,
+                            promo_price: promo_price,
+                            hasPromo: hasPromo,
+                            finalPrice: finalPrice,
                             category: category,
                             sub_category: subCat,
                             img: imgUrl,
@@ -499,16 +507,21 @@
             }
         }
 
-        // 2. دالة توليد بطاقة المنتج
+        // 2. دالة توليد بطاقة المنتج مع دعم الأسعار الترويجية
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             const localizedName = p.name[currentLang];
             const localizedDesc = p.desc[currentLang];
             
+            const discount = p.hasPromo ? Math.round(((p.price - p.promo_price) / p.price) * 100) : 0;
+            const promoBadge = p.hasPromo ? `<div class="absolute top-2 right-2 bg-red-600 text-white px-2 py-0.5 rounded-lg text-xs font-black shadow-[0_0_10px_rgba(220,38,38,0.5)] z-30 transform -rotate-3 border border-red-400/50">-${discount}% 🔥</div>` : '';
+
             let mediaContent = p.model3d 
-                ? `<div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
+                ? `${promoBadge}
+                   <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
                    <model-viewer src="${p.model3d}" ar ar-modes="webxr scene-viewer quick-look" environment-image="neutral" auto-rotate camera-controls class="w-full h-full object-cover relative z-10" alt="${localizedName}"></model-viewer>`
-                : `<img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 group-hover:scale-105 transition duration-500 relative z-10" alt="${localizedName}">`;
+                : `${promoBadge}
+                   <img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 group-hover:scale-105 transition duration-500 relative z-10" alt="${localizedName}">`;
 
             const arButtonHTML = p.model3d 
                 ? `<button onclick="const mv = this.closest('.glass-3d').querySelector('model-viewer'); if(mv) mv.activateAR();" class="w-[85%] mx-auto bg-dark-800 border border-brand-500/30 text-brand-500 py-1.5 rounded-full text-xs font-bold mb-3 flex justify-center items-center gap-2 active:scale-95 transition-transform">
@@ -535,9 +548,21 @@
             </div>`;
         }
 
-        // أداة التحكم الذكية للإضافة إلى السلة
+        // أداة التحكم الذكية للإضافة إلى السلة مع دعم السعر الترويجي
         function generateControlsHTML(p, qty) {
-            const priceVal = p.price === 0 ? "Gratuit" : `${p.price} <span class="text-[10px] font-normal opacity-70">${translations[currentLang].currency}</span>`;
+            let priceVal = "";
+            if (p.finalPrice === 0) {
+                priceVal = "Gratuit";
+            } else if (p.hasPromo) {
+                priceVal = `
+                    <div class="flex flex-col items-start leading-none gap-0.5">
+                        <span class="text-[9px] text-dark-900/60 line-through font-bold">${p.price} ${translations[currentLang].currency}</span>
+                        <span>${p.promo_price} <span class="text-[9px] font-normal opacity-70">${translations[currentLang].currency}</span></span>
+                    </div>
+                `;
+            } else {
+                priceVal = `${p.price} <span class="text-[10px] font-normal opacity-70">${translations[currentLang].currency}</span>`;
+            }
 
             if (qty > 0) {
                 return `
@@ -549,7 +574,7 @@
             } else {
                 return `
                 <button onclick="updateCart(${p.id}, 1)" class="w-[85%] mx-auto bg-brand-500 text-dark-950 py-2.5 px-5 rounded-full font-bold flex justify-between items-center shadow-lg active:scale-95 transition-transform">
-                    <span class="text-base leading-none text-dark-950">${priceVal}</span>
+                    <span class="text-base leading-none text-dark-950 flex items-center">${priceVal}</span>
                     <span class="font-black text-2xl leading-none mb-1 text-dark-950">+</span>
                 </button>`;
             }
@@ -623,9 +648,10 @@
             if(navigator.vibrate) navigator.vibrate(40);
         }
 
+        // تحديث الحسابات لتعتمد على السعر النهائي (finalPrice)
         function updateCartBar() {
             const totalQty = Object.values(cart).reduce((a, b) => a + b.qty, 0);
-            const totalPrice = Object.values(cart).reduce((a, b) => a + (b.price * b.qty), 0);
+            const totalPrice = Object.values(cart).reduce((a, b) => a + (b.finalPrice * b.qty), 0);
             document.getElementById('total-count').innerText = totalQty;
             const formattedPrice = `${totalPrice} ${translations[currentLang].currency}`;
             document.getElementById('total-price').innerText = formattedPrice;
@@ -665,7 +691,7 @@
                                 <img src="${p.img}" class="w-8 h-8 rounded-lg object-cover">
                                 <div class="flex-1 min-w-0 text-right">
                                     <p class="text-white text-[9px] font-bold truncate">${p.name[currentLang]}</p>
-                                    <p class="text-brand-500 text-[9px] font-bold">${p.price} ${translations[currentLang].currency}</p>
+                                    <p class="text-brand-500 text-[9px] font-bold">${p.finalPrice} ${translations[currentLang].currency}</p>
                                 </div>
                                 <button onclick="updateCart(${p.id}, 1)" class="w-6 h-6 bg-brand-500 text-dark-950 rounded-full flex items-center justify-center font-black text-lg">+</button>
                             </div>`;
@@ -690,7 +716,7 @@
                             <span class="font-medium text-gray-200">${item.name[currentLang]}</span>
                         </div>
                         <div class="flex items-center gap-3">
-                             <span class="font-bold text-brand-500">${item.price === 0 ? 'Free' : (item.price * item.qty) + ' ' + translations[currentLang].currency}</span>
+                             <span class="font-bold text-brand-500">${item.finalPrice === 0 ? 'Free' : (item.finalPrice * item.qty) + ' ' + translations[currentLang].currency}</span>
                              <button onclick="removeFromCart(${item.id})" class="text-red-400 text-xs px-2 py-1 bg-red-500/10 rounded hover:bg-red-500/30 transition">✕</button>
                         </div>
                     </div>`;
@@ -737,7 +763,8 @@
             const originalText = btn.innerHTML;
             btn.innerHTML = translations[currentLang].contactKitchen;
             btn.disabled = true;
-            const totalPrice = Object.values(cart).reduce((a, b) => a + (b.price * b.qty), 0);
+            // استخدام finalPrice لحساب المجموع
+            const totalPrice = Object.values(cart).reduce((a, b) => a + (b.finalPrice * b.qty), 0);
             try {
                 const WEBHOOK_URL = "https://n8n.vidsai.site/webhook/c25c8a4a-e633-4ae8-80f0-adece675548b"; 
                 const orderPayload = { 
@@ -745,7 +772,8 @@
                     items: Object.values(cart).map(i => ({
                         name: i.name[currentLang],
                         qty: i.qty,
-                        price: i.price
+                        // إرسال السعر النهائي لضمان الفوترة الدقيقة في KDS
+                        price: i.finalPrice
                     })),
                     total: totalPrice,
                     lang: currentLang 
