@@ -242,7 +242,7 @@
         </div>
 
         <!-- 3. المنتجات (عرض في صفحة واحدة - ديناميكي) -->
-        <div id="dynamic-menu-container" class="px-3 space-y-12 pb-8 min-h-[500px]"></div>
+        <div id="dynamic-menu-container" class="px-4 space-y-12 pb-8 min-h-[500px]"></div>
 
     </div>
 
@@ -507,14 +507,14 @@
             }
         }
 
-        // 2. دالة توليد بطاقة المنتج مع دعم الأسعار الترويجية
+        // 2. دالة توليد بطاقة المنتج مع دعم الأسعار الترويجية والتخطيط العمودي الأنيق
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             const localizedName = p.name[currentLang];
             const localizedDesc = p.desc[currentLang];
             
             const discount = p.hasPromo ? Math.round(((p.price - p.promo_price) / p.price) * 100) : 0;
-            const promoBadge = p.hasPromo ? `<div class="absolute top-2 right-2 bg-red-600 text-white px-2 py-0.5 rounded-lg text-xs font-black shadow-[0_0_10px_rgba(220,38,38,0.5)] z-30 transform -rotate-3 border border-red-400/50">-${discount}% 🔥</div>` : '';
+            const promoBadge = p.hasPromo ? `<div class="absolute top-3 right-3 bg-red-600 text-white px-2 py-0.5 rounded-lg text-sm font-black shadow-[0_0_10px_rgba(220,38,38,0.5)] z-30 transform -rotate-3 border border-red-400/50">-${discount}% 🔥</div>` : '';
 
             let mediaContent = p.model3d 
                 ? `${promoBadge}
@@ -530,16 +530,16 @@
                 : '';
 
             return `
-            <div class="glass-3d rounded-2xl overflow-hidden reveal-on-scroll h-full flex flex-col relative group">
-                <div class="pt-4 px-3 pb-2 text-center relative z-20">
-                    <h3 class="font-bold text-gray-100 text-sm mb-1 leading-tight tracking-wide">${localizedName}</h3>
-                    <p class="text-[10px] text-gray-400 line-clamp-2 leading-relaxed font-light">${localizedDesc}</p>
+            <div class="glass-3d rounded-3xl overflow-hidden reveal-on-scroll w-full flex flex-col relative group">
+                <div class="pt-5 px-4 pb-3 text-center relative z-20">
+                    <h3 class="font-bold text-gray-100 text-lg mb-1.5 leading-tight tracking-wide">${localizedName}</h3>
+                    <p class="text-xs text-gray-300 leading-relaxed font-light">${localizedDesc}</p>
                 </div>
-                <div class="h-48 w-full relative bg-gray-800 flex items-center justify-center overflow-hidden">
+                <div class="h-64 w-full relative bg-gray-800 flex items-center justify-center overflow-hidden">
                     ${mediaContent}
                     <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-60 pointer-events-none z-10"></div>
                 </div>
-                <div class="p-3 pt-3 flex flex-col justify-center items-center relative z-20 w-full mt-auto">
+                <div class="p-4 pt-4 flex flex-col justify-center items-center relative z-20 w-full mt-auto">
                     ${arButtonHTML}
                     <div id="controls-${p.id}" class="w-full flex items-center justify-center">
                         ${generateControlsHTML(p, qty)}
@@ -548,7 +548,7 @@
             </div>`;
         }
 
-        // أداة التحكم الذكية للإضافة إلى السلة مع دعم السعر الترويجي
+        // أداة التحكم الذكية للإضافة إلى السلة مع دعم السعر الترويجي والتصميم المبسط
         function generateControlsHTML(p, qty) {
             let priceVal = "";
             if (p.finalPrice === 0) {
@@ -556,12 +556,12 @@
             } else if (p.hasPromo) {
                 priceVal = `
                     <div class="flex flex-col items-start leading-none gap-0.5">
-                        <span class="text-[9px] text-dark-900/60 line-through font-bold">${p.price} ${translations[currentLang].currency}</span>
-                        <span>${p.promo_price} <span class="text-[9px] font-normal opacity-70">${translations[currentLang].currency}</span></span>
+                        <span class="text-xs text-dark-900/60 line-through decoration-red-600 font-bold">${p.price} ${translations[currentLang].currency}</span>
+                        <span class="text-lg font-black">${p.promo_price} <span class="text-xs font-normal opacity-70">${translations[currentLang].currency}</span></span>
                     </div>
                 `;
             } else {
-                priceVal = `${p.price} <span class="text-[10px] font-normal opacity-70">${translations[currentLang].currency}</span>`;
+                priceVal = `${p.price} <span class="text-xs font-normal opacity-70">${translations[currentLang].currency}</span>`;
             }
 
             if (qty > 0) {
@@ -574,7 +574,7 @@
             } else {
                 return `
                 <button onclick="updateCart(${p.id}, 1)" class="w-[85%] mx-auto bg-brand-500 text-dark-950 py-2.5 px-5 rounded-full font-bold flex justify-between items-center shadow-lg active:scale-95 transition-transform">
-                    <span class="text-base leading-none text-dark-950 flex items-center">${priceVal}</span>
+                    <span class="text-lg leading-none text-dark-950 flex items-center font-black">${priceVal}</span>
                     <span class="font-black text-2xl leading-none mb-1 text-dark-950">+</span>
                 </button>`;
             }
@@ -594,10 +594,13 @@
                 if (catProducts.length === 0) return;
                 const section = document.createElement('section');
                 section.id = `section-${cat.id}`;
-                section.className = "scroll-mt-44 text-center mb-4";
+                section.className = "scroll-mt-44 text-center mb-6";
                 section.innerHTML = `<h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim mb-4">${cat.title}</h2>`;
+                
+                // تخطيط عمود واحد (Single Column Layout)
                 const grid = document.createElement('div');
-                grid.className = "grid grid-cols-2 gap-3";
+                grid.className = "flex flex-col gap-6";
+                
                 if (cat.subSections) {
                     cat.subSections.forEach(sub => {
                         const subProducts = catProducts.filter(p => p.sub_category === sub.id);
@@ -763,7 +766,6 @@
             const originalText = btn.innerHTML;
             btn.innerHTML = translations[currentLang].contactKitchen;
             btn.disabled = true;
-            // استخدام finalPrice لحساب المجموع
             const totalPrice = Object.values(cart).reduce((a, b) => a + (b.finalPrice * b.qty), 0);
             try {
                 const WEBHOOK_URL = "https://n8n.vidsai.site/webhook/c25c8a4a-e633-4ae8-80f0-adece675548b"; 
