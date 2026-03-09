@@ -351,7 +351,7 @@
                 restaurantNamePrefix: "Restaurant",
                 restaurantNameSuffix: "Luxe",
                 callWaiter: "Appeler Serveur",
-                viewOnTable: "Voir sur votre table",
+                viewOnTable: "Voir sur table",
                 add: "Ajouter",
                 cartTitle: "Votre Panier",
                 total: "Total",
@@ -376,7 +376,7 @@
                 restaurantNamePrefix: "Restaurant",
                 restaurantNameSuffix: "Luxury",
                 callWaiter: "Call Waiter",
-                viewOnTable: "View on your table",
+                viewOnTable: "View on table",
                 add: "Add",
                 cartTitle: "Your Cart",
                 total: "Total",
@@ -507,7 +507,7 @@
             }
         }
 
-        // 2. هندسة بطاقة المنتج (تصميم طولي أنيق مع تقييد الـ 3D)
+        // 2. هندسة بطاقة المنتج (Immersive Portrait Card)
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             const localizedName = p.name[currentLang];
@@ -515,54 +515,14 @@
             
             const discount = p.hasPromo ? Math.round(((p.price - p.promo_price) / p.price) * 100) : 0;
             
-            // شريط الخصم المائل (موضوع على البطاقة الكبيرة الخارجية)
-            const promoBadge = p.hasPromo 
-                ? `<div class="absolute top-6 -left-10 -rotate-45 w-40 text-center bg-red-700 text-white py-1 text-xs font-bold z-40 shadow-[0_2px_10px_rgba(0,0,0,0.5)] border-y border-red-500/50">
-                        ${translations[currentLang].discount} ${discount}%
-                   </div>` 
-                : '';
-
-            // المربع الداخلي للصورة / 3D (الارتفاع h-56 أصغر ليوازن البطاقة الطولية)
-            let mediaContent = p.model3d 
-                ? `<div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
-                   <model-viewer src="${p.model3d}" ar ar-modes="webxr scene-viewer quick-look" environment-image="neutral" auto-rotate camera-controls class="w-full h-full object-cover relative z-10" alt="${localizedName}"></model-viewer>`
-                : `<img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 transition duration-700 relative z-10" alt="${localizedName}">`;
-
-            // بطاقة رئيسية تأخذ شكلاً طولياً واضحاً (Portrait)
-            return `
-            <div class="glass-3d rounded-3xl p-5 pb-6 min-h-[440px] w-full max-w-sm mx-auto flex flex-col relative group border border-white/5 reveal-on-scroll overflow-hidden">
-                ${promoBadge}
-                
-                <!-- 1. قسم النصوص (الأعلى) -->
-                <div class="text-center mb-5 relative z-20">
-                    <h3 class="font-bold text-brand-500 text-2xl mb-1.5 leading-tight tracking-wide drop-shadow-md" style="font-family: inherit;">${localizedName}</h3>
-                    <p class="text-sm text-gray-300 leading-relaxed font-light">${localizedDesc}</p>
-                </div>
-                
-                <!-- 2. البطاقة الداخلية للصورة (الوسط - أصغر ومحددة) -->
-                <div class="h-56 w-full relative bg-dark-900/50 rounded-2xl border border-white/5 flex items-center justify-center overflow-hidden mb-6 shadow-inner">
-                    ${mediaContent}
-                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-50 pointer-events-none z-10"></div>
-                </div>
-                
-                <!-- 3. قسم الأزرار والتحكم (الأسفل) -->
-                <div class="mt-auto w-full">
-                    <div id="controls-${p.id}" class="w-full">
-                        ${generateControlsHTML(p, qty)}
-                    </div>
-                </div>
-            </div>`;
-        }
-
-        // أداة الإضافة والتحكم بالكمية (السعر يمين، وزر الـ AR بجانب الإضافة في خط واحد)
-        function generateControlsHTML(p, qty) {
+            // تجهيز السعر للعرض تحت العنوان مباشرة
             let priceVal = "";
             if (p.finalPrice === 0) {
                 priceVal = `<span class="text-xl font-black text-brand-500 whitespace-nowrap">Gratuit</span>`;
             } else if (p.hasPromo) {
                 priceVal = `
-                    <div class="flex flex-col items-start leading-none gap-0.5">
-                        <span class="text-[10px] text-red-400/70 line-through font-bold">${p.price} ${translations[currentLang].currency}</span>
+                    <div class="flex items-center justify-center gap-2">
+                        <span class="text-sm text-red-400/70 line-through font-bold">${p.price}</span>
                         <span class="text-xl font-black text-brand-500 whitespace-nowrap">${p.promo_price} <span class="text-[10px] font-normal opacity-70">${translations[currentLang].currency}</span></span>
                     </div>
                 `;
@@ -570,40 +530,76 @@
                 priceVal = `<span class="text-xl font-black text-brand-500 whitespace-nowrap">${p.price} <span class="text-[10px] font-normal opacity-70">${translations[currentLang].currency}</span></span>`;
             }
 
-            // زر الواقع المعزز (مفرغ مع نص وأيقونة، يتناسب في خط واحد)
+            // شريط الخصم المائل (موضوع على البطاقة الكبيرة الخارجية)
+            const promoBadge = p.hasPromo 
+                ? `<div class="absolute top-6 -left-10 -rotate-45 w-40 text-center bg-red-700 text-white py-1 text-xs font-bold z-40 shadow-[0_2px_10px_rgba(0,0,0,0.5)] border-y border-red-500/50">
+                        ${translations[currentLang].discount} ${discount}%
+                   </div>` 
+                : '';
+
+            // المربع الداخلي للصورة / 3D (flex-1 min-h-[250px] لتمدد الصورة)
+            let mediaContent = p.model3d 
+                ? `<div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
+                   <model-viewer src="${p.model3d}" ar ar-modes="webxr scene-viewer quick-look" environment-image="neutral" auto-rotate camera-controls class="w-full h-full object-cover relative z-10" alt="${localizedName}"></model-viewer>`
+                : `<img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 transition duration-700 relative z-10" alt="${localizedName}">`;
+
+            // البطاقة الغامرة (min-h-[70vh])
+            return `
+            <div class="glass-3d rounded-3xl p-5 pb-6 min-h-[70vh] w-full max-w-sm mx-auto flex flex-col relative group border border-white/5 reveal-on-scroll overflow-hidden">
+                ${promoBadge}
+                
+                <!-- 1. قسم النصوص والسعر (الأعلى) -->
+                <div class="text-center mb-5 relative z-20 flex-shrink-0">
+                    <h3 class="font-bold text-brand-500 text-3xl mb-2 leading-tight tracking-wide drop-shadow-md" style="font-family: inherit;">${localizedName}</h3>
+                    <div class="mb-3 flex justify-center w-full">${priceVal}</div>
+                    <p class="text-sm text-gray-300 leading-relaxed font-light">${localizedDesc}</p>
+                </div>
+                
+                <!-- 2. البطاقة الداخلية للصورة (تمدد لملء الفراغ) -->
+                <div class="flex-1 min-h-[250px] w-full relative bg-dark-900/50 rounded-2xl border border-white/5 flex items-center justify-center overflow-hidden mb-6 shadow-inner">
+                    ${mediaContent}
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-50 pointer-events-none z-10"></div>
+                </div>
+                
+                <!-- 3. قسم الأزرار (الأسفل) -->
+                <div class="w-full pt-2 flex-shrink-0">
+                    <div id="controls-${p.id}" class="w-full">
+                        ${generateControlsHTML(p, qty)}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        // أداة التحكم (تُرجع أزرار الإضافة و الـ AR متجاورين بعرض متساوي)
+        function generateControlsHTML(p, qty) {
+            
             const arButtonHTML = p.model3d 
-                ? `<button onclick="const card = this.closest('.glass-3d'); if(card){ const mv = card.querySelector('model-viewer'); if(mv) mv.activateAR(); }" class="h-11 flex-1 bg-transparent border border-brand-500 text-brand-500 rounded-full flex justify-center items-center gap-1 active:scale-95 transition-transform hover:bg-brand-500/10 px-2 overflow-hidden" title="${translations[currentLang].viewOnTable}">
-                        <span class="text-base leading-none flex-shrink-0">👁️</span>
-                        <span class="text-[10px] sm:text-[11px] font-bold whitespace-nowrap truncate">${translations[currentLang].viewOnTable}</span>
+                ? `<button onclick="const card = this.closest('.glass-3d'); if(card){ const mv = card.querySelector('model-viewer'); if(mv) mv.activateAR(); }" class="flex-1 h-12 bg-transparent border border-brand-500 text-brand-500 rounded-full flex justify-center items-center gap-1.5 active:scale-95 transition-transform hover:bg-brand-500/10 px-2 overflow-hidden" title="${translations[currentLang].viewOnTable}">
+                        <span class="text-lg leading-none flex-shrink-0">👁️</span>
+                        <span class="text-[11px] sm:text-xs font-bold whitespace-nowrap truncate">${translations[currentLang].viewOnTable}</span>
                    </button>` 
                 : '';
 
             let qtyControls = "";
             if (qty > 0) {
                 qtyControls = `
-                <div class="flex-1 max-w-[110px] flex justify-between items-center bg-white/10 rounded-full p-1 border border-brand-500/30 h-11">
-                    <button onclick="updateCart(${p.id}, -1)" class="w-9 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition text-lg shadow-inner">-</button>
-                    <span class="font-black text-sm flex-1 text-center text-white">${qty}</span>
-                    <button onclick="updateCart(${p.id}, 1)" class="w-9 h-full bg-brand-500 rounded-full text-dark-950 font-black flex items-center justify-center hover:bg-brand-400 active:scale-95 transition-transform text-lg shadow-md">+</button>
+                <div class="flex-1 flex justify-between items-center bg-white/10 rounded-full p-1 border border-brand-500/30 h-12">
+                    <button onclick="updateCart(${p.id}, -1)" class="w-10 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition text-xl shadow-inner">-</button>
+                    <span class="font-black text-lg flex-1 text-center text-white">${qty}</span>
+                    <button onclick="updateCart(${p.id}, 1)" class="w-10 h-full bg-brand-500 rounded-full text-dark-950 font-black flex items-center justify-center hover:bg-brand-400 active:scale-95 transition-transform text-xl shadow-md">+</button>
                 </div>`;
             } else {
                 qtyControls = `
-                <button onclick="updateCart(${p.id}, 1)" class="flex-1 h-11 bg-brand-500 text-dark-950 px-2 rounded-full font-bold flex justify-center items-center shadow-[0_4px_15px_rgba(212,175,55,0.3)] active:scale-95 transition-transform gap-1">
+                <button onclick="updateCart(${p.id}, 1)" class="flex-1 bg-brand-500 text-dark-950 h-12 px-3 rounded-full font-bold flex justify-center items-center shadow-[0_4px_15px_rgba(212,175,55,0.3)] active:scale-95 transition-transform gap-1.5">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                     <span class="text-[11px] sm:text-xs whitespace-nowrap truncate">${translations[currentLang].add}</span>
                 </button>`;
             }
 
-            // السطر بالكامل يحتوي على السعر يميناً والأزرار يساراً
             return `
-            <div class="flex justify-between items-center gap-2 w-full">
-                <div class="text-start flex-shrink-0 min-w-[65px]">
-                    ${priceVal}
-                </div>
-                <div class="flex items-center gap-1.5 flex-1 justify-end overflow-hidden">
-                    ${arButtonHTML}
-                    ${qtyControls}
-                </div>
+            <div class="flex items-center justify-between gap-3 w-full">
+                ${arButtonHTML}
+                ${qtyControls}
             </div>`;
         }
 
