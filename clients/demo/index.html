@@ -7,10 +7,13 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- استدعاء خطوط Google الكلاسيكية الفاخرة -->
+    <!-- استدعاء خطوط Google الكلاسيكية الفاخرة للواجهة -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    
+    <!-- استدعاء خط Cairo المخصص للأرقام -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     
     <!-- استدعاء مكتبة model-viewer -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
@@ -27,6 +30,11 @@
         /* ضبط الخطوط للغات اللاتينية (Classic Typography) */
         html[dir="ltr"] body {
             font-family: 'Playfair Display', serif;
+        }
+        
+        /* فئة مخصصة للأرقام والأسعار */
+        .number-font { 
+            font-family: 'Cairo', sans-serif !important; 
         }
 
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -182,40 +190,41 @@
         <p class="text-brand-500 font-bold text-sm animate-pulse" data-i18n="loading">جاري تحضير القائمة...</p>
     </div>
 
-    <!-- 1. الرأس الثابت (Header) -->
+    <!-- 1. الرأس الثابت (Header) مع توزيع احترافي ثابت -->
     <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center px-4 shadow-lg">
-        <div class="flex justify-between items-center w-full relative h-full">
+        <div class="w-full relative h-full">
             
-            <!-- زر اختيار اللغة -->
-            <div class="relative z-10 flex items-center">
-                <button onclick="toggleLangMenu()" id="lang-btn" class="flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-1 rounded-full hover:bg-white/10 transition-all active:scale-95 text-sm font-bold">
-                    <span id="current-lang-flag">🇩🇿</span>
+            <!-- زر اختيار اللغة (يمين الشاشة دائماً) -->
+            <div class="absolute right-0 top-1/2 -translate-y-1/2 z-10 flex items-center">
+                <button onclick="toggleLangMenu()" id="lang-btn" class="flex items-center gap-1 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full hover:bg-white/10 transition-all active:scale-95 text-sm font-bold">
+                    <span id="current-lang-flag" class="number-font">FR</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
-                <div id="lang-menu" class="hidden absolute top-12 right-0 origin-top-right mt-2 bg-dark-900 border border-white/10 rounded-2xl shadow-2xl p-2 min-w-[140px] animate-zoom-in glass-3d z-[100]">
+                <!-- قائمة اللغات المنسدلة -->
+                <div id="lang-menu" class="hidden absolute top-12 right-0 mt-2 bg-dark-900 border border-white/10 rounded-2xl shadow-2xl p-2 min-w-[140px] animate-zoom-in glass-3d z-[100]">
                     <button onclick="setLanguage('ar')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
-                        <span>🇩🇿</span> العربية
+                        <span class="number-font text-brand-500">AR</span> العربية
                     </button>
                     <button onclick="setLanguage('fr')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
-                        <span>🇫🇷</span> Français
+                        <span class="number-font text-brand-500">FR</span> Français
                     </button>
                     <button onclick="setLanguage('en')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
-                        <span>🇺🇸</span> English
+                        <span class="number-font text-brand-500">EN</span> English
                     </button>
                 </div>
             </div>
 
-            <!-- اسم المطعم -->
-            <div class="absolute left-1/2 -translate-x-1/2 flex items-center pointer-events-none">
+            <!-- اسم المطعم (في الوسط تماماً) -->
+            <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
                 <span class="text-lg sm:text-xl font-black tracking-tighter text-white drop-shadow-lg whitespace-nowrap">
                     <span data-i18n="restaurantNamePrefix">مطعم</span> <span class="text-brand-500" data-i18n="restaurantNameSuffix">الفخامة</span>
                 </span>
             </div>
 
-            <!-- زر استدعاء النادل -->
-            <div class="z-10 flex items-center">
+            <!-- زر استدعاء النادل (يسار الشاشة دائماً) -->
+            <div class="absolute left-0 top-1/2 -translate-y-1/2 z-10 flex items-center">
                 <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center gap-2 px-3 py-1.5 bg-dark-900/90 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] active:scale-95 transition-all duration-300 group logo-glow">
                     <span class="font-bold text-[10px]" data-i18n="callWaiter">إستدعي النادل</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
@@ -231,12 +240,12 @@
 
         <!-- عنوان ترحيبي -->
         <div class="text-center px-4 mb-6 mt-2 animate-zoom-in">
-            <h1 class="text-3xl sm:text-4xl font-black text-white leading-tight welcome-title-anim whitespace-nowrap" data-i18n="welcomeMsg">
+            <h1 class="text-2xl sm:text-3xl font-black text-white leading-tight welcome-title-anim whitespace-nowrap" data-i18n="welcomeMsg">
                 مرحبا بيك في مطعمك<br>
             </h1>
         </div>
 
-        <!-- 2. شريط التصنيفات -->
+        <!-- 2. شريط التصنيفات (Sticky) -->
         <div class="sticky top-[60px] z-40 bg-dark-950/95 backdrop-blur-md border-b border-dark-800/50 py-3 mb-6 shadow-md transition-all">
             <div class="px-2 overflow-x-auto hide-scrollbar flex justify-center">
                 <div class="flex gap-2 min-w-max px-2">
@@ -256,10 +265,10 @@
     <!-- شريط السلة العائم -->
     <div id="cart-bar" class="fixed bottom-6 left-4 right-4 bg-gradient-to-r from-brand-500 to-brand-600 text-dark-950 p-3 rounded-2xl shadow-[0_0_30px_rgba(212,175,55,0.3)] transform translate-y-[150%] transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) z-50 flex justify-between items-center cursor-pointer active:scale-95 border border-white/20 glass-3d" onclick="openCartModal()">
         <div class="flex items-center gap-3">
-            <div class="bg-dark-950 text-brand-500 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shadow-inner border border-brand-600" id="total-count">0</div>
+            <div class="bg-dark-950 text-brand-500 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shadow-inner border border-brand-600 number-font" id="total-count">0</div>
             <div class="flex flex-col leading-none">
                 <span class="text-[10px] text-dark-900 font-bold uppercase tracking-wider" data-i18n="total">Total</span>
-                <span class="font-black text-xl" id="total-price">0 د.ج</span>
+                <span class="font-black text-xl number-font" id="total-price">0 د.ج</span>
             </div>
         </div>
         <div class="flex items-center gap-2 text-dark-950 font-bold bg-white/20 px-4 py-2 rounded-xl hover:bg-white/30 transition backdrop-blur-md border border-white/10 text-sm">
@@ -288,7 +297,7 @@
 
                 <div class="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5 shadow-inner">
                     <span class="text-gray-400 font-bold" data-i18n="total">Total</span>
-                    <span class="text-3xl font-black text-brand-500" id="final-price">0 د.ج</span>
+                    <span class="text-3xl font-black text-brand-500 number-font" id="final-price">0 د.ج</span>
                 </div>
 
                 <button onclick="submitOrder()" class="w-full bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#20bd5a] hover:to-[#0e7a6d] text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(37,211,102,0.3)] flex justify-center items-center gap-3 transition-transform active:scale-95 border-t border-white/20">
@@ -344,7 +353,7 @@
                 contactKitchen: "جارٍ الاتصال بالمطبخ...",
                 connError: "عذراً، حدث خطأ في الاتصال بالمطبخ!",
                 discount: "خصم",
-                flag: "🇫🇷", code: "FR" // Defaulting display for test purposes
+                flag: "AR", code: "AR"
             },
             fr: {
                 welcomeMsg: "Bienvenue dans votre restaurant",
@@ -368,8 +377,8 @@
                 backHome: "Retour à l'accueil",
                 contactKitchen: "Contact cuisine...",
                 connError: "Erreur de connexion cuisine !",
-                discount: "Réduc",
-                flag: "🇫🇷", code: "FR"
+                discount: "Promo",
+                flag: "FR", code: "FR"
             },
             en: {
                 welcomeMsg: "Welcome to your restaurant",
@@ -394,7 +403,7 @@
                 contactKitchen: "Contacting kitchen...",
                 connError: "Kitchen connection error!",
                 discount: "Save",
-                flag: "🇺🇸", code: "EN"
+                flag: "EN", code: "EN"
             }
         };
 
@@ -413,17 +422,8 @@
             });
 
             document.getElementById('current-lang-flag').textContent = translations[lang].flag;
-
-            const langMenu = document.getElementById('lang-menu');
-            if (lang === 'ar') {
-                langMenu.classList.remove('left-0', 'origin-top-left');
-                langMenu.classList.add('right-0', 'origin-top-right');
-            } else {
-                langMenu.classList.remove('right-0', 'origin-top-right');
-                langMenu.classList.add('left-0', 'origin-top-left');
-            }
-
             document.getElementById('lang-menu').classList.add('hidden');
+            
             renderAllSections();
             updateCartBar();
         }
@@ -522,17 +522,17 @@
             } else if (p.hasPromo) {
                 priceVal = `
                     <div class="flex items-center justify-center gap-2">
-                        <span class="text-sm text-red-400/70 line-through font-bold">${p.price}</span>
-                        <span class="text-xl font-black text-brand-500 whitespace-nowrap">${p.promo_price} <span class="text-[10px] font-normal opacity-70">${translations[currentLang]?.currency || ''}</span></span>
+                        <span class="text-sm text-red-400/70 line-through font-bold number-font">${p.price}</span>
+                        <span class="text-xl font-black text-brand-500 whitespace-nowrap number-font">${p.promo_price} <span class="text-[10px] font-normal opacity-70">${translations[currentLang]?.currency || ''}</span></span>
                     </div>
                 `;
             } else {
-                priceVal = `<span class="text-xl font-black text-brand-500 whitespace-nowrap">${p.price} <span class="text-[10px] font-normal opacity-70">${translations[currentLang]?.currency || ''}</span></span>`;
+                priceVal = `<span class="text-xl font-black text-brand-500 whitespace-nowrap number-font">${p.price} <span class="text-[10px] font-normal opacity-70">${translations[currentLang]?.currency || ''}</span></span>`;
             }
 
             const promoBadge = p.hasPromo 
                 ? `<div class="absolute top-6 -left-10 -rotate-45 w-40 text-center bg-red-700 text-white py-1 text-xs font-bold z-40 shadow-[0_2px_10px_rgba(0,0,0,0.5)] border-y border-red-500/50">
-                        ${translations[currentLang]?.discount || ''} ${discount}%
+                        ${translations[currentLang]?.discount || ''} <span class="number-font">${discount}%</span>
                    </div>` 
                 : '';
 
@@ -577,9 +577,9 @@
             if (qty > 0) {
                 qtyControls = `
                 <div class="flex-1 flex justify-between items-center bg-white/10 rounded-full p-1 border border-brand-500/30 h-12">
-                    <button onclick="updateCart(${p.id}, -1)" class="w-10 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition text-xl shadow-inner">-</button>
-                    <span class="font-black text-lg flex-1 text-center text-white">${qty}</span>
-                    <button onclick="updateCart(${p.id}, 1)" class="w-10 h-full bg-brand-500 rounded-full text-dark-950 font-black flex items-center justify-center hover:bg-brand-400 active:scale-95 transition-transform text-xl shadow-md">+</button>
+                    <button onclick="updateCart(${p.id}, -1)" class="w-10 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition text-xl shadow-inner number-font">-</button>
+                    <span class="font-black text-lg flex-1 text-center text-white number-font">${qty}</span>
+                    <button onclick="updateCart(${p.id}, 1)" class="w-10 h-full bg-brand-500 rounded-full text-dark-950 font-black flex items-center justify-center hover:bg-brand-400 active:scale-95 transition-transform text-xl shadow-md number-font">+</button>
                 </div>`;
             } else {
                 qtyControls = `
@@ -707,9 +707,9 @@
                                 <img src="${p.img}" class="w-8 h-8 rounded-lg object-cover">
                                 <div class="flex-1 min-w-0 text-right">
                                     <p class="text-white text-[9px] font-bold truncate">${p.name[currentLang]}</p>
-                                    <p class="text-brand-500 text-[9px] font-bold">${p.finalPrice} ${translations[currentLang].currency}</p>
+                                    <p class="text-brand-500 text-[9px] font-bold number-font">${p.finalPrice} ${translations[currentLang].currency}</p>
                                 </div>
-                                <button onclick="updateCart(${p.id}, 1)" class="w-6 h-6 bg-brand-500 text-dark-950 rounded-full flex items-center justify-center font-black text-lg">+</button>
+                                <button onclick="updateCart(${p.id}, 1)" class="w-6 h-6 bg-brand-500 text-dark-950 rounded-full flex items-center justify-center font-black text-lg number-font">+</button>
                             </div>`;
                     });
                     html += `</div></div>`;
@@ -728,11 +728,11 @@
                 list.innerHTML += `
                     <div class="flex justify-between items-center text-sm border-b border-white/10 pb-3 last:border-0 animate-slide-up-smooth">
                         <div class="flex items-center gap-3">
-                            <span class="bg-white/10 text-brand-500 px-2.5 py-1 rounded text-xs font-bold border border-white/10">x${item.qty}</span>
+                            <span class="bg-white/10 text-brand-500 px-2.5 py-1 rounded text-xs font-bold border border-white/10 number-font">x${item.qty}</span>
                             <span class="font-medium text-gray-200">${item.name[currentLang]}</span>
                         </div>
                         <div class="flex items-center gap-3">
-                             <span class="font-bold text-brand-500">${item.finalPrice === 0 ? 'Free' : (item.finalPrice * item.qty) + ' ' + translations[currentLang].currency}</span>
+                             <span class="font-bold text-brand-500 number-font">${item.finalPrice === 0 ? 'Free' : (item.finalPrice * item.qty) + ' ' + translations[currentLang].currency}</span>
                              <button onclick="removeFromCart(${item.id})" class="text-red-400 text-xs px-2 py-1 bg-red-500/10 rounded hover:bg-red-500/30 transition">✕</button>
                         </div>
                     </div>`;
