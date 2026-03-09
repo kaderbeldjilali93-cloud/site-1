@@ -6,7 +6,11 @@
     <title>قائمة الطعام | مطعم الفخامة</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- استدعاء خطوط Google الكلاسيكية الفاخرة -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
     
     <!-- استدعاء مكتبة model-viewer -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
@@ -16,13 +20,13 @@
             scroll-behavior: smooth;
         }
         body { 
-            font-family: 'Cairo', sans-serif; 
+            font-family: 'Amiri', serif; 
             -webkit-tap-highlight-color: transparent; 
         }
         
-        /* ضبط الخطوط للغات اللاتينية */
+        /* ضبط الخطوط للغات اللاتينية (Classic Typography) */
         html[dir="ltr"] body {
-            font-family: sans-serif;
+            font-family: 'Playfair Display', serif;
         }
 
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -157,6 +161,10 @@
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Amiri', 'serif'],
+                        latin: ['Playfair Display', 'serif'],
+                    },
                     colors: {
                         brand: { 500: '#D4AF37', 600: '#B5952F', 100: '#3D3418' }, 
                         dark: { 950: '#09090b', 900: '#18181b', 800: '#27272a', 700: '#3f3f46' }
@@ -202,7 +210,7 @@
 
             <!-- اسم المطعم (في الوسط تماماً) -->
             <div class="absolute left-1/2 -translate-x-1/2 flex items-center pointer-events-none">
-                <span class="text-lg sm:text-xl font-black tracking-tighter text-white font-sans drop-shadow-lg whitespace-nowrap">
+                <span class="text-lg sm:text-xl font-black tracking-tighter text-white drop-shadow-lg whitespace-nowrap">
                     <span data-i18n="restaurantNamePrefix">مطعم</span> <span class="text-brand-500" data-i18n="restaurantNameSuffix">الفخامة</span>
                 </span>
             </div>
@@ -299,7 +307,7 @@
             
             <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192 3 1.732 3z" />
                 </svg>
             </div>
             
@@ -321,7 +329,7 @@
                 restaurantNameSuffix: "الفخامة",
                 callWaiter: "إستدعي النادل",
                 viewOnTable: "عرض على طاولتك",
-                add: "أضف",
+                add: "إضافة",
                 cartTitle: "سلة المشتريات",
                 total: "Total",
                 checkCart: "تأكد من طلبك",
@@ -507,79 +515,103 @@
             }
         }
 
-        // 2. دالة توليد بطاقة المنتج مع دعم الأسعار الترويجية والتخطيط العمودي الأنيق
+        // 2. هندسة بطاقة المنتج الكلاسيكية الفاخرة (Classic UI Overhaul)
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             const localizedName = p.name[currentLang];
             const localizedDesc = p.desc[currentLang];
             
             const discount = p.hasPromo ? Math.round(((p.price - p.promo_price) / p.price) * 100) : 0;
-            const promoBadge = p.hasPromo ? `<div class="absolute top-3 right-3 bg-red-600 text-white px-2 py-0.5 rounded-lg text-sm font-black shadow-[0_0_10px_rgba(220,38,38,0.5)] z-30 transform -rotate-3 border border-red-400/50">-${discount}% 🔥</div>` : '';
+            // شارة خصم أنيقة (Premium Promo Badge)
+            const promoBadge = p.hasPromo ? `<div class="absolute top-4 right-4 bg-red-900/80 text-white px-3 py-1 rounded-xl text-xs font-bold shadow-lg z-30 border border-red-500/50">-${discount}%</div>` : '';
 
+            // أ. الصورة / الـ 3D (ارتفاع كبير h-64)
             let mediaContent = p.model3d 
                 ? `${promoBadge}
                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
                    <model-viewer src="${p.model3d}" ar ar-modes="webxr scene-viewer quick-look" environment-image="neutral" auto-rotate camera-controls class="w-full h-full object-cover relative z-10" alt="${localizedName}"></model-viewer>`
                 : `${promoBadge}
-                   <img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 group-hover:scale-105 transition duration-500 relative z-10" alt="${localizedName}">`;
+                   <img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 group-hover:scale-105 transition duration-700 relative z-10" alt="${localizedName}">`;
 
+            // ب. زر الـ AR (Ghost Button)
             const arButtonHTML = p.model3d 
-                ? `<button onclick="const mv = this.closest('.glass-3d').querySelector('model-viewer'); if(mv) mv.activateAR();" class="w-[85%] mx-auto bg-dark-800 border border-brand-500/30 text-brand-500 py-1.5 rounded-full text-xs font-bold mb-3 flex justify-center items-center gap-2 active:scale-95 transition-transform">
-                        <span class="text-sm">👁️</span> ${translations[currentLang].viewOnTable}
-                   </button>` 
+                ? `<div class="flex justify-center mb-4 mt-[-1.5rem] relative z-30">
+                        <button onclick="const mv = this.closest('.glass-3d').querySelector('model-viewer'); if(mv) mv.activateAR();" class="px-5 py-1.5 bg-dark-950/40 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full text-xs font-bold flex items-center gap-2 shadow-[0_4px_15px_rgba(0,0,0,0.5)] active:scale-95 transition-all hover:bg-brand-500/10">
+                            <span class="text-sm">👁️</span> ${translations[currentLang].viewOnTable}
+                        </button>
+                   </div>` 
                 : '';
 
+            // ج. المحتوى النصي (بدون line-clamp)
             return `
-            <div class="glass-3d rounded-3xl overflow-hidden reveal-on-scroll w-full flex flex-col relative group">
-                <div class="pt-5 px-4 pb-3 text-center relative z-20">
-                    <h3 class="font-bold text-gray-100 text-lg mb-1.5 leading-tight tracking-wide">${localizedName}</h3>
-                    <p class="text-xs text-gray-300 leading-relaxed font-light">${localizedDesc}</p>
-                </div>
-                <div class="h-64 w-full relative bg-gray-800 flex items-center justify-center overflow-hidden">
+            <div class="glass-3d rounded-3xl overflow-hidden reveal-on-scroll w-full flex flex-col relative group border border-white/5">
+                
+                <div class="h-64 w-full relative bg-dark-900 flex items-center justify-center overflow-hidden">
                     ${mediaContent}
-                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-60 pointer-events-none z-10"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950 to-transparent opacity-80 pointer-events-none z-10"></div>
                 </div>
-                <div class="p-4 pt-4 flex flex-col justify-center items-center relative z-20 w-full mt-auto">
+                
+                <div class="p-5 pt-0 flex flex-col flex-1 relative z-20 bg-dark-950/50">
                     ${arButtonHTML}
-                    <div id="controls-${p.id}" class="w-full flex items-center justify-center">
-                        ${generateControlsHTML(p, qty)}
+                    
+                    <div class="text-center mb-2">
+                        <h3 class="font-bold text-gray-100 text-xl mb-2 leading-tight tracking-wide" style="font-family: inherit;">${localizedName}</h3>
+                        <p class="text-xs text-gray-400 leading-relaxed font-light">${localizedDesc}</p>
+                    </div>
+                    
+                    <!-- منطقة التحكم المنفصلة الأنيقة -->
+                    <div class="mt-auto pt-4 border-t border-white/10 w-full">
+                        <div id="controls-${p.id}" class="w-full">
+                            ${generateControlsHTML(p, qty)}
+                        </div>
                     </div>
                 </div>
             </div>`;
         }
 
-        // أداة التحكم الذكية للإضافة إلى السلة مع دعم السعر الترويجي والتصميم المبسط
+        // فصل السعر عن زر الإضافة (Elegant Controls)
         function generateControlsHTML(p, qty) {
             let priceVal = "";
             if (p.finalPrice === 0) {
-                priceVal = "Gratuit";
+                priceVal = `<span class="text-xl font-black text-brand-500">Gratuit</span>`;
             } else if (p.hasPromo) {
+                // عرض السعر الترويجي بخط كبير والسعر القديم مشطوب ومصغر
                 priceVal = `
-                    <div class="flex flex-col items-start leading-none gap-0.5">
-                        <span class="text-xs text-dark-900/60 line-through decoration-red-600 font-bold">${p.price} ${translations[currentLang].currency}</span>
-                        <span class="text-lg font-black">${p.promo_price} <span class="text-xs font-normal opacity-70">${translations[currentLang].currency}</span></span>
+                    <div class="flex flex-col items-start leading-none gap-1">
+                        <span class="text-xs text-red-400/70 line-through font-bold">${p.price} ${translations[currentLang].currency}</span>
+                        <span class="text-xl font-black text-brand-500">${p.promo_price} <span class="text-sm font-normal opacity-70">${translations[currentLang].currency}</span></span>
                     </div>
                 `;
             } else {
-                priceVal = `${p.price} <span class="text-xs font-normal opacity-70">${translations[currentLang].currency}</span>`;
+                priceVal = `<span class="text-xl font-black text-brand-500">${p.price} <span class="text-sm font-normal opacity-70">${translations[currentLang].currency}</span></span>`;
             }
 
             if (qty > 0) {
                 return `
-                <div class="w-[85%] mx-auto flex justify-between items-center bg-white/10 rounded-full p-1 border border-brand-500/50 h-12 animate-zoom-in backdrop-blur-sm">
-                    <button onclick="updateCart(${p.id}, -1)" class="w-12 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition text-xl shadow-inner">-</button>
-                    <span class="font-black text-lg w-8 text-center text-white">${qty}</span>
-                    <button onclick="updateCart(${p.id}, 1)" class="w-12 h-full bg-brand-500 rounded-full text-dark-950 font-black flex items-center justify-center hover:bg-brand-400 active:scale-95 transition-transform text-xl shadow-md">+</button>
+                <div class="flex justify-between items-center w-full">
+                    <div>${priceVal}</div>
+                    <div class="flex items-center bg-white/10 rounded-full p-1 border border-brand-500/30 h-10 w-28">
+                        <button onclick="updateCart(${p.id}, -1)" class="w-8 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition shadow-inner">-</button>
+                        <span class="font-black text-base flex-1 text-center text-white">${qty}</span>
+                        <button onclick="updateCart(${p.id}, 1)" class="w-8 h-full bg-brand-500 rounded-full text-dark-950 font-black flex items-center justify-center hover:bg-brand-400 active:scale-95 transition-transform shadow-md">+</button>
+                    </div>
                 </div>`;
             } else {
+                // زر إضافة أنيق وصغير
                 return `
-                <button onclick="updateCart(${p.id}, 1)" class="w-[85%] mx-auto bg-brand-500 text-dark-950 py-2.5 px-5 rounded-full font-bold flex justify-between items-center shadow-lg active:scale-95 transition-transform">
-                    <span class="text-lg leading-none text-dark-950 flex items-center font-black">${priceVal}</span>
-                    <span class="font-black text-2xl leading-none mb-1 text-dark-950">+</span>
-                </button>`;
+                <div class="flex justify-between items-center w-full">
+                    <div>${priceVal}</div>
+                    <button onclick="updateCart(${p.id}, 1)" class="bg-brand-500 text-dark-950 px-5 py-2 rounded-full font-bold flex items-center justify-center shadow-[0_4px_15px_rgba(212,175,55,0.3)] active:scale-95 transition-transform">
+                        <span class="flex items-center gap-1.5 text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                            ${translations[currentLang].add}
+                        </span>
+                    </button>
+                </div>`;
             }
         }
 
+        // تحويل التخطيط إلى عمود واحد (Single Column Layout)
         function renderAllSections() {
             const container = document.getElementById('dynamic-menu-container');
             container.innerHTML = '';
@@ -594,12 +626,12 @@
                 if (catProducts.length === 0) return;
                 const section = document.createElement('section');
                 section.id = `section-${cat.id}`;
-                section.className = "scroll-mt-44 text-center mb-6";
-                section.innerHTML = `<h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim mb-4">${cat.title}</h2>`;
+                section.className = "scroll-mt-44 text-center mb-10";
+                section.innerHTML = `<h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim mb-6">${cat.title}</h2>`;
                 
-                // تخطيط عمود واحد (Single Column Layout)
+                // تخطيط عمود واحد
                 const grid = document.createElement('div');
-                grid.className = "flex flex-col gap-6";
+                grid.className = "flex flex-col gap-8";
                 
                 if (cat.subSections) {
                     cat.subSections.forEach(sub => {
@@ -651,7 +683,6 @@
             if(navigator.vibrate) navigator.vibrate(40);
         }
 
-        // تحديث الحسابات لتعتمد على السعر النهائي (finalPrice)
         function updateCartBar() {
             const totalQty = Object.values(cart).reduce((a, b) => a + b.qty, 0);
             const totalPrice = Object.values(cart).reduce((a, b) => a + (b.finalPrice * b.qty), 0);
@@ -774,7 +805,6 @@
                     items: Object.values(cart).map(i => ({
                         name: i.name[currentLang],
                         qty: i.qty,
-                        // إرسال السعر النهائي لضمان الفوترة الدقيقة في KDS
                         price: i.finalPrice
                     })),
                     total: totalPrice,
