@@ -507,70 +507,44 @@
             }
         }
 
-        // هندسة بطاقة المنتج (البطاقة المتداخلة Vertical Nested Card)
+        // 2. هندسة بطاقة المنتج (البطاقة المتداخلة Vertical Nested Card)
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             const localizedName = p.name[currentLang];
             const localizedDesc = p.desc[currentLang];
             
-            // حساب السعر ليعرض في الأعلى ضمن النصوص
-            let priceVal = "";
-            if (p.finalPrice === 0) {
-                priceVal = `<span class="text-lg font-black text-brand-500">Gratuit</span>`;
-            } else if (p.hasPromo) {
-                priceVal = `
-                    <div class="flex items-center justify-center gap-2">
-                        <span class="text-sm text-red-400/70 line-through font-bold">${p.price}</span>
-                        <span class="text-xl font-black text-brand-500">${p.promo_price} <span class="text-sm font-normal opacity-70">${translations[currentLang].currency}</span></span>
-                    </div>
-                `;
-            } else {
-                priceVal = `<span class="text-xl font-black text-brand-500">${p.price} <span class="text-sm font-normal opacity-70">${translations[currentLang].currency}</span></span>`;
-            }
-
             const discount = p.hasPromo ? Math.round(((p.price - p.promo_price) / p.price) * 100) : 0;
             
-            // شريط الخصم المائل (موضوع على المربع الداخلي للصورة)
+            // شريط الخصم المائل (موضوع على البطاقة الكبيرة الخارجية)
             const promoBadge = p.hasPromo 
-                ? `<div class="absolute top-0 left-0 -rotate-45 -translate-x-[40%] translate-y-[20%] w-40 text-center bg-red-700 text-white py-1 text-xs font-bold z-30 shadow-[0_2px_10px_rgba(0,0,0,0.5)] border-y border-red-500/50">
+                ? `<div class="absolute top-6 -left-10 -rotate-45 w-40 text-center bg-red-700 text-white py-1 text-xs font-bold z-40 shadow-[0_2px_10px_rgba(0,0,0,0.5)] border-y border-red-500/50">
                         ${translations[currentLang].discount} ${discount}%
                    </div>` 
                 : '';
 
-            // المربع الداخلي للصورة / 3D
+            // المربع الداخلي للصورة / 3D (الارتفاع h-72 كما طلب)
             let mediaContent = p.model3d 
-                ? `${promoBadge}
-                   <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
+                ? `<div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
                    <model-viewer src="${p.model3d}" ar ar-modes="webxr scene-viewer quick-look" environment-image="neutral" auto-rotate camera-controls class="w-full h-full object-cover relative z-10" alt="${localizedName}"></model-viewer>`
-                : `${promoBadge}
-                   <img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 transition duration-700 relative z-10" alt="${localizedName}">`;
-
-            // زر الـ AR أسفل المربع الداخلي
-            const arButtonHTML = p.model3d 
-                ? `<button onclick="const mv = this.closest('.glass-3d').querySelector('model-viewer'); if(mv) mv.activateAR();" class="w-full bg-transparent border border-brand-500 text-brand-500 py-2 rounded-full text-xs font-bold mb-3 flex justify-center items-center gap-2 active:scale-95 transition-transform hover:bg-brand-500/10">
-                        <span class="text-sm">👁️</span> ${translations[currentLang].viewOnTable}
-                   </button>` 
-                : '';
+                : `<img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 transition duration-700 relative z-10" alt="${localizedName}">`;
 
             return `
-            <div class="glass-3d rounded-3xl p-5 w-full flex flex-col relative group border border-white/5 reveal-on-scroll">
-                
+            <div class="glass-3d rounded-3xl p-5 w-full max-w-sm mx-auto flex flex-col relative group border border-white/5 reveal-on-scroll overflow-hidden">
+                ${promoBadge}
                 <!-- 1. قسم النصوص (الأعلى) -->
-                <div class="text-center mb-4">
-                    <h3 class="font-bold text-brand-500 text-2xl mb-1 leading-tight tracking-wide drop-shadow-md" style="font-family: inherit;">${localizedName}</h3>
-                    <div class="mb-2">${priceVal}</div>
-                    <p class="text-sm text-gray-400 leading-relaxed font-light">${localizedDesc}</p>
+                <div class="text-center mb-4 relative z-20">
+                    <h3 class="font-bold text-brand-500 text-2xl mb-1.5 leading-tight tracking-wide drop-shadow-md" style="font-family: inherit;">${localizedName}</h3>
+                    <p class="text-sm text-gray-300 leading-relaxed font-light">${localizedDesc}</p>
                 </div>
                 
                 <!-- 2. البطاقة الداخلية للصورة (الوسط) -->
-                <div class="h-56 w-full relative bg-dark-900/50 rounded-2xl border border-white/5 flex items-center justify-center overflow-hidden mb-5 shadow-inner">
+                <div class="h-72 w-full relative bg-dark-900/50 rounded-2xl border border-white/5 flex items-center justify-center overflow-hidden mb-5 shadow-inner">
                     ${mediaContent}
                     <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-50 pointer-events-none z-10"></div>
                 </div>
                 
                 <!-- 3. قسم الأزرار (الأسفل) -->
-                <div class="mt-auto w-full">
-                    ${arButtonHTML}
+                <div class="mt-auto w-full pt-2">
                     <div id="controls-${p.id}" class="w-full">
                         ${generateControlsHTML(p, qty)}
                     </div>
@@ -578,22 +552,58 @@
             </div>`;
         }
 
-        // أداة الإضافة / التحكم بالكمية
+        // أداة الإضافة والتحكم بالكمية (السطر الأول للسعر، والسطر الثاني للأزرار متساوية العرض)
         function generateControlsHTML(p, qty) {
+            let priceVal = "";
+            if (p.finalPrice === 0) {
+                priceVal = `<span class="text-2xl font-black text-brand-500">Gratuit</span>`;
+            } else if (p.hasPromo) {
+                priceVal = `
+                    <div class="flex flex-col items-start leading-none gap-1">
+                        <span class="text-sm text-red-400/70 line-through font-bold">${p.price} ${translations[currentLang].currency}</span>
+                        <span class="text-2xl font-black text-brand-500">${p.promo_price} <span class="text-sm font-normal opacity-70">${translations[currentLang].currency}</span></span>
+                    </div>
+                `;
+            } else {
+                priceVal = `<span class="text-2xl font-black text-brand-500">${p.price} <span class="text-sm font-normal opacity-70">${translations[currentLang].currency}</span></span>`;
+            }
+
+            // زر الواقع المعزز (مفرغ، مع النص بجانب الأيقونة وعرض متساوي)
+            const arButtonHTML = p.model3d 
+                ? `<button onclick="const card = this.closest('.glass-3d'); if(card){ const mv = card.querySelector('model-viewer'); if(mv) mv.activateAR(); }" class="flex-1 h-12 bg-transparent border border-brand-500 text-brand-500 rounded-full flex justify-center items-center gap-1.5 active:scale-95 transition-transform hover:bg-brand-500/10 px-2 overflow-hidden" title="${translations[currentLang].viewOnTable}">
+                        <span class="text-lg leading-none flex-shrink-0">👁️</span>
+                        <span class="text-[11px] sm:text-xs font-bold whitespace-nowrap truncate">${translations[currentLang].viewOnTable}</span>
+                   </button>` 
+                : '';
+
+            let qtyControls = "";
             if (qty > 0) {
-                return `
-                <div class="w-full flex justify-between items-center bg-white/10 rounded-full p-1 border border-brand-500/50 h-12 animate-zoom-in backdrop-blur-sm">
-                    <button onclick="updateCart(${p.id}, -1)" class="w-12 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition text-xl shadow-inner">-</button>
+                qtyControls = `
+                <div class="flex-1 flex justify-between items-center bg-white/10 rounded-full p-1 border border-brand-500/30 h-12">
+                    <button onclick="updateCart(${p.id}, -1)" class="w-10 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition text-xl shadow-inner">-</button>
                     <span class="font-black text-lg flex-1 text-center text-white">${qty}</span>
-                    <button onclick="updateCart(${p.id}, 1)" class="w-12 h-full bg-brand-500 rounded-full text-dark-950 font-black flex items-center justify-center hover:bg-brand-400 active:scale-95 transition-transform text-xl shadow-md">+</button>
+                    <button onclick="updateCart(${p.id}, 1)" class="w-10 h-full bg-brand-500 rounded-full text-dark-950 font-black flex items-center justify-center hover:bg-brand-400 active:scale-95 transition-transform text-xl shadow-md">+</button>
                 </div>`;
             } else {
-                return `
-                <button onclick="updateCart(${p.id}, 1)" class="w-full bg-brand-500 text-dark-950 py-2.5 px-5 rounded-full font-bold flex justify-center items-center shadow-[0_4px_15px_rgba(212,175,55,0.3)] active:scale-95 transition-transform gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                    <span>${translations[currentLang].add}</span>
+                qtyControls = `
+                <button onclick="updateCart(${p.id}, 1)" class="flex-1 bg-brand-500 text-dark-950 px-3 h-12 rounded-full font-bold flex justify-center items-center shadow-[0_4px_15px_rgba(212,175,55,0.3)] active:scale-95 transition-transform gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    <span class="text-sm whitespace-nowrap truncate">${translations[currentLang].add}</span>
                 </button>`;
             }
+
+            return `
+            <div class="flex flex-col gap-4 w-full">
+                <!-- السطر الأول: السعر -->
+                <div class="text-start px-1 w-full">
+                    ${priceVal}
+                </div>
+                <!-- السطر الثاني: الأزرار -->
+                <div class="flex justify-between items-center gap-3 w-full">
+                    ${qtyControls}
+                    ${arButtonHTML}
+                </div>
+            </div>`;
         }
 
         function renderAllSections() {
@@ -751,6 +761,11 @@
             updateCartBar();
             openCartModal();
             if(Object.keys(cart).length === 0) closeCartModal();
+        }
+
+        function addUpsell(id) {
+            updateCart(id, 1);
+            openCartModal(); 
         }
 
         async function callWaiter() {
