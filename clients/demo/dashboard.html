@@ -1460,9 +1460,9 @@
                 card.innerHTML = `
                     <div class="h-40 overflow-hidden relative"><img src="${imgUrl}" class="w-full h-full object-cover"><span class="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">${category}</span></div>
                     <div class="p-4 flex-1 flex flex-col gap-4">
-                        <div><h3 class="text-lg font-bold text-white truncate" title="${name}">${name}</h3></div>
+                        <div><input type="text" id="name-${item.id}" value="${name}" class="w-full bg-transparent border-b border-gray-600 text-lg font-bold text-white px-1 py-1 mb-2 focus:border-brand outline-none transition" placeholder="اسم الطبق"></div>
                         <div><label class="text-xs text-gray-400 block mb-1">السعر (DA)</label><input type="number" id="price-${item.id}" value="${price}" class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition"></div>
-                        <div class="flex items-center justify-between mt-auto pt-2"><button id="toggle-${item.id}" onclick="toggleAvailability(this)" data-status="${isAvailable ? 'متوفر' : 'غير متوفر'}" class="text-xs px-3 py-2.5 rounded text-white transition ${btnClass}">${btnText}</button><button id="btn-save-${item.id}" onclick="saveMenuItem(${item.id})" class="bg-brand hover:bg-brand-dark text-black font-bold px-4 py-2.5 rounded text-sm transition shadow-md">حفظ السعر</button></div>
+                        <div class="flex items-center justify-between mt-auto pt-2"><button id="toggle-${item.id}" onclick="toggleAvailability(this)" data-status="${isAvailable ? 'متوفر' : 'غير متوفر'}" class="text-xs px-3 py-2.5 rounded text-white transition ${btnClass}">${btnText}</button><button id="btn-save-${item.id}" onclick="saveMenuItem(${item.id})" class="bg-brand hover:bg-brand-dark text-black font-bold px-4 py-2.5 rounded text-sm transition shadow-md">حفظ التعديلات</button></div>
                     </div>`;
                 grid.appendChild(card);
             });
@@ -1711,9 +1711,10 @@
         };
 
         window.saveMenuItem = function(id) {
+            const newName = document.getElementById(`name-${id}`).value;
             const price = parseFloat(document.getElementById(`price-${id}`).value);
             const status = document.getElementById(`toggle-${id}`).getAttribute('data-status');
-            updateMenuItem(id, { "Price": price, "Availability": status });
+            updateMenuItem(id, { "Name": newName, "Price": price, "Availability": status });
         };
 
         // حفظ السعر الترويجي
