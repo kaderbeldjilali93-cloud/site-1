@@ -192,6 +192,9 @@
                 <div>
                     <h2 class="font-bold text-lg leading-tight">Resto<span class="text-brand">Pro</span></h2>
                 </div>
+                
+                <!-- العنوان الديناميكي للشاشة الحالية -->
+                <span id="global-page-title" class="text-gray-300 text-sm md:text-base font-bold mr-4 pr-4 border-r border-gray-600 truncate max-w-[150px] md:max-w-xs">لوحة القيادة</span>
             </div>
             
             <div class="flex items-center gap-2">
@@ -256,13 +259,13 @@
                         <!-- الخيارات الفرعية (مخفية افتراضياً) -->
                         <div id="menu-submenu" class="hidden flex-col gap-1 pl-2 pr-6 py-2 mt-1 bg-gray-800/50 rounded-lg border-r-2 border-gray-700">
                             <button onclick="loadView('menu_quick')" id="btn-menu_quick" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
-                                التعديل السريع
+                                <span class="font-medium">التعديل السريع</span>
                             </button>
                             <button onclick="loadView('menu_add')" id="btn-menu_add" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
-                                إضافة طبق
+                                <span class="font-medium">إضافة طبق</span>
                             </button>
                             <button onclick="loadView('menu_promo')" id="btn-menu_promo" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
-                                إدارة الخصومات
+                                <span class="font-medium">إدارة الخصومات</span>
                             </button>
                         </div>
                     </div>
@@ -1017,8 +1020,7 @@
 
             header.innerHTML = `
                 <div class="flex items-center gap-3">
-                    <h2 class="text-2xl font-bold text-white">شاشة المطبخ (KDS)</h2>
-                    <span class="live-indicator"></span>
+                    <span class="live-indicator" title="تحديث مباشر"></span>
                 </div>
                 <div class="flex bg-gray-900 p-1 rounded-xl border border-gray-700 shadow-inner flex-wrap gap-1">
                     <button onclick="setKdsTab('tables')" class="px-5 py-2 rounded-lg text-sm font-bold transition ${getTabClass('tables', hasNewTable)}">طلبات الطاولات</button>
@@ -1368,7 +1370,6 @@
             tableHeader.className = "flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700 gap-4";
             tableHeader.innerHTML = `
                 <div class="flex items-center gap-3">
-                    <h2 class="text-xl font-bold text-white">سجل العمليات</h2>
                     <span class="live-indicator" title="تحديث مباشر"></span>
                 </div>
                 <div class="relative flex items-center bg-gray-800 border border-gray-600 rounded-lg hover:border-brand focus-within:border-brand focus-within:ring-2 focus-within:ring-brand transition-all overflow-hidden group">
@@ -1436,10 +1437,6 @@
 
         function renderMenuEditor(items) {
             dynamicContent.innerHTML = '';
-            const header = document.createElement('div');
-            header.className = "flex justify-between items-center mb-6 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700";
-            header.innerHTML = `<h2 class="text-2xl font-bold text-white">التعديل السريع للقائمة</h2>`;
-            dynamicContent.appendChild(header);
 
             const grid = document.createElement('div');
             grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-10";
@@ -1461,7 +1458,7 @@
                 card.innerHTML = `
                     <div class="h-40 overflow-hidden relative"><img src="${imgUrl}" class="w-full h-full object-cover"><span class="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">${category}</span></div>
                     <div class="p-4 flex-1 flex flex-col gap-4">
-                        <div><input type="text" id="name-${item.id}" value="${name}" class="w-full bg-transparent border-b border-gray-600 text-lg font-bold text-white px-1 py-1 mb-2 focus:border-brand outline-none transition" placeholder="اسم الطبق"></div>
+                        <div><input type="text" id="name-${item.id}" value="${name}" class="w-full bg-gray-900 border border-gray-600 text-white text-lg font-bold text-center rounded px-3 py-2 mb-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none transition shadow-inner" placeholder="اسم الطبق"></div>
                         <div><textarea id="desc-${item.id}" rows="2" class="w-full bg-gray-900 border border-gray-600 text-gray-300 text-xs rounded px-3 py-2 mb-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none resize-none transition" placeholder="مكونات الطبق...">${desc}</textarea></div>
                         <div><label class="text-xs text-gray-400 block mb-1">السعر (DA)</label><input type="number" id="price-${item.id}" value="${price}" class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition"></div>
                         <div class="flex items-center justify-between mt-auto pt-2"><button id="toggle-${item.id}" onclick="toggleAvailability(this)" data-status="${isAvailable ? 'متوفر' : 'غير متوفر'}" class="text-xs px-3 py-2.5 rounded text-white transition ${btnClass}">${btnText}</button><button id="btn-save-${item.id}" onclick="saveMenuItem(${item.id})" class="bg-brand hover:bg-brand-dark text-black font-bold px-4 py-2.5 rounded text-sm transition shadow-md">حفظ التعديلات</button></div>
@@ -1474,10 +1471,6 @@
         // دالة إنشاء وعرض شاشة الخصومات
         function renderPromoEditor(items) {
             dynamicContent.innerHTML = '';
-            const header = document.createElement('div');
-            header.className = "flex justify-between items-center mb-6 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700";
-            header.innerHTML = `<h2 class="text-2xl font-bold text-white">إدارة الخصومات (Promotions)</h2>`;
-            dynamicContent.appendChild(header);
 
             const grid = document.createElement('div');
             grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-10";
@@ -1613,8 +1606,7 @@
                 const datePickerBorderClass = filterType === 'custom' ? 'border-brand ring-2 ring-brand' : 'border-gray-600 hover:border-brand focus-within:border-brand focus-within:ring-2 focus-within:ring-brand';
                 
                 dynamicContent.innerHTML += `
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700 gap-4">
-                        <h2 class="text-2xl font-bold text-white flex items-center gap-2">مركز التحليلات</h2>
+                    <div class="flex flex-col md:flex-row justify-end items-start md:items-center mb-8 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700 gap-4">
                         <div class="flex flex-wrap items-center gap-3">
                             <div class="flex bg-gray-800 p-1 rounded-xl">
                                 <button onclick="renderAnalytics(STATE.analyticsData, 'today')" class="${btnClass('today')}">اليوم</button>
@@ -1681,7 +1673,7 @@
         }
 
         function renderTableView() {
-            dynamicContent.innerHTML = `<div class="flex justify-between items-center mb-8 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700"><div class="flex items-center gap-3"><h2 class="text-2xl font-bold text-white">نداءات الطاولات</h2><span class="live-indicator" title="تحديث مباشر"></span></div><div class="text-gray-400 text-sm">اضغط على الطاولة الحمراء لإلغاء النداء</div></div>`;
+            dynamicContent.innerHTML = `<div class="flex justify-between items-center mb-8 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700"><div class="flex items-center gap-3"><span class="live-indicator" title="تحديث مباشر"></span></div><div class="text-gray-400 text-sm">اضغط على الطاولة الحمراء لإلغاء النداء</div></div>`;
             const grid = document.createElement('div');
             grid.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6";
 
@@ -1757,6 +1749,19 @@
             dynamicContent.classList.remove('hidden');
             loader.style.display = 'flex';
             loader.classList.remove('hidden');
+
+            // Update global page title based on clicked menu button
+            const activeBtn = document.getElementById(`btn-${viewType}`);
+            const pageTitleEl = document.getElementById('global-page-title');
+            if (activeBtn && pageTitleEl) {
+                // If button contains a span for text, get its text to avoid grabbing badges
+                const textSpan = activeBtn.querySelector('.font-medium');
+                if (textSpan) {
+                    pageTitleEl.innerText = textSpan.innerText.trim();
+                } else {
+                    pageTitleEl.innerText = activeBtn.innerText.trim();
+                }
+            }
 
             if (viewType === 'kds') {
                 const runKDS = async () => { 
