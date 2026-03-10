@@ -22,9 +22,15 @@
         html {
             scroll-behavior: smooth;
         }
+        
+        /* The Core Change: Ultra-Luxury Emerald Gradient Background */
         body { 
             font-family: 'Amiri', serif; 
             -webkit-tap-highlight-color: transparent; 
+            background-color: #04120B; /* Deep Emerald Night */
+            background-image: radial-gradient(circle at 50% 10%, #0C3825 0%, #04120B 80%);
+            background-attachment: fixed;
+            color: #FDFBF7; /* Ivory Off-White */
         }
         
         /* ضبط الخطوط للغات اللاتينية (Classic Typography) */
@@ -52,39 +58,36 @@
             opacity: 0;
             transform: translateY(20px);
             transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         .reveal-visible {
             opacity: 1;
             transform: translateY(0);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.15), inset 0 0 20px rgba(212, 175, 55, 0.05);
-            border-color: rgba(212, 175, 55, 0.4);
         }
 
-        /* تنسيق أزرار التصنيفات */
+        /* تنسيق أزرار التصنيفات الفاخرة */
         .nav-btn {
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            color: #9ca3af;
-            transition: all 0.2s ease;
+            background: rgba(12, 56, 37, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            color: #E0DCCA;
+            transition: all 0.3s ease;
         }
 
         .nav-active {
-            background: linear-gradient(135deg, #D4AF37 0%, #B5952F 100%) !important;
-            color: #09090b !important; 
+            background: linear-gradient(135deg, #BF953F 0%, #FCF6BA 50%, #B38728 100%) !important;
+            color: #04120B !important; 
             box-shadow: 
-                0 0 10px rgba(212, 175, 55, 0.5), 
-                inset 0 0 5px rgba(255, 255, 255, 0.3) !important;
-            border-color: rgba(255, 255, 255, 0.5) !important;
+                0 0 20px rgba(212, 175, 55, 0.4), 
+                inset 0 0 5px rgba(255, 255, 255, 0.6) !important;
+            border-color: #FCF6BA !important;
             transform: scale(1.05);
             font-weight: 900 !important;
         }
 
         .item-card { transition: transform 0.2s, box-shadow 0.3s, border-color 0.3s; }
-        .item-card:active { transform: scale(0.97); }
+        .item-card:active { transform: scale(0.98); }
         
         @keyframes pop {
             0% { transform: scale(1); }
@@ -99,47 +102,40 @@
         }
         .animate-slide-up-smooth { animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         
-        /* Logo Glow Animation */
+        /* Logo Gold Glow Animation */
         @keyframes logoPulse {
-            0%, 100% { filter: drop-shadow(0 0 8px rgba(212,175,55,0.6)); }
-            50% { filter: drop-shadow(0 0 15px rgba(212,175,55,0.9)); }
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(212,175,55,0.5)); }
+            50% { filter: drop-shadow(0 0 15px rgba(212,175,55,0.8)); }
         }
         .logo-glow { animation: logoPulse 3s infinite; }
 
-        /* تأثير توهج العناوين */
+        /* تأثير توهج العناوين الدافئ */
         @keyframes titleGlow {
-            0%, 100% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.1); color: #ffffff; transform: scale(1); }
-            50% { text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); color: #D4AF37; transform: scale(1.02); }
-        }
-        
-        .glow-text-anim {
-            animation: titleGlow 3s infinite ease-in-out;
-        }
-
-        /* تم تخفيف توهج العنوان الرئيسي */
-        @keyframes welcomeGlow {
             0%, 100% { text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
-            50% { text-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
+            50% { text-shadow: 0 0 25px rgba(212, 175, 55, 0.6); }
         }
         .welcome-title-anim {
-            animation: welcomeGlow 4s infinite ease-in-out;
+            animation: titleGlow 4s infinite ease-in-out;
         }
 
-        /* 3D Glassy Effect for cards */
+        /* 3D Glassy Effect for cards - Carved Emerald & Gold */
         .glass-3d {
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            background: linear-gradient(145deg, rgba(12,56,37,0.5) 0%, rgba(4,18,11,0.8) 100%);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            border-left: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            border-top: 1px solid rgba(212,175,55,0.4);
+            border-left: 1px solid rgba(212,175,55,0.2);
+            border-right: 1px solid rgba(212,175,55,0.1);
+            border-bottom: 1px solid rgba(212,175,55,0.1);
+            /* Subtle warm undercut lighting */
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 5px 25px rgba(212,175,55,0.1);
         }
 
         /* Loader CSS */
         #loader-container {
             position: fixed;
             inset: 0;
-            background-color: #09090b;
+            background-color: #04120B;
             z-index: 100;
             display: flex;
             flex-direction: column;
@@ -151,7 +147,7 @@
         .loader-spinner {
             width: 48px;
             height: 48px;
-            border: 5px solid #3f3f46;
+            border: 5px solid #0C3825;
             border-bottom-color: #D4AF37;
             border-radius: 50%;
             display: inline-block;
@@ -174,15 +170,16 @@
                         latin: ['Playfair Display', 'serif'],
                     },
                     colors: {
-                        brand: { 500: '#D4AF37', 600: '#B5952F', 100: '#3D3418' }, 
-                        dark: { 950: '#09090b', 900: '#18181b', 800: '#27272a', 700: '#3f3f46' }
+                        brand: { 500: '#D4AF37', 600: '#B5952F', 100: '#3D3418', gold: '#BF953F', light: '#FCF6BA', dark: '#B38728' }, 
+                        emerald: { 950: '#04120B', 900: '#072115', 800: '#0C3825', 700: '#125438' },
+                        ivory: { 100: '#FDFBF7', 200: '#F5F0E6', 300: '#E0DCCA', 400: '#C2BEAD' }
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-dark-950 text-gray-100 pb-28 select-none">
+<body class="pb-28 select-none">
 
     <!-- شاشة التحميل (Loader) -->
     <div id="loader-container">
@@ -190,27 +187,27 @@
         <p class="text-brand-500 font-bold text-sm animate-pulse" data-i18n="loading">جاري تحضير القائمة...</p>
     </div>
 
-    <!-- 1. الرأس الثابت (Header) مع توزيع احترافي ثابت -->
-    <div class="fixed top-0 w-full bg-dark-950/90 backdrop-blur-xl border-b border-dark-800 z-50 h-[60px] flex items-center px-4 shadow-lg">
+    <!-- 1. الرأس الثابت (Fixed Header - Deep Green Glassmorphism) -->
+    <div class="fixed top-0 w-full bg-emerald-950/70 backdrop-blur-2xl border-b border-brand-500/40 z-50 h-[60px] flex items-center px-4 shadow-[0_5px_25px_rgba(0,0,0,0.6)]">
         <div class="w-full relative h-full">
             
             <!-- زر اختيار اللغة (يمين الشاشة دائماً) -->
             <div class="absolute right-0 top-1/2 -translate-y-1/2 z-10 flex items-center">
-                <button onclick="toggleLangMenu()" id="lang-btn" class="flex items-center gap-1 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full hover:bg-white/10 transition-all active:scale-95 text-sm font-bold">
+                <button onclick="toggleLangMenu()" id="lang-btn" class="flex items-center gap-1 bg-emerald-800/40 border border-brand-500/30 px-3 py-1.5 rounded-full hover:bg-emerald-800/60 transition-all active:scale-95 text-sm font-bold text-brand-light shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
                     <span id="current-lang-flag" class="number-font">FR</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
                 <!-- قائمة اللغات المنسدلة -->
-                <div id="lang-menu" class="hidden absolute top-12 right-0 mt-2 bg-dark-900 border border-white/10 rounded-2xl shadow-2xl p-2 min-w-[140px] animate-zoom-in glass-3d z-[100]">
-                    <button onclick="setLanguage('ar')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
+                <div id="lang-menu" class="hidden absolute top-12 right-0 mt-2 bg-emerald-900 border border-brand-500/30 rounded-2xl shadow-2xl p-2 min-w-[140px] animate-zoom-in glass-3d z-[100]">
+                    <button onclick="setLanguage('ar')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-800/60 rounded-xl transition-colors text-sm font-bold text-ivory-100">
                         <span class="number-font text-brand-500">AR</span> العربية
                     </button>
-                    <button onclick="setLanguage('fr')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
+                    <button onclick="setLanguage('fr')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-800/60 rounded-xl transition-colors text-sm font-bold text-ivory-100">
                         <span class="number-font text-brand-500">FR</span> Français
                     </button>
-                    <button onclick="setLanguage('en')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 rounded-xl transition-colors text-sm font-bold">
+                    <button onclick="setLanguage('en')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-800/60 rounded-xl transition-colors text-sm font-bold text-ivory-100">
                         <span class="number-font text-brand-500">EN</span> English
                     </button>
                 </div>
@@ -218,14 +215,14 @@
 
             <!-- اسم المطعم (في الوسط تماماً مع خاصية Truncate لمنع التداخل) -->
             <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 flex items-center pointer-events-none justify-center">
-                <span class="text-base sm:text-lg font-black tracking-tighter text-white drop-shadow-lg truncate text-center block max-w-[40vw]">
+                <span class="text-base sm:text-lg font-black tracking-tighter text-ivory-100 drop-shadow-lg truncate text-center block max-w-[40vw]">
                     <span data-i18n="restaurantNamePrefix">مطعم</span> <span class="text-brand-500" data-i18n="restaurantNameSuffix">الفخامة</span>
                 </span>
             </div>
 
             <!-- زر استدعاء النادل (يسار الشاشة دائماً) -->
             <div class="absolute left-0 top-1/2 -translate-y-1/2 z-10 flex items-center">
-                <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-dark-900/90 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] active:scale-95 transition-all duration-300 group logo-glow">
+                <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-emerald-900/80 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] active:scale-95 transition-all duration-300 group logo-glow">
                     <span class="font-bold text-[9px] sm:text-[10px] whitespace-nowrap" data-i18n="callWaiter">إستدعي النادل</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2C10.3431 2 9 3.34315 9 5V6.05202C6.73318 6.92484 5.2323 9.27891 5.62024 11.9939L6.19169 15.9939C6.26252 16.4897 6.03759 16.9855 5.61746 17.2656L4.2886 18.1515C3.76672 18.4994 3.86433 19.324 4.45331 19.5298C6.91896 20.3916 9.53917 20.7302 12 20.7302C14.4608 20.7302 17.081 20.3916 19.5467 19.5298C20.1357 19.324 20.2333 18.4994 19.7114 18.1515L18.3825 17.2656C17.9624 16.9855 17.7375 16.4897 17.8083 15.9939L18.3798 11.9939C18.7677 9.27891 17.2668 6.92484 15 6.05202V5C15 3.34315 13.6569 2 12 2ZM14 22C14 23.1046 13.1046 24 12 24C10.8954 24 10 23.1046 10 22H14Z"></path>
@@ -240,13 +237,13 @@
 
         <!-- عنوان ترحيبي مصغر -->
         <div class="text-center px-4 mb-6 mt-2 animate-zoom-in">
-            <h1 class="text-2xl sm:text-3xl font-black text-white leading-tight welcome-title-anim whitespace-nowrap" data-i18n="welcomeMsg">
+            <h1 class="text-2xl sm:text-3xl font-black text-ivory-100 leading-tight welcome-title-anim whitespace-nowrap" data-i18n="welcomeMsg">
                 مرحبا بيك في مطعمك<br>
             </h1>
         </div>
 
         <!-- 2. شريط التصنيفات (Sticky) -->
-        <div class="sticky top-[60px] z-40 bg-dark-950/95 backdrop-blur-md border-b border-dark-800/50 py-3 mb-6 shadow-md transition-all">
+        <div class="sticky top-[60px] z-40 bg-emerald-950/80 backdrop-blur-md border-b border-brand-500/20 py-3 mb-6 shadow-md transition-all">
             <div class="px-2 overflow-x-auto hide-scrollbar flex justify-center">
                 <div class="flex gap-2 min-w-max px-2">
                     <button onclick="scrollToSection('pizza')" id="btn-pizza" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block" data-i18n="cat_pizza">Pizza</button>
@@ -262,45 +259,45 @@
 
     </div>
 
-    <!-- شريط السلة العائم -->
-    <div id="cart-bar" class="fixed bottom-6 left-4 right-4 bg-gradient-to-r from-brand-500 to-brand-600 text-dark-950 p-3 rounded-2xl shadow-[0_0_30px_rgba(212,175,55,0.3)] transform translate-y-[150%] transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) z-50 flex justify-between items-center cursor-pointer active:scale-95 border border-white/20 glass-3d" onclick="openCartModal()">
+    <!-- شريط السلة العائم (Solid Polished Gold) -->
+    <div id="cart-bar" class="fixed bottom-6 left-4 right-4 bg-gradient-to-r from-brand-gold via-brand-light to-brand-dark text-emerald-950 p-3 rounded-2xl shadow-[0_10px_30px_rgba(212,175,55,0.4)] transform translate-y-[150%] transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) z-50 flex justify-between items-center cursor-pointer active:scale-95 border border-[#FDED9E]" onclick="openCartModal()">
         <div class="flex items-center gap-3">
-            <div class="bg-dark-950 text-brand-500 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shadow-inner border border-brand-600 number-font" id="total-count">0</div>
+            <div class="bg-emerald-950 text-brand-light w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shadow-inner border border-brand-gold number-font" id="total-count">0</div>
             <div class="flex flex-col leading-none">
-                <span class="text-[10px] text-dark-900 font-bold uppercase tracking-wider" data-i18n="total">Total</span>
+                <span class="text-[10px] text-emerald-900 font-bold uppercase tracking-wider" data-i18n="total">Total</span>
                 <span class="font-black text-xl number-font" id="total-price">0 د.ج</span>
             </div>
         </div>
-        <div class="flex items-center gap-2 text-dark-950 font-bold bg-white/20 px-4 py-2 rounded-xl hover:bg-white/30 transition backdrop-blur-md border border-white/10 text-sm">
+        <div class="flex items-center gap-2 text-emerald-950 font-bold bg-white/30 px-4 py-2 rounded-xl hover:bg-white/40 transition backdrop-blur-md border border-white/20 text-sm shadow-sm">
             <span data-i18n="checkCart">تأكد من طلبك</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rtl:rotate-180" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
         </div>
     </div>
 
     <!-- نافذة المودال للسلة -->
-    <div id="cart-modal" class="fixed inset-0 bg-dark-950/90 z-[60] hidden backdrop-blur-md flex items-end sm:items-center justify-center transition-opacity duration-300">
-        <div class="bg-dark-900 border border-white/10 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 relative animate-slide-up-smooth shadow-2xl h-[85vh] sm:h-auto flex flex-col glass-3d">
+    <div id="cart-modal" class="fixed inset-0 bg-emerald-950/80 z-[60] hidden backdrop-blur-md flex items-end sm:items-center justify-center transition-opacity duration-300">
+        <div class="bg-emerald-900 border border-brand-500/40 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 relative animate-slide-up-smooth shadow-[0_0_50px_rgba(0,0,0,0.8)] h-[85vh] sm:h-auto flex flex-col glass-3d">
             
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
-                    <span class="text-brand-500">🛒</span> <span data-i18n="cartTitle">سلة المشتريات</span>
+                <h2 class="text-2xl font-bold text-brand-500 flex items-center gap-2">
+                    <span>🛒</span> <span data-i18n="cartTitle" class="text-ivory-100">سلة المشتريات</span>
                 </h2>
-                <button onclick="closeCartModal()" class="w-9 h-9 bg-white/5 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition">✕</button>
+                <button onclick="closeCartModal()" class="w-9 h-9 bg-emerald-800/50 border border-brand-500/20 rounded-full flex items-center justify-center text-brand-500 hover:text-brand-light hover:bg-emerald-800 transition">✕</button>
             </div>
             
             <div id="cart-items-list" class="flex-1 overflow-y-auto mb-2 space-y-3 hide-scrollbar pr-1"></div>
 
             <!-- الفوتر -->
-            <div class="mt-auto space-y-4 pt-4 border-t border-white/10">
+            <div class="mt-auto space-y-4 pt-4 border-t border-brand-500/20">
                 
                 <div id="upsell-section" class="hidden mb-4 animate-zoom-in"></div>
 
-                <div class="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5 shadow-inner">
-                    <span class="text-gray-400 font-bold" data-i18n="total">Total</span>
+                <div class="flex justify-between items-center bg-emerald-950/50 p-4 rounded-xl border border-brand-500/20 shadow-inner">
+                    <span class="text-ivory-300 font-bold" data-i18n="total">Total</span>
                     <span class="text-3xl font-black text-brand-500 number-font" id="final-price">0 د.ج</span>
                 </div>
 
-                <button onclick="submitOrder()" class="w-full bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#20bd5a] hover:to-[#0e7a6d] text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(37,211,102,0.3)] flex justify-center items-center gap-3 transition-transform active:scale-95 border-t border-white/20">
+                <button onclick="submitOrder()" class="w-full bg-gradient-to-r from-brand-gold via-brand-light to-brand-dark text-emerald-950 font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.4)] flex justify-center items-center gap-3 transition-transform active:scale-95 border border-[#FDED9E]">
                     <span data-i18n="confirmOrder">تأكيد وإرسال الطلب</span>
                 </button>
             </div>
@@ -308,20 +305,20 @@
     </div>
 
     <!-- نافذة عرض الأخطاء (Error Modal) -->
-    <div id="error-modal" class="fixed inset-0 bg-black/80 z-[110] hidden flex items-center justify-center backdrop-blur-sm p-4 animate-zoom-in">
-        <div class="bg-dark-900 border border-red-500/30 rounded-2xl p-6 shadow-2xl w-full max-w-sm text-center relative overflow-hidden glass-3d">
-            <div class="absolute inset-0 bg-red-500/5 pointer-events-none"></div>
+    <div id="error-modal" class="fixed inset-0 bg-emerald-950/90 z-[110] hidden flex items-center justify-center backdrop-blur-sm p-4 animate-zoom-in">
+        <div class="bg-emerald-900 border border-red-500/50 rounded-3xl p-6 shadow-[0_0_50px_rgba(220,38,38,0.3)] w-full max-w-sm text-center relative overflow-hidden glass-3d">
+            <div class="absolute inset-0 bg-red-900/10 pointer-events-none"></div>
             
-            <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+            <div class="w-16 h-16 bg-red-950/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.4)]">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
             </div>
             
-            <h3 class="text-xl font-bold text-white mb-2" data-i18n="alertTitle">تنبيه</h3>
-            <p id="error-message" class="text-gray-400 text-sm mb-6 leading-relaxed">حدث خطأ غير متوقع.</p>
+            <h3 class="text-xl font-bold text-ivory-100 mb-2" data-i18n="alertTitle">تنبيه</h3>
+            <p id="error-message" class="text-ivory-300 text-sm mb-6 leading-relaxed">حدث خطأ غير متوقع.</p>
             
-            <button onclick="closeErrorModal()" class="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-500 font-bold py-3 rounded-xl transition-all active:scale-95" data-i18n="ok">
+            <button onclick="closeErrorModal()" class="w-full bg-red-900/50 hover:bg-red-800/60 border border-red-500/50 text-ivory-100 font-bold py-3 rounded-xl transition-all active:scale-95" data-i18n="ok">
                 حسناً
             </button>
         </div>
@@ -526,7 +523,7 @@
             }
         }
 
-        // هندسة بطاقة المنتج (Immersive Portrait Card)
+        // هندسة بطاقة المنتج (Immersive Portrait Card - Ultra Luxury)
         function createProductCard(p) {
             const qty = cart[p.id] ? cart[p.id].qty : 0;
             const localizedName = p.name[currentLang] || "";
@@ -540,41 +537,42 @@
             } else if (p.hasPromo) {
                 priceVal = `
                     <div class="flex items-center justify-center gap-2">
-                        <span class="text-sm text-red-400/70 line-through font-bold number-font">${p.price}</span>
-                        <span class="text-xl font-black text-brand-500 whitespace-nowrap number-font">${p.promo_price} <span class="text-[10px] font-normal opacity-70">${translations[currentLang]?.currency || ''}</span></span>
+                        <span class="text-sm text-red-400/80 line-through font-bold number-font">${p.price.toFixed(2)}</span>
+                        <span class="text-xl font-black text-brand-500 whitespace-nowrap number-font">${p.promo_price.toFixed(2)} <span class="text-[10px] font-normal text-brand-500/70">${translations[currentLang]?.currency || ''}</span></span>
                     </div>
                 `;
             } else {
-                priceVal = `<span class="text-xl font-black text-brand-500 whitespace-nowrap number-font">${p.price} <span class="text-[10px] font-normal opacity-70">${translations[currentLang]?.currency || ''}</span></span>`;
+                priceVal = `<span class="text-xl font-black text-brand-500 whitespace-nowrap number-font">${p.price.toFixed(2)} <span class="text-[10px] font-normal text-brand-500/70">${translations[currentLang]?.currency || ''}</span></span>`;
             }
 
             const promoBadge = p.hasPromo 
-                ? `<div class="absolute top-6 -left-10 -rotate-45 w-40 text-center bg-red-700 text-white py-1 text-xs font-bold z-40 shadow-[0_2px_10px_rgba(0,0,0,0.5)] border-y border-red-500/50">
+                ? `<div class="absolute top-6 -left-10 -rotate-45 w-40 text-center bg-red-800 text-ivory-100 py-1 text-xs font-bold z-40 shadow-[0_4px_15px_rgba(220,38,38,0.5)] border-y border-red-500/50">
                         ${translations[currentLang]?.discount || ''} <span class="number-font">${discount}%</span>
                    </div>` 
                 : '';
 
             let mediaContent = p.model3d 
-                ? `<div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
+                ? `<div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.12)_0%,rgba(0,0,0,0)_70%)] pointer-events-none z-0"></div>
+                   <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
                    <model-viewer src="${p.model3d}" ar ar-modes="webxr scene-viewer quick-look" environment-image="neutral" auto-rotate camera-controls class="w-full h-full object-cover relative z-10" alt="${localizedName}"></model-viewer>`
                 : `<img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 transition duration-700 relative z-10" alt="${localizedName}">`;
 
             return `
-            <div class="glass-3d rounded-3xl p-5 pb-6 min-h-[70vh] w-full max-w-sm mx-auto flex flex-col relative group border border-white/5 reveal-on-scroll overflow-hidden">
+            <div class="glass-3d rounded-3xl p-5 pb-6 min-h-[70vh] w-full max-w-sm mx-auto flex flex-col relative group overflow-hidden">
                 ${promoBadge}
                 
                 <div class="text-center mb-5 relative z-20 flex-shrink-0">
                     <h3 class="font-bold text-brand-500 text-3xl mb-2 leading-tight tracking-wide drop-shadow-md" style="font-family: inherit;">${localizedName}</h3>
                     <div class="mb-3 flex justify-center w-full">${priceVal}</div>
-                    <p class="text-sm text-gray-300 leading-relaxed font-light">${localizedDesc}</p>
+                    <p class="text-sm text-ivory-300 leading-relaxed font-light">${localizedDesc}</p>
                 </div>
                 
-                <div class="h-[40vh] w-full relative bg-dark-900/50 rounded-2xl border border-white/5 flex items-center justify-center overflow-hidden mb-6 shadow-inner">
+                <div class="h-[40vh] w-full relative bg-emerald-950/60 rounded-2xl border border-brand-500/20 flex items-center justify-center overflow-hidden mb-6 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
                     ${mediaContent}
-                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-50 pointer-events-none z-10"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-emerald-950 to-transparent opacity-60 pointer-events-none z-10"></div>
                 </div>
                 
-                <div class="w-full pt-2 flex-shrink-0 mt-auto">
+                <div class="w-full pt-2 flex-shrink-0 mt-auto relative z-20">
                     <div id="controls-${p.id}" class="w-full">
                         ${generateControlsHTML(p, qty)}
                     </div>
@@ -585,23 +583,23 @@
         // أداة التحكم 
         function generateControlsHTML(p, qty) {
             const arButtonHTML = p.model3d 
-                ? `<button onclick="const card = this.closest('.glass-3d'); if(card){ const mv = card.querySelector('model-viewer'); if(mv) mv.activateAR(); }" class="flex-1 h-12 bg-transparent border border-brand-500 text-brand-500 rounded-full flex justify-center items-center gap-1.5 active:scale-95 transition-transform hover:bg-brand-500/10 px-2 overflow-hidden" title="${translations[currentLang].viewOnTable}">
+                ? `<button onclick="const card = this.closest('.glass-3d'); if(card){ const mv = card.querySelector('model-viewer'); if(mv) mv.activateAR(); }" class="flex-1 h-12 bg-emerald-950/40 border border-brand-500 text-brand-500 rounded-full flex justify-center items-center gap-1.5 active:scale-95 transition-transform hover:bg-brand-500/20 px-2 overflow-hidden shadow-[0_4px_15px_rgba(0,0,0,0.4)]" title="${translations[currentLang].viewOnTable}">
                         <span class="text-lg leading-none flex-shrink-0">👁️</span>
-                        <span class="text-[11px] sm:text-xs font-bold whitespace-nowrap truncate">${translations[currentLang].viewOnTable}</span>
+                        <span class="text-[11px] sm:text-xs font-bold whitespace-nowrap truncate text-brand-light">${translations[currentLang].viewOnTable}</span>
                    </button>` 
                 : '';
 
             let qtyControls = "";
             if (qty > 0) {
                 qtyControls = `
-                <div class="flex-1 flex justify-between items-center bg-white/10 rounded-full p-1 border border-brand-500/30 h-12">
-                    <button onclick="updateCart(${p.id}, -1)" class="w-10 h-full bg-dark-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-dark-950 transition text-xl shadow-inner number-font">-</button>
-                    <span class="font-black text-lg flex-1 text-center text-white number-font">${qty}</span>
-                    <button onclick="updateCart(${p.id}, 1)" class="w-10 h-full bg-brand-500 rounded-full text-dark-950 font-black flex items-center justify-center hover:bg-brand-400 active:scale-95 transition-transform text-xl shadow-md number-font">+</button>
+                <div class="flex-1 flex justify-between items-center bg-emerald-950/60 rounded-full p-1 border border-brand-500/40 h-12 shadow-[0_4px_15px_rgba(0,0,0,0.4)]">
+                    <button onclick="updateCart(${p.id}, -1)" class="w-10 h-full bg-emerald-900 rounded-full text-brand-500 font-bold flex items-center justify-center hover:bg-brand-500 hover:text-emerald-950 transition text-xl shadow-inner number-font">-</button>
+                    <span class="font-black text-lg flex-1 text-center text-ivory-100 number-font">${qty}</span>
+                    <button onclick="updateCart(${p.id}, 1)" class="w-10 h-full bg-gradient-to-r from-brand-gold to-brand-dark rounded-full text-emerald-950 font-black flex items-center justify-center hover:brightness-110 active:scale-95 transition-transform text-xl shadow-md number-font">+</button>
                 </div>`;
             } else {
                 qtyControls = `
-                <button onclick="updateCart(${p.id}, 1)" class="flex-1 bg-brand-500 text-dark-950 h-12 px-3 rounded-full font-bold flex justify-center items-center shadow-[0_4px_15px_rgba(212,175,55,0.3)] active:scale-95 transition-transform gap-1.5">
+                <button onclick="updateCart(${p.id}, 1)" class="flex-1 bg-gradient-to-r from-brand-gold via-brand-light to-brand-dark text-emerald-950 h-12 px-3 rounded-full font-bold flex justify-center items-center shadow-[0_4px_15px_rgba(212,175,55,0.4)] border border-[#FDED9E] active:scale-95 transition-transform gap-1.5">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                     <span class="text-[11px] sm:text-xs whitespace-nowrap truncate">${translations[currentLang].add}</span>
                 </button>`;
@@ -629,7 +627,7 @@
                 const section = document.createElement('section');
                 section.id = `section-${cat.id}`;
                 section.className = "scroll-mt-44 text-center mb-10";
-                section.innerHTML = `<h2 class="text-2xl font-black text-white uppercase tracking-wider glow-text-anim mb-6">${cat.title}</h2>`;
+                section.innerHTML = `<h2 class="text-2xl font-black text-ivory-100 uppercase tracking-wider glow-text-anim mb-6" style="font-family: inherit;">${cat.title}</h2>`;
                 
                 const grid = document.createElement('div');
                 grid.className = "flex flex-col gap-10";
@@ -688,7 +686,7 @@
             const totalQty = Object.values(cart).reduce((a, b) => a + b.qty, 0);
             const totalPrice = Object.values(cart).reduce((a, b) => a + (b.finalPrice * b.qty), 0);
             document.getElementById('total-count').innerText = totalQty;
-            const formattedPrice = `${totalPrice} ${translations[currentLang].currency}`;
+            const formattedPrice = `${totalPrice.toFixed(2)} ${translations[currentLang].currency}`;
             document.getElementById('total-price').innerText = formattedPrice;
             document.getElementById('final-price').innerText = formattedPrice;
             const cartBar = document.getElementById('cart-bar');
@@ -714,20 +712,20 @@
                 if (suggestions.length > 0) {
                     upsellContainer.classList.remove('hidden');
                     let html = `
-                        <div class="bg-brand-500/10 border border-brand-500/30 rounded-2xl p-3 mb-2">
+                        <div class="bg-emerald-800/40 border border-brand-500/30 rounded-2xl p-3 mb-2 shadow-inner">
                             <h4 class="text-brand-500 font-bold text-xs mb-1">${translations[currentLang].upsellTitle}</h4>
-                            <p class="text-white font-bold text-[10px] mb-3 opacity-80">${translations[currentLang].upsellSubtitle}</p>
+                            <p class="text-ivory-100 font-bold text-[10px] mb-3 opacity-80">${translations[currentLang].upsellSubtitle}</p>
                             <div class="flex gap-2">
                     `;
                     suggestions.forEach(p => {
                         html += `
-                            <div class="flex-1 bg-dark-800/80 rounded-xl p-2 flex items-center gap-2 border border-white/5 shadow-lg">
-                                <img src="${p.img}" class="w-8 h-8 rounded-lg object-cover">
+                            <div class="flex-1 bg-emerald-950/80 rounded-xl p-2 flex items-center gap-2 border border-brand-500/20 shadow-lg">
+                                <img src="${p.img}" class="w-8 h-8 rounded-lg object-cover border border-brand-500/30">
                                 <div class="flex-1 min-w-0 text-right">
-                                    <p class="text-white text-[9px] font-bold truncate">${p.name[currentLang]}</p>
-                                    <p class="text-brand-500 text-[9px] font-bold number-font">${p.finalPrice} ${translations[currentLang].currency}</p>
+                                    <p class="text-ivory-100 text-[9px] font-bold truncate" style="font-family: inherit;">${p.name[currentLang]}</p>
+                                    <p class="text-brand-500 text-[9px] font-bold number-font">${p.finalPrice.toFixed(2)} ${translations[currentLang].currency}</p>
                                 </div>
-                                <button onclick="updateCart(${p.id}, 1)" class="w-6 h-6 bg-brand-500 text-dark-950 rounded-full flex items-center justify-center font-black text-lg number-font">+</button>
+                                <button onclick="updateCart(${p.id}, 1)" class="w-6 h-6 bg-gradient-to-r from-brand-gold to-brand-dark text-emerald-950 rounded-full flex items-center justify-center font-black text-lg number-font shadow-sm">+</button>
                             </div>`;
                     });
                     html += `</div></div>`;
@@ -744,14 +742,14 @@
             if (Object.keys(cart).length === 0) return;
             Object.values(cart).forEach(item => {
                 list.innerHTML += `
-                    <div class="flex justify-between items-center text-sm border-b border-white/10 pb-3 last:border-0 animate-slide-up-smooth">
+                    <div class="flex justify-between items-center text-sm border-b border-brand-500/20 pb-3 last:border-0 animate-slide-up-smooth">
                         <div class="flex items-center gap-3">
-                            <span class="bg-white/10 text-brand-500 px-2.5 py-1 rounded text-xs font-bold border border-white/10 number-font">x${item.qty}</span>
-                            <span class="font-medium text-gray-200">${item.name[currentLang]}</span>
+                            <span class="bg-emerald-800/60 text-brand-light px-2.5 py-1 rounded text-xs font-bold border border-brand-500/30 number-font shadow-inner">x${item.qty}</span>
+                            <span class="font-medium text-ivory-100" style="font-family: inherit;">${item.name[currentLang]}</span>
                         </div>
                         <div class="flex items-center gap-3">
-                             <span class="font-bold text-brand-500 number-font">${item.finalPrice === 0 ? 'Free' : (item.finalPrice * item.qty) + ' ' + translations[currentLang].currency}</span>
-                             <button onclick="removeFromCart(${item.id})" class="text-red-400 text-xs px-2 py-1 bg-red-500/10 rounded hover:bg-red-500/30 transition">✕</button>
+                             <span class="font-bold text-brand-500 number-font">${item.finalPrice === 0 ? 'Free' : (item.finalPrice * item.qty).toFixed(2) + ' ' + translations[currentLang].currency}</span>
+                             <button onclick="removeFromCart(${item.id})" class="text-red-400 text-xs px-2 py-1 bg-red-900/40 rounded hover:bg-red-800/60 border border-red-500/30 transition">✕</button>
                         </div>
                     </div>`;
             });
@@ -823,14 +821,14 @@
 
         function showSuccessOrderModal() {
             const modal = document.createElement('div');
-            modal.className = "fixed inset-0 bg-dark-950/95 z-[70] flex flex-col items-center justify-center p-4 text-center animate-zoom-in";
+            modal.className = "fixed inset-0 bg-emerald-950/95 z-[70] flex flex-col items-center justify-center p-4 text-center animate-zoom-in";
             modal.innerHTML = `
-                <div class="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mb-6 border border-green-500/20 shadow-[0_0_30px_rgba(34,197,94,0.2)]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                <div class="w-24 h-24 bg-emerald-900/80 rounded-full flex items-center justify-center mb-6 border border-brand-500/50 shadow-[0_0_30px_rgba(212,175,55,0.3)]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
                 </div>
-                <h2 class="text-3xl font-black text-white mb-2">${translations[currentLang].orderSent}</h2>
-                <p class="text-gray-400 mb-8 max-w-xs leading-relaxed">${translations[currentLang].orderWait}</p>
-                <button onclick="location.reload()" class="bg-dark-800 text-white px-8 py-4 rounded-xl font-bold border border-dark-700 w-full max-w-xs shadow-lg">${translations[currentLang].backHome}</button>`;
+                <h2 class="text-3xl font-black text-brand-500 mb-2" style="font-family: inherit;">${translations[currentLang].orderSent}</h2>
+                <p class="text-ivory-300 mb-8 max-w-xs leading-relaxed">${translations[currentLang].orderWait}</p>
+                <button onclick="location.reload()" class="bg-emerald-800 text-ivory-100 px-8 py-4 rounded-xl font-bold border border-brand-500/30 w-full max-w-xs shadow-lg active:scale-95 transition-transform">${translations[currentLang].backHome}</button>`;
             document.body.appendChild(modal);
         }
 
@@ -841,10 +839,5 @@
         });
     </script>
     
-    <style>
-    @keyframes swing { 0%, 100% { transform: rotate(0deg); } 20% { transform: rotate(15deg); } 40% { transform: rotate(-10deg); } 60% { transform: rotate(5deg); } 80% { transform: rotate(-5deg); } }
-    .group-hover\:animate-swing:hover { animation: swing 1s ease-in-out infinite; }
-    .logo-glow { animation: logoPulse 2s infinite; }
-    </style>
 </body>
 </html>
