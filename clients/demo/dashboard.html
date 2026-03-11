@@ -621,6 +621,25 @@
         // 🛠️ Utilities
         // =========================================================
 
+        // تحديث مظهر زر رفع الملف
+        window.updateFileName = function(input) {
+            const label = document.getElementById('file-upload-label');
+            if (input.files && input.files.length > 0) {
+                const fileName = input.files[0].name;
+                label.className = "w-full flex items-center justify-start gap-2 bg-gray-700 text-white font-bold rounded-lg px-4 py-3 cursor-pointer transition shadow-inner border border-gray-600";
+                label.innerHTML = `
+                    <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span class="truncate">${fileName}</span>
+                `;
+            } else {
+                label.className = "w-full flex items-center justify-center gap-2 bg-gray-800 text-gray-300 font-medium rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-700 transition shadow-sm border border-gray-600";
+                label.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    <span>اختر صورة...</span>
+                `;
+            }
+        };
+
         // التحكم في قائمة المنيو المنسدلة (Accordion)
         window.toggleMenuAccordion = function() {
             const submenu = document.getElementById('menu-submenu');
@@ -1794,19 +1813,30 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">التصنيف</label>
-                            <select id="add-category" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition appearance-none">
-                                <option value="pizza">Pizza</option>
-                                <option value="burger">Burger</option>
-                                <option value="boissons">Boissons</option>
-                                <option value="suppléments">Suppléments</option>
-                            </select>
+                            <div class="relative">
+                                <select id="add-category" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition appearance-none">
+                                    <option value="pizza">Pizza</option>
+                                    <option value="burger">Burger</option>
+                                    <option value="boissons">Boissons</option>
+                                    <option value="suppléments">Suppléments</option>
+                                </select>
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">صورة الطبق (اختياري)</label>
-                        <input type="file" id="add-image" accept="image/*" class="w-full bg-gray-900 border border-gray-600 text-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand outline-none transition file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand file:text-black hover:file:bg-brand-dark cursor-pointer">
-                        <p class="text-xs text-gray-500 mt-1">يُفضل استخدام صور واضحة ومناسبة (jpg, png).</p>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">صورة الطبق</label>
+                        <div class="relative">
+                            <input type="file" id="add-image" accept="image/*" class="hidden" onchange="updateFileName(this)">
+                            <label for="add-image" id="file-upload-label" class="w-full flex items-center justify-center gap-2 bg-gray-800 text-gray-300 font-medium rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-700 transition shadow-sm border border-gray-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                <span>اختر صورة...</span>
+                            </label>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">يُفضل استخدام صور واضحة ومناسبة (jpg, png).</p>
                     </div>
 
                     <div class="pt-4 mt-6 border-t border-gray-700">
@@ -1972,7 +2002,7 @@
                 const payload = {
                     "Name": name,
                     "Description": desc,
-                    "Price": price, 
+                    "Price": price, // تم تصحيح نوع البيانات ليصبح رقماً (Number)
                     "Category": category,
                     "Availability": "متوفر"
                 };
@@ -2013,6 +2043,7 @@
                 priceInput.value = '';
                 imgInput.value = '';
                 catInput.value = 'pizza';
+                updateFileName(imgInput); // إعادة زر الصورة لشكله الافتراضي
                 
             } catch (error) {
                 console.error("Baserow API Error Details:", error);
