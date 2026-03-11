@@ -1820,7 +1820,7 @@
             const payload = {
                 "Name": name,
                 "Description": desc,
-                "Price": String(price),
+                "Price": price, // تم تصحيح نوع البيانات ليصبح رقماً (Number)
                 "Category": category,
                 "Availability": "متوفر"
             };
@@ -1837,7 +1837,17 @@
 
                 if (!response.ok) {
                     const errData = await response.json();
-                    throw new Error(errData.error || "Failed to create item");
+                    let errorMsg = errData.error || "Failed to create item";
+                    // ترقية نظام كشف الأخطاء لاستخراج التفاصيل
+                    if (errData.detail) {
+                        if (typeof errData.detail === 'object') {
+                            const details = Object.entries(errData.detail).map(([field, msgs]) => `${field}: ${msgs.join(', ')}`).join(' | ');
+                            errorMsg += " - التفاصيل: " + details;
+                        } else {
+                            errorMsg += " - " + String(errData.detail);
+                        }
+                    }
+                    throw new Error(errorMsg);
                 }
 
                 showToast("تمت إضافة الطبق بنجاح ✅", "success");
