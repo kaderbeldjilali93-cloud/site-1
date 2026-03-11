@@ -1803,6 +1803,12 @@
                         </div>
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">صورة الطبق (اختياري)</label>
+                        <input type="file" id="add-image" accept="image/*" class="w-full bg-gray-900 border border-gray-600 text-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand outline-none transition file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand file:text-black hover:file:bg-brand-dark cursor-pointer">
+                        <p class="text-xs text-gray-500 mt-1">يُفضل استخدام صور واضحة ومناسبة (jpg, png).</p>
+                    </div>
+
                     <div class="pt-4 mt-6 border-t border-gray-700">
                         <button id="btn-submit-dish" onclick="submitNewDish()" class="w-full bg-brand hover:bg-brand-dark text-black font-bold text-lg py-4 rounded-xl transition shadow-lg transform hover:scale-[1.01]">
                             إضافة الطبق الآن
@@ -1910,11 +1916,13 @@
             const descInput = document.getElementById('add-desc');
             const priceInput = document.getElementById('add-price');
             const catInput = document.getElementById('add-category');
+            const imgInput = document.getElementById('add-image');
 
             const name = nameInput.value.trim();
             const desc = descInput.value.trim();
             const price = parseFloat(priceInput.value);
             const category = catInput.value;
+            const imageFile = imgInput.files[0];
 
             if (!name) {
                 showToast("الرجاء إدخال اسم الطبق", "error");
@@ -1928,19 +1936,51 @@
             }
 
             const originalBtnText = btn.innerHTML;
-            btn.innerHTML = `<span class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-black"></div> جاري الإضافة...</span>`;
+            btn.innerHTML = `<span class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-black"></div> جاري رفع الصورة وإضافة الطبق...</span>`;
             btn.disabled = true;
             btn.classList.add('opacity-70', 'cursor-not-allowed');
             
-            const payload = {
-                "Name": name,
-                "Description": desc,
-                "Price": price, // تم تصحيح نوع البيانات ليصبح رقماً (Number)
-                "Category": category,
-                "Availability": "متوفر"
-            };
-
             try {
+                let uploadedFileName = null;
+                
+                // 1. Upload Image (Two-Step Upload)
+                if (imageFile) {
+                    const formData = new FormData();
+                    formData.append("file", imageFile);
+                    
+                    const uploadResponse = await fetch(`https://baserow.vidsai.site/api/user-files/upload-file/`, {
+                        method: 'POST',
+                        headers: {
+                            "Authorization": `Token ${BASEROW_TOKEN}`
+                            // لا نضع Content-Type حتى يتكفل المتصفح بإضافة multipart/form-data والـ boundary
+                        },
+                        body: formData
+                    });
+                    
+                    if (!uploadResponse.ok) {
+                        const errUpload = await uploadResponse.json();
+                        throw new Error("فشل رفع الصورة: " + (errUpload.error || ""));
+                    }
+                    
+                    const uploadedFileObj = await uploadResponse.json();
+                    if(uploadedFileObj && uploadedFileObj.name) {
+                        uploadedFileName = uploadedFileObj.name;
+                    }
+                }
+
+                // 2. Create the Dish Record
+                const payload = {
+                    "Name": name,
+                    "Description": desc,
+                    "Price": price, 
+                    "Category": category,
+                    "Availability": "متوفر"
+                };
+
+                if (uploadedFileName) {
+                    payload["image"] = [{ "name": uploadedFileName }];
+                }
+
                 const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true`, {
                     method: 'POST',
                     headers: { 
@@ -1971,6 +2011,7 @@
                 nameInput.value = '';
                 descInput.value = '';
                 priceInput.value = '';
+                imgInput.value = '';
                 catInput.value = 'pizza';
                 
             } catch (error) {
