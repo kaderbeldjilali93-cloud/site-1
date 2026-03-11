@@ -191,32 +191,25 @@
     <div class="fixed top-0 w-full bg-emerald-950/70 backdrop-blur-2xl border-b border-brand-500/40 z-50 h-[60px] shadow-[0_5px_25px_rgba(0,0,0,0.6)] block">
         
         <!-- زر استدعاء النادل (يسار الشاشة دائماً) -->
-        <div class="absolute left-3 top-1/2 -translate-y-1/2 max-w-[125px] z-10">
-            <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-emerald-900/80 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] active:scale-95 transition-all duration-300 group logo-glow w-full">
-                <span class="font-bold text-[10px] sm:text-xs truncate" data-i18n="callWaiter">Appeler Serveur</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
+        <div class="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+            <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-900/80 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] active:scale-95 transition-all duration-300 group logo-glow">
+                <span class="font-bold text-xs sm:text-sm whitespace-nowrap text-center leading-tight" data-i18n="callWaiter">Appeler Serveur</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C10.3431 2 9 3.34315 9 5V6.05202C6.73318 6.92484 5.2323 9.27891 5.62024 11.9939L6.19169 15.9939C6.26252 16.4897 6.03759 16.9855 5.61746 17.2656L4.2886 18.1515C3.76672 18.4994 3.86433 19.324 4.45331 19.5298C6.91896 20.3916 9.53917 20.7302 12 20.7302C14.4608 20.7302 17.081 20.3916 19.5467 19.5298C20.1357 19.324 20.2333 18.4994 19.7114 18.1515L18.3825 17.2656C17.9624 16.9855 17.7375 16.4897 17.8083 15.9939L18.3798 11.9939C18.7677 9.27891 17.2668 6.92484 15 6.05202V5C15 3.34315 13.6569 2 12 2ZM14 22C14 23.1046 13.1046 24 12 24C10.8954 24 10 23.1046 10 22H14Z"></path>
                 </svg>
             </button>
         </div>
 
-        <!-- اسم المطعم (في الوسط مع منطقة آمنة مقيدة) -->
-        <div class="absolute top-1/2 -translate-y-1/2 left-[140px] right-[90px] pointer-events-none flex items-center justify-center">
-            <span class="text-sm sm:text-base font-black tracking-tighter text-ivory-100 drop-shadow-lg truncate block w-full text-center">
-                <span data-i18n="restaurantNamePrefix">Restaurant</span> <span class="text-brand-500" data-i18n="restaurantNameSuffix">Luxe</span>
-            </span>
-        </div>
-
         <!-- زر اختيار اللغة (يمين الشاشة دائماً) -->
-        <div class="absolute right-3 top-1/2 -translate-y-1/2 z-10">
-            <button onclick="toggleLangMenu()" id="lang-btn" class="flex items-center justify-center gap-1 bg-emerald-800/40 border border-brand-500/30 px-2.5 py-1.5 rounded-full hover:bg-emerald-800/60 transition-all active:scale-95 text-xs font-bold text-brand-light shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
+        <div class="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+            <button onclick="toggleLangMenu()" id="lang-btn" class="flex items-center justify-center gap-1.5 bg-emerald-800/40 border border-brand-500/30 px-3 py-2 rounded-full hover:bg-emerald-800/60 transition-all active:scale-95 text-sm font-bold text-brand-light shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
                 <span id="current-lang-flag" class="number-font">FR</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
             <!-- قائمة اللغات المنسدلة -->
-            <div id="lang-menu" class="hidden absolute top-10 right-0 mt-2 bg-emerald-900 border border-brand-500/30 rounded-2xl shadow-2xl p-2 min-w-[140px] animate-zoom-in glass-3d z-[100]">
+            <div id="lang-menu" class="hidden absolute top-12 right-0 mt-2 bg-emerald-900 border border-brand-500/30 rounded-2xl shadow-2xl p-2 min-w-[140px] animate-zoom-in glass-3d z-[100]">
                 <button onclick="setLanguage('ar')" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-800/60 rounded-xl transition-colors text-sm font-bold text-ivory-100">
                     <span class="number-font text-brand-500">AR</span> العربية
                 </button>
@@ -232,12 +225,15 @@
     </div>
 
     <!-- حاوية المحتوى -->
-    <div class="pt-[80px]">
+    <div class="pt-[90px]">
 
-        <!-- عنوان ترحيبي مصغر -->
-        <div class="text-center px-4 mb-6 mt-2 animate-zoom-in">
-            <h1 class="text-2xl sm:text-3xl font-black text-ivory-100 leading-tight welcome-title-anim whitespace-normal break-words" data-i18n="welcomeMsg">
-                Bienvenue dans votre restaurant<br>
+        <!-- عنوان ترحيبي واسم المطعم البارز -->
+        <div class="text-center px-4 mb-8 animate-zoom-in">
+            <span class="text-4xl sm:text-5xl font-black text-ivory-100 drop-shadow-lg mb-2 block tracking-tight">
+                <span data-i18n="restaurantNamePrefix">Restaurant</span> <span class="text-brand-500" data-i18n="restaurantNameSuffix">Luxe</span>
+            </span>
+            <h1 class="text-lg sm:text-xl font-bold text-ivory-300/80 leading-tight welcome-title-anim whitespace-normal break-words" data-i18n="welcomeMsg">
+                Bienvenue dans votre restaurant
             </h1>
         </div>
 
@@ -553,7 +549,7 @@
             let mediaContent = p.model3d 
                 ? `<div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.12)_0%,rgba(0,0,0,0)_70%)] pointer-events-none z-0"></div>
                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.8)_0%,_rgba(0,0,0,0)_70%)] blur-md pointer-events-none z-0"></div>
-                   <model-viewer src="${p.model3d}" ar ar-modes="webxr scene-viewer quick-look" environment-image="neutral" auto-rotate camera-controls class="w-full h-full object-cover relative z-10 touch-none" style="touch-action: none;" alt="${localizedName}"></model-viewer>`
+                   <model-viewer src="${p.model3d}" ar ar-modes="webxr scene-viewer quick-look" environment-image="neutral" auto-rotate camera-controls max-camera-orbit="auto 85deg auto" min-camera-orbit="auto 0deg auto" class="w-full h-full object-cover relative z-10 touch-none" style="touch-action: none;" alt="${localizedName}"></model-viewer>`
                 : `<img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 transition duration-700 relative z-10" alt="${localizedName}">`;
 
             return `
