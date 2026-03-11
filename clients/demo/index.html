@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="fr" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>قائمة الطعام | مطعم الفخامة</title>
+    <title>Menu | Restaurant Luxe</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -184,7 +184,7 @@
     <!-- شاشة التحميل (Loader) -->
     <div id="loader-container">
         <div class="loader-spinner mb-4"></div>
-        <p class="text-brand-500 font-bold text-sm animate-pulse" data-i18n="loading">جاري تحضير القائمة...</p>
+        <p class="text-brand-500 font-bold text-sm animate-pulse" data-i18n="loading">Chargement du menu...</p>
     </div>
 
     <!-- 1. الرأس الثابت (Fixed Header - Deep Green Glassmorphism) -->
@@ -216,14 +216,14 @@
             <!-- اسم المطعم (في الوسط تماماً مع خاصية Truncate لمنع التداخل) -->
             <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 flex items-center pointer-events-none justify-center">
                 <span class="text-base sm:text-lg font-black tracking-tighter text-ivory-100 drop-shadow-lg truncate text-center block max-w-[40vw]">
-                    <span data-i18n="restaurantNamePrefix">مطعم</span> <span class="text-brand-500" data-i18n="restaurantNameSuffix">الفخامة</span>
+                    <span data-i18n="restaurantNamePrefix">Restaurant</span> <span class="text-brand-500" data-i18n="restaurantNameSuffix">Luxe</span>
                 </span>
             </div>
 
             <!-- زر استدعاء النادل (يسار الشاشة دائماً) -->
             <div class="absolute left-0 top-1/2 -translate-y-1/2 z-10 flex items-center">
                 <button onclick="callWaiter()" id="waiter-btn" class="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-emerald-900/80 backdrop-blur-md border border-brand-500 text-brand-500 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] active:scale-95 transition-all duration-300 group logo-glow">
-                    <span class="font-bold text-[9px] sm:text-[10px] whitespace-nowrap" data-i18n="callWaiter">إستدعي النادل</span>
+                    <span class="font-bold text-[9px] sm:text-[10px] whitespace-normal text-center leading-tight break-words" data-i18n="callWaiter">Appeler Serveur</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:animate-swing" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2C10.3431 2 9 3.34315 9 5V6.05202C6.73318 6.92484 5.2323 9.27891 5.62024 11.9939L6.19169 15.9939C6.26252 16.4897 6.03759 16.9855 5.61746 17.2656L4.2886 18.1515C3.76672 18.4994 3.86433 19.324 4.45331 19.5298C6.91896 20.3916 9.53917 20.7302 12 20.7302C14.4608 20.7302 17.081 20.3916 19.5467 19.5298C20.1357 19.324 20.2333 18.4994 19.7114 18.1515L18.3825 17.2656C17.9624 16.9855 17.7375 16.4897 17.8083 15.9939L18.3798 11.9939C18.7677 9.27891 17.2668 6.92484 15 6.05202V5C15 3.34315 13.6569 2 12 2ZM14 22C14 23.1046 13.1046 24 12 24C10.8954 24 10 23.1046 10 22H14Z"></path>
                     </svg>
@@ -237,19 +237,19 @@
 
         <!-- عنوان ترحيبي مصغر -->
         <div class="text-center px-4 mb-6 mt-2 animate-zoom-in">
-            <h1 class="text-2xl sm:text-3xl font-black text-ivory-100 leading-tight welcome-title-anim whitespace-nowrap" data-i18n="welcomeMsg">
-                مرحبا بيك في مطعمك<br>
+            <h1 class="text-2xl sm:text-3xl font-black text-ivory-100 leading-tight welcome-title-anim whitespace-normal break-words" data-i18n="welcomeMsg">
+                Bienvenue dans votre restaurant<br>
             </h1>
         </div>
 
         <!-- 2. شريط التصنيفات (Sticky) -->
         <div class="sticky top-[60px] z-40 bg-emerald-950/80 backdrop-blur-md border-b border-brand-500/20 py-3 mb-6 shadow-md transition-all">
             <div class="px-2 overflow-x-auto hide-scrollbar flex justify-center">
-                <div class="flex gap-2 min-w-max px-2">
-                    <button onclick="scrollToSection('pizza')" id="btn-pizza" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block" data-i18n="cat_pizza">Pizza</button>
-                    <button onclick="scrollToSection('burger')" id="btn-burger" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block" data-i18n="cat_burger">Burger</button>
-                    <button onclick="scrollToSection('drinks')" id="btn-drinks" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block" data-i18n="cat_drinks">Boissons</button>
-                    <button onclick="scrollToSection('sides')" id="btn-sides" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap text-center block" data-i18n="cat_sides">Suppléments</button>
+                <div class="flex gap-2 min-w-max px-2 w-full sm:w-auto">
+                    <button onclick="scrollToSection('pizza')" id="btn-pizza" class="nav-btn px-3 py-2 rounded-lg text-[11px] sm:text-xs font-bold shadow-sm whitespace-normal break-words text-center block flex-1" data-i18n="cat_pizza">Pizza</button>
+                    <button onclick="scrollToSection('burger')" id="btn-burger" class="nav-btn px-3 py-2 rounded-lg text-[11px] sm:text-xs font-bold shadow-sm whitespace-normal break-words text-center block flex-1" data-i18n="cat_burger">Burger</button>
+                    <button onclick="scrollToSection('drinks')" id="btn-drinks" class="nav-btn px-3 py-2 rounded-lg text-[11px] sm:text-xs font-bold shadow-sm whitespace-normal break-words text-center block flex-1" data-i18n="cat_drinks">Boissons</button>
+                    <button onclick="scrollToSection('sides')" id="btn-sides" class="nav-btn px-3 py-2 rounded-lg text-[11px] sm:text-xs font-bold shadow-sm whitespace-normal break-words text-center block flex-1" data-i18n="cat_sides">Suppléments</button>
                 </div>
             </div>
         </div>
@@ -265,11 +265,11 @@
             <div class="bg-emerald-950 text-brand-light w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shadow-inner border border-brand-gold number-font" id="total-count">0</div>
             <div class="flex flex-col leading-none">
                 <span class="text-[10px] text-emerald-900 font-bold uppercase tracking-wider" data-i18n="total">Total</span>
-                <span class="font-black text-xl number-font" id="total-price">0 د.ج</span>
+                <span class="font-black text-xl number-font" id="total-price">0 DA</span>
             </div>
         </div>
-        <div class="flex items-center gap-2 text-emerald-950 font-bold bg-white/30 px-4 py-2 rounded-xl hover:bg-white/40 transition backdrop-blur-md border border-white/20 text-sm shadow-sm">
-            <span data-i18n="checkCart">تأكد من طلبك</span>
+        <div class="flex items-center gap-2 text-emerald-950 font-bold bg-white/30 px-4 py-2 rounded-xl hover:bg-white/40 transition backdrop-blur-md border border-white/20 text-sm shadow-sm whitespace-normal break-words text-center leading-tight">
+            <span data-i18n="checkCart">Vérifier commande</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rtl:rotate-180" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
         </div>
     </div>
@@ -280,7 +280,7 @@
             
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold text-brand-500 flex items-center gap-2">
-                    <span>🛒</span> <span data-i18n="cartTitle" class="text-ivory-100">سلة المشتريات</span>
+                    <span>🛒</span> <span data-i18n="cartTitle" class="text-ivory-100">Votre Panier</span>
                 </h2>
                 <button onclick="closeCartModal()" class="w-9 h-9 bg-emerald-800/50 border border-brand-500/20 rounded-full flex items-center justify-center text-brand-500 hover:text-brand-light hover:bg-emerald-800 transition">✕</button>
             </div>
@@ -294,11 +294,11 @@
 
                 <div class="flex justify-between items-center bg-emerald-950/50 p-4 rounded-xl border border-brand-500/20 shadow-inner">
                     <span class="text-ivory-300 font-bold" data-i18n="total">Total</span>
-                    <span class="text-3xl font-black text-brand-500 number-font" id="final-price">0 د.ج</span>
+                    <span class="text-3xl font-black text-brand-500 number-font" id="final-price">0 DA</span>
                 </div>
 
                 <button onclick="submitOrder()" class="w-full bg-gradient-to-r from-brand-gold via-brand-light to-brand-dark text-emerald-950 font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.4)] flex justify-center items-center gap-3 transition-transform active:scale-95 border border-[#FDED9E]">
-                    <span data-i18n="confirmOrder">تأكيد وإرسال الطلب</span>
+                    <span data-i18n="confirmOrder">Confirmer la commande</span>
                 </button>
             </div>
         </div>
@@ -315,11 +315,11 @@
                 </svg>
             </div>
             
-            <h3 class="text-xl font-bold text-ivory-100 mb-2" data-i18n="alertTitle">تنبيه</h3>
-            <p id="error-message" class="text-ivory-300 text-sm mb-6 leading-relaxed">حدث خطأ غير متوقع.</p>
+            <h3 class="text-xl font-bold text-ivory-100 mb-2" data-i18n="alertTitle">Alerte</h3>
+            <p id="error-message" class="text-ivory-300 text-sm mb-6 leading-relaxed">Erreur de connexion cuisine !</p>
             
             <button onclick="closeErrorModal()" class="w-full bg-red-900/50 hover:bg-red-800/60 border border-red-500/50 text-ivory-100 font-bold py-3 rounded-xl transition-all active:scale-95" data-i18n="ok">
-                حسناً
+                OK
             </button>
         </div>
     </div>
@@ -561,10 +561,10 @@
             <div class="glass-3d rounded-3xl p-5 pb-6 min-h-[70vh] w-full max-w-sm mx-auto flex flex-col relative group overflow-hidden">
                 ${promoBadge}
                 
-                <div class="text-center mb-5 relative z-20 flex-shrink-0">
-                    <h3 class="font-bold text-brand-500 text-3xl mb-2 leading-tight tracking-wide drop-shadow-md" style="font-family: inherit;">${localizedName}</h3>
+                <div class="text-center mb-5 relative z-20 flex-shrink-0 w-full flex flex-col items-center">
+                    <h3 class="font-bold text-brand-500 text-xl sm:text-2xl mb-2 leading-tight tracking-wide drop-shadow-md break-words whitespace-normal w-full" style="font-family: inherit;">${localizedName}</h3>
                     <div class="mb-3 flex justify-center w-full">${priceVal}</div>
-                    <p class="text-sm text-ivory-300 leading-relaxed font-light">${localizedDesc}</p>
+                    <p class="text-xs sm:text-sm text-ivory-300 leading-relaxed font-light break-words whitespace-normal line-clamp-3 w-full">${localizedDesc}</p>
                 </div>
                 
                 <div class="h-[35vh] w-4/5 mx-auto relative bg-emerald-950/60 rounded-2xl border border-brand-500/20 flex items-center justify-center overflow-hidden mb-6 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
@@ -585,7 +585,7 @@
             const arButtonHTML = p.model3d 
                 ? `<button onclick="const card = this.closest('.glass-3d'); if(card){ const mv = card.querySelector('model-viewer'); if(mv) mv.activateAR(); }" class="flex-1 h-12 bg-emerald-950/40 border border-brand-500 text-brand-500 rounded-full flex justify-center items-center gap-1.5 active:scale-95 transition-transform hover:bg-brand-500/20 px-2 overflow-hidden shadow-[0_4px_15px_rgba(0,0,0,0.4)]" title="${translations[currentLang].viewOnTable}">
                         <span class="text-lg leading-none flex-shrink-0">👁️</span>
-                        <span class="text-[11px] sm:text-xs font-bold whitespace-nowrap truncate text-brand-light">${translations[currentLang].viewOnTable}</span>
+                        <span class="text-[10px] sm:text-[11px] font-bold whitespace-normal leading-tight text-center break-words text-brand-light">${translations[currentLang].viewOnTable}</span>
                    </button>` 
                 : '';
 
@@ -599,14 +599,14 @@
                 </div>`;
             } else {
                 qtyControls = `
-                <button onclick="updateCart(${p.id}, 1)" class="flex-1 bg-gradient-to-r from-brand-gold via-brand-light to-brand-dark text-emerald-950 h-12 px-3 rounded-full font-bold flex justify-center items-center shadow-[0_4px_15px_rgba(212,175,55,0.4)] border border-[#FDED9E] active:scale-95 transition-transform gap-1.5">
+                <button onclick="updateCart(${p.id}, 1)" class="flex-1 bg-gradient-to-r from-brand-gold via-brand-light to-brand-dark text-emerald-950 h-12 px-2 sm:px-3 rounded-full font-bold flex justify-center items-center shadow-[0_4px_15px_rgba(212,175,55,0.4)] border border-[#FDED9E] active:scale-95 transition-transform gap-1.5">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                    <span class="text-[11px] sm:text-xs whitespace-nowrap truncate">${translations[currentLang].add}</span>
+                    <span class="text-[10px] sm:text-[11px] whitespace-normal leading-tight text-center break-words">${translations[currentLang].add}</span>
                 </button>`;
             }
 
             return `
-            <div class="flex items-center justify-between gap-3 w-full">
+            <div class="flex items-center justify-between gap-2 sm:gap-3 w-full">
                 ${arButtonHTML}
                 ${qtyControls}
             </div>`;
