@@ -1722,18 +1722,12 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">التصنيف</label>
                             <select id="add-category" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition appearance-none">
-                                <option value="Pizza">Pizza (بيتزا)</option>
-                                <option value="Burger">Burger (برجر)</option>
-                                <option value="Boissons">Boissons (مشروبات)</option>
-                                <option value="Suppléments">Suppléments (إضافات)</option>
+                                <option value="pizza">Pizza</option>
+                                <option value="burger">Burger</option>
+                                <option value="boissons">Boissons</option>
+                                <option value="suppléments">Suppléments</option>
                             </select>
                         </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">رابط الصورة (اختياري)</label>
-                        <input type="text" id="add-image" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition text-left" dir="ltr" placeholder="https://example.com/image.jpg">
-                        <p class="text-xs text-gray-500 mt-1">يُفضل استخدام روابط مباشرة للصور (jpg, png).</p>
                     </div>
 
                     <div class="pt-4 mt-6 border-t border-gray-700">
@@ -1793,13 +1787,11 @@
             const descInput = document.getElementById('add-desc');
             const priceInput = document.getElementById('add-price');
             const catInput = document.getElementById('add-category');
-            const imgInput = document.getElementById('add-image');
 
             const name = nameInput.value.trim();
             const desc = descInput.value.trim();
             const price = parseFloat(priceInput.value);
             const category = catInput.value;
-            const imageUrl = imgInput.value.trim();
 
             if (!name) {
                 showToast("الرجاء إدخال اسم الطبق", "error");
@@ -1820,7 +1812,7 @@
             const payload = {
                 "Name": name,
                 "Description": desc,
-                "Price": price, // تم تصحيح نوع البيانات ليصبح رقماً (Number)
+                "Price": price, 
                 "Category": category,
                 "Availability": "متوفر"
             };
@@ -1856,8 +1848,7 @@
                 nameInput.value = '';
                 descInput.value = '';
                 priceInput.value = '';
-                imgInput.value = '';
-                catInput.value = 'Pizza';
+                catInput.value = 'pizza';
                 
             } catch (error) {
                 console.error("Baserow API Error Details:", error);
