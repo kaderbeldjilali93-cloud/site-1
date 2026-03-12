@@ -427,20 +427,22 @@
 
         // دالة جلب إعدادات المطعم من التخزين المحلي وتحديث الواجهة
         function loadRestaurantSettings() {
-            const savedName = localStorage.getItem('menu_restaurant_name');
+            const savedName = localStorage.getItem('menu_restaurant_name') || 'Restaurant Luxe';
             const savedLogo = localStorage.getItem('menu_restaurant_logo');
 
-            if (savedName) {
-                const nameEls = document.querySelectorAll('#customer-menu-name, #customer-menu-name-header');
-                nameEls.forEach(el => el.textContent = savedName);
+            const nameEl = document.getElementById('customer-menu-name');
+            if (nameEl) {
+                nameEl.textContent = savedName;
             }
 
-            if (savedLogo) {
-                const logoEls = document.querySelectorAll('#customer-menu-logo, #customer-menu-logo-header');
-                logoEls.forEach(el => {
-                    el.src = savedLogo;
-                    el.classList.remove('hidden');
-                });
+            const logoEl = document.getElementById('customer-menu-logo');
+            if (logoEl) {
+                if (savedLogo) {
+                    logoEl.src = savedLogo;
+                    logoEl.classList.remove('hidden');
+                } else {
+                    logoEl.classList.add('hidden');
+                }
             }
         }
 
@@ -881,6 +883,9 @@
                 <button onclick="location.reload()" class="bg-emerald-800 text-ivory-100 px-8 py-4 rounded-xl font-bold border border-brand-500/30 w-full max-w-xs shadow-lg active:scale-95 transition-transform">${translations[currentLang].backHome}</button>`;
             document.body.appendChild(modal);
         }
+
+        // الاستماع لتغييرات التخزين المحلي لتحديث الواجهة فوراً
+        window.addEventListener('storage', loadRestaurantSettings);
 
         document.addEventListener('DOMContentLoaded', async () => {
             loadRestaurantSettings();
