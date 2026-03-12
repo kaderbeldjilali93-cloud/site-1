@@ -467,9 +467,13 @@
                 
                 products = itemsArray
                     .filter(item => {
-                         // نستخرج القيمة ونسمح بمرور العناصر المتاحة أو التي نفدت لكي نرسمها
+                         // نستخرج القيمة
                          const availability = typeof item.Availability === 'object' && item.Availability ? String(item.Availability.value) : String(item.Availability || '');
-                         return availability.includes('متوفر') || availability.includes('Available') || availability === 'true' || availability.includes('نفد') || availability.includes('غير متوفر');
+                         // استبعاد أي عنصر حالته "غير متوفر" تماماً لكي لا يرسم في الواجهة
+                         if (availability.includes('غير متوفر') || availability.toLowerCase().includes('unavailable')) {
+                             return false;
+                         }
+                         return true; // الاحتفاظ بالعناصر المتوفرة أو التي نفدت كميتها
                     })
                     .map(item => {
                         let rawCat = (item.Category && item.Category.value) || item.Category || 'other';
@@ -498,8 +502,9 @@
                         const hasPromo = promo_price !== null && promo_price < price;
                         const finalPrice = hasPromo ? promo_price : price;
 
-                        // قراءة حالة التوفر (Sold Out)
-                        const isSoldOut = typeof item.Availability === 'object' ? String(item.Availability?.value || '').includes('نفد') || String(item.Availability?.value || '') === 'غير متوفر' : String(item.Availability || '').includes('نفد') || String(item.Availability || '') === 'غير متوفر';
+                        // قراءة حالة التوفر (Sold Out) وتحديد إن كانت نفدت الكمية
+                        const availabilityStr = typeof item.Availability === 'object' && item.Availability ? String(item.Availability.value) : String(item.Availability || '');
+                        const isSoldOut = availabilityStr.includes('نفد') || availabilityStr.includes('نفذ') || availabilityStr.toLowerCase().includes('sold out');
 
                         return {
                             id: item.id,
@@ -568,8 +573,8 @@
                    <model-viewer src="${p.model3d}" ar ar-modes="webxr scene-viewer quick-look" environment-image="neutral" auto-rotate camera-controls max-camera-orbit="auto 85deg auto" min-camera-orbit="auto 0deg auto" class="w-full h-full object-cover relative z-10 touch-none" style="touch-action: none;" alt="${localizedName}"></model-viewer>`
                 : `<img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 transition duration-700 relative z-10" alt="${localizedName}">`;
 
-            // إضافة كلاسات البهتان وتعطيل المؤشر إذا كانت الكمية نافدة
-            const cardClasses = p.isSoldOut ? "opacity-60 grayscale cursor-not-allowed" : "";
+            // إضافة كلاسات البهتان ومنع النقر/التفاعل بالكامل إذا كانت الكمية نافدة
+            const cardClasses = p.isSoldOut ? "opacity-60 grayscale cursor-not-allowed pointer-events-none" : "";
 
             return `
             <div class="glass-3d rounded-3xl p-5 pb-6 min-h-[70vh] w-full max-w-sm mx-auto flex flex-col relative group overflow-hidden ${cardClasses}">
@@ -597,13 +602,13 @@
 
         // أداة التحكم 
         function generateControlsHTML(p, qty) {
-            // عرض زر رمادي معطل في حال نفاد الكمية
+            // عرض زر معطل أحمر داكن كرسالة "نفدت الكمية" بدلاً من التحكم إذا نفدت الكمية
             if (p.isSoldOut) {
                 return `
                 <div class="w-full flex justify-center">
-                    <button disabled class="w-full h-12 bg-emerald-900/50 text-ivory-300/50 rounded-full font-bold flex justify-center items-center border border-brand-500/20 cursor-not-allowed shadow-none">
-                        <span class="text-sm whitespace-nowrap truncate">${translations[currentLang].unavailable}</span>
-                    </button>
+                    <div class="w-full text-center bg-red-900/80 text-white font-bold py-2 rounded mt-2 border border-red-700 shadow-sm">
+                        ${translations[currentLang].soldOutBadge}
+                    </div>
                 </div>`;
             }
 
