@@ -182,22 +182,24 @@
         
         <!-- الشريط العلوي (Header) -->
         <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center shadow-md z-20">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 overflow-hidden">
                 <!-- زر القائمة (Hamburger Menu) - يظهر في الهاتف فقط -->
-                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white p-2 focus:outline-none">
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white p-2 focus:outline-none shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
 
-                <div class="bg-brand text-black font-bold rounded-lg p-2 text-xl">RP</div>
-                <div>
-                    <h2 class="font-bold text-lg leading-tight">Resto<span class="text-brand">Pro</span></h2>
+                <div id="header-logo-container" class="bg-brand text-black font-bold rounded-lg p-2 text-xl flex items-center justify-center overflow-hidden w-10 h-10 shrink-0">
+                    <span>RP</span>
+                </div>
+                <div class="truncate">
+                    <h2 id="header-restaurant-name" class="font-bold text-lg leading-tight truncate">Resto<span class="text-brand">Pro</span></h2>
                 </div>
                 
                 <!-- العنوان الديناميكي للشاشة الحالية -->
-                <span id="global-page-title" class="text-gray-300 text-sm md:text-base font-bold mr-4 pr-4 border-r border-gray-600 truncate max-w-[150px] md:max-w-xs">لوحة القيادة</span>
+                <span id="global-page-title" class="text-gray-300 text-sm md:text-base font-bold mr-4 pr-4 border-r border-gray-600 truncate max-w-[150px] md:max-w-xs shrink-0 hidden sm:inline-block">لوحة القيادة</span>
             </div>
             
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 shrink-0">
                 <!-- زر كتم الصوت (Global Mute) -->
                 <button id="btn-mute" onclick="toggleMute()" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition" title="كتم/تفعيل الصوت">
                     <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -273,6 +275,12 @@
                     <!-- زر الإحصائيات -->
                     <button onclick="loadView('analytics')" id="btn-analytics" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">إحصائيات المبيعات</span>
+                    </button>
+                    
+                    <!-- زر الإعدادات العامة -->
+                    <button onclick="loadView('settings')" id="btn-settings" class="nav-btn w-full flex items-center gap-2 text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative mt-2">
+                        <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <span class="font-medium">الإعدادات العامة</span>
                     </button>
                 </nav>
 
@@ -412,7 +420,8 @@
                     cashier: "api_mode",
                     menu_quick: "api_mode",
                     menu_add: "api_mode",
-                    menu_promo: "api_mode"
+                    menu_promo: "api_mode",
+                    settings: "api_mode"
                 }
             },
             "burger_king": {
@@ -423,7 +432,8 @@
                     cashier: "api_mode",
                     menu_quick: "api_mode",
                     menu_add: "api_mode",
-                    menu_promo: "api_mode"
+                    menu_promo: "api_mode",
+                    settings: "api_mode"
                 }
             }
         };
@@ -497,6 +507,9 @@
             const savedRole = localStorage.getItem(STATE.storageKeys.role);
             const lastView = localStorage.getItem(STATE.storageKeys.lastView);
 
+            // تطبيق إعدادات المطعم المحفوظة (الاسم والشعار)
+            applyRestaurantSettings();
+
             // إذا كان هناك بيانات محفوظة وصحيحة، تخطى شاشة الدخول
             if (savedUser && savedRole && CLIENTS_DB[savedUser]) {
                 authenticateUser(savedUser, CLIENTS_DB[savedUser].links, savedRole);
@@ -557,6 +570,9 @@
             STATE.currentRole = role;
             
             const tablesBtn = document.getElementById('btn-tables');
+
+            // تطبيق إعدادات المطعم فور تسجيل الدخول
+            applyRestaurantSettings();
 
             // إدارة الصلاحيات (إخفاء/إظهار القائمة الجانبية)
             if (role === 'kitchen') {
@@ -838,6 +854,34 @@
             STATE.isFirstFetch = false;
             return orders;
         }
+
+        window.applyRestaurantSettings = function() {
+            const name = localStorage.getItem('resto_name') || 'RestoPro';
+            const logoUrl = localStorage.getItem('resto_logo');
+            
+            const nameEl = document.getElementById('header-restaurant-name');
+            const logoContainer = document.getElementById('header-logo-container');
+
+            if (nameEl) {
+                if (name === 'RestoPro') {
+                    nameEl.innerHTML = 'Resto<span class="text-brand">Pro</span>';
+                } else {
+                    nameEl.innerText = name;
+                }
+            }
+
+            if (logoContainer) {
+                if (logoUrl && logoUrl.trim() !== '') {
+                    logoContainer.innerHTML = `<img src="${logoUrl}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none;">${name.substring(0, 2).toUpperCase()}</span>`;
+                    logoContainer.classList.remove('p-2');
+                } else {
+                    let initial = name.length >= 2 ? name.substring(0, 2).toUpperCase() : name.toUpperCase();
+                    if(name === 'RestoPro') initial = 'RP';
+                    logoContainer.innerHTML = `<span>${initial}</span>`;
+                    logoContainer.classList.add('p-2');
+                }
+            }
+        };
 
         // =========================================================
         // 🌐 API Calls
@@ -1963,6 +2007,65 @@
             dynamicContent.appendChild(container);
         }
 
+        window.renderSettingsRestaurant = function() {
+            dynamicContent.innerHTML = '';
+            
+            const currentName = localStorage.getItem('resto_name') || 'RestoPro';
+            const currentLogo = localStorage.getItem('resto_logo') || '';
+
+            const header = document.createElement('div');
+            header.className = "flex justify-between items-center mb-8 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700";
+            header.innerHTML = `<h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                إعدادات المطعم
+            </h2>`;
+            dynamicContent.appendChild(header);
+
+            const container = document.createElement('div');
+            container.className = "max-w-2xl mx-auto pb-10";
+
+            container.innerHTML = `
+                <div class="bg-gray-800 border border-gray-700 rounded-2xl shadow-xl p-6 md:p-8 mt-6">
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">اسم المطعم</label>
+                            <input type="text" id="setting-resto-name" value="${currentName}" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition" placeholder="أدخل اسم المطعم">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">رابط الشعار (Logo URL)</label>
+                            <input type="text" id="setting-resto-logo" value="${currentLogo}" oninput="document.getElementById('logo-preview').src = this.value || 'https://placehold.co/150x150/1f2937/a1a1aa?text=No+Logo'" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition text-left" dir="ltr" placeholder="https://example.com/logo.png">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">معاينة الشعار</label>
+                            <div class="w-32 h-32 rounded-xl border-2 border-gray-600 overflow-hidden bg-gray-900 flex items-center justify-center">
+                                <img id="logo-preview" src="${currentLogo || 'https://placehold.co/150x150/1f2937/a1a1aa?text=No+Logo'}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/150x150/1f2937/a1a1aa?text=Error'; this.onerror=null;">
+                            </div>
+                        </div>
+
+                        <div class="pt-4 mt-6 border-t border-gray-700">
+                            <button onclick="saveRestaurantSettings()" class="w-full bg-brand hover:bg-brand-dark text-black font-bold text-lg py-4 rounded-xl transition shadow-lg transform hover:scale-[1.01]">
+                                حفظ الإعدادات
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            dynamicContent.appendChild(container);
+        };
+
+        window.saveRestaurantSettings = function() {
+            const name = document.getElementById('setting-resto-name').value.trim();
+            const logo = document.getElementById('setting-resto-logo').value.trim();
+            
+            localStorage.setItem('resto_name', name);
+            localStorage.setItem('resto_logo', logo);
+            
+            showSuccessPopup();
+            applyRestaurantSettings();
+        };
+
         // =========================================================
         // 🔄 Routing & Navigation
         // =========================================================
@@ -2139,12 +2242,13 @@
                     throw new Error(errorMsg);
                 }
 
-                showToast("تمت إضافة الطبق بنجاح ✅", "success");
+                showSuccessPopup();
                 
                 // تفريغ الحقول بعد النجاح
                 nameInput.value = '';
                 descInput.value = '';
                 priceInput.value = '';
+                imgInput.value = '';
                 catInput.value = 'pizza';
                 updateFileName(imgInput); // إعادة زر الصورة لشكله الافتراضي
                 
@@ -2231,6 +2335,10 @@
             }
             else if (viewType === 'tables') {
                 renderTableView();
+                loader.style.display = 'none';
+            }
+            else if (viewType === 'settings') {
+                renderSettingsRestaurant();
                 loader.style.display = 'none';
             }
             
