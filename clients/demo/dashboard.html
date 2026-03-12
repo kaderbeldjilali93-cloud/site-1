@@ -871,28 +871,35 @@
                 const data = await response.json();
                 
                 const todayStr = getLocalYYYYMMDD();
+                const lastAutoResetDate = localStorage.getItem('last_auto_reset_date');
                 
                 // The 6 AM Auto-Reset Hack
-                data.results.forEach(item => {
-                    let availVal = (typeof item.Availability === 'object' && item.Availability) ? item.Availability.value : item.Availability;
-                    if (availVal && typeof availVal === 'string' && availVal.startsWith('نفد_')) {
-                        const savedDate = availVal.split('_')[1];
-                        if (savedDate !== todayStr) {
-                            // Reset locally
+                if (lastAutoResetDate !== todayStr) {
+                    const itemsToReset = data.results.filter(item => {
+                        const availVal = (typeof item.Availability === 'object' && item.Availability) ? item.Availability.value : item.Availability;
+                        return availVal === 'نفذت الكمية';
+                    });
+
+                    if (itemsToReset.length > 0) {
+                        itemsToReset.forEach(item => {
+                            // Reset locally to reflect immediately
                             if (typeof item.Availability === 'object' && item.Availability !== null) {
                                 item.Availability.value = 'متوفر';
                             } else {
                                 item.Availability = 'متوفر';
                             }
+                            
                             // Silent PATCH to Baserow
                             fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/${item.id}/?user_field_names=true`, {
                                 method: 'PATCH',
                                 headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                                 body: JSON.stringify({ "Availability": "متوفر" })
-                            }).catch(err => console.warn("Silent auto-reset failed:", err));
-                        }
+                            }).catch(err => console.warn("Silent auto-reset failed for item " + item.id + ":", err));
+                        });
                     }
-                });
+                    // Update the reset date so we don't trigger again today
+                    localStorage.setItem('last_auto_reset_date', todayStr);
+                }
 
                 return data.results;
             } catch (error) {
@@ -1518,36 +1525,39 @@
             dynamicContent.appendChild(tableContainer);
         }
 
-        window.setAvailabilityState = function(id, type) {
+        window.setAvailabilityState = function(id, action) {
+            const statusInput = document.getElementById(`status-${id}`);
             const toggleBtn = document.getElementById(`toggle-${id}`);
             const exhaustedBtn = document.getElementById(`exhausted-${id}`);
-            const today = getLocalYYYYMMDD();
 
-            if (type === 'exhausted') {
-                toggleBtn.setAttribute('data-status', 'نفد_' + today);
-                toggleBtn.className = "text-xs px-3 py-2.5 rounded text-white transition bg-gray-600 hover:bg-gray-500";
-                toggleBtn.innerText = "متوفر"; 
-                exhaustedBtn.className = "text-xs px-3 py-2.5 rounded transition bg-red-600 text-white border-2 border-white font-bold shadow-md";
-            } else {
-                let currentStatus = toggleBtn.getAttribute('data-status');
-                let newStatus = 'متوفر';
-                
+            let currentStatus = statusInput.value;
+            let newStatus = currentStatus;
+
+            if (action === 'exhausted') {
+                newStatus = 'نفذت الكمية';
+            } else if (action === 'toggle') {
                 if (currentStatus === 'متوفر') {
                     newStatus = 'غير متوفر';
-                } else if (currentStatus === 'غير متوفر' || currentStatus.startsWith('نفد_')) {
+                } else {
                     newStatus = 'متوفر';
                 }
+            }
 
-                toggleBtn.setAttribute('data-status', newStatus);
+            statusInput.value = newStatus;
+
+            // Update UI
+            if (newStatus === 'نفذت الكمية') {
+                toggleBtn.className = "text-xs px-3 py-2.5 rounded text-white transition bg-gray-600 hover:bg-gray-500";
+                toggleBtn.innerText = "متوفر"; // The fallback toggle text
+                exhaustedBtn.className = "text-xs px-3 py-2.5 rounded transition bg-red-600 text-white border-2 border-white font-bold shadow-md";
+            } else if (newStatus === 'متوفر') {
+                toggleBtn.className = "text-xs px-3 py-2.5 rounded text-white transition bg-green-600 hover:bg-green-700";
+                toggleBtn.innerText = "متوفر";
                 exhaustedBtn.className = "text-xs px-3 py-2.5 rounded transition bg-gray-700 text-gray-300 hover:bg-red-600 hover:text-white";
-                
-                if (newStatus === 'متوفر') {
-                    toggleBtn.className = "text-xs px-3 py-2.5 rounded text-white transition bg-green-600 hover:bg-green-700";
-                    toggleBtn.innerText = "متوفر";
-                } else {
-                    toggleBtn.className = "text-xs px-3 py-2.5 rounded text-white transition bg-red-600 hover:bg-red-700";
-                    toggleBtn.innerText = "غير متوفر";
-                }
+            } else if (newStatus === 'غير متوفر') {
+                toggleBtn.className = "text-xs px-3 py-2.5 rounded text-white transition bg-red-600 hover:bg-red-700";
+                toggleBtn.innerText = "غير متوفر";
+                exhaustedBtn.className = "text-xs px-3 py-2.5 rounded transition bg-gray-700 text-gray-300 hover:bg-red-600 hover:text-white";
             }
         };
 
@@ -1590,15 +1600,18 @@
                 const availVal = (typeof availObj === 'object' && availObj) ? availObj.value : availObj;
                 
                 let currentStatus = availVal || "متوفر";
-                const todayDate = getLocalYYYYMMDD();
-                const isExhausted = currentStatus.startsWith('نفد_') && currentStatus.includes(todayDate);
+                if(!["متوفر", "غير متوفر", "نفذت الكمية"].includes(currentStatus)) {
+                    currentStatus = "متوفر"; // fallback
+                }
 
                 let toggleClass = "";
                 let toggleText = "";
+                let exhaustedClass = "bg-gray-700 text-gray-300 hover:bg-red-600 hover:text-white";
                 
-                if (isExhausted) {
+                if (currentStatus === "نفذت الكمية") {
                     toggleClass = "bg-gray-600 hover:bg-gray-500";
                     toggleText = "متوفر"; 
+                    exhaustedClass = "bg-red-600 text-white border-2 border-white font-bold shadow-md";
                 } else if (currentStatus === "متوفر") {
                     toggleClass = "bg-green-600 hover:bg-green-700";
                     toggleText = "متوفر";
@@ -1606,8 +1619,6 @@
                     toggleClass = "bg-red-600 hover:bg-red-700";
                     toggleText = "غير متوفر";
                 }
-
-                const exhaustedClass = isExhausted ? "bg-red-600 text-white border-2 border-white font-bold shadow-md" : "bg-gray-700 text-gray-300 hover:bg-red-600 hover:text-white";
                 
                 const card = document.createElement('div');
                 card.className = "bg-gray-800 border border-gray-700 rounded-xl overflow-hidden shadow-lg flex flex-col relative";
@@ -1625,8 +1636,9 @@
                         <div><textarea id="desc-${item.id}" rows="2" class="w-full bg-gray-900 border border-gray-600 text-gray-300 text-xs rounded px-3 py-2 mb-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none resize-none transition" placeholder="مكونات الطبق...">${desc}</textarea></div>
                         <div><label class="text-xs text-gray-400 block mb-1">السعر (DA)</label><input type="number" id="price-${item.id}" value="${price}" class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition"></div>
                         <div class="flex items-center justify-between mt-auto pt-2 gap-2">
+                            <input type="hidden" id="status-${item.id}" value="${currentStatus}">
                             <div class="flex gap-1">
-                                <button id="toggle-${item.id}" onclick="setAvailabilityState(${item.id}, 'toggle')" data-status="${currentStatus}" class="text-xs px-3 py-2.5 rounded text-white transition ${toggleClass}">${toggleText}</button>
+                                <button id="toggle-${item.id}" onclick="setAvailabilityState(${item.id}, 'toggle')" class="text-xs px-3 py-2.5 rounded text-white transition ${toggleClass}">${toggleText}</button>
                                 <button id="exhausted-${item.id}" onclick="setAvailabilityState(${item.id}, 'exhausted')" class="text-xs px-3 py-2.5 rounded transition ${exhaustedClass}">نفدت الكمية</button>
                             </div>
                             <button id="btn-save-${item.id}" onclick="saveMenuItem(${item.id})" class="bg-brand hover:bg-brand-dark text-black font-bold px-4 py-2.5 rounded text-sm transition shadow-md whitespace-nowrap">حفظ</button>
@@ -2004,19 +2016,11 @@
             }
         };
 
-        window.toggleAvailability = function(btn) {
-            const currentStatus = btn.getAttribute('data-status');
-            const newStatus = currentStatus === 'متوفر' ? 'غير متوفر' : 'متوفر';
-            btn.setAttribute('data-status', newStatus);
-            btn.innerText = newStatus;
-            btn.className = `text-xs px-3 py-2 rounded text-white transition ${newStatus === 'متوفر' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`;
-        };
-
         window.saveMenuItem = function(id) {
             const newName = document.getElementById(`name-${id}`).value;
             const newDesc = document.getElementById(`desc-${id}`).value;
             const price = parseFloat(document.getElementById(`price-${id}`).value);
-            const status = document.getElementById(`toggle-${id}`).getAttribute('data-status');
+            const status = document.getElementById(`status-${id}`).value;
             updateMenuItem(id, { "Name": newName, "Description": newDesc, "Price": price, "Availability": status });
         };
 
