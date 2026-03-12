@@ -200,6 +200,14 @@
             </button>
         </div>
 
+        <!-- اسم المطعم والشعار في الهيدر (منطقة آمنة) -->
+        <div class="absolute top-1/2 -translate-y-1/2 left-[140px] right-[90px] pointer-events-none flex items-center justify-center gap-2">
+            <img id="customer-menu-logo-header" src="" alt="Logo" class="h-8 w-auto max-w-[40px] object-contain hidden drop-shadow-lg">
+            <span id="customer-menu-name-header" class="text-sm sm:text-base font-black tracking-tighter text-ivory-100 drop-shadow-lg truncate block text-center">
+                <span data-i18n="restaurantNamePrefix">Restaurant</span> <span class="text-brand-500" data-i18n="restaurantNameSuffix">Luxe</span>
+            </span>
+        </div>
+
         <!-- زر اختيار اللغة (يمين الشاشة دائماً) -->
         <div class="absolute right-4 top-1/2 -translate-y-1/2 z-10">
             <button onclick="toggleLangMenu()" id="lang-btn" class="flex items-center justify-center gap-1.5 bg-emerald-800/40 border border-brand-500/30 px-3 py-2 rounded-full hover:bg-emerald-800/60 transition-all active:scale-95 text-sm font-bold text-brand-light shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
@@ -228,8 +236,9 @@
     <div class="pt-[90px]">
 
         <!-- عنوان ترحيبي واسم المطعم البارز -->
-        <div class="text-center px-4 mb-8 animate-zoom-in">
-            <span class="text-4xl sm:text-5xl font-black text-ivory-100 drop-shadow-lg mb-2 block tracking-tight">
+        <div class="text-center px-4 mb-8 animate-zoom-in flex flex-col items-center">
+            <img id="customer-menu-logo" src="" alt="Restaurant Logo" class="h-20 w-auto max-w-[120px] object-contain mb-3 hidden drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+            <span id="customer-menu-name" class="text-4xl sm:text-5xl font-black text-ivory-100 drop-shadow-lg mb-2 block tracking-tight">
                 <span data-i18n="restaurantNamePrefix">Restaurant</span> <span class="text-brand-500" data-i18n="restaurantNameSuffix">Luxe</span>
             </span>
             <h1 class="text-lg sm:text-xl font-bold text-ivory-300/80 leading-tight welcome-title-anim whitespace-normal break-words" data-i18n="welcomeMsg">
@@ -425,6 +434,25 @@
 
         // التغيير ليكون الفرنسي هو اللغة الافتراضية
         let currentLang = localStorage.getItem('user_lang') || 'fr';
+
+        // دالة جلب إعدادات المطعم من التخزين المحلي وتحديث الواجهة
+        function loadRestaurantSettings() {
+            const savedName = localStorage.getItem('menu_restaurant_name');
+            const savedLogo = localStorage.getItem('menu_restaurant_logo');
+
+            if (savedName) {
+                const nameEls = document.querySelectorAll('#customer-menu-name, #customer-menu-name-header');
+                nameEls.forEach(el => el.textContent = savedName);
+            }
+
+            if (savedLogo) {
+                const logoEls = document.querySelectorAll('#customer-menu-logo, #customer-menu-logo-header');
+                logoEls.forEach(el => {
+                    el.src = savedLogo;
+                    el.classList.remove('hidden');
+                });
+            }
+        }
 
         function setLanguage(lang) {
             currentLang = lang;
@@ -863,6 +891,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
+            loadRestaurantSettings();
             await fetchMenuItems();
             setLanguage(currentLang); 
             document.getElementById('loader-container').style.display = 'none';
