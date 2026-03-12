@@ -375,6 +375,16 @@
         </div>
     </div>
 
+    <!-- نافذة النجاح المنبثقة -->
+    <div id="success-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity">
+        <div class="bg-gray-800 border-2 border-green-500 rounded-2xl shadow-[0_0_30px_rgba(34,197,94,0.4)] p-8 text-center transform transition-all scale-100 flex flex-col items-center">
+            <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-4 animate-pulse shadow-lg">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h3 class="text-2xl font-extrabold text-white">تم الحفظ بنجاح</h3>
+        </div>
+    </div>
+
     <!-- حاوية الإشعارات (Toast Container) -->
     <div id="toast-container" class="fixed bottom-5 left-5 z-[60] flex flex-col gap-3 pointer-events-none"></div>
 
@@ -621,6 +631,14 @@
         // 🛠️ Utilities
         // =========================================================
 
+        window.showSuccessPopup = function() {
+            const modal = document.getElementById('success-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 1500);
+        };
+
         // تحديث مظهر زر رفع الملف
         window.updateFileName = function(input) {
             const label = document.getElementById('file-upload-label');
@@ -851,6 +869,31 @@
                 });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
+                
+                const todayStr = getLocalYYYYMMDD();
+                
+                // The 6 AM Auto-Reset Hack
+                data.results.forEach(item => {
+                    let availVal = (typeof item.Availability === 'object' && item.Availability) ? item.Availability.value : item.Availability;
+                    if (availVal && typeof availVal === 'string' && availVal.startsWith('نفد_')) {
+                        const savedDate = availVal.split('_')[1];
+                        if (savedDate !== todayStr) {
+                            // Reset locally
+                            if (typeof item.Availability === 'object' && item.Availability !== null) {
+                                item.Availability.value = 'متوفر';
+                            } else {
+                                item.Availability = 'متوفر';
+                            }
+                            // Silent PATCH to Baserow
+                            fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/${item.id}/?user_field_names=true`, {
+                                method: 'PATCH',
+                                headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                                body: JSON.stringify({ "Availability": "متوفر" })
+                            }).catch(err => console.warn("Silent auto-reset failed:", err));
+                        }
+                    }
+                });
+
                 return data.results;
             } catch (error) {
                 console.warn("Using Mock Data for Menu:", error.message);
@@ -908,7 +951,7 @@
                     renderMenuEditor(data);
                 }
                 
-                showToast("تم تحديث العنصر بنجاح ✅", "success");
+                showSuccessPopup();
             } catch (error) {
                 console.warn("API Error:", error.message);
                 showToast("فشل تحديث العنصر.", "error");
@@ -1475,6 +1518,39 @@
             dynamicContent.appendChild(tableContainer);
         }
 
+        window.setAvailabilityState = function(id, type) {
+            const toggleBtn = document.getElementById(`toggle-${id}`);
+            const exhaustedBtn = document.getElementById(`exhausted-${id}`);
+            const today = getLocalYYYYMMDD();
+
+            if (type === 'exhausted') {
+                toggleBtn.setAttribute('data-status', 'نفد_' + today);
+                toggleBtn.className = "text-xs px-3 py-2.5 rounded text-white transition bg-gray-600 hover:bg-gray-500";
+                toggleBtn.innerText = "متوفر"; 
+                exhaustedBtn.className = "text-xs px-3 py-2.5 rounded transition bg-red-600 text-white border-2 border-white font-bold shadow-md";
+            } else {
+                let currentStatus = toggleBtn.getAttribute('data-status');
+                let newStatus = 'متوفر';
+                
+                if (currentStatus === 'متوفر') {
+                    newStatus = 'غير متوفر';
+                } else if (currentStatus === 'غير متوفر' || currentStatus.startsWith('نفد_')) {
+                    newStatus = 'متوفر';
+                }
+
+                toggleBtn.setAttribute('data-status', newStatus);
+                exhaustedBtn.className = "text-xs px-3 py-2.5 rounded transition bg-gray-700 text-gray-300 hover:bg-red-600 hover:text-white";
+                
+                if (newStatus === 'متوفر') {
+                    toggleBtn.className = "text-xs px-3 py-2.5 rounded text-white transition bg-green-600 hover:bg-green-700";
+                    toggleBtn.innerText = "متوفر";
+                } else {
+                    toggleBtn.className = "text-xs px-3 py-2.5 rounded text-white transition bg-red-600 hover:bg-red-700";
+                    toggleBtn.innerText = "غير متوفر";
+                }
+            }
+        };
+
         function renderMenuEditor(items) {
             dynamicContent.innerHTML = '';
 
@@ -1511,12 +1587,30 @@
                 const imgUrl = (item.image && item.image.length > 0) ? item.image[0].url : "https://placehold.co/400x300/374151/FFFFFF?text=No+Image";
                 const category = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'عام');
                 const availObj = item.Availability || item.availability;
-                const isAvailable = (typeof availObj === 'object' && availObj) ? availObj.value === "متوفر" : availObj === "متوفر";
+                const availVal = (typeof availObj === 'object' && availObj) ? availObj.value : availObj;
+                
+                let currentStatus = availVal || "متوفر";
+                const todayDate = getLocalYYYYMMDD();
+                const isExhausted = currentStatus.startsWith('نفد_') && currentStatus.includes(todayDate);
+
+                let toggleClass = "";
+                let toggleText = "";
+                
+                if (isExhausted) {
+                    toggleClass = "bg-gray-600 hover:bg-gray-500";
+                    toggleText = "متوفر"; 
+                } else if (currentStatus === "متوفر") {
+                    toggleClass = "bg-green-600 hover:bg-green-700";
+                    toggleText = "متوفر";
+                } else {
+                    toggleClass = "bg-red-600 hover:bg-red-700";
+                    toggleText = "غير متوفر";
+                }
+
+                const exhaustedClass = isExhausted ? "bg-red-600 text-white border-2 border-white font-bold shadow-md" : "bg-gray-700 text-gray-300 hover:bg-red-600 hover:text-white";
                 
                 const card = document.createElement('div');
                 card.className = "bg-gray-800 border border-gray-700 rounded-xl overflow-hidden shadow-lg flex flex-col relative";
-                const btnClass = isAvailable ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700";
-                const btnText = isAvailable ? "متوفر" : "غير متوفر";
 
                 card.innerHTML = `
                     <div class="h-40 overflow-hidden relative">
@@ -1530,7 +1624,13 @@
                         <div><input type="text" id="name-${item.id}" value="${name}" class="w-full bg-gray-900 border border-gray-600 text-white text-lg font-bold text-center rounded px-3 py-2 mb-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none transition shadow-inner" placeholder="اسم الطبق"></div>
                         <div><textarea id="desc-${item.id}" rows="2" class="w-full bg-gray-900 border border-gray-600 text-gray-300 text-xs rounded px-3 py-2 mb-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none resize-none transition" placeholder="مكونات الطبق...">${desc}</textarea></div>
                         <div><label class="text-xs text-gray-400 block mb-1">السعر (DA)</label><input type="number" id="price-${item.id}" value="${price}" class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition"></div>
-                        <div class="flex items-center justify-between mt-auto pt-2"><button id="toggle-${item.id}" onclick="toggleAvailability(this)" data-status="${isAvailable ? 'متوفر' : 'غير متوفر'}" class="text-xs px-3 py-2.5 rounded text-white transition ${btnClass}">${btnText}</button><button id="btn-save-${item.id}" onclick="saveMenuItem(${item.id})" class="bg-brand hover:bg-brand-dark text-black font-bold px-4 py-2.5 rounded text-sm transition shadow-md">حفظ التعديلات</button></div>
+                        <div class="flex items-center justify-between mt-auto pt-2 gap-2">
+                            <div class="flex gap-1">
+                                <button id="toggle-${item.id}" onclick="setAvailabilityState(${item.id}, 'toggle')" data-status="${currentStatus}" class="text-xs px-3 py-2.5 rounded text-white transition ${toggleClass}">${toggleText}</button>
+                                <button id="exhausted-${item.id}" onclick="setAvailabilityState(${item.id}, 'exhausted')" class="text-xs px-3 py-2.5 rounded transition ${exhaustedClass}">نفدت الكمية</button>
+                            </div>
+                            <button id="btn-save-${item.id}" onclick="saveMenuItem(${item.id})" class="bg-brand hover:bg-brand-dark text-black font-bold px-4 py-2.5 rounded text-sm transition shadow-md whitespace-nowrap">حفظ</button>
+                        </div>
                     </div>`;
                 grid.appendChild(card);
             });
@@ -2041,7 +2141,6 @@
                 nameInput.value = '';
                 descInput.value = '';
                 priceInput.value = '';
-                imgInput.value = '';
                 catInput.value = 'pizza';
                 updateFileName(imgInput); // إعادة زر الصورة لشكله الافتراضي
                 
