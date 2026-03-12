@@ -345,6 +345,8 @@
                 contactKitchen: "جارٍ الاتصال بالمطبخ...",
                 connError: "عذراً، حدث خطأ في الاتصال بالمطبخ!",
                 discount: "خصم",
+                soldOutBadge: "نفدت الكمية",
+                unavailable: "غير متاح",
                 flag: "AR", code: "AR",
                 cat_pizza: "بيتزا",
                 cat_burger: "برجر",
@@ -376,6 +378,8 @@
                 contactKitchen: "Contact cuisine...",
                 connError: "Erreur de connexion cuisine !",
                 discount: "Promo",
+                soldOutBadge: "Épuisé",
+                unavailable: "Indisponible",
                 flag: "FR", code: "FR",
                 cat_pizza: "Pizza",
                 cat_burger: "Burger",
@@ -407,6 +411,8 @@
                 contactKitchen: "Contacting kitchen...",
                 connError: "Kitchen connection error!",
                 discount: "Save",
+                soldOutBadge: "Sold Out",
+                unavailable: "Unavailable",
                 flag: "EN", code: "EN",
                 cat_pizza: "Pizza",
                 cat_burger: "Burger",
@@ -461,8 +467,9 @@
                 
                 products = itemsArray
                     .filter(item => {
-                         const availability = item.Availability && item.Availability.value ? item.Availability.value : item.Availability;
-                         return availability === 'متوفر' || availability === 'Available' || availability === true;
+                         // نستخرج القيمة ونسمح بمرور العناصر المتاحة أو التي نفدت لكي نرسمها
+                         const availability = typeof item.Availability === 'object' && item.Availability ? String(item.Availability.value) : String(item.Availability || '');
+                         return availability.includes('متوفر') || availability.includes('Available') || availability === 'true' || availability.includes('نفد') || availability.includes('غير متوفر');
                     })
                     .map(item => {
                         let rawCat = (item.Category && item.Category.value) || item.Category || 'other';
@@ -491,6 +498,9 @@
                         const hasPromo = promo_price !== null && promo_price < price;
                         const finalPrice = hasPromo ? promo_price : price;
 
+                        // قراءة حالة التوفر (Sold Out)
+                        const isSoldOut = typeof item.Availability === 'object' ? String(item.Availability?.value || '').includes('نفد') || String(item.Availability?.value || '') === 'غير متوفر' : String(item.Availability || '').includes('نفد') || String(item.Availability || '') === 'غير متوفر';
+
                         return {
                             id: item.id,
                             name: {
@@ -506,6 +516,7 @@
                             sub_category: subCat,
                             img: imgUrl,
                             model3d: modelUrl, 
+                            isSoldOut: isSoldOut, // إرسال الحالة للواجهة
                             desc: {
                                 ar: item.Description || item.desc_ar || "",
                                 fr: item.Description_FR || item.desc_fr || item.Description || "",
@@ -540,10 +551,15 @@
                 priceVal = `<span class="text-xl font-black text-brand-500 whitespace-nowrap number-font">${p.price.toFixed(2)} <span class="text-[10px] font-normal text-brand-500/70">${translations[currentLang]?.currency || ''}</span></span>`;
             }
 
-            const promoBadge = p.hasPromo 
+            const promoBadge = p.hasPromo && !p.isSoldOut
                 ? `<div class="absolute top-6 -left-10 -rotate-45 w-40 text-center bg-red-800 text-ivory-100 py-1 text-xs font-bold z-40 shadow-[0_4px_15px_rgba(220,38,38,0.5)] border-y border-red-500/50">
                         ${translations[currentLang]?.discount || ''} <span class="number-font">${discount}%</span>
                    </div>` 
+                : '';
+
+            // الختم البصري في حال نفاد الكمية
+            const soldOutOverlay = p.isSoldOut 
+                ? `<div class="absolute inset-0 bg-black/40 flex items-center justify-center z-20"><span class="bg-red-600 text-white px-4 py-1.5 rounded-lg font-bold text-sm transform -rotate-12 shadow-[0_4px_15px_rgba(220,38,38,0.5)] border border-red-800" style="font-family: inherit;">${translations[currentLang].soldOutBadge}</span></div>` 
                 : '';
 
             let mediaContent = p.model3d 
@@ -552,8 +568,11 @@
                    <model-viewer src="${p.model3d}" ar ar-modes="webxr scene-viewer quick-look" environment-image="neutral" auto-rotate camera-controls max-camera-orbit="auto 85deg auto" min-camera-orbit="auto 0deg auto" class="w-full h-full object-cover relative z-10 touch-none" style="touch-action: none;" alt="${localizedName}"></model-viewer>`
                 : `<img src="${p.img}" onerror="this.src='https://placehold.co/400x300?text=No+Image'" class="w-full h-full object-cover brightness-90 group-hover:brightness-110 transition duration-700 relative z-10" alt="${localizedName}">`;
 
+            // إضافة كلاسات البهتان وتعطيل المؤشر إذا كانت الكمية نافدة
+            const cardClasses = p.isSoldOut ? "opacity-60 grayscale cursor-not-allowed" : "";
+
             return `
-            <div class="glass-3d rounded-3xl p-5 pb-6 min-h-[70vh] w-full max-w-sm mx-auto flex flex-col relative group overflow-hidden">
+            <div class="glass-3d rounded-3xl p-5 pb-6 min-h-[70vh] w-full max-w-sm mx-auto flex flex-col relative group overflow-hidden ${cardClasses}">
                 ${promoBadge}
                 
                 <div class="text-center mb-5 relative z-20 flex-shrink-0 w-full flex flex-col items-center">
@@ -563,6 +582,7 @@
                 </div>
                 
                 <div class="h-[35vh] w-4/5 mx-auto relative bg-emerald-950/60 rounded-2xl border border-brand-500/20 flex items-center justify-center overflow-hidden mb-6 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
+                    ${soldOutOverlay}
                     ${mediaContent}
                     <div class="absolute inset-0 bg-gradient-to-t from-emerald-950 to-transparent opacity-60 pointer-events-none z-10"></div>
                 </div>
@@ -577,6 +597,16 @@
 
         // أداة التحكم 
         function generateControlsHTML(p, qty) {
+            // عرض زر رمادي معطل في حال نفاد الكمية
+            if (p.isSoldOut) {
+                return `
+                <div class="w-full flex justify-center">
+                    <button disabled class="w-full h-12 bg-emerald-900/50 text-ivory-300/50 rounded-full font-bold flex justify-center items-center border border-brand-500/20 cursor-not-allowed shadow-none">
+                        <span class="text-sm whitespace-nowrap truncate">${translations[currentLang].unavailable}</span>
+                    </button>
+                </div>`;
+            }
+
             const arButtonHTML = p.model3d 
                 ? `<button onclick="const card = this.closest('.glass-3d'); if(card){ const mv = card.querySelector('model-viewer'); if(mv) mv.activateAR(); }" class="flex-1 h-12 bg-emerald-950/40 border border-brand-500 text-brand-500 rounded-full flex justify-center items-center gap-1.5 active:scale-95 transition-transform hover:bg-brand-500/20 px-2 overflow-hidden shadow-[0_4px_15px_rgba(0,0,0,0.4)]" title="${translations[currentLang].viewOnTable}">
                         <span class="text-lg leading-none flex-shrink-0">👁️</span>
@@ -659,7 +689,7 @@
         function updateCart(id, change) {
             if (!cart[id]) {
                 const p = products.find(p => p.id === id);
-                if (!p) return;
+                if (!p || p.isSoldOut) return; // منع إضافة المبيعات التي نفدت
                 cart[id] = { ...p, qty: 0 };
             }
             cart[id].qty += change;
@@ -703,7 +733,7 @@
             const hasDrinkOrSide = items.some(i => i.category === 'drinks' || i.category === 'sides');
 
             if (hasMainDish && !hasDrinkOrSide) {
-                const suggestions = products.filter(p => p.category === 'drinks' || p.category === 'sides').slice(0, 2);
+                const suggestions = products.filter(p => (p.category === 'drinks' || p.category === 'sides') && !p.isSoldOut).slice(0, 2);
                 if (suggestions.length > 0) {
                     upsellContainer.classList.remove('hidden');
                     let html = `
