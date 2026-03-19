@@ -422,26 +422,57 @@
             }
         };
 
+        const SETTINGS_TABLE_ID = "754";
+        let cachedRestaurantSettings = null;
+
         // التغيير ليكون الفرنسي هو اللغة الافتراضية
         let currentLang = localStorage.getItem('user_lang') || 'fr';
 
-        // دالة جلب إعدادات المطعم من التخزين المحلي وتحديث الواجهة
-        function loadRestaurantSettings() {
-            const savedName = localStorage.getItem('menu_restaurant_name') || 'Restaurant Luxe';
-            const savedLogo = localStorage.getItem('menu_restaurant_logo');
+        // دالة جلب إعدادات المطعم من Baserow وتحديث الواجهة
+        async function loadRestaurantSettings() {
+            try {
+                let settings = cachedRestaurantSettings;
+                if (!settings) {
+                    const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${SETTINGS_TABLE_ID}/?user_field_names=true`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': 'Token DfaoAk1o41H4iPUtkblY2ZKzXcbHxizb'
+                        }
+                    });
+                    if (!response.ok) throw new Error('HTTP error fetching settings');
+                    const data = await response.json();
+                    if (data && data.results && data.results.length > 0) {
+                        settings = data.results[0];
+                        cachedRestaurantSettings = settings; // Cache the response
+                    }
+                }
 
-            const nameEl = document.getElementById('customer-menu-name');
-            if (nameEl) {
-                nameEl.textContent = savedName;
-            }
+                const savedName = (settings && settings.Name) ? settings.Name : 'Restaurant Luxe';
+                let savedLogo = null;
+                
+                if (settings && settings.Logo && Array.isArray(settings.Logo) && settings.Logo.length > 0) {
+                    savedLogo = settings.Logo[0].url;
+                }
 
-            const logoEl = document.getElementById('customer-menu-logo');
-            if (logoEl) {
-                if (savedLogo) {
-                    logoEl.src = savedLogo;
-                    logoEl.classList.remove('hidden');
-                } else {
-                    logoEl.classList.add('hidden');
+                const nameEl = document.getElementById('customer-menu-name');
+                if (nameEl) {
+                    nameEl.textContent = savedName;
+                }
+
+                const logoEl = document.getElementById('customer-menu-logo');
+                if (logoEl) {
+                    if (savedLogo) {
+                        logoEl.src = savedLogo;
+                        logoEl.classList.remove('hidden');
+                    } else {
+                        logoEl.classList.add('hidden');
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading settings from Baserow:", error);
+                const nameEl = document.getElementById('customer-menu-name');
+                if (nameEl && !nameEl.textContent) {
+                    nameEl.textContent = 'Restaurant Luxe';
                 }
             }
         }
@@ -884,11 +915,8 @@
             document.body.appendChild(modal);
         }
 
-        // الاستماع لتغييرات التخزين المحلي لتحديث الواجهة فوراً
-        window.addEventListener('storage', loadRestaurantSettings);
-
         document.addEventListener('DOMContentLoaded', async () => {
-            loadRestaurantSettings();
+            await loadRestaurantSettings();
             await fetchMenuItems();
             setLanguage(currentLang); 
             document.getElementById('loader-container').style.display = 'none';
