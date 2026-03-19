@@ -447,7 +447,8 @@
                     }
                 }
 
-                const savedName = (settings && settings.Name) ? settings.Name : 'Restaurant Luxe';
+                // استخدام معامل ?? للسماح بطباعة النص الفارغ "" إن وجد، واستخدام الاسم الافتراضي فقط إذا كانت القيمة null أو undefined
+                const savedName = settings?.Name ?? 'Restaurant Luxe';
                 let savedLogo = null;
                 
                 if (settings && settings.Logo && Array.isArray(settings.Logo) && settings.Logo.length > 0) {
@@ -470,10 +471,6 @@
                 }
             } catch (error) {
                 console.error("Error loading settings from Baserow:", error);
-                const nameEl = document.getElementById('customer-menu-name');
-                if (nameEl && !nameEl.textContent) {
-                    nameEl.textContent = 'Restaurant Luxe';
-                }
             }
         }
 
