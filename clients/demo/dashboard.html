@@ -2131,12 +2131,6 @@
             const nameVal = nameInput.value.trim();
             const imageFile = logoInput.files[0];
 
-            if (!nameVal) {
-                showToast("الرجاء إدخال اسم المطعم", "error");
-                nameInput.focus();
-                return;
-            }
-
             const originalBtnText = btn.innerHTML;
             btn.innerHTML = `<span class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-black"></div> جاري الحفظ...</span>`;
             btn.disabled = true;
