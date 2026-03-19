@@ -2025,7 +2025,7 @@
                     const data = await response.json();
                     if (data.results && data.results.length > 0) {
                         const row = data.results[0];
-                        currentName = row.Name || '';
+                        currentName = row.Name ?? '';
                         if (row.Logo && row.Logo.length > 0) {
                             currentLogo = row.Logo[0].url;
                         }
