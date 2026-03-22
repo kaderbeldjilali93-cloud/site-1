@@ -428,14 +428,14 @@
             "burger_king": { adminPass: "0000", kitchenPass: "k0000", links: { kds: "api_mode", cashier: "api_mode", menu_quick: "api_mode", menu_add: "api_mode", menu_promo: "api_mode", settings_restaurant: "api_mode", settings_print: "api_mode", settings_account: "api_mode" } }
         };
 
-        function getLocalYYYYMMDD() {
+        window.getLocalYYYYMMDD = function() {
             const d = new Date();
             if (d.getHours() < 6) d.setDate(d.getDate() - 1);
             const year = d.getFullYear();
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
-        }
+        };
 
         let currentDeleteItemId = null; 
 
@@ -479,10 +479,10 @@
             const lastView = localStorage.getItem(STATE.storageKeys.lastView);
 
             if (savedUser && savedRole && CLIENTS_DB[savedUser]) {
-                authenticateUser(savedUser, CLIENTS_DB[savedUser].links, savedRole);
-                if (savedRole === 'kitchen') loadView('kds');
-                else if (lastView && CLIENTS_DB[savedUser].links[lastView]) loadView(lastView);
-                else loadView('kds'); 
+                window.authenticateUser(savedUser, CLIENTS_DB[savedUser].links, savedRole);
+                if (savedRole === 'kitchen') window.loadView('kds');
+                else if (lastView && CLIENTS_DB[savedUser].links[lastView]) window.loadView(lastView);
+                else window.loadView('kds'); 
             }
         });
 
@@ -538,16 +538,16 @@
             submitBtn.disabled = false;
 
             if (role) {
-                authenticateUser(usernameInput, currentLinks, role);
-                if (role === 'kitchen') loadView('kds');
-                else loadView('kds');
-                showToast(`مرحباً بك! تم تسجيل الدخول بصلاحية ${role === 'admin' ? 'المدير' : 'المطبخ'}`, "success");
+                window.authenticateUser(usernameInput, currentLinks, role);
+                if (role === 'kitchen') window.loadView('kds');
+                else window.loadView('kds');
+                window.showToast(`مرحباً بك! تم تسجيل الدخول بصلاحية ${role === 'admin' ? 'المدير' : 'المطبخ'}`, "success");
             } else {
-                showToast("اسم المستخدم أو كلمة المرور غير صحيحة ❌", "error");
+                window.showToast("اسم المستخدم أو كلمة المرور غير صحيحة ❌", "error");
             }
         });
 
-        function authenticateUser(username, links, role) {
+        window.authenticateUser = function(username, links, role) {
             localStorage.setItem(STATE.storageKeys.username, username);
             localStorage.setItem(STATE.storageKeys.role, role);
             
@@ -566,19 +566,19 @@
                 sidebar.classList.add('flex', 'md:relative', 'md:translate-x-0');
                 if(tablesBtn) tablesBtn.style.display = 'flex';
                 
-                fetchWaiterCalls(); 
+                window.fetchWaiterCalls(); 
                 if (STATE.waiterInterval) clearInterval(STATE.waiterInterval);
-                STATE.waiterInterval = setInterval(fetchWaiterCalls, 5000); 
+                STATE.waiterInterval = setInterval(window.fetchWaiterCalls, 5000); 
             }
 
             loginScreen.style.display = 'none';
             dashboardScreen.style.display = 'flex';
-        }
+        };
 
-        function logout() { logoutModal.classList.remove('hidden'); }
-        function closeLogoutModal() { logoutModal.classList.add('hidden'); }
+        window.logout = function() { logoutModal.classList.remove('hidden'); };
+        window.closeLogoutModal = function() { logoutModal.classList.add('hidden'); };
 
-        function confirmLogout() {
+        window.confirmLogout = function() {
             if (STATE.pollingInterval) clearInterval(STATE.pollingInterval);
             if (STATE.waiterInterval) clearInterval(STATE.waiterInterval);
             
@@ -595,7 +595,7 @@
             sidebar.classList.remove('hidden'); 
             sidebar.classList.add('flex', 'md:relative', 'md:translate-x-0');
             
-            closeLogoutModal();
+            window.closeLogoutModal();
             dashboardScreen.style.display = 'none';
             loginScreen.style.display = 'flex';
             
@@ -607,8 +607,8 @@
             
             document.getElementById('restaurantName').value = ''; 
             document.getElementById('password').value = '';
-            updateNavStyles('');
-        }
+            window.updateNavStyles('');
+        };
 
         window.showSuccessPopup = function() {
             const modal = document.getElementById('success-modal');
@@ -664,7 +664,7 @@
             }
         };
 
-        function parseCustomDate(dateStr) {
+        window.parseCustomDate = function(dateStr) {
             if (!dateStr) return new Date(NaN);
             let date = new Date(dateStr);
             if (!isNaN(date.getTime())) return date;
@@ -681,24 +681,24 @@
                 }
             }
             return new Date(NaN);
-        }
+        };
 
-        function toggleMute() {
+        window.toggleMute = function() {
             STATE.isMuted = !STATE.isMuted;
             const iconOn = document.getElementById('icon-sound-on');
             const iconOff = document.getElementById('icon-sound-off');
             if (STATE.isMuted) {
                 iconOn.classList.add('hidden');
                 iconOff.classList.remove('hidden');
-                showToast('تم كتم الصوت الإشعارات 🔕', 'success');
+                window.showToast('تم كتم الصوت الإشعارات 🔕', 'success');
             } else {
                 iconOff.classList.add('hidden');
                 iconOn.classList.remove('hidden');
-                showToast('تم تفعيل صوت الإشعارات 🔊', 'success');
+                window.showToast('تم تفعيل صوت الإشعارات 🔊', 'success');
             }
-        }
+        };
 
-        function showToast(message, type = 'success') {
+        window.showToast = function(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const isSuccess = type === 'success';
@@ -717,56 +717,56 @@
                 toast.classList.add('-translate-x-[120%]', 'opacity-0');
                 setTimeout(() => toast.remove(), 500); 
             }, 3000);
-        }
+        };
 
-        function toggleSidebar() {
+        window.toggleSidebar = function() {
             document.getElementById('sidebar').classList.toggle('translate-x-full');
             document.getElementById('sidebar-overlay').classList.toggle('hidden');
-        }
+        };
 
-        function toggleFullscreen() {
+        window.toggleFullscreen = function() {
             if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(err => console.log(err));
             else if (document.exitFullscreen) document.exitFullscreen();
-        }
+        };
 
-        function formatOrderTime(order) {
+        window.formatOrderTime = function(order) {
             const rawTime = order['Created at'] || order.Time || order.time || order.created_on;
             if (!rawTime) return '--:--';
             try {
-                const date = parseCustomDate(rawTime);
+                const date = window.parseCustomDate(rawTime);
                 if (isNaN(date.getTime())) return rawTime; 
                 return date.toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit', hour12: false });
             } catch (e) { return '--:--'; }
-        } 
+        };
 
-        function calculateElapsedMinutes(rawTime) {
+        window.calculateElapsedMinutes = function(rawTime) {
             if (!rawTime) return 0;
             try {
-                const orderDate = parseCustomDate(rawTime);
+                const orderDate = window.parseCustomDate(rawTime);
                 if (isNaN(orderDate.getTime())) return 0;
                 const diffMins = Math.floor((new Date() - orderDate) / 60000);
                 return diffMins >= 0 ? diffMins : 0;
             } catch (e) { return 0; }
-        }
+        };
 
-        function getTimerStyle(minutes) {
+        window.getTimerStyle = function(minutes) {
             if (minutes <= 1) return "text-green-400";
             if (minutes <= 3) return "text-yellow-400";
             return "text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse font-bold";
-        }
+        };
 
-        function formatTimerText(minutes) {
+        window.formatTimerText = function(minutes) {
             if (minutes <= 0) return 'الآن';
             if (minutes === 1) return 'دقيقة واحدة';
             if (minutes === 2) return 'دقيقتين';
             if (minutes >= 3 && minutes <= 10) return `${minutes} دقائق`;
             return `${minutes} دقيقة`;
-        }
+        };
 
-        function isOrderFromToday(rawTime) {
+        window.isOrderFromToday = function(rawTime) {
             if (!rawTime) return false;
             try {
-                const orderDate = parseCustomDate(rawTime);
+                const orderDate = window.parseCustomDate(rawTime);
                 if (isNaN(orderDate.getTime())) return false;
                 const now = new Date();
                 let businessDayStart = new Date();
@@ -774,12 +774,12 @@
                 if (now.getHours() < 6) businessDayStart.setDate(businessDayStart.getDate() - 1);
                 return orderDate >= businessDayStart;
             } catch (e) { return false; }
-        }
+        };
 
-        function isOrderFromSelectedDate(rawTime, dateString) {
+        window.isOrderFromSelectedDate = function(rawTime, dateString) {
             if (!rawTime || !dateString) return false;
             try {
-                const orderDate = parseCustomDate(rawTime);
+                const orderDate = window.parseCustomDate(rawTime);
                 if (isNaN(orderDate.getTime())) return false;
                 const [year, month, day] = dateString.split('-').map(Number);
                 const businessDayStart = new Date(year, month - 1, day);
@@ -790,16 +790,16 @@
             } catch (e) {
                 return false;
             }
-        }
+        };
 
-        function calculateDailySequence(orders) {
+        window.calculateDailySequence = function(orders) {
             return [...orders].reverse().map((order, index) => ({
                 ...order,
                 dailySequence: `#D-${String(index + 1).padStart(3, '0')}`
             })).reverse();
-        }
+        };
 
-        function processOrderAlerts(orders) {
+        window.processOrderAlerts = function(orders) {
             const newKnownOrders = {};
             const getStatus = (o) => (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
 
@@ -818,12 +818,12 @@
             STATE.knownOrders = newKnownOrders;
             STATE.isFirstFetch = false;
             return orders;
-        }
+        };
 
         // =========================================================
         // 🌐 API Calls
         // =========================================================
-        async function fetchOrders(tableId) {
+        window.fetchOrders = async function(tableId) {
             try {
                 const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true`, {
                     method: 'GET',
@@ -840,9 +840,9 @@
                     { id: 102, Table: "T-2", Details: "1x بيتزا مارغريتا", Status: "جاهز", "Created at": isoToday, Price: "500" },
                 ].reverse();
             }
-        }
+        };
 
-        async function fetchMenu() {
+        window.fetchMenu = async function() {
             try {
                 const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true`, {
                     method: 'GET',
@@ -851,7 +851,7 @@
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
                 
-                const todayStr = getLocalYYYYMMDD();
+                const todayStr = window.getLocalYYYYMMDD();
                 const lastAutoResetDate = localStorage.getItem('last_auto_reset_date');
                 
                 if (lastAutoResetDate !== todayStr) {
@@ -882,9 +882,9 @@
                 console.warn("Using Mock Data for Menu:", error.message);
                 return [];
             }
-        }
+        };
 
-        async function updateOrderStatus(rowId, newStatus) {
+        window.updateOrderStatus = async function(rowId, newStatus) {
             const btn = document.getElementById(`btn-done-${rowId}`);
             if(btn) { btn.innerHTML = `...`; btn.disabled = true; }
 
@@ -894,52 +894,73 @@
                     headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                     body: JSON.stringify({ "Status": newStatus })
                 });
-                const data = await fetchOrders(ORDERS_TABLE_ID);
+                const data = await window.fetchOrders(ORDERS_TABLE_ID);
                 STATE.latestKdsOrders = data;
                 STATE.lastFetchedOrders = data;
                 
                 const currentView = localStorage.getItem(STATE.storageKeys.lastView);
                 if (STATE.currentRole === 'kitchen' || currentView === 'kds') {
-                    renderKDS(data);
+                    window.renderKDS(data);
                 } else if (currentView === 'cashier') {
-                    renderCashier(data);
+                    window.renderCashier(data);
                 } else if (currentView === 'analytics') {
-                    renderAnalytics(data, 'today');
+                    window.renderAnalytics(data, 'today');
                 } else {
-                    renderKDS(data);
+                    window.renderKDS(data);
                 }
-                showToast("تم تحديث حالة الطلب بنجاح ✅", "success");
+                window.showToast("تم تحديث حالة الطلب بنجاح ✅", "success");
             } catch (error) {
                 console.warn("API Error:", error.message);
-                showToast("فشل تحديث الحالة. تأكد من الاتصال.", "error");
+                window.showToast("فشل تحديث الحالة. تأكد من الاتصال.", "error");
                 if(btn) { btn.innerHTML = 'جاهز ✅'; btn.disabled = false; }
             }
-        }
+        };
 
-        async function updateMenuItem(rowId, updateData) {
+        window.updateMenuItem = async function(rowId, updateData, btnId = null) {
+            const btn = btnId ? document.getElementById(btnId) : null;
+            let originalBtnText = '';
+            
+            if (btn) {
+                originalBtnText = btn.innerHTML;
+                btn.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-current"></div> جاري...`;
+                btn.disabled = true;
+                btn.classList.add('opacity-70', 'cursor-not-allowed', 'flex', 'items-center', 'justify-center', 'gap-2');
+            }
+
             try {
-                await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/${rowId}/?user_field_names=true`, {
+                const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/${rowId}/?user_field_names=true`, {
                     method: 'PATCH',
                     headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                     body: JSON.stringify(updateData)
                 });
-                const data = await fetchMenu();
+                
+                if (!response.ok) {
+                    throw new Error("فشل الاتصال بقاعدة البيانات");
+                }
+                
+                const data = await window.fetchMenu();
                 
                 const currentView = localStorage.getItem(STATE.storageKeys.lastView);
                 if (currentView === 'menu_promo') {
-                    renderPromoEditor(data);
+                    window.renderPromoEditor(data);
                 } else {
-                    renderMenuEditor(data);
+                    window.renderMenuEditor(data);
                 }
                 
-                showSuccessPopup();
+                window.showSuccessPopup();
             } catch (error) {
                 console.warn("API Error:", error.message);
-                showToast("فشل تحديث العنصر.", "error");
+                window.showToast(error.message || "فشل تحديث العنصر.", "error");
+            } finally {
+                if (btn) {
+                    btn.innerHTML = originalBtnText;
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-70', 'cursor-not-allowed', 'flex', 'items-center', 'justify-center', 'gap-2');
+                }
             }
-        }
+        };
 
-        async function fetchWaiterCalls() {
+        window.fetchWaiterCalls = async function() {
             try {
                 const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${CALLS_TABLE_ID}/?user_field_names=true`, {
                     method: 'GET',
@@ -971,7 +992,7 @@
 
                 if (newCallIds.length > 0) {
                     if (!STATE.isMuted) { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(()=>{}); }
-                    newCallIds.forEach(t => showToast(`نداء جديد من طاولة ${t}`, "success"));
+                    newCallIds.forEach(t => window.showToast(`نداء جديد من طاولة ${t}`, "success"));
                 }
 
                 STATE.activeCalls = currentActiveCalls;
@@ -984,17 +1005,17 @@
                 }
                 
                 const currentTitle = document.querySelector('#dynamic-content h2');
-                if (currentTitle && currentTitle.textContent.includes('نداءات')) renderTableView();
+                if (currentTitle && currentTitle.textContent.includes('نداءات')) window.renderTableView();
 
             } catch (e) {
                 console.warn("Failed to fetch waiter calls (Network Error):", e.message);
             }
-        }
+        };
 
-        async function resolveTableCall(tableNum) {
+        window.resolveTableCall = async function(tableNum) {
             const rowId = STATE.activeCallRows[tableNum];
             if (!rowId) {
-                showToast("خطأ: لا يمكن العثور على معرف النداء", "error");
+                window.showToast("خطأ: لا يمكن العثور على معرف النداء", "error");
                 return;
             }
 
@@ -1015,7 +1036,7 @@
             STATE.activeCalls = STATE.activeCalls.filter(t => t !== tableNum);
             delete STATE.activeCallRows[tableNum];
             
-            renderTableView();
+            window.renderTableView();
             
             const badge = document.getElementById('tables-badge');
             if (badge) {
@@ -1023,9 +1044,9 @@
                 else badge.classList.add('hidden');
             }
             
-            showToast(`تمت الاستجابة للطاولة ${tableNum}`, 'success');
-            fetchWaiterCalls().catch(()=>console.warn("Sync failed"));
-        }
+            window.showToast(`تمت الاستجابة للطاولة ${tableNum}`, 'success');
+            window.fetchWaiterCalls().catch(()=>console.warn("Sync failed"));
+        };
 
         // =========================================================
         // 🖥️ Views Rendering
@@ -1033,14 +1054,14 @@
 
         window.setKdsTab = function(tab) {
             STATE.kdsActiveTab = tab;
-            renderKDS(STATE.latestKdsOrders || []);
+            window.renderKDS(STATE.latestKdsOrders || []);
         };
 
-        function renderKDS(orders) {
+        window.renderKDS = function(orders) {
             let filteredOrders = [...orders]; 
             
-            filteredOrders = calculateDailySequence(filteredOrders);
-            filteredOrders = processOrderAlerts(filteredOrders);
+            filteredOrders = window.calculateDailySequence(filteredOrders);
+            filteredOrders = window.processOrderAlerts(filteredOrders);
 
             dynamicContent.innerHTML = '';
             const getStatus = (o) => (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
@@ -1098,9 +1119,9 @@
             const renderOrderList = (ordersArray) => {
                 return ordersArray.map(o => {
                     const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
-                    const elapsedMins = calculateElapsedMinutes(rawTime);
-                    const timerStyle = getTimerStyle(elapsedMins);
-                    const timerText = formatTimerText(elapsedMins);
+                    const elapsedMins = window.calculateElapsedMinutes(rawTime);
+                    const timerStyle = window.getTimerStyle(elapsedMins);
+                    const timerText = window.formatTimerText(elapsedMins);
                     const s = getStatus(o);
                     
                     const btnHtml = s === 'قيد التحضير' 
@@ -1170,9 +1191,9 @@
                         card.className = `bg-gray-800 border-2 ${borderColorClass} rounded-2xl flex flex-col overflow-hidden ${hasNew ? 'animate-pulse' : ''} h-full`;
                         
                         const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
-                        const elapsedMins = calculateElapsedMinutes(rawTime);
-                        const timerStyle = getTimerStyle(elapsedMins);
-                        const timerText = formatTimerText(elapsedMins);
+                        const elapsedMins = window.calculateElapsedMinutes(rawTime);
+                        const timerStyle = window.getTimerStyle(elapsedMins);
+                        const timerText = window.formatTimerText(elapsedMins);
 
                         const btnHtml = s === 'قيد التحضير' 
                             ? `<button id="btn-done-${o.id}" onclick="updateOrderStatus(${o.id}, 'جاهز')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition shadow-lg flex justify-center items-center gap-2 mt-auto text-lg hover:scale-[1.02]"><span>جاهز للتسليم</span> ✅</button>`
@@ -1197,16 +1218,16 @@
             }
             
             dynamicContent.appendChild(grid);
-        }
+        };
 
         window.handleCashierDateChange = function(e) {
             STATE.selectedCashierDate = e.target.value;
-            renderCashier(STATE.lastFetchedOrders);
+            window.renderCashier(STATE.lastFetchedOrders);
         };
         
         window.setCashierFilter = function(status) {
             STATE.cashierStatusFilter = status;
-            renderCashier(STATE.lastFetchedOrders);
+            window.renderCashier(STATE.lastFetchedOrders);
         };
 
         window.handlePaymentToggle = function(rowId) {
@@ -1234,8 +1255,8 @@
             const order = STATE.currentCheckoutOrder;
             if (!order) return;
             
-            closeCheckoutModal();
-            processPayment(order.id, shouldPrint);
+            window.closeCheckoutModal();
+            window.processPayment(order.id, shouldPrint);
         };
 
         window.processPayment = async function(rowId, shouldPrint) {
@@ -1268,7 +1289,7 @@
 
             if (shouldPrint) {
                 const orderToPrint = STATE.processedCashierOrders.find(o => o.id === rowId);
-                if(orderToPrint) printReceipt(orderToPrint);
+                if(orderToPrint) window.printReceipt(orderToPrint);
             }
 
             try {
@@ -1281,18 +1302,18 @@
                     body: JSON.stringify({ "Status": 'مدفوع' })
                 });
                 
-                showToast("تم تأكيد الدفع بنجاح", "success");
+                window.showToast("تم تأكيد الدفع بنجاح", "success");
                 
                 setTimeout(async () => {
                     try {
                         const currentView = localStorage.getItem(STATE.storageKeys.lastView);
                         if (currentView === 'cashier') {
-                            renderCashier(STATE.lastFetchedOrders);
+                            window.renderCashier(STATE.lastFetchedOrders);
                         } else if (currentView === 'analytics') {
-                            renderAnalytics(STATE.analyticsData, 'today');
+                            window.renderAnalytics(STATE.analyticsData, 'today');
                         }
                         
-                        const freshData = await fetchOrders(ORDERS_TABLE_ID);
+                        const freshData = await window.fetchOrders(ORDERS_TABLE_ID);
                         STATE.latestKdsOrders = freshData;
                         STATE.lastFetchedOrders = freshData;
                         
@@ -1303,7 +1324,7 @@
 
             } catch (error) {
                 console.warn("API Error:", error.message);
-                showToast("فشل تأكيد الدفع. تأكد من الاتصال.", "error");
+                window.showToast("فشل تأكيد الدفع. تأكد من الاتصال.", "error");
                 
                 const revertLocalStatus = (ordersArray) => {
                     if(!ordersArray) return;
@@ -1386,7 +1407,7 @@
             }, 100);
         };
 
-        function renderCashier(orders) {
+        window.renderCashier = function(orders) {
             STATE.lastFetchedOrders = orders;
             const getPrice = (o) => parseFloat((o.total || o.Total || o.price || o.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
             const getStatus = (o) => (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
@@ -1394,11 +1415,11 @@
 
             let baseOrders = orders.filter(o => {
                 const time = o['Created at'] || o.Time || o.time || o.created_on;
-                return isOrderFromSelectedDate(time, STATE.selectedCashierDate);
+                return window.isOrderFromSelectedDate(time, STATE.selectedCashierDate);
             });
             
-            baseOrders = calculateDailySequence(baseOrders);
-            baseOrders = processOrderAlerts(baseOrders);
+            baseOrders = window.calculateDailySequence(baseOrders);
+            baseOrders = window.processOrderAlerts(baseOrders);
             STATE.processedCashierOrders = baseOrders;
 
             let filteredOrders = baseOrders.filter(o => getStatus(o) === STATE.cashierStatusFilter);
@@ -1468,12 +1489,12 @@
                     statusHTML = `<button id="btn-pay-${order.id}" onclick="handlePaymentToggle(${order.id})" class="px-3 py-1 rounded-full text-xs border border-brand bg-brand text-black font-bold hover:bg-brand-dark transition shadow-[0_0_10px_rgba(255,153,0,0.4)] animate-pulse hover:animate-none whitespace-nowrap">جاهز (تحصيل)</button>`;
                 }
 
-                tableHTML += `<tr class="hover:bg-gray-750 transition duration-150 ${rowAlertClass}"><td class="p-4 text-right font-mono font-bold text-white">${order.dailySequence}</td><td class="p-4 text-right text-gray-400">${formatOrderTime(order)}</td><td class="p-4 text-right font-bold">${order.Table||'Takeaway'}</td><td class="p-4 text-right truncate max-w-xs">${order.Details||'-'}</td><td class="p-4 text-left font-bold text-white">${getPrice(order).toLocaleString()} ${sysCurrency}</td><td class="p-4 text-center">${statusHTML}</td></tr>`;
+                tableHTML += `<tr class="hover:bg-gray-750 transition duration-150 ${rowAlertClass}"><td class="p-4 text-right font-mono font-bold text-white">${order.dailySequence}</td><td class="p-4 text-right text-gray-400">${window.formatOrderTime(order)}</td><td class="p-4 text-right font-bold">${order.Table||'Takeaway'}</td><td class="p-4 text-right truncate max-w-xs">${order.Details||'-'}</td><td class="p-4 text-left font-bold text-white">${getPrice(order).toLocaleString()} ${sysCurrency}</td><td class="p-4 text-center">${statusHTML}</td></tr>`;
             });
             tableHTML += `</tbody></table>`;
             tableContainer.innerHTML = tableHTML;
             dynamicContent.appendChild(tableContainer);
-        }
+        };
 
         window.setAvailabilityState = function(id, action) {
             const statusInput = document.getElementById(`status-${id}`);
@@ -1510,7 +1531,7 @@
             }
         };
 
-        function renderMenuEditor(items) {
+        window.renderMenuEditor = function(items) {
             dynamicContent.innerHTML = '';
             const sysCurrency = localStorage.getItem('system_currency') || 'DA';
 
@@ -1595,9 +1616,9 @@
                 grid.appendChild(card);
             });
             dynamicContent.appendChild(grid);
-        }
+        };
 
-        function renderPromoEditor(items) {
+        window.renderPromoEditor = function(items) {
             dynamicContent.innerHTML = '';
             const sysCurrency = localStorage.getItem('system_currency') || 'DA';
 
@@ -1674,14 +1695,14 @@
                 grid.appendChild(card);
             });
             dynamicContent.appendChild(grid);
-        }
+        };
 
-        async function renderAnalytics(orders = STATE.analyticsData, filterType = 'today') {
+        window.renderAnalytics = async function(orders = STATE.analyticsData, filterType = 'today') {
             dynamicContent.innerHTML = '<div class="flex h-full items-center justify-center"><div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand"></div></div>';
             const sysCurrency = localStorage.getItem('system_currency') || 'DA';
 
             try {
-                const menuItems = await fetchMenu();
+                const menuItems = await window.fetchMenu();
                 const categoryMap = {};
                 menuItems.forEach(item => {
                     const itemName = (item.Name || item.name || '').toLowerCase().trim();
@@ -1693,10 +1714,10 @@
                 const filteredOrders = orders.filter(o => {
                     const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
                     if (!rawTime) return false;
-                    const t = parseCustomDate(rawTime);
+                    const t = window.parseCustomDate(rawTime);
                     const now = new Date();
-                    if (filterType === 'today') return isOrderFromToday(rawTime);
-                    if (filterType === 'custom') return isOrderFromSelectedDate(rawTime, STATE.selectedAnalyticsDate);
+                    if (filterType === 'today') return window.isOrderFromToday(rawTime);
+                    if (filterType === 'custom') return window.isOrderFromSelectedDate(rawTime, STATE.selectedAnalyticsDate);
                     if (filterType === 'week') { const oneWeekAgo = new Date(); oneWeekAgo.setDate(now.getDate() - 7); return t >= oneWeekAgo; }
                     if (filterType === 'month') { const oneMonthAgo = new Date(); oneMonthAgo.setDate(now.getDate() - 30); return t >= oneMonthAgo; }
                     return true;
@@ -1712,7 +1733,7 @@
                     totalSales += price;
                     const t = order['Created at'] || order.Time;
                     if(t) {
-                        const dateObj = parseCustomDate(t);
+                        const dateObj = window.parseCustomDate(t);
                         let key = (filterType === 'today' || filterType === 'custom') ? dateObj.getHours() + ":00" : dateObj.getDate() + "/" + (dateObj.getMonth()+1);
                         salesByTime[key] = (salesByTime[key] || 0) + price;
                     }
@@ -1820,9 +1841,14 @@
                 console.warn("Analytics Error:", error.message);
                 dynamicContent.innerHTML = `<div class="text-red-400 p-10 text-center border border-red-900 rounded bg-red-900/20">حدث خطأ أثناء معالجة البيانات: ${error.message}</div>`;
             }
-        }
+        };
 
-        function renderTableView() {
+        window.handleAnalyticsDateChange = function(e) {
+            STATE.selectedAnalyticsDate = e.target.value;
+            window.renderAnalytics(STATE.analyticsData, 'custom');
+        };
+
+        window.renderTableView = function() {
             dynamicContent.innerHTML = `<div class="flex justify-between items-center mb-8 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700"><div class="flex items-center gap-3"><span class="live-indicator" title="تحديث مباشر"></span></div><div class="text-gray-400 text-sm">اضغط على الطاولة الحمراء لإلغاء النداء</div></div>`;
             const grid = document.createElement('div');
             grid.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6";
@@ -1833,7 +1859,7 @@
                 card.className = `h-40 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all duration-300 relative overflow-hidden border-2 ${isActive ? 'bg-red-600 border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.6)] animate-pulse text-white' : 'bg-gray-800 border-gray-700 hover:border-gray-500 text-gray-400 hover:bg-gray-750'}`;
                 
                 if (isActive) {
-                    card.onclick = () => resolveTableCall(i);
+                    card.onclick = () => window.resolveTableCall(i);
                     card.innerHTML = `<div class="text-4xl mb-2 animate-bounce">⚠️</div><div class="text-xl font-bold">طاولة ${i}</div><div class="text-xs mt-1 bg-red-800 px-2 py-1 rounded text-red-100">تطلب مساعدة</div>`;
                 } else {
                     card.innerHTML = `<div class="text-4xl mb-2 opacity-50">🍽️</div><div class="text-lg font-medium">طاولة ${i}</div>`;
@@ -1841,9 +1867,9 @@
                 grid.appendChild(card);
             }
             dynamicContent.appendChild(grid);
-        }
+        };
 
-        function renderMenuAdd() {
+        window.renderMenuAdd = function() {
             dynamicContent.innerHTML = '';
             const sysCurrency = localStorage.getItem('system_currency') || 'DA';
             
@@ -1908,7 +1934,115 @@
 
             container.appendChild(card);
             dynamicContent.appendChild(container);
-        }
+        };
+
+        window.submitNewDish = async function() {
+            const btn = document.getElementById('btn-submit-dish');
+            const nameInput = document.getElementById('add-name');
+            const descInput = document.getElementById('add-desc');
+            const priceInput = document.getElementById('add-price');
+            const catInput = document.getElementById('add-category');
+            const imgInput = document.getElementById('add-image');
+
+            const name = nameInput.value.trim();
+            const desc = descInput.value.trim();
+            const price = parseFloat(priceInput.value);
+            const category = catInput.value;
+            const imageFile = imgInput.files[0];
+
+            if (!name) {
+                window.showToast("الرجاء إدخال اسم الطبق", "error");
+                nameInput.focus();
+                return;
+            }
+            if (isNaN(price) || price <= 0) {
+                window.showToast("الرجاء إدخال سعر صحيح", "error");
+                priceInput.focus();
+                return;
+            }
+
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = `<span class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-black"></div> جاري رفع الصورة وإضافة الطبق...</span>`;
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            
+            try {
+                let uploadedFileName = null;
+                
+                if (imageFile) {
+                    const formData = new FormData();
+                    formData.append("file", imageFile);
+                    
+                    const uploadResponse = await fetch(`https://baserow.vidsai.site/api/user-files/upload-file/`, {
+                        method: 'POST',
+                        headers: { "Authorization": `Token ${BASEROW_TOKEN}` },
+                        body: formData
+                    });
+                    
+                    if (!uploadResponse.ok) {
+                        const errUpload = await uploadResponse.json();
+                        throw new Error("فشل رفع الصورة: " + (errUpload.error || ""));
+                    }
+                    
+                    const uploadedFileObj = await uploadResponse.json();
+                    if(uploadedFileObj && uploadedFileObj.name) {
+                        uploadedFileName = uploadedFileObj.name;
+                    }
+                }
+
+                const payload = {
+                    "Name": name,
+                    "Description": desc,
+                    "Price": price, 
+                    "Category": category,
+                    "Availability": "متوفر"
+                };
+
+                if (uploadedFileName) {
+                    payload["image"] = [{ "name": uploadedFileName }];
+                }
+
+                const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true`, {
+                    method: 'POST',
+                    headers: { 
+                        "Authorization": `Token ${BASEROW_TOKEN}`, 
+                        "Content-Type": "application/json" 
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    let errorMsg = errData.error || "Failed to create item";
+                    if (errData.detail) {
+                        if (typeof errData.detail === 'object') {
+                            const details = Object.entries(errData.detail).map(([field, msgs]) => `${field}: ${msgs.join(', ')}`).join(' | ');
+                            errorMsg += " - التفاصيل: " + details;
+                        } else {
+                            errorMsg += " - " + String(errData.detail);
+                        }
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                window.showSuccessPopup();
+                
+                nameInput.value = '';
+                descInput.value = '';
+                priceInput.value = '';
+                imgInput.value = '';
+                catInput.value = 'pizza';
+                window.updateFileName(imgInput); 
+                
+            } catch (error) {
+                console.error("Baserow API Error Details:", error);
+                window.showToast("خطأ: " + error.message, "error");
+            } finally {
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            }
+        };
 
         window.renderSettingsRestaurant = async function() {
             dynamicContent.innerHTML = '<div class="flex h-full items-center justify-center"><div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand"></div></div>';
@@ -2124,190 +2258,12 @@
                     localStorage.removeItem('menu_restaurant_logo');
                 }
 
-                showSuccessPopup();
+                window.showSuccessPopup();
                 document.getElementById('logo-action').value = 'keep'; 
                 
             } catch (error) {
                 console.error("Baserow API Error Details:", error);
-                showToast("خطأ: " + error.message, "error");
-            } finally {
-                btn.innerHTML = originalBtnText;
-                btn.disabled = false;
-                btn.classList.remove('opacity-70', 'cursor-not-allowed');
-            }
-        };
-
-        window.renderSettingsPrint = async function() {
-            dynamicContent.innerHTML = '<div class="flex h-full items-center justify-center"><div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand"></div></div>';
-            
-            let currentName = 'RestoPro';
-            let currentTop = 'إدارة المطاعم الذكية';
-            let currentBottom = 'شكراً لزيارتكم!\\nThank you for your visit';
-            let currentPhone = '';
-
-            try {
-                const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${SETTINGS_TABLE_ID}/?user_field_names=true`, {
-                    method: 'GET',
-                    headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.results && data.results.length > 0) {
-                        const row = data.results[0];
-                        currentName = row.Name ?? 'RestoPro';
-                        currentTop = row.ReceiptTop ?? '';
-                        currentBottom = row.ReceiptBottom ?? '';
-                        currentPhone = row.Phone ?? '';
-                    }
-                }
-            } catch (error) {
-                console.warn("Failed to fetch settings:", error);
-            }
-
-            dynamicContent.innerHTML = '';
-            
-            const header = document.createElement('div');
-            header.className = "flex justify-between items-center mb-8 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700";
-            header.innerHTML = `<h2 class="text-2xl font-bold text-white flex items-center gap-2">
-                <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                إعدادات الطباعة
-            </h2>`;
-            dynamicContent.appendChild(header);
-
-            const container = document.createElement('div');
-            container.className = "max-w-6xl mx-auto pb-10 flex flex-col lg:flex-row gap-8";
-
-            const formSection = document.createElement('div');
-            formSection.className = "flex-1 bg-gray-800 border border-gray-700 rounded-2xl shadow-xl p-6 md:p-8 order-2 lg:order-1";
-            formSection.innerHTML = `
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">رقم الهاتف / العنوان (أسفل الإسم)</label>
-                        <input type="text" id="setting-print-phone" value="${currentPhone}" oninput="document.getElementById('preview-phone').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition" placeholder="مثال: 0550 00 00 00 - حي الأمل">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">رسالة أعلى التذكرة (ترحيب)</label>
-                        <textarea id="setting-print-top" rows="3" oninput="document.getElementById('preview-top').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none resize-none transition" placeholder="مثال: أهلاً بكم في مطعمنا...">${currentTop}</textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">رسالة أسفل التذكرة (وداع/سوشيال ميديا)</label>
-                        <textarea id="setting-print-bottom" rows="4" oninput="document.getElementById('preview-bottom').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none resize-none transition" placeholder="مثال: شكراً لزيارتكم! تابعونا على انستغرام...">${currentBottom}</textarea>
-                    </div>
-
-                    <div class="pt-4 mt-6 border-t border-gray-700">
-                        <button id="btn-save-print" onclick="savePrintSettings()" class="w-full bg-brand hover:bg-brand-dark text-black font-bold text-lg py-4 rounded-xl transition shadow-lg transform hover:scale-[1.01]">
-                            حفظ إعدادات الطباعة
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            const previewSection = document.createElement('div');
-            previewSection.className = "w-full lg:w-80 flex-shrink-0 flex justify-center order-1 lg:order-2";
-            previewSection.innerHTML = `
-                <div class="bg-white text-black p-4 w-full max-w-sm rounded shadow-2xl font-mono text-center text-sm leading-relaxed border-t-8 border-gray-300">
-                    <h2 id="preview-name" class="font-bold text-xl mb-1">${currentName}</h2>
-                    <div id="preview-top" class="text-xs mb-1 whitespace-pre-line text-gray-800">${currentTop}</div>
-                    <div id="preview-phone" class="text-xs mb-3 font-bold">${currentPhone}</div>
-                    
-                    <div class="border-t border-dashed border-gray-400 my-3"></div>
-                    
-                    <div class="text-left text-xs mb-2 space-y-1">
-                        <div class="flex justify-between"><span>رقم الطلب:</span> <b>#D-015</b></div>
-                        <div class="flex justify-between"><span>الطاولة:</span> <b>T-4</b></div>
-                        <div class="flex justify-between"><span>التاريخ:</span> <span>${new Date().toLocaleDateString('ar-DZ')}</span></div>
-                    </div>
-                    
-                    <div class="border-t border-dashed border-gray-400 my-3"></div>
-                    
-                    <div class="text-left text-xs mb-2 space-y-2">
-                        <div class="font-bold border-b border-gray-300 pb-1 mb-1">تفاصيل الطلب:</div>
-                        <div class="flex justify-between"><span>1x Pizza Marguerita</span></div>
-                        <div class="flex justify-between"><span>2x Coca Cola</span></div>
-                    </div>
-                    
-                    <div class="border-t border-dashed border-gray-400 my-3"></div>
-                    
-                    <div class="flex justify-between font-bold text-sm mb-3 bg-gray-100 p-1">
-                        <span>المجموع:</span>
-                        <span>850 DA</span>
-                    </div>
-                    
-                    <div class="border-t border-dashed border-gray-400 my-3"></div>
-                    
-                    <div id="preview-bottom" class="text-xs font-bold whitespace-pre-line mt-3 text-gray-800">${currentBottom}</div>
-                </div>
-            `;
-
-            container.appendChild(formSection);
-            container.appendChild(previewSection);
-            dynamicContent.appendChild(container);
-        };
-
-        window.savePrintSettings = async function() {
-            const btn = document.getElementById('btn-save-print');
-            const topVal = document.getElementById('setting-print-top').value.trim();
-            const bottomVal = document.getElementById('setting-print-bottom').value.trim();
-            const phoneVal = document.getElementById('setting-print-phone').value.trim();
-
-            const originalBtnText = btn.innerHTML;
-            btn.innerHTML = `<span class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-black"></div> جاري الحفظ...</span>`;
-            btn.disabled = true;
-            btn.classList.add('opacity-70', 'cursor-not-allowed');
-
-            try {
-                const settingsResponse = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${SETTINGS_TABLE_ID}/?user_field_names=true`, {
-                    method: 'GET',
-                    headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
-                });
-                
-                if (!settingsResponse.ok) {
-                    throw new Error("فشل جلب الإعدادات");
-                }
-                
-                const settingsData = await settingsResponse.json();
-                const payload = {
-                    "ReceiptTop": topVal,
-                    "ReceiptBottom": bottomVal,
-                    "Phone": phoneVal
-                };
-
-                if (settingsData.results && settingsData.results.length > 0) {
-                    const rowId = settingsData.results[0].id;
-                    const updateResponse = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${SETTINGS_TABLE_ID}/${rowId}/?user_field_names=true`, {
-                        method: 'PATCH',
-                        headers: { 
-                            "Authorization": `Token ${BASEROW_TOKEN}`, 
-                            "Content-Type": "application/json" 
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!updateResponse.ok) throw new Error("فشل تحديث إعدادات الطباعة");
-                    
-                } else {
-                    const createResponse = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${SETTINGS_TABLE_ID}/?user_field_names=true`, {
-                        method: 'POST',
-                        headers: { 
-                            "Authorization": `Token ${BASEROW_TOKEN}`, 
-                            "Content-Type": "application/json" 
-                        },
-                        body: JSON.stringify(payload)
-                    });
-                    if (!createResponse.ok) throw new Error("فشل إنشاء الإعدادات");
-                }
-
-                localStorage.setItem('print_receipt_top', topVal);
-                localStorage.setItem('print_receipt_bottom', bottomVal);
-                localStorage.setItem('print_phone', phoneVal);
-
-                showSuccessPopup();
-                
-            } catch (error) {
-                console.error("Baserow API Error Details:", error);
-                showToast("خطأ: " + error.message, "error");
+                window.showToast("خطأ: " + error.message, "error");
             } finally {
                 btn.innerHTML = originalBtnText;
                 btn.disabled = false;
@@ -2432,11 +2388,11 @@
                 }
 
                 localStorage.setItem('system_currency', currencyVal);
-                showSuccessPopup();
+                window.showSuccessPopup();
                 
             } catch (error) {
                 console.error("Baserow API Error Details:", error);
-                showToast("خطأ: " + error.message, "error");
+                window.showToast("خطأ: " + error.message, "error");
             } finally {
                 btn.innerHTML = originalBtnText;
                 btn.disabled = false;
@@ -2444,7 +2400,89 @@
             }
         };
 
-        async function loadView(viewType) {
+        window.openDeleteModal = function(id, name) {
+            currentDeleteItemId = id;
+            document.getElementById('delete-item-name').innerText = name;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        };
+
+        window.closeDeleteModal = function() {
+            currentDeleteItemId = null;
+            document.getElementById('delete-item-name').innerText = '';
+            document.getElementById('delete-modal').classList.add('hidden');
+        };
+
+        window.confirmDelete = async function() {
+            if (!currentDeleteItemId) return;
+
+            const btn = document.getElementById('btn-confirm-delete');
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div> جاري الحذف...`;
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+
+            try {
+                const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/${currentDeleteItemId}/`, {
+                    method: 'DELETE',
+                    headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || "Failed to delete item");
+                }
+
+                window.showToast("تم حذف الطبق بنجاح", "success");
+                window.closeDeleteModal();
+                
+                const newData = await window.fetchMenu();
+                window.renderMenuEditor(newData);
+
+            } catch (error) {
+                console.error("Baserow API Error Details:", error);
+                window.showToast("خطأ: " + error.message, "error");
+            } finally {
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            }
+        };
+
+        window.saveMenuItem = function(id) {
+            const newName = document.getElementById(`name-${id}`).value;
+            const newDesc = document.getElementById(`desc-${id}`).value;
+            const price = parseFloat(document.getElementById(`price-${id}`).value);
+            const status = document.getElementById(`status-${id}`).value;
+            
+            if (!newName.trim()) {
+                window.showToast("الرجاء إدخال اسم الطبق", "error");
+                return;
+            }
+            if (isNaN(price) || price < 0) {
+                window.showToast("الرجاء إدخال سعر صحيح", "error");
+                return;
+            }
+            
+            window.updateMenuItem(id, { "Name": newName, "Description": newDesc, "Price": price, "Availability": status }, `btn-save-${id}`);
+        };
+
+        window.savePromoPrice = function(id) {
+            const promoInput = document.getElementById(`promo-${id}`).value;
+            const promoPrice = parseFloat(promoInput);
+            if (isNaN(promoPrice) || promoPrice <= 0) {
+                window.showToast("الرجاء إدخال سعر ترويجي صحيح أكبر من صفر.", "error");
+                return;
+            }
+            window.updateMenuItem(id, { "PromoPrice": promoPrice }, null);
+        };
+
+        window.clearPromoPrice = function(id) {
+            const promoInput = document.getElementById(`promo-${id}`);
+            if(promoInput) promoInput.value = '';
+            window.updateMenuItem(id, { "PromoPrice": null }, null); 
+        };
+
+        window.loadView = async function(viewType) {
             if (window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.add('translate-x-full');
                 document.getElementById('sidebar-overlay').classList.add('hidden');
@@ -2453,7 +2491,7 @@
             if (STATE.pollingInterval) { clearInterval(STATE.pollingInterval); STATE.pollingInterval = null; }
             
             if (STATE.currentRole === 'kitchen' && viewType !== 'kds') return;
-            if (STATE.currentRole === 'admin') { updateNavStyles(viewType); localStorage.setItem(STATE.storageKeys.lastView, viewType); }
+            if (STATE.currentRole === 'admin') { window.updateNavStyles(viewType); localStorage.setItem(STATE.storageKeys.lastView, viewType); }
 
             welcomeState.style.display = 'none';
             contentFrame.classList.add('hidden');
@@ -2476,9 +2514,9 @@
             if (viewType === 'kds') {
                 const runKDS = async () => { 
                     try { 
-                        const data = await fetchOrders(ORDERS_TABLE_ID); 
+                        const data = await window.fetchOrders(ORDERS_TABLE_ID); 
                         STATE.latestKdsOrders = data; 
-                        renderKDS(data); 
+                        window.renderKDS(data); 
                     } catch (e) { console.warn(e); } 
                     finally { loader.style.display = 'none'; } 
                 };
@@ -2486,58 +2524,58 @@
                 STATE.pollingInterval = setInterval(runKDS, 10000);
             } 
             else if (viewType === 'cashier') {
-                const runCashier = async () => { try { const data = await fetchOrders(ORDERS_TABLE_ID); renderCashier(data); } catch (e) { console.warn(e); } finally { loader.style.display = 'none'; } };
+                const runCashier = async () => { try { const data = await window.fetchOrders(ORDERS_TABLE_ID); window.renderCashier(data); } catch (e) { console.warn(e); } finally { loader.style.display = 'none'; } };
                 await runCashier();
                 STATE.pollingInterval = setInterval(runCashier, 10000);
             }
             else if (viewType === 'menu_quick') {
-                try { const data = await fetchMenu(); renderMenuEditor(data); } 
+                try { const data = await window.fetchMenu(); window.renderMenuEditor(data); } 
                 catch (e) { console.warn(e); dynamicContent.innerHTML = `<div class="text-red-400 p-10 text-center">خطأ في تحميل القائمة.</div>`; } 
                 finally { loader.style.display = 'none'; }
             }
             else if (viewType === 'menu_promo') {
-                try { const data = await fetchMenu(); renderPromoEditor(data); } 
+                try { const data = await window.fetchMenu(); window.renderPromoEditor(data); } 
                 catch (e) { console.warn(e); dynamicContent.innerHTML = `<div class="text-red-400 p-10 text-center">خطأ في تحميل بيانات الخصومات.</div>`; } 
                 finally { loader.style.display = 'none'; }
             }
             else if (viewType === 'menu_add') {
-                renderMenuAdd();
+                window.renderMenuAdd();
                 loader.style.display = 'none';
             }
             else if (viewType === 'analytics') {
                 try {
-                    const data = await fetchOrders(ORDERS_TABLE_ID);
+                    const data = await window.fetchOrders(ORDERS_TABLE_ID);
                     STATE.analyticsData = data; 
-                    await renderAnalytics(data, 'today');
+                    await window.renderAnalytics(data, 'today');
                 } catch (e) { console.warn(e); dynamicContent.innerHTML = `<div class="text-red-400 p-10 text-center">خطأ في تحميل البيانات.</div>`; } 
                 finally { loader.style.display = 'none'; }
             }
             else if (viewType === 'tables') {
-                renderTableView();
+                window.renderTableView();
                 loader.style.display = 'none';
             }
             else if (viewType === 'settings_restaurant') {
-                renderSettingsRestaurant();
+                await window.renderSettingsRestaurant();
                 loader.style.display = 'none';
             }
             else if (viewType === 'settings_print') {
-                renderSettingsPrint();
+                await window.renderSettingsPrint();
                 loader.style.display = 'none';
             }
             else if (viewType === 'settings_account') {
-                renderSettingsAccount();
+                await window.renderSettingsAccount();
                 loader.style.display = 'none';
             }
             
             const url = STATE.currentLinks[viewType];
             if (url && url !== "api_mode" && !dynamicContent.innerHTML) {
-                 if (url.includes("YOUR_DEMO")) showToast("⚠️ هذا حساب تجريبي. البيانات غير حقيقية.", "error");
-                 else showToast("الرابط غير متوفر أو قيد التطوير.", "error");
+                 if (url.includes("YOUR_DEMO")) window.showToast("⚠️ هذا حساب تجريبي. البيانات غير حقيقية.", "error");
+                 else window.showToast("الرابط غير متوفر أو قيد التطوير.", "error");
                  loader.style.display = 'none';
             }
-        }
+        };
 
-        function updateNavStyles(activeView) {
+        window.updateNavStyles = function(activeView) {
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('bg-brand', 'text-black', 'text-white');
                 btn.classList.add('text-gray-300', 'hover:bg-gray-800');
@@ -2584,7 +2622,7 @@
                     activeBtn.classList.add('bg-brand', 'text-black');
                 }
             }
-        }
+        };
     </script>
 </body>
 </html>
