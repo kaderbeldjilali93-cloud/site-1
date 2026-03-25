@@ -545,7 +545,12 @@
                         else if (typeof imgField === 'string') imgUrl = imgField;
 
                         let modelField = item["Model 3D"] || item["Model3D"] || item["model_3d"];
-                        let modelUrl = (Array.isArray(modelField) && modelField.length > 0) ? modelField[0].url : (typeof modelField === 'string' ? modelField : null);
+                        let modelUrl = null;
+                        if (Array.isArray(modelField) && modelField.length > 0) {
+                            modelUrl = modelField[0].url;
+                        } else if (typeof modelField === 'string' && modelField.trim() !== '') {
+                            modelUrl = modelField;
+                        }
 
                         const price = parseFloat(item.Price) || 0;
                         const promo_price = item.PromoPrice ? parseFloat(item.PromoPrice) : null;
