@@ -184,7 +184,7 @@
         <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center shadow-md z-20">
             <div class="flex items-center gap-3 overflow-hidden">
                 <!-- زر القائمة (Hamburger Menu) - يظهر في الهاتف فقط -->
-                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white p-2 focus:outline-none shrink-0">
+                <button onclick="window.toggleSidebar()" class="md:hidden text-gray-400 hover:text-white p-2 focus:outline-none shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
 
@@ -201,7 +201,7 @@
             
             <div class="flex items-center gap-2 shrink-0">
                 <!-- زر كتم الصوت (Global Mute) -->
-                <button id="btn-mute" onclick="toggleMute()" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition" title="كتم/تفعيل الصوت">
+                <button id="btn-mute" onclick="window.toggleMute()" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition" title="كتم/تفعيل الصوت">
                     <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                     </svg>
@@ -212,20 +212,20 @@
                 </button>
 
                 <!-- زر ملء الشاشة -->
-                <button onclick="toggleFullscreen()" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition" title="ملء الشاشة">
+                <button onclick="window.toggleFullscreen()" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition" title="ملء الشاشة">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                     </svg>
                 </button>
 
-                <button onclick="logout()" class="text-sm text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">
+                <button onclick="window.logout()" class="text-sm text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">
                     خروج
                 </button>
             </div>
         </header>
 
         <!-- خلفية شفافة للقائمة الجانبية في الهاتف -->
-        <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+        <div id="sidebar-overlay" onclick="window.toggleSidebar()" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
 
         <!-- المحتوى الرئيسي (Main Layout) -->
         <div class="flex flex-1 overflow-hidden">
@@ -234,17 +234,17 @@
             <aside id="sidebar" class="fixed inset-y-0 right-0 z-40 transform translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-gray-900 border-l border-gray-800 flex flex-col justify-between flex-shrink-0 pt-16 md:pt-0">
                 <nav class="p-2 space-y-2 mt-4">
                     <!-- زر المطبخ -->
-                    <button onclick="loadView('kds')" id="btn-kds" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
+                    <button onclick="window.loadView('kds')" id="btn-kds" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">الطلبات الحالية (KDS)</span>
                     </button>
 
                     <!-- زر الكاشير -->
-                    <button onclick="loadView('cashier')" id="btn-cashier" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
+                    <button onclick="window.loadView('cashier')" id="btn-cashier" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">سجل المبيعات (Cashier)</span>
                     </button>
 
                     <!-- زر نداءات الطاولات -->
-                    <button onclick="loadView('tables')" id="btn-tables" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
+                    <button onclick="window.loadView('tables')" id="btn-tables" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">نداءات الطاولات</span>
                         <span id="tables-badge" class="absolute top-3 left-4 flex h-3 w-3 hidden">
                           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -254,32 +254,32 @@
 
                     <!-- زر المنيو (قائمة منسدلة) -->
                     <div class="relative">
-                        <button onclick="toggleMenuAccordion()" id="btn-menu-parent" class="nav-btn w-full flex justify-between items-center text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition">
+                        <button onclick="window.toggleMenuAccordion()" id="btn-menu-parent" class="nav-btn w-full flex justify-between items-center text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition">
                             <span class="font-medium">إدارة القائمة (Menu)</span>
                             <svg id="menu-accordion-icon" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                         <!-- الخيارات الفرعية (مخفية افتراضياً) -->
                         <div id="menu-submenu" class="hidden flex-col gap-1 pl-2 pr-6 py-2 mt-1 bg-gray-800/50 rounded-lg border-r-2 border-gray-700">
-                            <button onclick="loadView('menu_quick')" id="btn-menu_quick" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                            <button onclick="window.loadView('menu_quick')" id="btn-menu_quick" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
                                 <span class="font-medium">التعديل السريع</span>
                             </button>
-                            <button onclick="loadView('menu_add')" id="btn-menu_add" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                            <button onclick="window.loadView('menu_add')" id="btn-menu_add" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
                                 <span class="font-medium">إضافة طبق</span>
                             </button>
-                            <button onclick="loadView('menu_promo')" id="btn-menu_promo" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                            <button onclick="window.loadView('menu_promo')" id="btn-menu_promo" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
                                 <span class="font-medium">إدارة الخصومات</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- زر الإحصائيات -->
-                    <button onclick="loadView('analytics')" id="btn-analytics" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
+                    <button onclick="window.loadView('analytics')" id="btn-analytics" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">إحصائيات المبيعات</span>
                     </button>
                     
                     <!-- زر الإعدادات (قائمة منسدلة جديدة) -->
                     <div class="relative mt-2">
-                        <button onclick="toggleSettingsAccordion()" id="btn-settings-parent" class="nav-btn w-full flex justify-between items-center text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition">
+                        <button onclick="window.toggleSettingsAccordion()" id="btn-settings-parent" class="nav-btn w-full flex justify-between items-center text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition">
                             <div class="flex items-center gap-2">
                                 <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                 <span class="font-medium">الإعدادات</span>
@@ -288,13 +288,13 @@
                         </button>
                         <!-- الخيارات الفرعية (الإعدادات) -->
                         <div id="settings-submenu" class="hidden flex-col gap-1 pl-2 pr-6 py-2 mt-1 bg-gray-800/50 rounded-lg border-r-2 border-gray-700">
-                            <button onclick="loadView('settings_restaurant')" id="btn-settings_restaurant" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                            <button onclick="window.loadView('settings_restaurant')" id="btn-settings_restaurant" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
                                 <span class="font-medium">إعدادات المطعم</span>
                             </button>
-                            <button onclick="loadView('settings_print')" id="btn-settings_print" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                            <button onclick="window.loadView('settings_print')" id="btn-settings_print" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
                                 <span class="font-medium">إعدادات الطباعة</span>
                             </button>
-                            <button onclick="loadView('settings_account')" id="btn-settings_account" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                            <button onclick="window.loadView('settings_account')" id="btn-settings_account" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
                                 <span class="font-medium">إدارة الحساب</span>
                             </button>
                         </div>
@@ -1923,9 +1923,15 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-300 mb-2">صورة الطبق</label>
-                        <div class="relative">
-                            <input type="file" id="add-image" accept="image/*" class="hidden" onchange="window.updateFileName(this)">
-                            <label for="add-image" id="file-upload-label" class="w-full flex items-center justify-center gap-2 bg-gray-800 text-gray-300 font-medium rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-700 transition shadow-sm border border-gray-600">
+                        <div id="add-image-preview-container" class="hidden relative w-full h-40 rounded-xl border border-gray-600 overflow-hidden bg-gray-900 mb-3 shadow-inner">
+                            <img id="add-image-preview" src="" class="w-full h-full object-cover">
+                            <button type="button" onclick="window.removeAddDishImage()" class="absolute top-2 left-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded shadow-lg transition" title="حذف الصورة">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                        <div class="relative" id="add-image-upload-wrapper">
+                            <input type="file" id="add-image" accept="image/*" class="hidden" onchange="window.previewAddDishImage(this)">
+                            <label for="add-image" class="w-full flex items-center justify-center gap-2 bg-gray-800 text-gray-300 font-medium rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-700 transition shadow-sm border border-gray-600">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                 <span>اختر صورة...</span>
                             </label>
@@ -1943,6 +1949,29 @@
 
             container.appendChild(card);
             dynamicContent.appendChild(container);
+        };
+
+        window.previewAddDishImage = function(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('add-image-preview').src = e.target.result;
+                    document.getElementById('add-image-preview-container').classList.remove('hidden');
+                    document.getElementById('add-image-upload-wrapper').classList.add('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+
+        window.removeAddDishImage = function() {
+            const input = document.getElementById('add-image');
+            if (input) input.value = '';
+            const preview = document.getElementById('add-image-preview');
+            if (preview) preview.src = '';
+            const container = document.getElementById('add-image-preview-container');
+            if (container) container.classList.add('hidden');
+            const wrapper = document.getElementById('add-image-upload-wrapper');
+            if (wrapper) wrapper.classList.remove('hidden');
         };
 
         window.openDeleteModal = function(id, name) {
@@ -2117,9 +2146,9 @@
                 nameInput.value = '';
                 descInput.value = '';
                 priceInput.value = '';
-                imgInput.value = '';
+                if(imgInput) imgInput.value = '';
                 catInput.value = 'pizza';
-                window.updateFileName(imgInput); 
+                window.removeAddDishImage();
                 
             } catch (error) {
                 console.error("Baserow API Error Details:", error);
@@ -2186,7 +2215,7 @@
                             <div class="relative w-32 h-32 rounded-xl border-2 border-gray-600 overflow-hidden bg-gray-900 group">
                                 <img id="logo-preview" src="${currentLogo || 'https://placehold.co/150x150/1f2937/a1a1aa?text=No+Logo'}" class="w-full h-full object-contain p-2" onerror="this.src='https://placehold.co/150x150/1f2937/a1a1aa?text=Error'; this.onerror=null;">
                                 
-                                <button id="btn-remove-logo" onclick="window.removeRestaurantLogo()" class="absolute top-1 left-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded shadow-lg transition opacity-0 group-hover:opacity-100 ${hasLogo ? '' : 'hidden'}" title="حذف الشعار">
+                                <button id="btn-remove-logo" onclick="window.removeRestaurantLogo()" class="absolute top-1 left-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded shadow-lg transition ${hasLogo ? '' : 'hidden'}" title="حذف الشعار">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
                             </div>
