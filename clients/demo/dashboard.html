@@ -1601,9 +1601,18 @@
                         <span class="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">${category}</span>
                     </div>
                     <div class="p-4 flex-1 flex flex-col gap-4">
-                        <div><input type="text" id="name-${item.id}" value="${name}" class="w-full bg-gray-900 border border-gray-600 text-white text-lg font-bold text-center rounded px-3 py-2 mb-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none transition shadow-inner" placeholder="اسم الطبق"></div>
-                        <div><textarea id="desc-${item.id}" rows="2" class="w-full bg-gray-900 border border-gray-600 text-gray-300 text-xs rounded px-3 py-2 mb-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none resize-none transition" placeholder="مكونات الطبق...">${desc}</textarea></div>
-                        <div><label class="text-xs text-gray-400 block mb-1">السعر (${sysCurrency})</label><input type="number" id="price-${item.id}" value="${price}" class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition"></div>
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-1">اسم الطبق</label>
+                            <input type="text" id="name-${item.id}" value="${name}" class="w-full bg-gray-900 border border-gray-600 text-white text-lg font-bold text-center rounded px-3 py-2 focus:border-brand focus:ring-1 focus:ring-brand outline-none transition shadow-inner" placeholder="اسم الطبق">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-1">المكونات</label>
+                            <textarea id="desc-${item.id}" rows="2" class="w-full bg-gray-900 border border-gray-600 text-gray-300 text-xs rounded px-3 py-2 focus:border-brand focus:ring-1 focus:ring-brand outline-none resize-none transition" placeholder="مكونات الطبق...">${desc}</textarea>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-1">السعر (${sysCurrency})</label>
+                            <input type="number" id="price-${item.id}" value="${price}" class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition">
+                        </div>
                         <div class="flex items-center justify-between mt-auto pt-2 gap-2">
                             <input type="hidden" id="status-${item.id}" value="${currentStatus}">
                             <div class="flex gap-1">
