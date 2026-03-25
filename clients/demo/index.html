@@ -449,6 +449,27 @@
 
                 // استخدام معامل ?? للسماح بطباعة النص الفارغ "" إن وجد، واستخدام الاسم الافتراضي فقط إذا كانت القيمة null أو undefined
                 const savedName = settings?.Name ?? 'Restaurant Luxe';
+                
+                // قراءة العملة والرسالة من السيرفر أو استخدام القيم الافتراضية
+                const savedCurrency = settings?.Currency || 'DA';
+                const savedWelcome = settings?.WelcomeMessage || translations[currentLang].welcomeMsg;
+
+                // الكتابة فوق القيم الثابتة في كائن الترجمة لجميع اللغات
+                ['ar', 'fr', 'en'].forEach(lang => {
+                    translations[lang].currency = savedCurrency;
+                    translations[lang].welcomeMsg = savedWelcome;
+                });
+
+                // تحديث الرسالة الترحيبية في الواجهة فوراً
+                const welcomeEl = document.querySelector('.welcome-title-anim');
+                if (welcomeEl) {
+                    welcomeEl.textContent = savedWelcome;
+                }
+
+                // إعادة رسم الأطباق والسلة لتطبيق العملة الجديدة
+                if (typeof renderAllSections === 'function') renderAllSections();
+                if (typeof updateCartBar === 'function') updateCartBar();
+
                 let savedLogo = null;
                 
                 if (settings && settings.Logo && Array.isArray(settings.Logo) && settings.Logo.length > 0) {
