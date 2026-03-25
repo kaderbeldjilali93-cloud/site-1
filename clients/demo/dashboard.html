@@ -2166,6 +2166,7 @@
             let currentName = '';
             let currentLogo = '';
             let currentWelcome = 'مرحباً بك في مطعمنا';
+            let currency = 'DA';
 
             try {
                 const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${SETTINGS_TABLE_ID}/?user_field_names=true`, {
@@ -2178,6 +2179,7 @@
                         const row = data.results[0];
                         currentName = row.Name ?? '';
                         currentWelcome = row.WelcomeMessage ?? 'مرحباً بك في مطعمنا';
+                        currency = row.Currency ?? 'DA';
                         if (row.Logo && row.Logo.length > 0) {
                             currentLogo = row.Logo[0].url;
                         }
@@ -2216,6 +2218,35 @@
                         </div>
                         
                         <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">العملة (Currency)</label>
+                            <div class="relative">
+                                <select id="setting-currency" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition appearance-none cursor-pointer" dir="rtl">
+                                    <option value="DA">الجزائر (DA)</option>
+                                    <option value="EGP">مصر (EGP)</option>
+                                    <option value="TND">تونس (TND)</option>
+                                    <option value="MAD">المغرب (MAD)</option>
+                                    <option value="SAR">السعودية (SAR)</option>
+                                    <option value="AED">الامارات (AED)</option>
+                                    <option value="BHD">البحرين (BHD)</option>
+                                    <option value="QAR">قطر (QAR)</option>
+                                    <option value="SYP">سوريا (SYP)</option>
+                                    <option value="KWD">الكويت (KWD)</option>
+                                    <option value="IQD">العراق (IQD)</option>
+                                    <option value="€">أوروبا (€)</option>
+                                    <option value="CHF">سويسرا (CHF)</option>
+                                    <option value="$">الولايات المتحدة الامريكية ($)</option>
+                                    <option value="CA$">كندا (CA$)</option>
+                                    <option value="฿">تايلاند (฿)</option>
+                                    <option value="RM">ماليزيا (RM)</option>
+                                    <option value="LBP">لبنان (LBP)</option>
+                                </select>
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">شعار المطعم (Logo)</label>
                             <input type="hidden" id="logo-action" value="keep">
                             
@@ -2246,6 +2277,11 @@
                 </div>
             `;
             dynamicContent.appendChild(container);
+            
+            const currencySelect = document.getElementById('setting-currency');
+            if (currencySelect) {
+                currencySelect.value = currency;
+            }
         };
 
         window.previewRestaurantLogo = function(input) {
@@ -2283,11 +2319,13 @@
             const btn = document.getElementById('btn-save-settings');
             const nameInput = document.getElementById('setting-resto-name');
             const welcomeInput = document.getElementById('setting-welcome-msg');
+            const currencyInput = document.getElementById('setting-currency'); 
             const logoInput = document.getElementById('setting-resto-logo');
             const logoAction = document.getElementById('logo-action').value;
             
             const nameVal = nameInput.value.trim();
             const welcomeVal = welcomeInput.value.trim();
+            const currencyVal = currencyInput.value.trim(); 
             const imageFile = logoInput.files[0];
 
             const originalBtnText = btn.innerHTML;
@@ -2333,7 +2371,8 @@
                     
                     const payload = { 
                         "Name": nameVal,
-                        "WelcomeMessage": welcomeVal
+                        "WelcomeMessage": welcomeVal,
+                        "Currency": currencyVal 
                     };
 
                     if (logoAction === 'delete') {
@@ -2368,7 +2407,8 @@
                 } else {
                     const payload = { 
                         "Name": nameVal,
-                        "WelcomeMessage": welcomeVal
+                        "WelcomeMessage": welcomeVal,
+                        "Currency": currencyVal 
                     };
                     if (uploadedFileName) {
                         payload["Logo"] = [{ "name": uploadedFileName }];
@@ -2386,6 +2426,7 @@
 
                 localStorage.setItem('menu_restaurant_name', nameVal);
                 localStorage.setItem('menu_welcome_message', welcomeVal);
+                localStorage.setItem('system_currency', currencyVal); 
                 if (logoAction === 'delete') {
                     localStorage.removeItem('menu_restaurant_logo');
                 }
@@ -2586,7 +2627,6 @@
             
             let adminPass = '123';
             let kitchenPass = 'k123';
-            let currency = 'DA';
 
             try {
                 const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${SETTINGS_TABLE_ID}/?user_field_names=true`, {
@@ -2599,7 +2639,6 @@
                         const row = data.results[0];
                         adminPass = row.AdminPass ?? '123';
                         kitchenPass = row.KitchenPass ?? 'k123';
-                        currency = row.Currency ?? 'DA';
                     }
                 }
             } catch (error) {
@@ -2632,35 +2671,6 @@
                             <input type="text" id="setting-kitchen-pass" value="${kitchenPass}" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition" placeholder="مثال: k123">
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">العملة (Currency)</label>
-                            <div class="relative">
-                                <select id="setting-currency" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition appearance-none cursor-pointer" dir="rtl">
-                                    <option value="DA">الجزائر (DA)</option>
-                                    <option value="EGP">مصر (EGP)</option>
-                                    <option value="TND">تونس (TND)</option>
-                                    <option value="MAD">المغرب (MAD)</option>
-                                    <option value="SAR">السعودية (SAR)</option>
-                                    <option value="AED">الامارات (AED)</option>
-                                    <option value="BHD">البحرين (BHD)</option>
-                                    <option value="QAR">قطر (QAR)</option>
-                                    <option value="SYP">سوريا (SYP)</option>
-                                    <option value="KWD">الكويت (KWD)</option>
-                                    <option value="IQD">العراق (IQD)</option>
-                                    <option value="€">أوروبا (€)</option>
-                                    <option value="CHF">سويسرا (CHF)</option>
-                                    <option value="$">الولايات المتحدة الامريكية ($)</option>
-                                    <option value="CA$">كندا (CA$)</option>
-                                    <option value="฿">تايلاند (฿)</option>
-                                    <option value="RM">ماليزيا (RM)</option>
-                                    <option value="LBP">لبنان (LBP)</option>
-                                </select>
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-400">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="pt-4 mt-6 border-t border-gray-700">
                             <button id="btn-save-account" onclick="window.saveAccountSettings()" class="w-full bg-brand hover:bg-brand-dark text-black font-bold text-lg py-4 rounded-xl transition shadow-lg transform hover:scale-[1.01]">
                                 حفظ إعدادات الحساب
@@ -2670,18 +2680,12 @@
                 </div>
             `;
             dynamicContent.appendChild(container);
-            
-            const currencySelect = document.getElementById('setting-currency');
-            if (currencySelect) {
-                currencySelect.value = currency;
-            }
         };
 
         window.saveAccountSettings = async function() {
             const btn = document.getElementById('btn-save-account');
             const adminPassVal = document.getElementById('setting-admin-pass').value.trim();
             const kitchenPassVal = document.getElementById('setting-kitchen-pass').value.trim();
-            const currencyVal = document.getElementById('setting-currency').value.trim();
 
             const originalBtnText = btn.innerHTML;
             btn.innerHTML = `<span class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-black"></div> جاري الحفظ...</span>`;
@@ -2699,8 +2703,7 @@
                 const settingsData = await settingsResponse.json();
                 const payload = {
                     "AdminPass": adminPassVal,
-                    "KitchenPass": kitchenPassVal,
-                    "Currency": currencyVal
+                    "KitchenPass": kitchenPassVal
                 };
 
                 if (settingsData.results && settingsData.results.length > 0) {
@@ -2726,7 +2729,6 @@
                     if (!createResponse.ok) throw new Error("فشل إنشاء الإعدادات");
                 }
 
-                localStorage.setItem('system_currency', currencyVal);
                 window.showSuccessPopup();
                 
             } catch (error) {
