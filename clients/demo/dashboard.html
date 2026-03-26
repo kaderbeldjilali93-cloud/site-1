@@ -636,6 +636,16 @@
             }
         };
 
+        window.toggleCustomCategory = function(select) {
+            const customInput = document.getElementById('custom-category-input');
+            if (select.value === 'custom') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+            }
+        };
+
         window.toggleMenuAccordion = function() {
             const submenu = document.getElementById('menu-submenu');
             const icon = document.getElementById('menu-accordion-icon');
@@ -1908,16 +1918,18 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">التصنيف</label>
                             <div class="relative">
-                                <select id="add-category" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition appearance-none">
-                                    <option value="pizza">Pizza</option>
-                                    <option value="burger">Burger</option>
-                                    <option value="boissons">Boissons</option>
-                                    <option value="suppléments">Suppléments</option>
+                                <select id="add-category" onchange="window.toggleCustomCategory(this)" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition appearance-none">
+                                    <option value="pizza">بيتزا (Pizza)</option>
+                                    <option value="burger">برجر (Burger)</option>
+                                    <option value="boissons">مشروبات (Boissons)</option>
+                                    <option value="suppléments">إضافات (Suppléments)</option>
+                                    <option value="custom" class="text-brand font-bold bg-gray-800">✨ + إضافة تصنيف جديد...</option>
                                 </select>
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-400">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </div>
                             </div>
+                            <input type="text" id="custom-category-input" class="w-full bg-gray-800 border border-brand text-white rounded-lg px-4 py-3 mt-3 focus:ring-2 focus:ring-brand outline-none transition hidden shadow-inner" placeholder="اكتب اسم التصنيف الجديد هنا (مثال: طاكوس، حلويات)...">
                         </div>
                     </div>
 
@@ -2066,6 +2078,16 @@
             const category = catInput.value;
             const imageFile = imgInput.files[0];
 
+            let finalCategory = category;
+            if (category === 'custom') {
+                finalCategory = document.getElementById('custom-category-input').value.trim();
+                if (!finalCategory) {
+                    window.showToast("الرجاء كتابة اسم التصنيف الجديد", "error");
+                    document.getElementById('custom-category-input').focus();
+                    return;
+                }
+            }
+
             if (!name) {
                 window.showToast("الرجاء إدخال اسم الطبق", "error");
                 nameInput.focus();
@@ -2110,7 +2132,7 @@
                     "Name": name,
                     "Description": desc,
                     "Price": price, 
-                    "Category": category,
+                    "Category": finalCategory,
                     "Availability": "متوفر"
                 };
 
@@ -2149,6 +2171,12 @@
                 if(imgInput) imgInput.value = '';
                 catInput.value = 'pizza';
                 window.removeAddDishImage();
+                
+                const customCatInput = document.getElementById('custom-category-input');
+                if (customCatInput) {
+                    customCatInput.value = '';
+                    customCatInput.classList.add('hidden');
+                }
                 
             } catch (error) {
                 console.error("Baserow API Error Details:", error);
