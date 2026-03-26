@@ -1087,7 +1087,12 @@
             
             const activeOrders = filteredOrders.filter(o => {
                 const s = getStatus(o);
-                return s === 'قيد التحضير' || s === 'جاهز';
+                const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
+                
+                // السماح بظهور الطلب فقط إذا كانت حالته نشطة وكان ينتمي لليوم التجاري الحالي
+                const isToday = window.isOrderFromToday(rawTime);
+                
+                return (s === 'قيد التحضير' || s === 'جاهز') && isToday;
             });
 
             const groupedOrders = { quick: [], delivery: [] };
@@ -2523,7 +2528,7 @@
             dynamicContent.innerHTML = '<div class="flex h-full items-center justify-center"><div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand"></div></div>';
             
             let currentName = localStorage.getItem('menu_restaurant_name') || 'RestoPro';
-            let currentTop = 'أهلاً بكم في مطعمنا';
+            let currentTop = 'إدارة المطاعم الذكية';
             let currentBottom = 'شكراً لزيارتكم!\\nThank you for your visit';
             let currentQrCode = '';
 
