@@ -1366,9 +1366,9 @@
             const sysCurrency = localStorage.getItem('system_currency') || 'DA';
             
             const rName = localStorage.getItem('menu_restaurant_name') || 'RestoPro';
-            const rTop = localStorage.getItem('print_receipt_top') || 'إدارة المطاعم الذكية';
-            const rBottom = localStorage.getItem('print_receipt_bottom') || 'شكراً لزيارتكم!\nThank you for your visit';
-            const rPhone = localStorage.getItem('print_phone') || '';
+            const rTop = localStorage.getItem('print_receipt_top') || 'أهلاً بكم في مطعمنا';
+            const rBottom = localStorage.getItem('print_receipt_bottom') || 'شكراً لزيارتكم!';
+            const rQrCode = localStorage.getItem('print_qr_code') || '';
 
             const detailsList = (order.Details || "").split(/[\n]/).filter(i => i.trim() !== "");
             let itemsHtml = '';
@@ -1385,9 +1385,8 @@
 
             printSec.innerHTML = `
                 <div style="text-align: center; margin-bottom: 12px;">
-                    <h2 style="margin: 0; font-size: 20px; font-weight: bold;">${rName}</h2>
-                    ${rTop ? `<div style="font-size: 11px; color: #333; margin-top: 4px; white-space: pre-line;">${rTop}</div>` : ''}
-                    ${rPhone ? `<div style="font-size: 11px; font-weight: bold; margin-top: 4px;">${rPhone}</div>` : ''}
+                    <h2 style="margin: 0; font-size: 24px; font-weight: 900;">${rName}</h2>
+                    ${rTop ? `<div style="font-size: 14px; font-weight: bold; color: #333; margin-top: 4px; white-space: pre-line;">${rTop}</div>` : ''}
                 </div>
                 <div style="border-top: 1px dashed #000; margin: 12px 0;"></div>
                 <div style="font-size: 12px; margin-bottom: 12px; line-height: 1.6;">
@@ -1410,6 +1409,7 @@
                 <div style="text-align: center; font-size: 11px; margin-top: 15px; font-weight: bold; white-space: pre-line;">
                     ${rBottom}
                 </div>
+                ${rQrCode ? `<div style="text-align: center; margin-top: 10px;"><img src="${rQrCode}" style="width: 100px; height: 100px; margin: 0 auto; display: block;" /></div>` : ''}
             `;
             
             setTimeout(() => {
@@ -1923,7 +1923,7 @@
                                     <option value="burger">برجر (Burger)</option>
                                     <option value="boissons">مشروبات (Boissons)</option>
                                     <option value="suppléments">إضافات (Suppléments)</option>
-                                    <option value="custom" class="text-brand font-bold bg-gray-800">✨ + إضافة تصنيف جديد...</option>
+                                    <option value="custom" class="text-brand font-bold bg-gray-800">+ إضافة تصنيف جديد...</option>
                                 </select>
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-400">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -2472,13 +2472,48 @@
             }
         };
 
+        window.previewPrintQRCode = function(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('print-qr-preview').src = e.target.result;
+                    document.getElementById('print-qr-action').value = 'update';
+                    document.getElementById('btn-remove-print-qr').classList.remove('hidden');
+                    document.getElementById('preview-qr-img').src = e.target.result;
+                    document.getElementById('preview-qr-img').classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+                
+                const label = document.getElementById('print-qr-label');
+                label.innerHTML = `
+                    <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <span class="truncate">${input.files[0].name}</span>
+                `;
+            }
+        };
+
+        window.removePrintQRCode = function() {
+            document.getElementById('print-qr-preview').src = 'https://placehold.co/150x150/1f2937/a1a1aa?text=No+QR';
+            document.getElementById('print-qr-action').value = 'delete';
+            document.getElementById('btn-remove-print-qr').classList.add('hidden');
+            document.getElementById('setting-print-qr').value = '';
+            document.getElementById('preview-qr-img').src = '';
+            document.getElementById('preview-qr-img').classList.add('hidden');
+            
+            const label = document.getElementById('print-qr-label');
+            label.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                <span>تعديل الـ QR Code</span>
+            `;
+        };
+
         window.renderSettingsPrint = async function() {
             dynamicContent.innerHTML = '<div class="flex h-full items-center justify-center"><div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand"></div></div>';
             
             let currentName = localStorage.getItem('menu_restaurant_name') || 'RestoPro';
-            let currentTop = 'إدارة المطاعم الذكية';
+            let currentTop = 'أهلاً بكم في مطعمنا';
             let currentBottom = 'شكراً لزيارتكم!\\nThank you for your visit';
-            let currentPhone = '';
+            let currentQrCode = '';
 
             try {
                 const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${SETTINGS_TABLE_ID}/?user_field_names=true`, {
@@ -2492,7 +2527,9 @@
                         currentName = row.Name ?? currentName;
                         currentTop = row.ReceiptTop ?? currentTop;
                         currentBottom = row.ReceiptBottom ?? currentBottom;
-                        currentPhone = row.Phone ?? '';
+                        if (row.QRCode && row.QRCode.length > 0) {
+                            currentQrCode = row.QRCode[0].url;
+                        }
                     }
                 }
             } catch (error) {
@@ -2500,6 +2537,7 @@
             }
 
             dynamicContent.innerHTML = '';
+            const hasQrCode = currentQrCode && currentQrCode.trim() !== '';
             
             const header = document.createElement('div');
             header.className = "flex justify-between items-center mb-8 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700";
@@ -2517,18 +2555,39 @@
             formSection.innerHTML = `
                 <div class="space-y-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">رقم الهاتف / العنوان (أسفل الإسم)</label>
-                        <input type="text" id="setting-print-phone" value="${currentPhone}" oninput="document.getElementById('preview-phone').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition" placeholder="مثال: 0550 00 00 00 - حي الأمل">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">اسم المطعم (أعلى التذكرة)</label>
+                        <input type="text" id="setting-print-name" value="${currentName}" oninput="document.getElementById('preview-name').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition" placeholder="مثال: مطعم الأمل">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">رسالة أعلى التذكرة (ترحيب)</label>
-                        <textarea id="setting-print-top" rows="3" oninput="document.getElementById('preview-top').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none resize-none transition" placeholder="مثال: أهلاً بكم في مطعمنا...">${currentTop}</textarea>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">عبارة ترحيبية (أسفل الاسم)</label>
+                        <textarea id="setting-print-top" rows="2" oninput="document.getElementById('preview-top').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none resize-none transition" placeholder="مثال: أهلاً بكم في مطعمنا...">${currentTop}</textarea>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">رسالة أسفل التذكرة (وداع/سوشيال ميديا)</label>
-                        <textarea id="setting-print-bottom" rows="4" oninput="document.getElementById('preview-bottom').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none resize-none transition" placeholder="مثال: شكراً لزيارتكم! تابعونا على انستغرام...">${currentBottom}</textarea>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">أضف عبارة اختيارية أو رقم هاتف (أسفل التذكرة)</label>
+                        <textarea id="setting-print-bottom" rows="3" oninput="document.getElementById('preview-bottom').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none resize-none transition" placeholder="مثال: شكراً لزيارتكم! للتواصل: 0550...">${currentBottom}</textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">صورة رمز الاستجابة السريعة (QR Code)</label>
+                        <input type="hidden" id="print-qr-action" value="keep">
+                        
+                        <div class="relative w-32 h-32 rounded-xl border-2 border-gray-600 overflow-hidden bg-gray-900 group">
+                            <img id="print-qr-preview" src="${currentQrCode || 'https://placehold.co/150x150/1f2937/a1a1aa?text=No+QR'}" class="w-full h-full object-contain p-2" onerror="this.src='https://placehold.co/150x150/1f2937/a1a1aa?text=Error'; this.onerror=null;">
+                            
+                            <button id="btn-remove-print-qr" onclick="window.removePrintQRCode()" class="absolute top-1 left-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded shadow-lg transition ${hasQrCode ? '' : 'hidden'}" title="حذف الشعار">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+
+                        <div class="relative mt-4">
+                            <input type="file" id="setting-print-qr" accept="image/*" class="hidden" onchange="window.previewPrintQRCode(this)">
+                            <label for="setting-print-qr" id="print-qr-label" class="w-full flex items-center justify-center gap-2 bg-gray-700 text-white font-bold rounded-lg px-4 py-2.5 cursor-pointer hover:bg-gray-600 transition shadow-inner border border-gray-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                <span>تعديل الـ QR Code</span>
+                            </label>
+                        </div>
                     </div>
 
                     <div class="pt-4 mt-6 border-t border-gray-700">
@@ -2542,10 +2601,9 @@
             const previewSection = document.createElement('div');
             previewSection.className = "w-full lg:w-80 flex-shrink-0 flex justify-center order-1 lg:order-2";
             previewSection.innerHTML = `
-                <div class="bg-white text-black p-4 w-full max-w-sm rounded shadow-2xl font-mono text-center text-sm leading-relaxed border-t-8 border-gray-300">
-                    <h2 id="preview-name" class="font-bold text-xl mb-1">${currentName}</h2>
-                    <div id="preview-top" class="text-xs mb-1 whitespace-pre-line text-gray-800">${currentTop}</div>
-                    <div id="preview-phone" class="text-xs mb-3 font-bold">${currentPhone}</div>
+                <div class="bg-white text-black p-4 w-full max-w-sm rounded shadow-2xl font-mono text-center leading-relaxed border-t-8 border-gray-300">
+                    <h2 id="preview-name" class="text-2xl font-black mb-1">${currentName}</h2>
+                    <div id="preview-top" class="text-sm font-bold text-gray-700 mb-3 whitespace-pre-line">${currentTop}</div>
                     
                     <div class="border-t border-dashed border-gray-400 my-3"></div>
                     
@@ -2567,12 +2625,14 @@
                     
                     <div class="flex justify-between font-bold text-sm mb-3 bg-gray-100 p-1">
                         <span>المجموع:</span>
-                        <span>850 DA</span>
+                        <span>850</span>
                     </div>
                     
                     <div class="border-t border-dashed border-gray-400 my-3"></div>
                     
-                    <div id="preview-bottom" class="text-xs font-bold whitespace-pre-line mt-3 text-gray-800">${currentBottom}</div>
+                    <div id="preview-bottom" class="text-xs font-bold whitespace-pre-line mt-3">${currentBottom}</div>
+                    
+                    <img id="preview-qr-img" src="${currentQrCode}" class="w-[100px] h-[100px] object-cover mx-auto mt-3 ${hasQrCode ? '' : 'hidden'}">
                 </div>
             `;
 
@@ -2583,9 +2643,11 @@
 
         window.savePrintSettings = async function() {
             const btn = document.getElementById('btn-save-print');
+            const nameVal = document.getElementById('setting-print-name').value.trim();
             const topVal = document.getElementById('setting-print-top').value.trim();
             const bottomVal = document.getElementById('setting-print-bottom').value.trim();
-            const phoneVal = document.getElementById('setting-print-phone').value.trim();
+            const qrAction = document.getElementById('print-qr-action').value;
+            const imageFile = document.getElementById('setting-print-qr').files[0];
 
             const originalBtnText = btn.innerHTML;
             btn.innerHTML = `<span class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-black"></div> جاري الحفظ...</span>`;
@@ -2593,24 +2655,54 @@
             btn.classList.add('opacity-70', 'cursor-not-allowed');
 
             try {
+                let uploadedFileName = null;
+                
+                if (qrAction === 'update' && imageFile) {
+                    const formData = new FormData();
+                    formData.append("file", imageFile);
+                    
+                    const uploadResponse = await fetch(`https://baserow.vidsai.site/api/user-files/upload-file/`, {
+                        method: 'POST',
+                        headers: { "Authorization": `Token ${BASEROW_TOKEN}` },
+                        body: formData
+                    });
+                    
+                    if (!uploadResponse.ok) {
+                        const errUpload = await uploadResponse.json();
+                        throw new Error("فشل رفع الشعار: " + (errUpload.error || ""));
+                    }
+                    
+                    const uploadedFileObj = await uploadResponse.json();
+                    if(uploadedFileObj && uploadedFileObj.name) {
+                        uploadedFileName = uploadedFileObj.name;
+                    }
+                }
+
                 const settingsResponse = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${SETTINGS_TABLE_ID}/?user_field_names=true`, {
                     method: 'GET',
                     headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
                 });
                 
-                if (!settingsResponse.ok) {
-                    throw new Error("فشل جلب الإعدادات");
-                }
+                if (!settingsResponse.ok) throw new Error("فشل جلب الإعدادات");
                 
                 const settingsData = await settingsResponse.json();
                 const payload = {
+                    "Name": nameVal,
                     "ReceiptTop": topVal,
-                    "ReceiptBottom": bottomVal,
-                    "Phone": phoneVal
+                    "ReceiptBottom": bottomVal
                 };
+
+                if (qrAction === 'delete') {
+                    payload["QRCode"] = [];
+                } else if (uploadedFileName) {
+                    payload["QRCode"] = [{ "name": uploadedFileName }];
+                }
+
+                let finalQrUrl = '';
 
                 if (settingsData.results && settingsData.results.length > 0) {
                     const rowId = settingsData.results[0].id;
+                    
                     const updateResponse = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${SETTINGS_TABLE_ID}/${rowId}/?user_field_names=true`, {
                         method: 'PATCH',
                         headers: { 
@@ -2621,6 +2713,8 @@
                     });
 
                     if (!updateResponse.ok) throw new Error("فشل تحديث إعدادات الطباعة");
+                    const updatedData = await updateResponse.json();
+                    if (updatedData.QRCode && updatedData.QRCode.length > 0) finalQrUrl = updatedData.QRCode[0].url;
                     
                 } else {
                     const createResponse = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${SETTINGS_TABLE_ID}/?user_field_names=true`, {
@@ -2632,16 +2726,25 @@
                         body: JSON.stringify(payload)
                     });
                     if (!createResponse.ok) throw new Error("فشل إنشاء الإعدادات");
+                    const createdData = await createResponse.json();
+                    if (createdData.QRCode && createdData.QRCode.length > 0) finalQrUrl = createdData.QRCode[0].url;
                 }
 
+                localStorage.setItem('menu_restaurant_name', nameVal);
                 localStorage.setItem('print_receipt_top', topVal);
                 localStorage.setItem('print_receipt_bottom', bottomVal);
-                localStorage.setItem('print_phone', phoneVal);
+                
+                if (qrAction === 'delete') {
+                    localStorage.removeItem('print_qr_code');
+                } else if (finalQrUrl) {
+                    localStorage.setItem('print_qr_code', finalQrUrl);
+                }
 
                 window.showSuccessPopup();
+                document.getElementById('print-qr-action').value = 'keep';
                 
             } catch (error) {
-                console.error("Baserow API Error Details:", error);
+                console.error("Baserow API Error:", error);
                 window.showToast("خطأ: " + error.message, "error");
             } finally {
                 btn.innerHTML = originalBtnText;
