@@ -1058,6 +1058,15 @@
             window.fetchWaiterCalls().catch(()=>console.warn("Sync failed"));
         };
 
+        window.removeImage = function(id) {
+            const preview = document.getElementById(`img-preview-${id}`);
+            if (preview) {
+                preview.src = 'https://placehold.co/400x300/374151/FFFFFF?text=No+Image';
+            }
+            const btn = document.getElementById(`btn-remove-${id}`);
+            if (btn) btn.classList.add('hidden');
+        };
+
         // =========================================================
         // 🖥️ Views Rendering
         // =========================================================
@@ -1603,9 +1612,9 @@
                 card.className = "bg-gray-800 border border-gray-700 rounded-xl overflow-hidden shadow-lg flex flex-col relative";
 
                 card.innerHTML = `
-                    <div class="h-40 overflow-hidden relative">
+                    <div class="h-40 overflow-hidden relative group">
                         <img src="${imgUrl}" class="w-full h-full object-cover">
-                        <button onclick="window.openDeleteModal(${item.id}, '${name.replace(/'/g, "\\'")}')" class="absolute top-2 left-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded shadow-lg transition" title="حذف الطبق">
+                        <button onclick="window.openDeleteModal(${item.id}, '${name.replace(/'/g, "\\'")}')" class="absolute top-2 left-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded shadow-lg transition opacity-0 group-hover:opacity-100" title="حذف الطبق">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                         <span class="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">${category}</span>
@@ -1935,11 +1944,14 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-300 mb-2">صورة الطبق</label>
-                        <div id="add-image-preview-container" class="hidden relative w-full h-40 rounded-xl border border-gray-600 overflow-hidden bg-gray-900 mb-3 shadow-inner">
-                            <img id="add-image-preview" src="" class="w-full h-full object-cover">
-                            <button type="button" onclick="window.removeAddDishImage()" class="absolute top-2 left-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded shadow-lg transition" title="حذف الصورة">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
+                        <!-- حاوية المعاينة المربعة (تظهر عند اختيار صورة) -->
+                        <div class="w-full flex justify-center mb-3">
+                            <div id="add-image-preview-container" class="hidden relative w-48 h-48 rounded-2xl border-2 border-gray-600 overflow-hidden bg-gray-900 shadow-inner group">
+                                <img id="add-image-preview" src="" class="w-full h-full object-cover">
+                                <button type="button" onclick="window.removeAddDishImage()" class="absolute top-2 left-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded shadow-lg transition" title="حذف الصورة">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
                         </div>
                         <div class="relative" id="add-image-upload-wrapper">
                             <input type="file" id="add-image" accept="image/*" class="hidden" onchange="window.previewAddDishImage(this)">
@@ -2555,18 +2567,18 @@
             formSection.innerHTML = `
                 <div class="space-y-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">اسم المطعم (أعلى التذكرة)</label>
-                        <input type="text" id="setting-print-name" value="${currentName}" oninput="document.getElementById('preview-name').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition" placeholder="مثال: مطعم الأمل">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">رقم الهاتف / العنوان (أسفل الإسم)</label>
+                        <input type="text" id="setting-print-phone" value="${currentPhone}" oninput="document.getElementById('preview-phone').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition" placeholder="مثال: 0550 00 00 00 - حي الأمل">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">عبارة ترحيبية (أسفل الاسم)</label>
-                        <textarea id="setting-print-top" rows="2" oninput="document.getElementById('preview-top').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none resize-none transition" placeholder="مثال: أهلاً بكم في مطعمنا...">${currentTop}</textarea>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">رسالة أعلى التذكرة (ترحيب)</label>
+                        <textarea id="setting-print-top" rows="3" oninput="document.getElementById('preview-top').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none resize-none transition" placeholder="مثال: أهلاً بكم في مطعمنا...">${currentTop}</textarea>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">أضف عبارة اختيارية أو رقم هاتف (أسفل التذكرة)</label>
-                        <textarea id="setting-print-bottom" rows="3" oninput="document.getElementById('preview-bottom').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none resize-none transition" placeholder="مثال: شكراً لزيارتكم! للتواصل: 0550...">${currentBottom}</textarea>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">رسالة أسفل التذكرة (وداع/سوشيال ميديا)</label>
+                        <textarea id="setting-print-bottom" rows="4" oninput="document.getElementById('preview-bottom').innerText = this.value" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none resize-none transition" placeholder="مثال: شكراً لزيارتكم! تابعونا على انستغرام...">${currentBottom}</textarea>
                     </div>
                     
                     <div>
@@ -2601,9 +2613,10 @@
             const previewSection = document.createElement('div');
             previewSection.className = "w-full lg:w-80 flex-shrink-0 flex justify-center order-1 lg:order-2";
             previewSection.innerHTML = `
-                <div class="bg-white text-black p-4 w-full max-w-sm rounded shadow-2xl font-mono text-center leading-relaxed border-t-8 border-gray-300">
-                    <h2 id="preview-name" class="text-2xl font-black mb-1">${currentName}</h2>
-                    <div id="preview-top" class="text-sm font-bold text-gray-700 mb-3 whitespace-pre-line">${currentTop}</div>
+                <div class="bg-white text-black p-4 w-full max-w-sm rounded shadow-2xl font-mono text-center text-sm leading-relaxed border-t-8 border-gray-300">
+                    <h2 id="preview-name" class="font-bold text-xl mb-1">${currentName}</h2>
+                    <div id="preview-top" class="text-xs mb-1 whitespace-pre-line text-gray-800">${currentTop}</div>
+                    <div id="preview-phone" class="text-xs mb-3 font-bold">${currentPhone}</div>
                     
                     <div class="border-t border-dashed border-gray-400 my-3"></div>
                     
@@ -2625,12 +2638,12 @@
                     
                     <div class="flex justify-between font-bold text-sm mb-3 bg-gray-100 p-1">
                         <span>المجموع:</span>
-                        <span>850</span>
+                        <span>850 DA</span>
                     </div>
                     
                     <div class="border-t border-dashed border-gray-400 my-3"></div>
                     
-                    <div id="preview-bottom" class="text-xs font-bold whitespace-pre-line mt-3">${currentBottom}</div>
+                    <div id="preview-bottom" class="text-xs font-bold whitespace-pre-line mt-3 text-gray-800">${currentBottom}</div>
                     
                     <img id="preview-qr-img" src="${currentQrCode}" class="w-[100px] h-[100px] object-cover mx-auto mt-3 ${hasQrCode ? '' : 'hidden'}">
                 </div>
@@ -2643,9 +2656,9 @@
 
         window.savePrintSettings = async function() {
             const btn = document.getElementById('btn-save-print');
-            const nameVal = document.getElementById('setting-print-name').value.trim();
             const topVal = document.getElementById('setting-print-top').value.trim();
             const bottomVal = document.getElementById('setting-print-bottom').value.trim();
+            const phoneVal = document.getElementById('setting-print-phone').value.trim();
             const qrAction = document.getElementById('print-qr-action').value;
             const imageFile = document.getElementById('setting-print-qr').files[0];
 
@@ -2683,13 +2696,15 @@
                     headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
                 });
                 
-                if (!settingsResponse.ok) throw new Error("فشل جلب الإعدادات");
+                if (!settingsResponse.ok) {
+                    throw new Error("فشل جلب الإعدادات");
+                }
                 
                 const settingsData = await settingsResponse.json();
                 const payload = {
-                    "Name": nameVal,
                     "ReceiptTop": topVal,
-                    "ReceiptBottom": bottomVal
+                    "ReceiptBottom": bottomVal,
+                    "Phone": phoneVal
                 };
 
                 if (qrAction === 'delete') {
@@ -2730,9 +2745,9 @@
                     if (createdData.QRCode && createdData.QRCode.length > 0) finalQrUrl = createdData.QRCode[0].url;
                 }
 
-                localStorage.setItem('menu_restaurant_name', nameVal);
                 localStorage.setItem('print_receipt_top', topVal);
                 localStorage.setItem('print_receipt_bottom', bottomVal);
+                localStorage.setItem('print_phone', phoneVal);
                 
                 if (qrAction === 'delete') {
                     localStorage.removeItem('print_qr_code');
@@ -2744,7 +2759,7 @@
                 document.getElementById('print-qr-action').value = 'keep';
                 
             } catch (error) {
-                console.error("Baserow API Error:", error);
+                console.error("Baserow API Error Details:", error);
                 window.showToast("خطأ: " + error.message, "error");
             } finally {
                 btn.innerHTML = originalBtnText;
