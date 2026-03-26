@@ -236,14 +236,11 @@
             </h1>
         </div>
 
-        <!-- 2. شريط التصنيفات (Sticky) -->
+        <!-- 2. شريط التصنيفات (Sticky) ديناميكي بالكامل -->
         <div class="sticky top-[60px] z-40 bg-emerald-950/80 backdrop-blur-md border-b border-brand-500/20 py-3 mb-6 shadow-md transition-all">
             <div class="px-2 overflow-x-auto hide-scrollbar flex justify-center">
-                <div class="flex gap-2 min-w-max px-2 w-full sm:w-auto">
-                    <button onclick="scrollToSection('pizza')" id="btn-pizza" class="nav-btn px-3 py-2 rounded-lg text-[11px] sm:text-xs font-bold shadow-sm whitespace-normal break-words text-center block flex-1" data-i18n="cat_pizza">Pizza</button>
-                    <button onclick="scrollToSection('burger')" id="btn-burger" class="nav-btn px-3 py-2 rounded-lg text-[11px] sm:text-xs font-bold shadow-sm whitespace-normal break-words text-center block flex-1" data-i18n="cat_burger">Burger</button>
-                    <button onclick="scrollToSection('drinks')" id="btn-drinks" class="nav-btn px-3 py-2 rounded-lg text-[11px] sm:text-xs font-bold shadow-sm whitespace-normal break-words text-center block flex-1" data-i18n="cat_drinks">Boissons</button>
-                    <button onclick="scrollToSection('sides')" id="btn-sides" class="nav-btn px-3 py-2 rounded-lg text-[11px] sm:text-xs font-bold shadow-sm whitespace-normal break-words text-center block flex-1" data-i18n="cat_sides">Suppléments</button>
+                <div class="flex gap-2 min-w-max px-2 w-full sm:w-auto" id="category-nav">
+                    <!-- سيتم توليد أزرار التصنيفات هنا ديناميكياً -->
                 </div>
             </div>
         </div>
@@ -351,6 +348,9 @@
                 cat_burger: "برجر",
                 cat_drinks: "مشروبات",
                 cat_sides: "إضافات",
+                cat_shawarma: "شاورما",
+                cat_tacos: "طاكو",
+                cat_sandwich: "ساندويتش",
                 sub_soda: "مشروبات غازية",
                 sub_juice: "عصائر"
             },
@@ -384,6 +384,9 @@
                 cat_burger: "Burger",
                 cat_drinks: "Boissons",
                 cat_sides: "Suppléments",
+                cat_shawarma: "Chawarma",
+                cat_tacos: "Tacos",
+                cat_sandwich: "Sandwich",
                 sub_soda: "Sodas",
                 sub_juice: "Jus"
             },
@@ -417,6 +420,9 @@
                 cat_burger: "Burger",
                 cat_drinks: "Drinks",
                 cat_sides: "Sides",
+                cat_shawarma: "Shawarma",
+                cat_tacos: "Tacos",
+                cat_sandwich: "Sandwich",
                 sub_soda: "Sodas",
                 sub_juice: "Juices"
             }
@@ -551,8 +557,13 @@
                         rawCat = rawCat.toString().toLowerCase().trim();
 
                         let category = rawCat;
-                        if (rawCat === 'boissons' || rawCat === 'drinks' || rawCat === 'drink') category = 'drinks';
-                        if (rawCat.includes('suppl') || rawCat === 'sides' || rawCat === 'side') category = 'sides';
+                        if (rawCat === 'boissons' || rawCat === 'drinks' || rawCat === 'drink' || rawCat === 'مشروبات') category = 'drinks';
+                        if (rawCat.includes('suppl') || rawCat === 'sides' || rawCat === 'side' || rawCat.includes('إضافات')) category = 'sides';
+                        if (rawCat.includes('شاورما') || rawCat.includes('chawarma') || rawCat.includes('shawarma')) category = 'shawarma';
+                        if (rawCat.includes('طاكو') || rawCat.includes('tacos') || rawCat.includes('taco')) category = 'tacos';
+                        if (rawCat.includes('ساندويتش') || rawCat.includes('sandwich')) category = 'sandwich';
+                        if (rawCat.includes('بيتزا') || rawCat.includes('pizza')) category = 'pizza';
+                        if (rawCat.includes('برجر') || rawCat.includes('burger')) category = 'burger';
 
                         let subCat = '';
                         if (category === 'drinks') {
@@ -720,33 +731,67 @@
 
         function renderAllSections() {
             const container = document.getElementById('dynamic-menu-container');
+            const navContainer = document.getElementById('category-nav');
             container.innerHTML = '';
-            const categoriesConfig = [
-                { id: 'pizza', title: translations[currentLang].cat_pizza },
-                { id: 'burger', title: translations[currentLang].cat_burger },
-                { id: 'drinks', title: translations[currentLang].cat_drinks, subSections: [{ id: 'soda', title: translations[currentLang].sub_soda }, { id: 'juice', title: translations[currentLang].sub_juice }] },
-                { id: 'sides', title: translations[currentLang].cat_sides }
-            ];
-            categoriesConfig.forEach(cat => {
-                const catProducts = products.filter(p => p.category === cat.id);
+            
+            if (navContainer) {
+                navContainer.innerHTML = '';
+            }
+
+            // استخراج التصنيفات الفريدة من المنتجات
+            let uniqueCategories = [...new Set(products.map(p => p.category))];
+
+            // فرز التصنيفات لضمان ظهور المشروبات والإضافات في النهاية
+            uniqueCategories.sort((a, b) => {
+                const order = { 'drinks': 1, 'sides': 2 };
+                const weightA = order[a] || 0;
+                const weightB = order[b] || 0;
+                return weightA - weightB;
+            });
+
+            uniqueCategories.forEach(catId => {
+                const catProducts = products.filter(p => p.category === catId);
                 if (catProducts.length === 0) return;
+
+                // الحصول على اسم التصنيف المترجم أو استخدام المعرف كما هو
+                const translationKey = 'cat_' + catId;
+                const catTitle = translations[currentLang][translationKey] || catId;
+
+                // إنشاء زر في شريط التصنيفات
+                if (navContainer) {
+                    const btn = document.createElement('button');
+                    btn.onclick = () => scrollToSection(catId);
+                    btn.id = `btn-${catId}`;
+                    btn.className = "nav-btn px-3 py-2 rounded-lg text-[11px] sm:text-xs font-bold shadow-sm whitespace-normal break-words text-center block flex-1";
+                    // نستخدم data-i18n لكي يتم تحديثه لاحقاً إذا تغيرت اللغة
+                    btn.setAttribute('data-i18n', translationKey);
+                    btn.textContent = catTitle;
+                    navContainer.appendChild(btn);
+                }
+
+                // إنشاء قسم المنتجات
                 const section = document.createElement('section');
-                section.id = `section-${cat.id}`;
+                section.id = `section-${catId}`;
                 section.className = "scroll-mt-44 text-center mb-10";
-                section.innerHTML = `<h2 class="text-2xl font-black text-ivory-100 uppercase tracking-wider glow-text-anim mb-6" style="font-family: inherit;">${cat.title}</h2>`;
                 
+                // إضافة عنوان القسم
+                const h2 = document.createElement('h2');
+                h2.className = "text-2xl font-black text-ivory-100 uppercase tracking-wider glow-text-anim mb-6";
+                h2.style.fontFamily = "inherit";
+                h2.textContent = catTitle;
+                h2.setAttribute('data-i18n', translationKey);
+                section.appendChild(h2);
+
                 const grid = document.createElement('div');
                 grid.className = "flex flex-col gap-10";
                 
-                if (cat.subSections) {
-                    cat.subSections.forEach(sub => {
-                        const subProducts = catProducts.filter(p => p.sub_category === sub.id);
-                        if (subProducts.length > 0) grid.innerHTML += subProducts.map(createProductCard).join('');
-                    });
-                } else { grid.innerHTML = catProducts.map(createProductCard).join(''); }
+                // عرض المنتجات بدون تقسيمات فرعية (subSections)
+                grid.innerHTML = catProducts.map(createProductCard).join('');
+                
                 section.appendChild(grid);
                 container.appendChild(section);
             });
+            
             initRevealObserver();
         }
 
@@ -810,7 +855,7 @@
                 return;
             }
 
-            const hasMainDish = items.some(i => i.category === 'pizza' || i.category === 'burger');
+            const hasMainDish = items.some(i => i.category === 'pizza' || i.category === 'burger' || i.category === 'shawarma' || i.category === 'tacos' || i.category === 'sandwich');
             const hasDrinkOrSide = items.some(i => i.category === 'drinks' || i.category === 'sides');
 
             if (hasMainDish && !hasDrinkOrSide) {
