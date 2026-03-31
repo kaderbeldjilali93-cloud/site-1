@@ -351,16 +351,6 @@
                 <div id="checkout-amount" class="text-4xl font-extrabold text-brand tracking-wider drop-shadow-md relative z-10">0 DA</div>
             </div>
 
-            <!-- إضافة سريعة -->
-            <div class="bg-gray-900/80 rounded-xl p-4 mb-6 border border-gray-700 shadow-inner">
-                <p class="text-xs text-gray-400 mb-2 font-bold">هل أضاف الزبون شيئاً؟ (تعديل سريع)</p>
-                <div class="flex gap-2">
-                    <input type="text" id="quick-add-name" placeholder="المنتج (مثال: 1x ماء)" class="flex-1 bg-gray-800 border border-gray-600 text-white text-sm rounded px-3 py-2 outline-none focus:border-brand transition">
-                    <input type="number" id="quick-add-price" placeholder="السعر" class="w-24 bg-gray-800 border border-gray-600 text-white text-sm rounded px-3 py-2 outline-none focus:border-brand transition">
-                    <button onclick="window.addExtraItemToOrder(event)" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-bold transition shadow" title="إضافة للطلب">+</button>
-                </div>
-            </div>
-
             <div class="flex flex-col gap-3">
                 <button onclick="window.confirmPayment(true)" class="w-full bg-brand hover:bg-brand-dark text-black font-bold py-3 rounded-lg transition shadow-[0_0_15px_rgba(255,153,0,0.3)] flex justify-center items-center gap-2 transform hover:scale-[1.02]">
                     <span>تأكيد وطباعة التذكرة</span>
@@ -368,6 +358,40 @@
                 <button onclick="window.confirmPayment(false)" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition shadow-lg flex justify-center items-center gap-2 transform hover:scale-[1.02]">
                     <span>تأكيد بدون طباعة</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- نافذة تعديل الطلب من المنيو (Edit Order Modal) -->
+    <!-- ========================================== -->
+    <div id="edit-order-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md transition-opacity">
+        <div class="relative bg-gray-800 border-t-4 border-blue-500 rounded-2xl shadow-2xl p-6 w-full max-w-lg mx-4 flex flex-col max-h-[90vh]">
+            <button onclick="window.closeEditOrderModal()" class="absolute top-4 left-4 text-gray-500 hover:text-white transition focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h3 class="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-2">تعديل الطلب: <span id="edit-order-title" class="text-blue-400"></span></h3>
+            
+            <!-- تفاصيل الطلب الحالية -->
+            <div class="mb-4 bg-gray-900 p-3 rounded-lg border border-gray-700 overflow-y-auto max-h-32">
+                <p class="text-xs text-gray-400 mb-1">محتوى الطلب الحالي:</p>
+                <div id="edit-order-details" class="text-sm text-white whitespace-pre-line leading-relaxed"></div>
+            </div>
+            
+            <!-- المجموع -->
+            <div class="flex justify-between items-center mb-4 bg-blue-900/20 p-3 rounded-lg border border-blue-800">
+                <span class="font-bold text-gray-300">المجموع بعد التعديل:</span>
+                <span id="edit-order-total" class="text-2xl font-bold text-blue-400">0 DA</span>
+            </div>
+
+            <!-- قائمة المنيو للإضافة -->
+            <p class="text-xs text-gray-400 mb-2 font-bold">اضغط على أي منتج لإضافته للطلب:</p>
+            <div id="edit-menu-grid" class="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-2 pr-2 custom-scrollbar border border-gray-700 p-2 rounded-lg bg-gray-900 min-h-[200px]">
+                <div class="col-span-full text-center text-sm text-gray-500 py-4">جاري تحميل المنيو...</div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-gray-700 flex gap-3">
+                <button onclick="window.saveOrderEdit()" id="btn-save-edit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-lg">حفظ التعديلات</button>
             </div>
         </div>
     </div>
@@ -469,6 +493,10 @@
             kdsActiveTab: 'tables', 
             cashierStatusFilter: 'جاهز',
             currentCheckoutOrder: null, 
+            currentEditOrder: null,
+            pendingEditDetails: "",
+            pendingEditPrice: 0,
+            cachedMenuItems: null,
             storageKeys: { username: "rp_username", role: "rp_role", lastView: "rp_last_view" }
         };
 
@@ -1286,73 +1314,6 @@
             STATE.currentCheckoutOrder = null;
         };
 
-        window.addExtraItemToOrder = async function(event) {
-            const order = STATE.currentCheckoutOrder;
-            if (!order) return;
-
-            const nameInput = document.getElementById('quick-add-name');
-            const priceInput = document.getElementById('quick-add-price');
-            const addedName = nameInput.value.trim();
-            const addedPrice = parseFloat(priceInput.value);
-
-            if (!addedName || isNaN(addedPrice) || addedPrice < 0) {
-                window.showToast("الرجاء إدخال اسم المنتج والسعر بشكل صحيح", "error");
-                return;
-            }
-
-            const btn = event.currentTarget;
-            const originalContent = btn.innerHTML;
-            btn.innerHTML = '...';
-            btn.disabled = true;
-
-            // استخراج السعر الحالي والتفاصيل
-            const currentPrice = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
-            const newPrice = currentPrice + addedPrice;
-            const currentDetails = order.Details || "";
-            const newDetails = currentDetails ? `${currentDetails}\n${addedName}` : addedName;
-
-            // تحديد اسم عمود السعر لتحديثه في Baserow
-            let priceKey = 'Price'; 
-            if ('Total' in order) priceKey = 'Total';
-            else if ('total' in order) priceKey = 'total';
-            else if ('price' in order) priceKey = 'price';
-
-            try {
-                const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${order.id}/?user_field_names=true`, {
-                    method: 'PATCH',
-                    headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ "Details": newDetails, [priceKey]: String(newPrice) })
-                });
-
-                if(!response.ok) throw new Error("Failed to update order");
-
-                // تحديث البيانات محلياً للطباعة
-                order.Details = newDetails;
-                order[priceKey] = String(newPrice);
-
-                // تحديث الواجهة
-                const sysCurrency = localStorage.getItem('system_currency') || 'DA';
-                document.getElementById('checkout-amount').innerText = `${newPrice.toLocaleString()} ${sysCurrency}`;
-                
-                nameInput.value = '';
-                priceInput.value = '';
-                window.showToast("تمت إضافة المنتج وتحديث المجموع بنجاح", "success");
-
-                // تحديث صامت للبيانات في الخلفية
-                window.fetchOrders(ORDERS_TABLE_ID).then(freshData => {
-                    STATE.latestKdsOrders = freshData;
-                    STATE.lastFetchedOrders = freshData;
-                });
-
-            } catch (e) {
-                console.error(e);
-                window.showToast("حدث خطأ أثناء تحديث الطلب", "error");
-            } finally {
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
-            }
-        };
-
         window.confirmPayment = function(shouldPrint) {
             const order = STATE.currentCheckoutOrder;
             if (!order) return;
@@ -1588,7 +1549,11 @@
 
                 let statusHTML = `<span class="px-3 py-1 rounded-full text-xs border ${statusClass} inline-block">${statusVal}</span>`;
                 if (statusVal === 'جاهز') {
-                    statusHTML = `<button id="btn-pay-${order.id}" onclick="window.handlePaymentToggle(${order.id})" class="px-3 py-1 rounded-full text-xs border border-brand bg-brand text-black font-bold hover:bg-brand-dark transition shadow-[0_0_10px_rgba(255,153,0,0.4)] animate-pulse hover:animate-none whitespace-nowrap">جاهز (تحصيل)</button>`;
+                    statusHTML = `
+                    <div class="flex gap-2 justify-center">
+                        <button id="btn-pay-${order.id}" onclick="window.handlePaymentToggle(${order.id})" class="px-3 py-1 rounded-lg text-xs border border-brand bg-brand text-black font-bold hover:bg-brand-dark transition shadow-md whitespace-nowrap">تحصيل 💰</button>
+                        <button onclick="window.openEditOrderModal(${order.id})" class="px-3 py-1 rounded-lg text-xs border border-blue-500 bg-blue-600 text-white font-bold hover:bg-blue-700 transition shadow-md whitespace-nowrap">تعديل ✏️</button>
+                    </div>`;
                 }
 
                 tableHTML += `<tr class="hover:bg-gray-750 transition duration-150 ${rowAlertClass}"><td class="p-4 text-right font-mono font-bold text-white">${order.dailySequence}</td><td class="p-4 text-right text-gray-400">${window.formatOrderTime(order)}</td><td class="p-4 text-right font-bold">${order.Table||'Takeaway'}</td><td class="p-4 text-right truncate max-w-xs">${order.Details||'-'}</td><td class="p-4 text-left font-bold text-white">${getPrice(order).toLocaleString()} ${sysCurrency}</td><td class="p-4 text-center">${statusHTML}</td></tr>`;
@@ -1596,6 +1561,99 @@
             tableHTML += `</tbody></table>`;
             tableContainer.innerHTML = tableHTML;
             dynamicContent.appendChild(tableContainer);
+        };
+
+        window.openEditOrderModal = async function(orderId) {
+            const order = STATE.processedCashierOrders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            STATE.currentEditOrder = order;
+            STATE.pendingEditDetails = order.Details || "";
+            STATE.pendingEditPrice = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
+            
+            document.getElementById('edit-order-title').innerText = `${order.dailySequence} - ${order.Table || 'سفري'}`;
+            document.getElementById('edit-order-details').innerText = STATE.pendingEditDetails;
+            const sysCurrency = localStorage.getItem('system_currency') || 'DA';
+            document.getElementById('edit-order-total').innerText = `${STATE.pendingEditPrice.toLocaleString()} ${sysCurrency}`;
+            
+            document.getElementById('edit-order-modal').classList.remove('hidden');
+
+            // جلب المنيو إذا لم يكن موجوداً
+            if (!STATE.cachedMenuItems) {
+                STATE.cachedMenuItems = await window.fetchMenu();
+            }
+            
+            // رسم أزرار المنيو
+            const grid = document.getElementById('edit-menu-grid');
+            grid.innerHTML = '';
+            STATE.cachedMenuItems.filter(item => {
+                const avail = (typeof item.Availability === 'object' && item.Availability) ? item.Availability.value : item.Availability;
+                return avail !== 'نفذت الكمية';
+            }).forEach(item => {
+                const name = item.Name || item.name;
+                const price = parseFloat(item.PromoPrice || item.promoprice) || parseFloat(item.Price || item.price || 0);
+                const btn = document.createElement('button');
+                btn.className = "bg-gray-800 hover:bg-blue-900 border border-gray-600 hover:border-blue-500 text-white p-2 rounded-lg text-xs transition text-right flex flex-col justify-between h-full";
+                btn.innerHTML = `<span class="font-bold truncate w-full" title="${name}">${name}</span><span class="text-blue-400 mt-1">${price} ${sysCurrency}</span>`;
+                btn.onclick = () => window.addItemToEditOrder(name, price);
+                grid.appendChild(btn);
+            });
+        };
+
+        window.addItemToEditOrder = function(itemName, itemPrice) {
+            STATE.pendingEditDetails = STATE.pendingEditDetails ? `${STATE.pendingEditDetails}\n1x ${itemName}` : `1x ${itemName}`;
+            STATE.pendingEditPrice += itemPrice;
+            
+            document.getElementById('edit-order-details').innerText = STATE.pendingEditDetails;
+            const sysCurrency = localStorage.getItem('system_currency') || 'DA';
+            document.getElementById('edit-order-total').innerText = `${STATE.pendingEditPrice.toLocaleString()} ${sysCurrency}`;
+            
+            // تمرير التفاصيل للأسفل لرؤية الإضافة الجديدة
+            const detailsDiv = document.getElementById('edit-order-details').parentElement;
+            detailsDiv.scrollTop = detailsDiv.scrollHeight;
+        };
+
+        window.closeEditOrderModal = function() {
+            document.getElementById('edit-order-modal').classList.add('hidden');
+            STATE.currentEditOrder = null;
+        };
+
+        window.saveOrderEdit = async function() {
+            const order = STATE.currentEditOrder;
+            if (!order) return;
+
+            const btn = document.getElementById('btn-save-edit');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'جاري الحفظ...';
+            btn.disabled = true;
+
+            let priceKey = 'Price'; 
+            if ('Total' in order) priceKey = 'Total';
+            else if ('total' in order) priceKey = 'total';
+            else if ('price' in order) priceKey = 'price';
+
+            try {
+                const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${order.id}/?user_field_names=true`, {
+                    method: 'PATCH',
+                    headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ "Details": STATE.pendingEditDetails, [priceKey]: String(STATE.pendingEditPrice) })
+                });
+
+                if(!response.ok) throw new Error("Failed to update");
+
+                window.showToast("تم تحديث الطلب بنجاح", "success");
+                window.closeEditOrderModal();
+                
+                // تحديث الواجهة
+                const data = await window.fetchOrders(ORDERS_TABLE_ID);
+                window.renderCashier(data);
+
+            } catch (e) {
+                window.showToast("حدث خطأ أثناء الحفظ", "error");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         };
 
         window.setAvailabilityState = function(id, action) {
