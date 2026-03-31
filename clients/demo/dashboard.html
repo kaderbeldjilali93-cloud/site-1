@@ -365,33 +365,45 @@
     <!-- ========================================== -->
     <!-- نافذة تعديل الطلب من المنيو (Edit Order Modal) -->
     <!-- ========================================== -->
-    <div id="edit-order-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md transition-opacity">
-        <div class="relative bg-gray-800 border-t-4 border-blue-500 rounded-2xl shadow-2xl p-6 w-full max-w-lg mx-4 flex flex-col max-h-[90vh]">
+    <div id="edit-order-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm transition-opacity">
+        <div class="relative bg-gray-800 border-t-4 border-brand rounded-2xl shadow-2xl p-6 w-full max-w-5xl mx-4 flex flex-col h-[85vh]">
             <button onclick="window.closeEditOrderModal()" class="absolute top-4 left-4 text-gray-500 hover:text-white transition focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
-            <h3 class="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-2">تعديل الطلب: <span id="edit-order-title" class="text-blue-400"></span></h3>
+            <h3 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-3">تعديل الطلب: <span id="edit-order-title" class="text-brand"></span></h3>
             
-            <!-- تفاصيل الطلب الحالية -->
-            <div class="mb-4 bg-gray-900 p-3 rounded-lg border border-gray-700 overflow-y-auto max-h-32">
-                <p class="text-xs text-gray-400 mb-1">محتوى الطلب الحالي:</p>
-                <div id="edit-order-details" class="text-sm text-white whitespace-pre-line leading-relaxed"></div>
-            </div>
-            
-            <!-- المجموع -->
-            <div class="flex justify-between items-center mb-4 bg-blue-900/20 p-3 rounded-lg border border-blue-800">
-                <span class="font-bold text-gray-300">المجموع بعد التعديل:</span>
-                <span id="edit-order-total" class="text-2xl font-bold text-blue-400">0 DA</span>
+            <div class="flex flex-col md:flex-row gap-6 flex-1 overflow-hidden">
+                <!-- القسم الأيمن: تفاصيل الطلب -->
+                <div class="w-full md:w-1/3 flex flex-col gap-4 bg-gray-900 p-4 rounded-xl border border-gray-700 overflow-hidden">
+                    <div class="flex-1 overflow-y-auto custom-scrollbar pr-2">
+                        <p class="text-xs text-gray-400 mb-2 font-bold">الطلب الأصلي (لا يمكن حذفه هنا):</p>
+                        <div id="edit-order-original-details" class="text-sm text-gray-300 whitespace-pre-line leading-relaxed mb-4 border-b border-gray-700 pb-4"></div>
+                        
+                        <p class="text-xs text-brand mb-2 font-bold">الإضافات الجديدة:</p>
+                        <div id="edit-order-new-items" class="space-y-2">
+                            <!-- سيتم حقن الإضافات هنا مع زر الحذف -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- القسم الأيسر: المنيو -->
+                <div class="w-full md:w-2/3 flex flex-col overflow-hidden">
+                    <p class="text-sm text-gray-300 mb-3 font-bold">اضغط على أي منتج لإضافته:</p>
+                    <div id="edit-menu-grid" class="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pr-2 custom-scrollbar pb-10">
+                        <div class="col-span-full text-center text-sm text-gray-500 py-4">جاري تحميل المنيو...</div>
+                    </div>
+                </div>
             </div>
 
-            <!-- قائمة المنيو للإضافة -->
-            <p class="text-xs text-gray-400 mb-2 font-bold">اضغط على أي منتج لإضافته للطلب:</p>
-            <div id="edit-menu-grid" class="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-2 pr-2 custom-scrollbar border border-gray-700 p-2 rounded-lg bg-gray-900 min-h-[200px]">
-                <div class="col-span-full text-center text-sm text-gray-500 py-4">جاري تحميل المنيو...</div>
-            </div>
-
-            <div class="mt-6 pt-4 border-t border-gray-700 flex gap-3">
-                <button onclick="window.saveOrderEdit()" id="btn-save-edit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-lg">حفظ التعديلات</button>
+            <!-- الشريط السفلي: المجموع والحفظ -->
+            <div class="mt-4 pt-4 border-t border-gray-700 flex justify-between items-center gap-4 bg-gray-900 p-4 rounded-xl shadow-inner">
+                <div class="flex items-center gap-3">
+                    <span class="text-lg font-bold text-gray-400">المجموع النهائي:</span>
+                    <span id="edit-order-total" class="text-4xl font-black text-brand drop-shadow-md">0 DA</span>
+                </div>
+                <button onclick="window.saveOrderEdit()" id="btn-save-edit" class="bg-brand hover:bg-brand-dark text-black font-bold py-3 px-10 rounded-xl transition shadow-[0_0_15px_rgba(255,153,0,0.3)] transform hover:scale-[1.02] text-xl">
+                    تأكيد وحفظ
+                </button>
             </div>
         </div>
     </div>
@@ -1568,24 +1580,24 @@
             if (!order) return;
             
             STATE.currentEditOrder = order;
-            STATE.pendingEditDetails = order.Details || "";
-            STATE.pendingEditPrice = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
+            STATE.originalEditDetails = order.Details || "";
+            STATE.originalEditPrice = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
+            STATE.newlyAddedItems = []; // مصفوفة لتتبع الإضافات
             
             document.getElementById('edit-order-title').innerText = `${order.dailySequence} - ${order.Table || 'سفري'}`;
-            document.getElementById('edit-order-details').innerText = STATE.pendingEditDetails;
-            const sysCurrency = localStorage.getItem('system_currency') || 'DA';
-            document.getElementById('edit-order-total').innerText = `${STATE.pendingEditPrice.toLocaleString()} ${sysCurrency}`;
+            document.getElementById('edit-order-original-details').innerText = STATE.originalEditDetails || "لا توجد تفاصيل";
             
+            window.updateEditOrderUI();
             document.getElementById('edit-order-modal').classList.remove('hidden');
 
-            // جلب المنيو إذا لم يكن موجوداً
             if (!STATE.cachedMenuItems) {
                 STATE.cachedMenuItems = await window.fetchMenu();
             }
             
-            // رسم أزرار المنيو
             const grid = document.getElementById('edit-menu-grid');
+            const sysCurrency = localStorage.getItem('system_currency') || 'DA';
             grid.innerHTML = '';
+            
             STATE.cachedMenuItems.filter(item => {
                 const avail = (typeof item.Availability === 'object' && item.Availability) ? item.Availability.value : item.Availability;
                 return avail !== 'نفذت الكمية';
@@ -1593,24 +1605,55 @@
                 const name = item.Name || item.name;
                 const price = parseFloat(item.PromoPrice || item.promoprice) || parseFloat(item.Price || item.price || 0);
                 const btn = document.createElement('button');
-                btn.className = "bg-gray-800 hover:bg-blue-900 border border-gray-600 hover:border-blue-500 text-white p-2 rounded-lg text-xs transition text-right flex flex-col justify-between h-full";
-                btn.innerHTML = `<span class="font-bold truncate w-full" title="${name}">${name}</span><span class="text-blue-400 mt-1">${price} ${sysCurrency}</span>`;
+                btn.className = "bg-gray-800 hover:bg-gray-700 border-2 border-gray-700 hover:border-brand text-white p-3 rounded-xl transition text-right flex flex-col justify-between h-28 shadow-sm group transform hover:-translate-y-1";
+                btn.innerHTML = `<span class="font-bold truncate w-full text-base group-hover:text-brand transition" title="${name}">${name}</span><span class="text-gray-300 font-mono mt-auto bg-gray-900 px-3 py-1 rounded-lg w-fit border border-gray-600 group-hover:border-brand/50">${price} ${sysCurrency}</span>`;
                 btn.onclick = () => window.addItemToEditOrder(name, price);
                 grid.appendChild(btn);
             });
         };
 
-        window.addItemToEditOrder = function(itemName, itemPrice) {
-            STATE.pendingEditDetails = STATE.pendingEditDetails ? `${STATE.pendingEditDetails}\n1x ${itemName}` : `1x ${itemName}`;
-            STATE.pendingEditPrice += itemPrice;
-            
-            document.getElementById('edit-order-details').innerText = STATE.pendingEditDetails;
+        window.addItemToEditOrder = function(name, price) {
+            STATE.newlyAddedItems.push({ id: Date.now() + Math.random(), name, price });
+            window.updateEditOrderUI();
+        };
+
+        window.removeAddedItem = function(itemId) {
+            STATE.newlyAddedItems = STATE.newlyAddedItems.filter(item => item.id !== itemId);
+            window.updateEditOrderUI();
+        };
+
+        window.updateEditOrderUI = function() {
             const sysCurrency = localStorage.getItem('system_currency') || 'DA';
-            document.getElementById('edit-order-total').innerText = `${STATE.pendingEditPrice.toLocaleString()} ${sysCurrency}`;
+            let addedTotal = 0;
+            const container = document.getElementById('edit-order-new-items');
+            container.innerHTML = '';
             
-            // تمرير التفاصيل للأسفل لرؤية الإضافة الجديدة
-            const detailsDiv = document.getElementById('edit-order-details').parentElement;
-            detailsDiv.scrollTop = detailsDiv.scrollHeight;
+            if (STATE.newlyAddedItems.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-500 italic bg-gray-800 p-2 rounded">لم يتم إضافة شيء بعد.</p>';
+            } else {
+                STATE.newlyAddedItems.forEach(item => {
+                    addedTotal += item.price;
+                    container.innerHTML += `
+                        <div class="flex justify-between items-center bg-gray-800 p-3 rounded-lg border border-gray-600 shadow-sm animate-fade-in">
+                            <span class="text-sm font-bold text-white truncate flex-1 pl-2 border-l-2 border-brand">${item.name}</span>
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm text-gray-300 font-mono">${item.price}</span>
+                                <button onclick="window.removeAddedItem(${item.id})" class="text-red-500 hover:text-red-400 hover:bg-red-500/20 p-1.5 rounded transition" title="إلغاء الإضافة">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            const finalPrice = STATE.originalEditPrice + addedTotal;
+            document.getElementById('edit-order-total').innerText = `${finalPrice.toLocaleString()} ${sysCurrency}`;
+            
+            // Scroll to bottom of newly added items
+            if(container.parentElement) {
+                 container.parentElement.scrollTop = container.parentElement.scrollHeight;
+            }
         };
 
         window.closeEditOrderModal = function() {
@@ -1622,10 +1665,21 @@
             const order = STATE.currentEditOrder;
             if (!order) return;
 
+            if (STATE.newlyAddedItems.length === 0) {
+                window.showToast("لم تقم بإضافة أي شيء جديد للطلب", "error");
+                return;
+            }
+
             const btn = document.getElementById('btn-save-edit');
             const originalText = btn.innerHTML;
             btn.innerHTML = 'جاري الحفظ...';
             btn.disabled = true;
+
+            const addedTotal = STATE.newlyAddedItems.reduce((sum, item) => sum + item.price, 0);
+            const finalPrice = STATE.originalEditPrice + addedTotal;
+            
+            const addedLines = STATE.newlyAddedItems.map(item => `1x ${item.name}`).join('\n');
+            const finalDetails = STATE.originalEditDetails ? `${STATE.originalEditDetails}\n${addedLines}` : addedLines;
 
             let priceKey = 'Price'; 
             if ('Total' in order) priceKey = 'Total';
@@ -1636,7 +1690,7 @@
                 const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${order.id}/?user_field_names=true`, {
                     method: 'PATCH',
                     headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ "Details": STATE.pendingEditDetails, [priceKey]: String(STATE.pendingEditPrice) })
+                    body: JSON.stringify({ "Details": finalDetails, [priceKey]: String(finalPrice) })
                 });
 
                 if(!response.ok) throw new Error("Failed to update");
