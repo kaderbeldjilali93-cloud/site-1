@@ -506,8 +506,9 @@
             cashierStatusFilter: 'جاهز',
             currentCheckoutOrder: null, 
             currentEditOrder: null,
-            pendingEditDetails: "",
-            pendingEditPrice: 0,
+            originalEditDetails: "",
+            originalEditPrice: 0,
+            newlyAddedItems: [],
             cachedMenuItems: null,
             storageKeys: { username: "rp_username", role: "rp_role", lastView: "rp_last_view" }
         };
@@ -1582,7 +1583,7 @@
             STATE.currentEditOrder = order;
             STATE.originalEditDetails = order.Details || "";
             STATE.originalEditPrice = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
-            STATE.newlyAddedItems = []; // مصفوفة لتتبع الإضافات
+            STATE.newlyAddedItems = []; 
             
             document.getElementById('edit-order-title').innerText = `${order.dailySequence} - ${order.Table || 'سفري'}`;
             document.getElementById('edit-order-original-details').innerText = STATE.originalEditDetails || "لا توجد تفاصيل";
@@ -1598,18 +1599,39 @@
             const sysCurrency = localStorage.getItem('system_currency') || 'DA';
             grid.innerHTML = '';
             
-            STATE.cachedMenuItems.filter(item => {
+            // 1. فلترة العناصر المتاحة فقط
+            const availableItems = STATE.cachedMenuItems.filter(item => {
                 const avail = (typeof item.Availability === 'object' && item.Availability) ? item.Availability.value : item.Availability;
                 return avail !== 'نفذت الكمية';
-            }).forEach(item => {
-                const name = item.Name || item.name;
-                const price = parseFloat(item.PromoPrice || item.promoprice) || parseFloat(item.Price || item.price || 0);
-                const btn = document.createElement('button');
-                btn.className = "bg-gray-800 hover:bg-gray-700 border-2 border-gray-700 hover:border-brand text-white p-3 rounded-xl transition text-right flex flex-col justify-between h-28 shadow-sm group transform hover:-translate-y-1";
-                btn.innerHTML = `<span class="font-bold truncate w-full text-base group-hover:text-brand transition" title="${name}">${name}</span><span class="text-gray-300 font-mono mt-auto bg-gray-900 px-3 py-1 rounded-lg w-fit border border-gray-600 group-hover:border-brand/50">${price} ${sysCurrency}</span>`;
-                btn.onclick = () => window.addItemToEditOrder(name, price);
-                grid.appendChild(btn);
             });
+
+            // 2. تجميع العناصر حسب التصنيف
+            const groupedItems = {};
+            availableItems.forEach(item => {
+                const cat = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'أخرى');
+                if (!groupedItems[cat]) groupedItems[cat] = [];
+                groupedItems[cat].push(item);
+            });
+
+            // 3. رسم التصنيفات والعناصر
+            for (const [category, items] of Object.entries(groupedItems)) {
+                // إضافة عنوان التصنيف (يأخذ العرض كاملاً ويثبت في الأعلى عند النزول)
+                const catHeader = document.createElement('div');
+                catHeader.className = "col-span-full text-brand font-black border-b-2 border-gray-600 pb-2 mt-4 text-xl sticky top-0 bg-gray-900 z-10 pt-2 shadow-sm";
+                catHeader.innerText = category;
+                grid.appendChild(catHeader);
+
+                // إضافة عناصر هذا التصنيف
+                items.forEach(item => {
+                    const name = item.Name || item.name;
+                    const price = parseFloat(item.PromoPrice || item.promoprice) || parseFloat(item.Price || item.price || 0);
+                    const btn = document.createElement('button');
+                    btn.className = "bg-gray-800 hover:bg-gray-700 border-2 border-gray-700 hover:border-brand text-white p-3 rounded-xl transition text-right flex flex-col justify-between h-28 shadow-sm group transform hover:-translate-y-1";
+                    btn.innerHTML = `<span class="font-bold truncate w-full text-base group-hover:text-brand transition" title="${name}">${name}</span><span class="text-gray-300 font-mono mt-auto bg-gray-900 px-3 py-1 rounded-lg w-fit border border-gray-600 group-hover:border-brand/50">${price} ${sysCurrency}</span>`;
+                    btn.onclick = () => window.addItemToEditOrder(name, price);
+                    grid.appendChild(btn);
+                });
+            }
         };
 
         window.addItemToEditOrder = function(name, price) {
