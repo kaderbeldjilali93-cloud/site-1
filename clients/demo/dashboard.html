@@ -926,12 +926,9 @@
                 const data = await response.json();
                 return data.results.reverse();
             } catch (error) {
-                console.warn("Using Mock Data for API:", error.message);
-                const isoToday = new Date().toISOString();
-                return [
-                    { id: 101, Table: "T-5", Details: "2x برجر كلاسيك", Status: { value: "قيد التحضير" }, "Created at": isoToday, Price: "1150" },
-                    { id: 102, Table: "T-2", Details: "1x بيتزا مارغريتا", Status: "جاهز", "Created at": isoToday, Price: "500" },
-                ].reverse();
+                console.warn("API Fetch Error (Silent Fail):", error.message);
+                // إرجاع آخر طلبات صحيحة بدلاً من الطلبات الوهمية لكي لا تتغير الشاشة
+                return STATE.lastFetchedOrders || [];
             }
         };
 
@@ -964,7 +961,7 @@
                                 method: 'PATCH',
                                 headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                                 body: JSON.stringify({ "Availability": "متوفر" })
-                            }).catch(err => console.warn("Silent auto-reset failed for item " + item.id + ":", err));
+                            }).catch(err => console.warn("Silent auto-reset failed:", err));
                         });
                     }
                     localStorage.setItem('last_auto_reset_date', todayStr);
@@ -972,8 +969,9 @@
 
                 return data.results;
             } catch (error) {
-                console.warn("Using Mock Data for Menu:", error.message);
-                return [];
+                console.warn("Menu Fetch Error (Silent Fail):", error.message);
+                // إرجاع آخر منيو صحيح تم جلبه
+                return STATE.cachedMenuItems || [];
             }
         };
 
