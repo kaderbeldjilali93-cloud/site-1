@@ -153,7 +153,7 @@
 
             <form id="loginForm" class="space-y-6">
                 <div>
-                    <label for="restaurantName" class="block text-sm font-medium text-gray-300 mb-2">اسم المطعم (جرب: demo)</label>
+                    <label for="restaurantName" class="block text-sm font-medium text-gray-300 mb-2">اسم المطعم</label>
                     <input type="text" id="restaurantName" required 
                         class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition text-white placeholder-gray-500"
                         placeholder="أدخل اسم المستخدم">
@@ -163,7 +163,7 @@
                     <label for="password" class="block text-sm font-medium text-gray-300 mb-2">كلمة المرور</label>
                     <input type="password" id="password" required 
                         class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition text-white placeholder-gray-500"
-                        placeholder="المدير: 123 | المطبخ: k123">
+                        placeholder="أدخل كلمة المرور">
                 </div>
 
                 <button type="submit" 
@@ -412,10 +412,10 @@
     <!-- نافذة دمج الطلبات (Merge Modal) -->
     <!-- ========================================== -->
     <div id="merge-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm transition-opacity">
-        <div class="bg-gray-800 border-t-4 border-purple-500 rounded-2xl shadow-2xl p-6 w-full max-w-2xl mx-4 flex flex-col max-h-[85vh]">
+        <div class="bg-gray-800 border-t-4 border-brand rounded-2xl shadow-2xl p-6 w-full max-w-2xl mx-4 flex flex-col max-h-[85vh]">
             <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
                 <h3 class="text-2xl font-bold text-white flex items-center gap-2">
-                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                    <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
                     دمج الطلبات المتعددة
                 </h3>
                 <button onclick="window.closeMergeModal()" class="text-gray-500 hover:text-white transition">
@@ -429,8 +429,8 @@
             </div>
 
             <div class="pt-4 border-t border-gray-700 flex justify-between items-center">
-                <span class="text-sm text-gray-300">الطلبات المحددة: <b id="merge-count" class="text-purple-400 text-lg">0</b></span>
-                <button id="btn-confirm-merge" onclick="window.confirmMergeOrders()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-lg opacity-50 cursor-not-allowed" disabled>
+                <span class="text-sm text-gray-300">الطلبات المحددة: <b id="merge-count" class="text-brand text-lg">0</b></span>
+                <button id="btn-confirm-merge" onclick="window.confirmMergeOrders()" class="bg-brand hover:bg-brand-dark text-black font-bold py-3 px-8 rounded-xl transition shadow-lg opacity-50 cursor-not-allowed" disabled>
                     تأكيد الدمج
                 </button>
             </div>
@@ -1537,12 +1537,8 @@
             const tableHeader = document.createElement('div');
             tableHeader.className = "flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700 gap-4";
             tableHeader.innerHTML = `
-                <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-3">
                     <span class="live-indicator" title="تحديث مباشر"></span>
-                    <button onclick="window.openMergeModal()" class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition shadow flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101"></path></svg>
-                        دمج الطلبات
-                    </button>
                 </div>
                 <div class="relative flex items-center bg-gray-800 border border-gray-600 rounded-lg hover:border-brand focus-within:border-brand focus-within:ring-2 focus-within:ring-brand transition-all overflow-hidden group">
                     <div class="absolute right-3 text-brand pointer-events-none z-0">
@@ -1597,8 +1593,9 @@
                 if (statusVal === 'جاهز') {
                     statusHTML = `
                     <div class="flex gap-2 justify-center">
-                        <button id="btn-pay-${order.id}" onclick="window.handlePaymentToggle(${order.id})" class="px-3 py-1 rounded-lg text-xs border border-brand bg-brand text-black font-bold hover:bg-brand-dark transition shadow-md whitespace-nowrap">تحصيل 💰</button>
-                        <button onclick="window.openEditOrderModal(${order.id})" class="px-3 py-1 rounded-lg text-xs border border-blue-500 bg-blue-600 text-white font-bold hover:bg-blue-700 transition shadow-md whitespace-nowrap">تعديل ✏️</button>
+                        <button onclick="window.openMergeModal(${order.id})" class="px-4 py-1.5 rounded-lg text-xs border border-blue-500 bg-blue-500/20 text-blue-300 font-bold hover:bg-blue-600 hover:text-white transition shadow-sm whitespace-nowrap">دمج</button>
+                        <button onclick="window.openEditOrderModal(${order.id})" class="px-4 py-1.5 rounded-lg text-xs border border-blue-500 bg-blue-500/20 text-blue-300 font-bold hover:bg-blue-600 hover:text-white transition shadow-sm whitespace-nowrap">تعديل</button>
+                        <button id="btn-pay-${order.id}" onclick="window.handlePaymentToggle(${order.id})" class="px-4 py-1.5 rounded-lg text-xs border border-brand bg-brand text-black font-bold hover:bg-brand-dark transition shadow-md whitespace-nowrap">تحصيل</button>
                     </div>`;
                 }
 
@@ -1767,13 +1764,20 @@
 
         STATE.mergeSelection = [];
 
-        window.openMergeModal = function() {
-            STATE.mergeSelection = [];
-            document.getElementById('merge-count').innerText = '0';
-            document.getElementById('btn-confirm-merge').disabled = true;
-            document.getElementById('btn-confirm-merge').classList.add('opacity-50', 'cursor-not-allowed');
+        window.openMergeModal = function(preselectedId = null) {
+            STATE.mergeSelection = preselectedId ? [preselectedId] : [];
+            document.getElementById('merge-count').innerText = STATE.mergeSelection.length;
             
-            // جلب الطلبات غير المدفوعة فقط
+            const btnConfirm = document.getElementById('btn-confirm-merge');
+            btnConfirm.disabled = true;
+            btnConfirm.classList.add('opacity-50', 'cursor-not-allowed');
+            // تغيير لون الزر في الواجهة للبرتقالي
+            btnConfirm.className = "bg-brand hover:bg-brand-dark text-black font-bold py-3 px-8 rounded-xl transition shadow-lg opacity-50 cursor-not-allowed";
+            
+            // تلوين العناوين في الواجهة
+            document.querySelector('#merge-modal h3 svg').classList.replace('text-purple-400', 'text-brand');
+            document.getElementById('merge-count').classList.replace('text-purple-400', 'text-brand');
+            
             const getStatus = (o) => (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
             const eligibleOrders = STATE.processedCashierOrders.filter(o => {
                 const s = getStatus(o);
@@ -1793,19 +1797,20 @@
             eligibleOrders.forEach(order => {
                 const price = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
                 const card = document.createElement('div');
-                card.className = "flex items-center gap-4 bg-gray-900 p-3 rounded-xl border border-gray-700 cursor-pointer hover:border-purple-500 transition";
+                const isSelected = STATE.mergeSelection.includes(order.id);
+                
+                card.className = `flex items-center gap-4 bg-gray-900 p-3 rounded-xl border cursor-pointer transition ${isSelected ? 'border-brand bg-brand/10' : 'border-gray-700 hover:border-brand'}`;
                 card.onclick = () => window.toggleMergeSelection(order.id, card);
                 
-                const checkHtml = STATE.mergeSelection.includes(order.id) 
-                    ? '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' 
-                    : '';
-                
+                const checkboxHtml = isSelected ? '<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : '';
+                const checkboxClass = isSelected ? 'border-brand bg-brand' : 'border-gray-500';
+
                 card.innerHTML = `
-                    <div class="w-6 h-6 rounded border-2 border-gray-500 flex items-center justify-center merge-checkbox transition">${checkHtml}</div>
+                    <div class="w-6 h-6 rounded border-2 flex items-center justify-center merge-checkbox transition ${checkboxClass}">${checkboxHtml}</div>
                     <div class="flex-1">
                         <div class="flex justify-between">
                             <span class="font-bold text-white">${order.dailySequence} - ${order.Table || 'سفري'}</span>
-                            <span class="text-purple-400 font-mono">${price} ${sysCurrency}</span>
+                            <span class="text-brand font-mono">${price} ${sysCurrency}</span>
                         </div>
                         <div class="text-xs text-gray-400 truncate max-w-sm mt-1">${order.Details || ''}</div>
                     </div>
@@ -1821,14 +1826,18 @@
             const checkbox = cardElement.querySelector('.merge-checkbox');
             if (STATE.mergeSelection.includes(orderId)) {
                 STATE.mergeSelection = STATE.mergeSelection.filter(id => id !== orderId);
-                cardElement.classList.remove('border-purple-500', 'bg-purple-900/20');
-                checkbox.classList.remove('border-purple-500', 'bg-purple-500');
+                cardElement.classList.remove('border-brand', 'bg-brand/10');
+                cardElement.classList.add('border-gray-700');
+                checkbox.classList.remove('border-brand', 'bg-brand');
+                checkbox.classList.add('border-gray-500');
                 checkbox.innerHTML = '';
             } else {
                 STATE.mergeSelection.push(orderId);
-                cardElement.classList.add('border-purple-500', 'bg-purple-900/20');
-                checkbox.classList.add('border-purple-500', 'bg-purple-500');
-                checkbox.innerHTML = '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+                cardElement.classList.remove('border-gray-700');
+                cardElement.classList.add('border-brand', 'bg-brand/10');
+                checkbox.classList.remove('border-gray-500');
+                checkbox.classList.add('border-brand', 'bg-brand');
+                checkbox.innerHTML = '<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
             }
 
             document.getElementById('merge-count').innerText = STATE.mergeSelection.length;
@@ -2174,7 +2183,8 @@
                         else if (endMatch) { name = endMatch[1].trim(); qty = parseInt(endMatch[2]) || 1; }
 
                         name = name.replace(/^[-▫▪•\.]+\s*/, '').trim();
-                        if (!name || name === 'لا توجد تفاصيل') return;
+                        // تجاهل الأسطر الفارغة، أو كلمة 'لا توجد تفاصيل'، أو أي سطر يحتوي على كلمة 'مدمج'
+                        if (!name || name === 'لا توجد تفاصيل' || name.includes('مدمج')) return;
 
                         const lowerName = name.toLowerCase();
                         let category = categoryMap[lowerName] || '';
