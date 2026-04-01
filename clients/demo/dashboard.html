@@ -1465,17 +1465,34 @@
             const rBottom = localStorage.getItem('print_receipt_bottom') || 'شكراً لزيارتكم!';
             const rQrCode = localStorage.getItem('print_qr_code') || '';
 
-            const detailsList = (order.Details || "").split(/[\n]/).filter(i => i.trim() !== "");
+            const detailsList = (order.Details || "").split(/[\n،,]/).filter(i => i.trim() !== "");
             let itemsHtml = '';
             detailsList.forEach(item => {
-                const subItems = item.split('،');
-                subItems.forEach(subItem => {
-                    if(subItem.trim() !== '') {
-                        itemsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 11px;">
-                            <span>${subItem.trim()}</span>
-                        </div>`;
+                let text = item.trim();
+                if(text !== '') {
+                    let itemName = text;
+                    let itemPrice = '';
+                    
+                    // فصل السعر إذا تم استخدام علامة = أو -
+                    if (text.includes('=')) {
+                        let parts = text.split('=');
+                        itemName = parts[0].trim();
+                        itemPrice = parts[1].trim();
+                    } else if (text.includes('-')) {
+                        let parts = text.split('-');
+                        let lastPart = parts[parts.length - 1].trim();
+                        if (/^[\d\.]+/.test(lastPart)) {
+                            itemPrice = lastPart;
+                            parts.pop();
+                            itemName = parts.join('-').trim();
+                        }
                     }
-                });
+
+                    itemsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 11px;">
+                        <span style="flex:1;">${itemName}</span>
+                        <span style="font-weight:bold; white-space:nowrap; margin-left: 8px;">${itemPrice}</span>
+                    </div>`;
+                }
             });
 
             printSec.innerHTML = `
@@ -1730,7 +1747,7 @@
             const addedTotal = STATE.newlyAddedItems.reduce((sum, item) => sum + item.price, 0);
             const finalPrice = STATE.originalEditPrice + addedTotal;
             
-            const addedLines = STATE.newlyAddedItems.map(item => `1x ${item.name}`).join('\n');
+            const addedLines = STATE.newlyAddedItems.map(item => `1x ${item.name} = ${item.price}`).join('\n');
             const finalDetails = STATE.originalEditDetails ? `${STATE.originalEditDetails}\n${addedLines}` : addedLines;
 
             let priceKey = 'Price'; 
