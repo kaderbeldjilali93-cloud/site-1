@@ -162,10 +162,12 @@ window.saveOrderEdit = async function () {
 
     const payload = {
         "Details": isNewOrder ? addedLines : finalDetails,
-        [priceKey]: String(finalPrice),
-        "Status": "قيد التحضير"
+        [priceKey]: String(finalPrice)
     };
-    if (isNewOrder) payload["Table"] = "سفري";
+    if (isNewOrder) {
+        payload["Table"] = "سفري";
+        payload["Status"] = "قيد التحضير";
+    }
 
     try {
         const response = await fetch(url, {
