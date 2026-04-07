@@ -2,60 +2,60 @@
 // 💰 Cashier Logic (الكاشير، الدفع، الطباعة، والدمج)
 // =========================================================
 
-window.handleCashierDateChange = function(e) {
+window.handleCashierDateChange = function (e) {
     STATE.selectedCashierDate = e.target.value;
     window.renderCashier(STATE.lastFetchedOrders);
 };
 
-window.setCashierFilter = function(status) {
+window.setCashierFilter = function (status) {
     STATE.cashierStatusFilter = status;
     window.renderCashier(STATE.lastFetchedOrders);
 };
 
-window.handlePaymentToggle = function(rowId) {
+window.handlePaymentToggle = function (rowId) {
     const order = STATE.processedCashierOrders.find(o => o.id === rowId);
     if (!order) return;
-    
+
     STATE.currentCheckoutOrder = order;
-    
+
     const price = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
     const tableStr = order.Table || order.table || 'سفري';
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
-    
+
     document.getElementById('checkout-title').innerText = `تأكيد الدفع: الطلب ${order.dailySequence} - ${tableStr}`;
     document.getElementById('checkout-amount').innerText = `${price.toLocaleString()} ${sysCurrency}`;
-    
+
     document.getElementById('checkout-modal').classList.remove('hidden');
 };
 
-window.closeCheckoutModal = function() {
+window.closeCheckoutModal = function () {
     document.getElementById('checkout-modal').classList.add('hidden');
     STATE.currentCheckoutOrder = null;
 };
 
-window.confirmPayment = function(shouldPrint) {
+window.confirmPayment = function (shouldPrint) {
     const order = STATE.currentCheckoutOrder;
     if (!order) return;
-    
+
     window.closeCheckoutModal();
     window.processPayment(order.id, shouldPrint);
 };
 
-window.processPayment = async function(rowId, shouldPrint) {
+window.processPayment = async function (rowId, shouldPrint) {
     const payBtn = document.getElementById(`btn-pay-${rowId}`);
     let originalHTML = '';
     let originalClassName = '';
-    
+
     if (payBtn) {
         originalHTML = payBtn.innerHTML;
         originalClassName = payBtn.className;
-        
+
         payBtn.innerHTML = 'مدفوع';
         payBtn.className = 'px-3 py-1 rounded-full text-xs border border-blue-700 bg-blue-800 text-white font-bold transition shadow-lg pointer-events-none whitespace-nowrap';
     }
 
     const updateLocalStatus = (ordersArray) => {
-        if(!ordersArray) return;
+        if (!ordersArray) return;
         const order = ordersArray.find(o => o.id === rowId);
         if (order) {
             if (typeof order.Status === 'object' && order.Status !== null) {
@@ -71,21 +71,21 @@ window.processPayment = async function(rowId, shouldPrint) {
 
     if (shouldPrint) {
         const orderToPrint = STATE.processedCashierOrders.find(o => o.id === rowId);
-        if(orderToPrint) window.printReceipt(orderToPrint);
+        if (orderToPrint) window.printReceipt(orderToPrint);
     }
 
     try {
         await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${rowId}/?user_field_names=true`, {
             method: 'PATCH',
-            headers: { 
-                "Authorization": `Token ${BASEROW_TOKEN}`, 
-                "Content-Type": "application/json" 
+            headers: {
+                "Authorization": `Token ${BASEROW_TOKEN}`,
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({ "Status": 'مدفوع' })
         });
-        
+
         window.showToast("تم تأكيد الدفع بنجاح", "success");
-        
+
         setTimeout(async () => {
             try {
                 const currentView = localStorage.getItem(STATE.storageKeys.lastView);
@@ -94,11 +94,11 @@ window.processPayment = async function(rowId, shouldPrint) {
                 } else if (currentView === 'analytics') {
                     window.renderAnalytics(STATE.analyticsData, 'today');
                 }
-                
+
                 const freshData = await window.fetchOrders(ORDERS_TABLE_ID);
                 STATE.latestKdsOrders = freshData;
                 STATE.lastFetchedOrders = freshData;
-                
+
             } catch (e) {
                 console.warn("حدث خطأ أثناء المزامنة بعد التأخير:", e);
             }
@@ -107,9 +107,9 @@ window.processPayment = async function(rowId, shouldPrint) {
     } catch (error) {
         console.warn("API Error:", error.message);
         window.showToast("فشل تأكيد الدفع. تأكد من الاتصال.", "error");
-        
+
         const revertLocalStatus = (ordersArray) => {
-            if(!ordersArray) return;
+            if (!ordersArray) return;
             const order = ordersArray.find(o => o.id === rowId);
             if (order) {
                 if (typeof order.Status === 'object' && order.Status !== null) {
@@ -130,13 +130,13 @@ window.processPayment = async function(rowId, shouldPrint) {
     }
 };
 
-window.printReceipt = function(order) {
+window.printReceipt = function (order) {
     const printSec = document.getElementById('print-section');
     const price = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
     const tableStr = order.Table || order.table || 'سفري';
     const dateStr = new Date().toLocaleString('ar-DZ');
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
-    
+
     const rName = localStorage.getItem('menu_restaurant_name') || 'RestoPro';
     const rTop = localStorage.getItem('print_receipt_top') || 'أهلاً بكم في مطعمنا';
     const rBottom = localStorage.getItem('print_receipt_bottom') || 'شكراً لزيارتكم!';
@@ -146,10 +146,10 @@ window.printReceipt = function(order) {
     let itemsHtml = '';
     detailsList.forEach(item => {
         let text = item.trim();
-        if(text !== '') {
+        if (text !== '') {
             let itemName = text;
             let itemPrice = '';
-            
+
             if (text.includes('=')) {
                 let parts = text.split('=');
                 itemName = parts[0].trim();
@@ -199,13 +199,13 @@ window.printReceipt = function(order) {
         </div>
         ${rQrCode ? `<div style="text-align: center; margin-top: 10px;"><img src="${rQrCode}" style="width: 100px; height: 100px; margin: 0 auto; display: block;" /></div>` : ''}
     `;
-    
+
     setTimeout(() => {
         window.print();
     }, 100);
 };
 
-window.renderCashier = function(orders) {
+window.renderCashier = function (orders) {
     STATE.lastFetchedOrders = orders;
     const getPrice = (o) => parseFloat((o.total || o.Total || o.price || o.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
     const getStatus = (o) => (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
@@ -215,12 +215,14 @@ window.renderCashier = function(orders) {
         const time = o['Created at'] || o.Time || o.time || o.created_on;
         return window.isOrderFromSelectedDate(time, STATE.selectedCashierDate);
     });
-    
+
     baseOrders = window.calculateDailySequence(baseOrders);
     baseOrders = window.processOrderAlerts(baseOrders);
     STATE.processedCashierOrders = baseOrders;
 
-    let filteredOrders = baseOrders.filter(o => getStatus(o) === STATE.cashierStatusFilter);
+    let filteredOrders = STATE.cashierStatusFilter === 'الكل'
+        ? baseOrders
+        : baseOrders.filter(o => getStatus(o) === STATE.cashierStatusFilter);
 
     const dynamicContent = document.getElementById('dynamic-content');
     if (!dynamicContent) return;
@@ -257,11 +259,11 @@ window.renderCashier = function(orders) {
 
     const filtersContainer = document.createElement('div');
     filtersContainer.className = "flex gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar";
-    const statuses = ['قيد التحضير', 'جاهز', 'مدفوع'];
+    const statuses = ['الكل', 'قيد التحضير', 'جاهز', 'مدفوع'];
     filtersContainer.innerHTML = statuses.map(status => {
         const isActive = STATE.cashierStatusFilter === status;
-        const btnClass = isActive 
-            ? 'bg-brand text-black font-bold shadow-[0_0_10px_rgba(255,153,0,0.3)]' 
+        const btnClass = isActive
+            ? 'bg-brand text-black font-bold shadow-[0_0_10px_rgba(255,153,0,0.3)]'
             : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500';
         return `<button onclick="window.setCashierFilter('${status}')" class="px-5 py-2 rounded-xl text-sm transition whitespace-nowrap ${btnClass}">${status}</button>`;
     }).join('');
@@ -270,16 +272,16 @@ window.renderCashier = function(orders) {
     const tableContainer = document.createElement('div');
     tableContainer.className = "overflow-x-auto bg-gray-800 rounded-lg shadow border border-gray-700";
     let tableHTML = `<table class="w-full text-left border-collapse"><thead><tr class="bg-gray-700 text-gray-300 text-sm"><th class="p-4 text-right">رقم الطلب</th><th class="p-4 text-right">الوقت</th><th class="p-4 text-right">الطاولة</th><th class="p-4 text-right w-1/3">التفاصيل</th><th class="p-4 text-left">السعر</th><th class="p-4 text-center">الحالة الإجراء</th></tr></thead><tbody class="divide-y divide-gray-700 text-gray-300 text-sm">`;
-    
+
     filteredOrders.forEach(order => {
         const statusVal = getStatus(order) || 'Unknown';
-        const statusColors = { 
-            'قيد التحضير': 'text-yellow-300 border-yellow-700 bg-yellow-900/20', 
-            'جاهز': 'text-green-300 border-green-700 bg-green-900/20', 
-            'مدفوع': 'text-blue-300 border-blue-700 bg-blue-900/20' 
+        const statusColors = {
+            'قيد التحضير': 'text-yellow-300 border-yellow-700 bg-yellow-900/20',
+            'جاهز': 'text-green-300 border-green-700 bg-green-900/20',
+            'مدفوع': 'text-blue-300 border-blue-700 bg-blue-900/20'
         };
         const statusClass = statusColors[statusVal] || 'text-gray-300 bg-gray-800 border-gray-600';
-        
+
         let rowAlertClass = '';
         if (order.isNew) rowAlertClass = 'animate-new-order';
         else if (order.justReady) rowAlertClass = 'animate-ready-order';
@@ -294,7 +296,7 @@ window.renderCashier = function(orders) {
             </div>`;
         }
 
-        tableHTML += `<tr class="hover:bg-gray-750 transition duration-150 ${rowAlertClass}"><td class="p-4 text-right font-mono font-bold text-white">${order.dailySequence}</td><td class="p-4 text-right text-gray-400">${window.formatOrderTime(order)}</td><td class="p-4 text-right font-bold">${order.Table||'Takeaway'}</td><td class="p-4 text-right truncate max-w-xs">${order.Details||'-'}</td><td class="p-4 text-left font-bold text-white">${getPrice(order).toLocaleString()} ${sysCurrency}</td><td class="p-4 text-center">${statusHTML}</td></tr>`;
+        tableHTML += `<tr class="hover:bg-gray-750 transition duration-150 ${rowAlertClass}"><td class="p-4 text-right font-mono font-bold text-white">${order.dailySequence}</td><td class="p-4 text-right text-gray-400">${window.formatOrderTime(order)}</td><td class="p-4 text-right font-bold">${order.Table || 'Takeaway'}</td><td class="p-4 text-right truncate max-w-xs">${order.Details || '-'}</td><td class="p-4 text-left font-bold text-white">${getPrice(order).toLocaleString()} ${sysCurrency}</td><td class="p-4 text-center">${statusHTML}</td></tr>`;
     });
     tableHTML += `</tbody></table>`;
     tableContainer.innerHTML = tableHTML;
@@ -303,18 +305,18 @@ window.renderCashier = function(orders) {
 
 STATE.mergeSelection = [];
 
-window.openMergeModal = function(preselectedId = null) {
+window.openMergeModal = function (preselectedId = null) {
     STATE.mergeSelection = preselectedId ? [preselectedId] : [];
     document.getElementById('merge-count').innerText = STATE.mergeSelection.length;
-    
+
     const btnConfirm = document.getElementById('btn-confirm-merge');
     btnConfirm.disabled = true;
     btnConfirm.classList.add('opacity-50', 'cursor-not-allowed');
     btnConfirm.className = "bg-brand hover:bg-brand-dark text-black font-bold py-3 px-8 rounded-xl transition shadow-lg opacity-50 cursor-not-allowed";
-    
+
     document.querySelector('#merge-modal h3 svg').classList.replace('text-purple-400', 'text-brand');
     document.getElementById('merge-count').classList.replace('text-purple-400', 'text-brand');
-    
+
     const getStatus = (o) => (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
     const eligibleOrders = STATE.processedCashierOrders.filter(o => {
         const s = getStatus(o);
@@ -335,10 +337,10 @@ window.openMergeModal = function(preselectedId = null) {
         const price = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
         const card = document.createElement('div');
         const isSelected = STATE.mergeSelection.includes(order.id);
-        
+
         card.className = `flex items-center gap-4 bg-gray-900 p-3 rounded-xl border cursor-pointer transition ${isSelected ? 'border-brand bg-brand/10' : 'border-gray-700 hover:border-brand'}`;
         card.onclick = () => window.toggleMergeSelection(order.id, card);
-        
+
         const checkboxHtml = isSelected ? '<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : '';
         const checkboxClass = isSelected ? 'border-brand bg-brand' : 'border-gray-500';
 
@@ -359,7 +361,7 @@ window.openMergeModal = function(preselectedId = null) {
     document.getElementById('merge-modal').classList.remove('hidden');
 };
 
-window.toggleMergeSelection = function(orderId, cardElement) {
+window.toggleMergeSelection = function (orderId, cardElement) {
     const checkbox = cardElement.querySelector('.merge-checkbox');
     if (STATE.mergeSelection.includes(orderId)) {
         STATE.mergeSelection = STATE.mergeSelection.filter(id => id !== orderId);
@@ -388,14 +390,14 @@ window.toggleMergeSelection = function(orderId, cardElement) {
     }
 };
 
-window.closeMergeModal = function() {
+window.closeMergeModal = function () {
     document.getElementById('merge-modal').classList.add('hidden');
     STATE.mergeSelection = [];
 };
 
-window.confirmMergeOrders = async function() {
+window.confirmMergeOrders = async function () {
     if (STATE.mergeSelection.length < 2) return;
-    
+
     const btn = document.getElementById('btn-confirm-merge');
     const originalText = btn.innerHTML;
     btn.innerHTML = 'جاري الدمج...';
@@ -403,7 +405,7 @@ window.confirmMergeOrders = async function() {
 
     const selectedOrders = STATE.processedCashierOrders.filter(o => STATE.mergeSelection.includes(o.id));
     selectedOrders.sort((a, b) => a.id - b.id);
-    
+
     const primaryOrder = selectedOrders[0];
     const secondaryOrders = selectedOrders.slice(1);
 
@@ -416,7 +418,7 @@ window.confirmMergeOrders = async function() {
         if (o.Details) combinedDetails += `\n-- مدمج --\n${o.Details}`;
     });
 
-    let priceKey = 'Price'; 
+    let priceKey = 'Price';
     if ('Total' in primaryOrder) priceKey = 'Total';
     else if ('total' in primaryOrder) priceKey = 'total';
     else if ('price' in primaryOrder) priceKey = 'price';
@@ -438,7 +440,7 @@ window.confirmMergeOrders = async function() {
 
         window.showToast("تم دمج الطلبات بنجاح ✅", "success");
         window.closeMergeModal();
-        
+
         const freshData = await window.fetchOrders(ORDERS_TABLE_ID);
         window.renderCashier(freshData);
 

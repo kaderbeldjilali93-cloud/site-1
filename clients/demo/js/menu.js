@@ -4,15 +4,15 @@
 
 // --- 1. دوال تعديل وإنشاء الطلبات ---
 
-window.openEditOrderModal_DrawMenu = async function() {
+window.openEditOrderModal_DrawMenu = async function () {
     if (!STATE.cachedMenuItems) {
         STATE.cachedMenuItems = await window.fetchMenu();
     }
-    
+
     const grid = document.getElementById('edit-menu-grid');
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
     grid.innerHTML = '';
-    
+
     const availableItems = STATE.cachedMenuItems.filter(item => {
         const avail = (typeof item.Availability === 'object' && item.Availability) ? item.Availability.value : item.Availability;
         return avail !== 'نفذت الكمية';
@@ -43,56 +43,56 @@ window.openEditOrderModal_DrawMenu = async function() {
     }
 };
 
-window.openEditOrderModal = async function(orderId) {
+window.openEditOrderModal = async function (orderId) {
     const order = STATE.processedCashierOrders.find(o => o.id === orderId);
     if (!order) return;
-    
+
     STATE.currentEditOrder = order;
     STATE.originalEditDetails = order.Details || "";
     STATE.originalEditPrice = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
-    STATE.newlyAddedItems = []; 
-    
+    STATE.newlyAddedItems = [];
+
     document.getElementById('edit-order-title').innerText = `${order.dailySequence} - ${order.Table || 'سفري'}`;
     document.getElementById('edit-order-original-details').innerText = STATE.originalEditDetails || "لا توجد تفاصيل";
-    
+
     window.updateEditOrderUI();
     document.getElementById('edit-order-modal').classList.remove('hidden');
 
     window.openEditOrderModal_DrawMenu();
 };
 
-window.openNewOrderModal = async function() {
-    STATE.currentEditOrder = null; 
+window.openNewOrderModal = async function () {
+    STATE.currentEditOrder = null;
     STATE.newlyAddedItems = [];
     STATE.originalEditDetails = "";
     STATE.originalEditPrice = 0;
-    
+
     document.getElementById('edit-order-title').innerText = "إنشاء طلب سريع جديد";
     document.getElementById('edit-order-original-details').innerText = "ابدأ بإضافة الأصناف من القائمة على اليسار";
-    
+
     window.updateEditOrderUI();
     document.getElementById('edit-order-modal').classList.remove('hidden');
 
-    window.openEditOrderModal_DrawMenu(); 
+    window.openEditOrderModal_DrawMenu();
 };
 
-window.addItemToEditOrder = function(name, price) {
+window.addItemToEditOrder = function (name, price) {
     STATE.newlyAddedItems.push({ id: Date.now() + Math.random(), name, price });
     window.updateEditOrderUI();
 };
 
-window.removeAddedItem = function(itemId) {
+window.removeAddedItem = function (itemId) {
     STATE.newlyAddedItems = STATE.newlyAddedItems.filter(item => item.id !== itemId);
     window.updateEditOrderUI();
 };
 
-window.updateEditOrderUI = function() {
+window.updateEditOrderUI = function () {
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
     let addedTotal = 0;
     const container = document.getElementById('edit-order-new-items');
     if (!container) return;
     container.innerHTML = '';
-    
+
     if (STATE.newlyAddedItems.length === 0) {
         container.innerHTML = '<p class="text-xs text-gray-500 italic bg-gray-800 p-2 rounded">لم يتم إضافة شيء بعد.</p>';
     } else {
@@ -111,25 +111,25 @@ window.updateEditOrderUI = function() {
             `;
         });
     }
-    
+
     const finalPrice = STATE.originalEditPrice + addedTotal;
     const totalEl = document.getElementById('edit-order-total');
     if (totalEl) totalEl.innerText = `${finalPrice.toLocaleString()} ${sysCurrency}`;
-    
-    if(container.parentElement) {
-         container.parentElement.scrollTop = container.parentElement.scrollHeight;
+
+    if (container.parentElement) {
+        container.parentElement.scrollTop = container.parentElement.scrollHeight;
     }
 };
 
-window.closeEditOrderModal = function() {
+window.closeEditOrderModal = function () {
     const modal = document.getElementById('edit-order-modal');
     if (modal) modal.classList.add('hidden');
     STATE.currentEditOrder = null;
 };
 
-window.saveOrderEdit = async function() {
+window.saveOrderEdit = async function () {
     const isNewOrder = STATE.currentEditOrder === null;
-    
+
     if (STATE.newlyAddedItems.length === 0) {
         window.showToast(isNewOrder ? "الرجاء إضافة منتج للطلب" : "لم تقم بإضافة أي شيء جديد للطلب", "error");
         return;
@@ -142,24 +142,25 @@ window.saveOrderEdit = async function() {
 
     const addedTotal = STATE.newlyAddedItems.reduce((sum, item) => sum + item.price, 0);
     const finalPrice = STATE.originalEditPrice + addedTotal;
-    
+
     const addedLines = STATE.newlyAddedItems.map(item => `1x ${item.name} = ${item.price}`).join('\n');
     const finalDetails = STATE.originalEditDetails ? `${STATE.originalEditDetails}\n${addedLines}` : addedLines;
 
-    let priceKey = 'Price'; 
+    let priceKey = 'Total';
     if (!isNewOrder) {
         if ('Total' in STATE.currentEditOrder) priceKey = 'Total';
         else if ('total' in STATE.currentEditOrder) priceKey = 'total';
         else if ('price' in STATE.currentEditOrder) priceKey = 'price';
+        else if ('Price' in STATE.currentEditOrder) priceKey = 'Price';
     }
 
-    const url = isNewOrder 
+    const url = isNewOrder
         ? `https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/?user_field_names=true`
         : `https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${STATE.currentEditOrder.id}/?user_field_names=true`;
 
     const method = isNewOrder ? 'POST' : 'PATCH';
 
-    const payload = { 
+    const payload = {
         "Details": isNewOrder ? addedLines : finalDetails,
         [priceKey]: String(finalPrice),
         "Status": "قيد التحضير"
@@ -173,15 +174,15 @@ window.saveOrderEdit = async function() {
             body: JSON.stringify(payload)
         });
 
-        if(!response.ok) throw new Error("Failed to save");
+        if (!response.ok) throw new Error("Failed to save");
 
         window.showToast(isNewOrder ? "تم إنشاء الطلب بنجاح" : "تم تحديث الطلب بنجاح", "success");
         window.closeEditOrderModal();
-        
+
         const data = await window.fetchOrders(ORDERS_TABLE_ID);
         STATE.latestKdsOrders = data;
         STATE.lastFetchedOrders = data;
-        
+
         const currentView = localStorage.getItem(STATE.storageKeys.lastView);
         if (STATE.currentRole === 'kitchen' || currentView === 'kds') {
             window.renderKDS(data);
@@ -199,7 +200,7 @@ window.saveOrderEdit = async function() {
 
 // --- 2. دوال إدارة المنيو والتعديلات السريعة ---
 
-window.setAvailabilityState = function(id, action) {
+window.setAvailabilityState = function (id, action) {
     const statusInput = document.getElementById(`status-${id}`);
     const toggleBtn = document.getElementById(`toggle-${id}`);
     const exhaustedBtn = document.getElementById(`exhausted-${id}`);
@@ -221,7 +222,7 @@ window.setAvailabilityState = function(id, action) {
 
     if (newStatus === 'نفذت الكمية') {
         toggleBtn.className = "text-xs px-3 py-2.5 rounded text-white transition bg-gray-600 hover:bg-gray-500";
-        toggleBtn.innerText = "متوفر"; 
+        toggleBtn.innerText = "متوفر";
         exhaustedBtn.className = "text-xs px-3 py-2.5 rounded transition bg-red-600 text-white border-2 border-white font-bold shadow-md";
     } else if (newStatus === 'متوفر') {
         toggleBtn.className = "text-xs px-3 py-2.5 rounded text-white transition bg-green-600 hover:bg-green-700";
@@ -234,9 +235,9 @@ window.setAvailabilityState = function(id, action) {
     }
 };
 
-window.renderMenuEditor = function(items) {
+window.renderMenuEditor = function (items) {
     const dynamicContent = document.getElementById('dynamic-content');
-    if(!dynamicContent) return;
+    if (!dynamicContent) return;
     dynamicContent.innerHTML = '';
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
 
@@ -244,7 +245,7 @@ window.renderMenuEditor = function(items) {
     items.sort((a, b) => {
         let catA = (typeof a.Category === 'object' && a.Category) ? a.Category.value : (a.Category || '');
         let catB = (typeof b.Category === 'object' && b.Category) ? b.Category.value : (b.Category || '');
-        
+
         catA = String(catA).trim().toLowerCase();
         catB = String(catB).trim().toLowerCase();
 
@@ -257,7 +258,7 @@ window.renderMenuEditor = function(items) {
         if (indexA !== indexB) {
             return indexA - indexB;
         } else {
-            return (a.id || 0) - (b.id || 0); 
+            return (a.id || 0) - (b.id || 0);
         }
     });
 
@@ -272,19 +273,19 @@ window.renderMenuEditor = function(items) {
         const category = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'عام');
         const availObj = item.Availability || item.availability;
         const availVal = (typeof availObj === 'object' && availObj) ? availObj.value : availObj;
-        
+
         let currentStatus = availVal || "متوفر";
-        if(!["متوفر", "غير متوفر", "نفذت الكمية"].includes(currentStatus)) {
-            currentStatus = "متوفر"; 
+        if (!["متوفر", "غير متوفر", "نفذت الكمية"].includes(currentStatus)) {
+            currentStatus = "متوفر";
         }
 
         let toggleClass = "";
         let toggleText = "";
         let exhaustedClass = "bg-gray-700 text-gray-300 hover:bg-red-600 hover:text-white";
-        
+
         if (currentStatus === "نفذت الكمية") {
             toggleClass = "bg-gray-600 hover:bg-gray-500";
-            toggleText = "متوفر"; 
+            toggleText = "متوفر";
             exhaustedClass = "bg-red-600 text-white border-2 border-white font-bold shadow-md";
         } else if (currentStatus === "متوفر") {
             toggleClass = "bg-green-600 hover:bg-green-700";
@@ -293,7 +294,7 @@ window.renderMenuEditor = function(items) {
             toggleClass = "bg-red-600 hover:bg-red-700";
             toggleText = "غير متوفر";
         }
-        
+
         const card = document.createElement('div');
         card.className = "bg-gray-800 border border-gray-700 rounded-xl overflow-hidden shadow-lg flex flex-col relative";
 
@@ -332,9 +333,9 @@ window.renderMenuEditor = function(items) {
     dynamicContent.appendChild(grid);
 };
 
-window.renderPromoEditor = function(items) {
+window.renderPromoEditor = function (items) {
     const dynamicContent = document.getElementById('dynamic-content');
-    if(!dynamicContent) return;
+    if (!dynamicContent) return;
     dynamicContent.innerHTML = '';
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
 
@@ -342,7 +343,7 @@ window.renderPromoEditor = function(items) {
     items.sort((a, b) => {
         let catA = (typeof a.Category === 'object' && a.Category) ? a.Category.value : (a.Category || '');
         let catB = (typeof b.Category === 'object' && b.Category) ? b.Category.value : (b.Category || '');
-        
+
         catA = String(catA).trim().toLowerCase();
         catB = String(catB).trim().toLowerCase();
 
@@ -355,7 +356,7 @@ window.renderPromoEditor = function(items) {
         if (indexA !== indexB) {
             return indexA - indexB;
         } else {
-            return (a.id || 0) - (b.id || 0); 
+            return (a.id || 0) - (b.id || 0);
         }
     });
 
@@ -368,7 +369,7 @@ window.renderPromoEditor = function(items) {
         const promoPrice = parseFloat(item.PromoPrice || item.promoprice);
         const imgUrl = (item.image && item.image.length > 0) ? item.image[0].url : "https://placehold.co/400x300/374151/FFFFFF?text=No+Image";
         const category = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'عام');
-        
+
         let hasPromo = !isNaN(promoPrice) && promoPrice > 0 && promoPrice < price;
         let discountPercent = 0;
         if (hasPromo) {
@@ -377,7 +378,7 @@ window.renderPromoEditor = function(items) {
 
         const card = document.createElement('div');
         card.className = `bg-gray-800 border ${hasPromo ? 'border-brand shadow-[0_0_15px_rgba(255,153,0,0.2)]' : 'border-gray-700'} rounded-xl overflow-hidden shadow-lg flex flex-col transition-all`;
-        
+
         let badgeHtml = hasPromo ? `<span class="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg animate-pulse">-${discountPercent}% 🔥</span>` : '';
 
         card.innerHTML = `
@@ -413,12 +414,12 @@ window.renderPromoEditor = function(items) {
     dynamicContent.appendChild(grid);
 };
 
-window.renderMenuAdd = function() {
+window.renderMenuAdd = function () {
     const dynamicContent = document.getElementById('dynamic-content');
-    if(!dynamicContent) return;
+    if (!dynamicContent) return;
     dynamicContent.innerHTML = '';
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
-    
+
     const container = document.createElement('div');
     container.className = "max-w-2xl mx-auto pb-10 mt-6";
 
@@ -492,10 +493,10 @@ window.renderMenuAdd = function() {
     dynamicContent.appendChild(container);
 };
 
-window.previewAddDishImage = function(input) {
+window.previewAddDishImage = function (input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             document.getElementById('add-image-preview').src = e.target.result;
             document.getElementById('add-image-preview-container').classList.remove('hidden');
             document.getElementById('add-image-upload-wrapper').classList.add('hidden');
@@ -504,7 +505,7 @@ window.previewAddDishImage = function(input) {
     }
 };
 
-window.removeAddDishImage = function() {
+window.removeAddDishImage = function () {
     const input = document.getElementById('add-image');
     if (input) input.value = '';
     const preview = document.getElementById('add-image-preview');
@@ -515,19 +516,19 @@ window.removeAddDishImage = function() {
     if (wrapper) wrapper.classList.remove('hidden');
 };
 
-window.openDeleteModal = function(id, name) {
+window.openDeleteModal = function (id, name) {
     currentDeleteItemId = id;
     document.getElementById('delete-item-name').innerText = name;
     document.getElementById('delete-modal').classList.remove('hidden');
 };
 
-window.closeDeleteModal = function() {
+window.closeDeleteModal = function () {
     currentDeleteItemId = null;
     document.getElementById('delete-item-name').innerText = '';
     document.getElementById('delete-modal').classList.add('hidden');
 };
 
-window.confirmDelete = async function() {
+window.confirmDelete = async function () {
     if (!currentDeleteItemId) return;
 
     const btn = document.getElementById('btn-confirm-delete');
@@ -549,7 +550,7 @@ window.confirmDelete = async function() {
 
         window.showToast("تم حذف الطبق بنجاح", "success");
         window.closeDeleteModal();
-        
+
         const newData = await window.fetchMenu();
         window.renderMenuEditor(newData);
 
@@ -563,21 +564,21 @@ window.confirmDelete = async function() {
     }
 };
 
-window.saveMenuItem = async function(id) {
+window.saveMenuItem = async function (id) {
     const newName = document.getElementById(`name-${id}`).value;
     const newDesc = document.getElementById(`desc-${id}`).value;
     const price = parseFloat(document.getElementById(`price-${id}`).value);
     const status = document.getElementById(`status-${id}`).value;
-    
+
     if (isNaN(price)) {
         window.showToast("الرجاء إدخال سعر صحيح", "error");
         return;
     }
-    
+
     await window.updateMenuItem(id, { "Name": newName, "Description": newDesc, "Price": price, "Availability": status }, 'btn-save-' + id);
 };
 
-window.savePromoPrice = async function(id) {
+window.savePromoPrice = async function (id) {
     const promoInput = document.getElementById(`promo-${id}`).value;
     const promoPrice = parseFloat(promoInput);
     if (isNaN(promoPrice) || promoPrice <= 0) {
@@ -587,13 +588,13 @@ window.savePromoPrice = async function(id) {
     await window.updateMenuItem(id, { "PromoPrice": promoPrice }, null);
 };
 
-window.clearPromoPrice = async function(id) {
+window.clearPromoPrice = async function (id) {
     const promoInput = document.getElementById(`promo-${id}`);
-    if(promoInput) promoInput.value = '';
+    if (promoInput) promoInput.value = '';
     await window.updateMenuItem(id, { "PromoPrice": null }, null);
 };
 
-window.submitNewDish = async function() {
+window.submitNewDish = async function () {
     const btn = document.getElementById('btn-submit-dish');
     const nameInput = document.getElementById('add-name');
     const descInput = document.getElementById('add-desc');
@@ -632,27 +633,27 @@ window.submitNewDish = async function() {
     btn.innerHTML = `<span class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-black"></div> جاري الرفع...</span>`;
     btn.disabled = true;
     btn.classList.add('opacity-70', 'cursor-not-allowed');
-    
+
     try {
         let uploadedFileName = null;
-        
+
         if (imageFile) {
             const formData = new FormData();
             formData.append("file", imageFile);
-            
+
             const uploadResponse = await fetch(`https://baserow.vidsai.site/api/user-files/upload-file/`, {
                 method: 'POST',
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}` },
                 body: formData
             });
-            
+
             if (!uploadResponse.ok) {
                 const errUpload = await uploadResponse.json();
                 throw new Error("فشل رفع الصورة: " + (errUpload.error || ""));
             }
-            
+
             const uploadedFileObj = await uploadResponse.json();
-            if(uploadedFileObj && uploadedFileObj.name) {
+            if (uploadedFileObj && uploadedFileObj.name) {
                 uploadedFileName = uploadedFileObj.name;
             }
         }
@@ -660,7 +661,7 @@ window.submitNewDish = async function() {
         const payload = {
             "Name": name,
             "Description": desc,
-            "Price": price, 
+            "Price": price,
             "Category": finalCategory,
             "Availability": "متوفر"
         };
@@ -671,9 +672,9 @@ window.submitNewDish = async function() {
 
         const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true`, {
             method: 'POST',
-            headers: { 
-                "Authorization": `Token ${BASEROW_TOKEN}`, 
-                "Content-Type": "application/json" 
+            headers: {
+                "Authorization": `Token ${BASEROW_TOKEN}`,
+                "Content-Type": "application/json"
             },
             body: JSON.stringify(payload)
         });
@@ -693,20 +694,20 @@ window.submitNewDish = async function() {
         }
 
         window.showSuccessPopup();
-        
+
         nameInput.value = '';
         descInput.value = '';
         priceInput.value = '';
-        if(imgInput) imgInput.value = '';
+        if (imgInput) imgInput.value = '';
         catInput.value = 'pizza';
         window.removeAddDishImage();
-        
+
         const customCatInput = document.getElementById('custom-category-input');
         if (customCatInput) {
             customCatInput.value = '';
             customCatInput.classList.add('hidden');
         }
-        
+
     } catch (error) {
         console.error("Baserow API Error Details:", error);
         window.showToast("خطأ: " + error.message, "error");
