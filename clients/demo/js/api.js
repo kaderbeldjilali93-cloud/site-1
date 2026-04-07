@@ -2,7 +2,7 @@
 // 🌐 API Calls (دوال الاتصال بقاعدة بيانات Baserow)
 // =========================================================
 
-window.fetchOrders = async function(tableId) {
+window.fetchOrders = async function (tableId) {
     try {
         const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true`, {
             method: 'GET',
@@ -17,7 +17,7 @@ window.fetchOrders = async function(tableId) {
     }
 };
 
-window.fetchMenu = async function() {
+window.fetchMenu = async function () {
     try {
         const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true`, {
             method: 'GET',
@@ -25,10 +25,10 @@ window.fetchMenu = async function() {
         });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-        
+
         const todayStr = window.getLocalYYYYMMDD();
         const lastAutoResetDate = localStorage.getItem('last_auto_reset_date');
-        
+
         if (lastAutoResetDate !== todayStr) {
             const itemsToReset = data.results.filter(item => {
                 const availVal = (typeof item.Availability === 'object' && item.Availability) ? item.Availability.value : item.Availability;
@@ -59,9 +59,9 @@ window.fetchMenu = async function() {
     }
 };
 
-window.updateOrderStatus = async function(rowId, newStatus) {
+window.updateOrderStatus = async function (rowId, newStatus) {
     const btn = document.getElementById(`btn-done-${rowId}`);
-    if(btn) { btn.innerHTML = `...`; btn.disabled = true; }
+    if (btn) { btn.innerHTML = `...`; btn.disabled = true; }
 
     try {
         await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${rowId}/?user_field_names=true`, {
@@ -72,7 +72,7 @@ window.updateOrderStatus = async function(rowId, newStatus) {
         const data = await window.fetchOrders(ORDERS_TABLE_ID);
         STATE.latestKdsOrders = data;
         STATE.lastFetchedOrders = data;
-        
+
         const currentView = localStorage.getItem(STATE.storageKeys.lastView);
         if (STATE.currentRole === 'kitchen' || currentView === 'kds') {
             window.renderKDS(data);
@@ -87,14 +87,14 @@ window.updateOrderStatus = async function(rowId, newStatus) {
     } catch (error) {
         console.warn("API Error:", error.message);
         window.showToast("فشل تحديث الحالة. تأكد من الاتصال.", "error");
-        if(btn) { btn.innerHTML = 'جاهز ✅'; btn.disabled = false; }
+        if (btn) { btn.innerHTML = 'جاهز ✅'; btn.disabled = false; }
     }
 };
 
-window.updateMenuItem = async function(rowId, updateData, btnId = null) {
+window.updateMenuItem = async function (rowId, updateData, btnId = null) {
     const btn = btnId ? document.getElementById(btnId) : null;
     let originalBtnText = '';
-    
+
     if (btn) {
         originalBtnText = btn.innerHTML;
         btn.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-current"></div> جاري...`;
@@ -108,20 +108,20 @@ window.updateMenuItem = async function(rowId, updateData, btnId = null) {
             headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
             body: JSON.stringify(updateData)
         });
-        
+
         if (!response.ok) {
             throw new Error("فشل الاتصال بقاعدة البيانات");
         }
-        
+
         const data = await window.fetchMenu();
-        
+
         const currentView = localStorage.getItem(STATE.storageKeys.lastView);
         if (currentView === 'menu_promo') {
             window.renderPromoEditor(data);
         } else {
             window.renderMenuEditor(data);
         }
-        
+
         window.showSuccessPopup();
     } catch (error) {
         console.warn("API Error:", error.message);
@@ -135,9 +135,9 @@ window.updateMenuItem = async function(rowId, updateData, btnId = null) {
     }
 };
 
-window.fetchWaiterCalls = async function() {
+window.fetchWaiterCalls = async function () {
     try {
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${CALLS_TABLE_ID}/?user_field_names=true`, {
+        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${CALLS_TABLE_ID}/?user_field_names=true&size=100&order_by=-id`, {
             method: 'GET',
             headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
         });
@@ -156,7 +156,7 @@ window.fetchWaiterCalls = async function() {
 
             if (statusVal === 'قيد الانتظار') {
                 const rawTable = row.table || row.Table;
-                const tableNum = parseInt(String(rawTable || '').trim()); 
+                const tableNum = parseInt(String(rawTable || '').trim());
                 if (!isNaN(tableNum)) {
                     currentActiveCalls.push(tableNum);
                     currentActiveRows[tableNum] = row.id;
@@ -166,7 +166,7 @@ window.fetchWaiterCalls = async function() {
         });
 
         if (newCallIds.length > 0) {
-            if (!STATE.isMuted) { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(()=>{}); }
+            if (!STATE.isMuted) { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(() => { }); }
             newCallIds.forEach(t => window.showToast(`نداء جديد من طاولة ${t}`, "success"));
         }
 
@@ -178,16 +178,15 @@ window.fetchWaiterCalls = async function() {
             if (STATE.activeCalls.length > 0) badge.classList.remove('hidden');
             else badge.classList.add('hidden');
         }
-        
-        const currentTitle = document.querySelector('#dynamic-content h2');
-        if (currentTitle && currentTitle.textContent.includes('نداءات')) window.renderTableView();
+
+        if (localStorage.getItem(STATE.storageKeys.lastView) === 'tables') window.renderTableView();
 
     } catch (e) {
         console.warn("Failed to fetch waiter calls (Network Error):", e.message);
     }
 };
 
-window.resolveTableCall = async function(tableNum) {
+window.resolveTableCall = async function (tableNum) {
     const rowId = STATE.activeCallRows[tableNum];
     if (!rowId) {
         window.showToast("خطأ: لا يمكن العثور على معرف النداء", "error");
@@ -197,7 +196,7 @@ window.resolveTableCall = async function(tableNum) {
     try {
         const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${CALLS_TABLE_ID}/${rowId}/?user_field_names=true`, {
             method: 'PATCH',
-            headers: { 
+            headers: {
                 "Authorization": `Token ${BASEROW_TOKEN}`,
                 "Content-Type": "application/json"
             },
@@ -210,15 +209,15 @@ window.resolveTableCall = async function(tableNum) {
 
     STATE.activeCalls = STATE.activeCalls.filter(t => t !== tableNum);
     delete STATE.activeCallRows[tableNum];
-    
+
     window.renderTableView();
-    
+
     const badge = document.getElementById('tables-badge');
     if (badge) {
         if (STATE.activeCalls.length > 0) badge.classList.remove('hidden');
         else badge.classList.add('hidden');
     }
-    
+
     window.showToast(`تمت الاستجابة للطاولة ${tableNum}`, 'success');
-    window.fetchWaiterCalls().catch(()=>console.warn("Sync failed"));
+    window.fetchWaiterCalls().catch(() => console.warn("Sync failed"));
 };
