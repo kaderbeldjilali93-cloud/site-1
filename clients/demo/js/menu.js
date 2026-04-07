@@ -319,7 +319,7 @@ window.renderMenuEditor = function (items) {
                 </div>
                 <div>
                     <label class="text-xs text-gray-400 block mb-1">السعر (${sysCurrency})</label>
-                    <input type="number" id="price-${item.id}" value="${price}" class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition">
+                    <input type="number" id="price-${item.id}" value="${price}" onfocus="this.select()" class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition">
                 </div>
                 <div class="flex items-center justify-between mt-auto pt-2 gap-2">
                     <input type="hidden" id="status-${item.id}" value="${currentStatus}">
@@ -416,11 +416,44 @@ window.renderPromoEditor = function (items) {
     dynamicContent.appendChild(grid);
 };
 
-window.renderMenuAdd = function () {
+window.renderMenuAdd = async function () {
     const dynamicContent = document.getElementById('dynamic-content');
     if (!dynamicContent) return;
     dynamicContent.innerHTML = '';
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
+
+    // جلب التصنيفات الموجودة من قاعدة البيانات
+    const defaultCategories = [
+        { value: 'pizza', label: 'بيتزا (Pizza)' },
+        { value: 'burger', label: 'برجر (Burger)' },
+        { value: 'boissons', label: 'مشروبات (Boissons)' },
+        { value: 'suppléments', label: 'إضافات (Suppléments)' }
+    ];
+    const defaultValues = defaultCategories.map(c => c.value.toLowerCase());
+
+    try {
+        if (!STATE.cachedMenuItems || STATE.cachedMenuItems.length === 0) {
+            STATE.cachedMenuItems = await window.fetchMenu();
+        }
+        const existingCats = new Set();
+        (STATE.cachedMenuItems || []).forEach(item => {
+            const cat = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || '');
+            const catTrimmed = String(cat).trim();
+            if (catTrimmed && !defaultValues.includes(catTrimmed.toLowerCase())) {
+                existingCats.add(catTrimmed);
+            }
+        });
+        existingCats.forEach(cat => {
+            defaultCategories.push({ value: cat, label: cat });
+        });
+    } catch (e) {
+        console.warn('Could not load existing categories:', e);
+    }
+
+    let categoryOptionsHtml = defaultCategories.map(c =>
+        `<option value="${c.value}">${c.label}</option>`
+    ).join('\n                            ');
+    categoryOptionsHtml += '\n                            <option value="custom" class="text-brand font-bold bg-gray-800">+ إضافة تصنيف جديد...</option>';
 
     const container = document.createElement('div');
     container.className = "max-w-2xl mx-auto pb-10 mt-6";
@@ -429,7 +462,7 @@ window.renderMenuAdd = function () {
     card.className = "bg-gray-800 border border-gray-700 rounded-2xl shadow-xl p-6 md:p-8";
 
     card.innerHTML = `
-        <div class="space-y-5">
+        <div class="space-y-8">
             <div>
                 <label class="block text-sm font-medium text-gray-300 mb-2">اسم الطبق <span class="text-red-500">*</span></label>
                 <input type="text" id="add-name" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition" placeholder="مثال: بيتزا مارغريتا">
@@ -443,17 +476,13 @@ window.renderMenuAdd = function () {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">السعر (${sysCurrency}) <span class="text-red-500">*</span></label>
-                    <input type="number" id="add-price" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition" placeholder="مثال: 500">
+                    <input type="number" id="add-price" onfocus="this.select()" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition" placeholder="مثال: 500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">التصنيف</label>
                     <div class="relative">
                         <select id="add-category" onchange="window.toggleCustomCategory(this)" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition appearance-none">
-                            <option value="pizza">بيتزا (Pizza)</option>
-                            <option value="burger">برجر (Burger)</option>
-                            <option value="boissons">مشروبات (Boissons)</option>
-                            <option value="suppléments">إضافات (Suppléments)</option>
-                            <option value="custom" class="text-brand font-bold bg-gray-800">+ إضافة تصنيف جديد...</option>
+                            ${categoryOptionsHtml}
                         </select>
                         <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -696,6 +725,7 @@ window.submitNewDish = async function () {
         }
 
         window.showSuccessPopup();
+        STATE.cachedMenuItems = null; // مسح الكاش لتحديث التصنيفات عند الإضافة القادمة
 
         nameInput.value = '';
         descInput.value = '';

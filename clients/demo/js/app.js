@@ -6,7 +6,7 @@ const loginScreen = document.getElementById('login-screen');
 const dashboardScreen = document.getElementById('dashboard-screen');
 const loginForm = document.getElementById('loginForm');
 const contentFrame = document.getElementById('content-frame');
-const dynamicContent = document.getElementById('dynamic-content'); 
+const dynamicContent = document.getElementById('dynamic-content');
 const welcomeState = document.getElementById('welcome-state');
 const loader = document.getElementById('loader');
 const logoutModal = document.getElementById('logout-modal');
@@ -22,22 +22,22 @@ window.addEventListener('DOMContentLoaded', () => {
         window.authenticateUser(savedUser, CLIENTS_DB[savedUser].links, savedRole);
         if (savedRole === 'kitchen') window.loadView('kds');
         else if (lastView && CLIENTS_DB[savedUser].links[lastView]) window.loadView(lastView);
-        else window.loadView('kds'); 
+        else window.loadView('kds');
     }
 });
 
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const usernameInput = document.getElementById('restaurantName').value.trim();
         const passwordInput = document.getElementById('password').value;
         const submitBtn = loginForm.querySelector('button[type="submit"]');
         const originalBtnText = submitBtn.innerHTML;
-        
+
         submitBtn.innerHTML = `<span class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-black"></div> جاري التحقق...</span>`;
         submitBtn.disabled = true;
-        
+
         let role = null;
         let currentLinks = null;
 
@@ -46,24 +46,24 @@ if (loginForm) {
                 method: 'GET',
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
             });
-            
+
             if (!response.ok) throw new Error("API Error");
             const data = await response.json();
-            
+
             if (data.results && data.results.length > 0) {
                 const row = data.results[0];
                 const adminPass = row.AdminPass ?? '123';
                 const kitchenPass = row.KitchenPass ?? 'k123';
-                
+
                 if (passwordInput === adminPass) role = 'admin';
                 else if (passwordInput === kitchenPass) role = 'kitchen';
-                
+
                 if (role) {
                     currentLinks = CLIENTS_DB[usernameInput] ? CLIENTS_DB[usernameInput].links : CLIENTS_DB['demo'].links;
                     if (row.Currency) localStorage.setItem('system_currency', row.Currency);
                 }
             } else {
-                 throw new Error("No data in settings");
+                throw new Error("No data in settings");
             }
         } catch (err) {
             console.warn("Cloud login failed, using fallback:", err);
@@ -89,70 +89,70 @@ if (loginForm) {
     });
 }
 
-window.authenticateUser = function(username, links, role) {
+window.authenticateUser = function (username, links, role) {
     localStorage.setItem(STATE.storageKeys.username, username);
     localStorage.setItem(STATE.storageKeys.role, role);
-    
+
     STATE.currentUser = username;
     STATE.currentLinks = links;
     STATE.currentRole = role;
-    
+
     const tablesBtn = document.getElementById('btn-tables');
 
     if (role === 'kitchen') {
         sidebar.classList.remove('flex', 'md:relative', 'md:translate-x-0');
         sidebar.classList.add('hidden');
-        if(tablesBtn) tablesBtn.style.display = 'none'; 
+        if (tablesBtn) tablesBtn.style.display = 'none';
     } else {
         sidebar.classList.remove('hidden');
         sidebar.classList.add('flex', 'md:relative', 'md:translate-x-0');
-        if(tablesBtn) tablesBtn.style.display = 'flex';
-        
-        window.fetchWaiterCalls(); 
+        if (tablesBtn) tablesBtn.style.display = 'flex';
+
+        window.fetchWaiterCalls();
         if (STATE.waiterInterval) clearInterval(STATE.waiterInterval);
-        STATE.waiterInterval = setInterval(window.fetchWaiterCalls, 5000); 
+        STATE.waiterInterval = setInterval(window.fetchWaiterCalls, 5000);
     }
 
     loginScreen.style.display = 'none';
     dashboardScreen.style.display = 'flex';
 };
 
-window.logout = function() { logoutModal.classList.remove('hidden'); };
-window.closeLogoutModal = function() { logoutModal.classList.add('hidden'); };
+window.logout = function () { logoutModal.classList.remove('hidden'); };
+window.closeLogoutModal = function () { logoutModal.classList.add('hidden'); };
 
-window.confirmLogout = function() {
+window.confirmLogout = function () {
     if (STATE.pollingInterval) clearInterval(STATE.pollingInterval);
     if (STATE.waiterInterval) clearInterval(STATE.waiterInterval);
-    
+
     localStorage.removeItem(STATE.storageKeys.username);
     localStorage.removeItem(STATE.storageKeys.role);
     localStorage.removeItem(STATE.storageKeys.lastView);
-    
-    STATE.currentUser = null; 
-    STATE.currentRole = null; 
+
+    STATE.currentUser = null;
+    STATE.currentRole = null;
     STATE.currentLinks = {};
-    STATE.knownOrders = {}; 
+    STATE.knownOrders = {};
     STATE.isFirstFetch = true;
-    
-    sidebar.classList.remove('hidden'); 
+
+    sidebar.classList.remove('hidden');
     sidebar.classList.add('flex', 'md:relative', 'md:translate-x-0');
-    
+
     window.closeLogoutModal();
     dashboardScreen.style.display = 'none';
     loginScreen.style.display = 'flex';
-    
-    contentFrame.src = ''; 
-    contentFrame.classList.add('hidden'); 
+
+    contentFrame.src = '';
+    contentFrame.classList.add('hidden');
     dynamicContent.classList.add('hidden');
-    welcomeState.style.display = 'flex'; 
+    welcomeState.style.display = 'flex';
     loader.style.display = 'none';
-    
-    document.getElementById('restaurantName').value = ''; 
+
+    document.getElementById('restaurantName').value = '';
     document.getElementById('password').value = '';
     window.updateNavStyles('');
 };
 
-window.showSuccessPopup = function() {
+window.showSuccessPopup = function () {
     const modal = document.getElementById('success-modal');
     modal.classList.remove('hidden');
     setTimeout(() => {
@@ -160,9 +160,9 @@ window.showSuccessPopup = function() {
     }, 1500);
 };
 
-window.updateFileName = function(input) {
+window.updateFileName = function (input) {
     const label = document.getElementById('file-upload-label');
-    if(!label) return;
+    if (!label) return;
     if (input.files && input.files.length > 0) {
         const fileName = input.files[0].name;
         label.className = "w-full flex items-center justify-start gap-2 bg-gray-700 text-white font-bold rounded-lg px-4 py-3 cursor-pointer transition shadow-inner border border-gray-600";
@@ -179,9 +179,9 @@ window.updateFileName = function(input) {
     }
 };
 
-window.toggleCustomCategory = function(select) {
+window.toggleCustomCategory = function (select) {
     const customInput = document.getElementById('custom-category-input');
-    if(!customInput) return;
+    if (!customInput) return;
     if (select.value === 'custom') {
         customInput.classList.remove('hidden');
         customInput.focus();
@@ -190,7 +190,7 @@ window.toggleCustomCategory = function(select) {
     }
 };
 
-window.toggleMenuAccordion = function() {
+window.toggleMenuAccordion = function () {
     const submenu = document.getElementById('menu-submenu');
     const icon = document.getElementById('menu-accordion-icon');
     if (submenu.classList.contains('hidden')) {
@@ -204,7 +204,7 @@ window.toggleMenuAccordion = function() {
     }
 };
 
-window.toggleSettingsAccordion = function() {
+window.toggleSettingsAccordion = function () {
     const submenu = document.getElementById('settings-submenu');
     const icon = document.getElementById('settings-accordion-icon');
     if (submenu.classList.contains('hidden')) {
@@ -218,7 +218,7 @@ window.toggleSettingsAccordion = function() {
     }
 };
 
-window.parseCustomDate = function(dateStr) {
+window.parseCustomDate = function (dateStr) {
     if (!dateStr) return new Date(NaN);
     let date = new Date(dateStr);
     if (!isNaN(date.getTime())) return date;
@@ -237,7 +237,7 @@ window.parseCustomDate = function(dateStr) {
     return new Date(NaN);
 };
 
-window.toggleMute = function() {
+window.toggleMute = function () {
     STATE.isMuted = !STATE.isMuted;
     const iconOn = document.getElementById('icon-sound-on');
     const iconOff = document.getElementById('icon-sound-off');
@@ -252,13 +252,13 @@ window.toggleMute = function() {
     }
 };
 
-window.showToast = function(message, type = 'success') {
+window.showToast = function (message, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     const isSuccess = type === 'success';
     const borderColor = isSuccess ? 'border-green-500' : 'border-red-500';
     const iconColor = isSuccess ? 'text-green-500' : 'text-red-500';
-    const iconSvg = isSuccess 
+    const iconSvg = isSuccess
         ? '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
         : '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
 
@@ -269,31 +269,31 @@ window.showToast = function(message, type = 'success') {
     requestAnimationFrame(() => toast.classList.remove('-translate-x-[120%]', 'opacity-0'));
     setTimeout(() => {
         toast.classList.add('-translate-x-[120%]', 'opacity-0');
-        setTimeout(() => toast.remove(), 500); 
+        setTimeout(() => toast.remove(), 500);
     }, 3000);
 };
 
-window.toggleSidebar = function() {
+window.toggleSidebar = function () {
     document.getElementById('sidebar').classList.toggle('translate-x-full');
     document.getElementById('sidebar-overlay').classList.toggle('hidden');
 };
 
-window.toggleFullscreen = function() {
+window.toggleFullscreen = function () {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(err => console.log(err));
     else if (document.exitFullscreen) document.exitFullscreen();
 };
 
-window.formatOrderTime = function(order) {
+window.formatOrderTime = function (order) {
     const rawTime = order['Created at'] || order.Time || order.time || order.created_on;
     if (!rawTime) return '--:--';
     try {
         const date = window.parseCustomDate(rawTime);
-        if (isNaN(date.getTime())) return rawTime; 
+        if (isNaN(date.getTime())) return rawTime;
         return date.toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit', hour12: false });
     } catch (e) { return '--:--'; }
 };
 
-window.calculateElapsedMinutes = function(rawTime) {
+window.calculateElapsedMinutes = function (rawTime) {
     if (!rawTime) return 0;
     try {
         const orderDate = window.parseCustomDate(rawTime);
@@ -303,13 +303,13 @@ window.calculateElapsedMinutes = function(rawTime) {
     } catch (e) { return 0; }
 };
 
-window.getTimerStyle = function(minutes) {
+window.getTimerStyle = function (minutes) {
     if (minutes <= 1) return "text-green-400";
     if (minutes <= 3) return "text-yellow-400";
     return "text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse font-bold";
 };
 
-window.formatTimerText = function(minutes) {
+window.formatTimerText = function (minutes) {
     if (minutes <= 0) return 'الآن';
     if (minutes === 1) return 'دقيقة واحدة';
     if (minutes === 2) return 'دقيقتين';
@@ -317,20 +317,20 @@ window.formatTimerText = function(minutes) {
     return `${minutes} دقيقة`;
 };
 
-window.isOrderFromToday = function(rawTime) {
+window.isOrderFromToday = function (rawTime) {
     if (!rawTime) return false;
     try {
         const orderDate = window.parseCustomDate(rawTime);
         if (isNaN(orderDate.getTime())) return false;
         const now = new Date();
         let businessDayStart = new Date();
-        businessDayStart.setHours(6, 0, 0, 0); 
+        businessDayStart.setHours(6, 0, 0, 0);
         if (now.getHours() < 6) businessDayStart.setDate(businessDayStart.getDate() - 1);
         return orderDate >= businessDayStart;
     } catch (e) { return false; }
 };
 
-window.isOrderFromSelectedDate = function(rawTime, dateString) {
+window.isOrderFromSelectedDate = function (rawTime, dateString) {
     if (!rawTime || !dateString) return false;
     try {
         const orderDate = window.parseCustomDate(rawTime);
@@ -346,14 +346,14 @@ window.isOrderFromSelectedDate = function(rawTime, dateString) {
     }
 };
 
-window.calculateDailySequence = function(orders) {
+window.calculateDailySequence = function (orders) {
     return [...orders].reverse().map((order, index) => ({
         ...order,
         dailySequence: `#D-${String(index + 1).padStart(3, '0')}`
     })).reverse();
 };
 
-window.processOrderAlerts = function(orders) {
+window.processOrderAlerts = function (orders) {
     const getStatus = (o) => (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
 
     orders.forEach(order => {
@@ -362,14 +362,14 @@ window.processOrderAlerts = function(orders) {
         if (!STATE.isFirstFetch) {
             if (STATE.knownOrders[order.id] === undefined) {
                 order.isNew = true;
-                if (!STATE.isMuted) { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(()=>{}); }
-            } 
+                if (!STATE.isMuted) { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(() => { }); }
+            }
             else if (STATE.knownOrders[order.id] !== 'جاهز' && currentStatus === 'جاهز') {
                 order.justReady = true;
-                if (!STATE.isMuted) { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(()=>{}); }
+                if (!STATE.isMuted) { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(() => { }); }
             }
         }
-        
+
         STATE.knownOrders[order.id] = currentStatus;
     });
 
@@ -377,7 +377,7 @@ window.processOrderAlerts = function(orders) {
     return orders;
 };
 
-window.removeImage = function(id) {
+window.removeImage = function (id) {
     const preview = document.getElementById(`img-preview-${id}`);
     if (preview) {
         preview.src = 'https://placehold.co/400x300/374151/FFFFFF?text=No+Image';
@@ -386,14 +386,14 @@ window.removeImage = function(id) {
     if (btn) btn.classList.add('hidden');
 };
 
-window.loadView = async function(viewType) {
+window.loadView = async function (viewType) {
     if (window.innerWidth < 768) {
         document.getElementById('sidebar').classList.add('translate-x-full');
         document.getElementById('sidebar-overlay').classList.add('hidden');
     }
 
     if (STATE.pollingInterval) { clearInterval(STATE.pollingInterval); STATE.pollingInterval = null; }
-    
+
     if (STATE.currentRole === 'kitchen' && viewType !== 'kds') return;
     if (STATE.currentRole === 'admin') { window.updateNavStyles(viewType); localStorage.setItem(STATE.storageKeys.lastView, viewType); }
 
@@ -417,35 +417,35 @@ window.loadView = async function(viewType) {
 
     try {
         if (viewType === 'kds') {
-            const runKDS = async () => { 
-                try { 
-                    const data = await window.fetchOrders(ORDERS_TABLE_ID); 
-                    STATE.latestKdsOrders = data; 
-                    window.renderKDS(data); 
-                } catch (e) { console.warn(e); } 
+            const runKDS = async () => {
+                try {
+                    const data = await window.fetchOrders(ORDERS_TABLE_ID);
+                    STATE.latestKdsOrders = data;
+                    window.renderKDS(data);
+                } catch (e) { console.warn(e); }
             };
             await runKDS();
             STATE.pollingInterval = setInterval(runKDS, 10000);
-        } 
+        }
         else if (viewType === 'cashier') {
             const runCashier = async () => { try { const data = await window.fetchOrders(ORDERS_TABLE_ID); window.renderCashier(data); } catch (e) { console.warn(e); } };
             await runCashier();
             STATE.pollingInterval = setInterval(runCashier, 10000);
         }
         else if (viewType === 'menu_quick') {
-            const data = await window.fetchMenu(); 
-            window.renderMenuEditor(data); 
+            const data = await window.fetchMenu();
+            window.renderMenuEditor(data);
         }
         else if (viewType === 'menu_promo') {
-            const data = await window.fetchMenu(); 
-            window.renderPromoEditor(data); 
+            const data = await window.fetchMenu();
+            window.renderPromoEditor(data);
         }
         else if (viewType === 'menu_add') {
-            window.renderMenuAdd();
+            await window.renderMenuAdd();
         }
         else if (viewType === 'analytics') {
             const data = await window.fetchOrders(ORDERS_TABLE_ID);
-            STATE.analyticsData = data; 
+            STATE.analyticsData = data;
             await window.renderAnalytics(data, 'today');
         }
         else if (viewType === 'tables') {
@@ -460,7 +460,7 @@ window.loadView = async function(viewType) {
         else if (viewType === 'settings_account') {
             await window.renderSettingsAccount();
         }
-        
+
         const url = STATE.currentLinks[viewType];
         if (url && url !== "api_mode" && !dynamicContent.innerHTML) {
             if (url.includes("YOUR_DEMO")) window.showToast("⚠️ هذا حساب تجريبي. البيانات غير حقيقية.", "error");
@@ -474,7 +474,7 @@ window.loadView = async function(viewType) {
     }
 };
 
-window.updateNavStyles = function(activeView) {
+window.updateNavStyles = function (activeView) {
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('bg-brand', 'text-black', 'text-white');
         btn.classList.add('text-gray-300', 'hover:bg-gray-800');
@@ -489,14 +489,14 @@ window.updateNavStyles = function(activeView) {
         if (activeBtn.classList.contains('sub-nav-btn')) {
             activeBtn.classList.remove('text-gray-400', 'hover:text-white', 'hover:bg-gray-700');
             activeBtn.classList.add('text-brand', 'bg-gray-700', 'font-bold');
-            
+
             const parentMenuBtn = document.getElementById('btn-menu-parent');
             const parentSettingsBtn = document.getElementById('btn-settings-parent');
-            
+
             if (activeView.startsWith('menu_') && parentMenuBtn) {
                 parentMenuBtn.classList.remove('text-gray-300', 'hover:bg-gray-800');
                 parentMenuBtn.classList.add('text-white');
-                
+
                 const submenu = document.getElementById('menu-submenu');
                 const icon = document.getElementById('menu-accordion-icon');
                 if (submenu && submenu.classList.contains('hidden')) {
@@ -507,7 +507,7 @@ window.updateNavStyles = function(activeView) {
             } else if (activeView.startsWith('settings_') && parentSettingsBtn) {
                 parentSettingsBtn.classList.remove('text-gray-300', 'hover:bg-gray-800');
                 parentSettingsBtn.classList.add('text-white');
-                
+
                 const submenu = document.getElementById('settings-submenu');
                 const icon = document.getElementById('settings-accordion-icon');
                 if (submenu && submenu.classList.contains('hidden')) {
