@@ -480,13 +480,18 @@ window.renderMenuAdd = async function () {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">التصنيف</label>
-                    <div class="relative">
-                        <select id="add-category" onchange="window.toggleCustomCategory(this)" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition appearance-none">
-                            ${categoryOptionsHtml}
-                        </select>
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <select id="add-category" onchange="window.toggleCustomCategory(this); window.toggleCategoryDeleteBtn(this)" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition appearance-none">
+                                ${categoryOptionsHtml}
+                            </select>
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
                         </div>
+                        <button type="button" id="btn-delete-custom-category" onclick="window.deleteCustomCategory()" class="hidden bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg shadow-lg transition" title="حذف هذا التصنيف وكل أطباقه">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
                     </div>
                     <input type="text" id="custom-category-input" class="w-full bg-gray-800 border border-brand text-white rounded-lg px-4 py-3 mt-3 focus:ring-2 focus:ring-brand outline-none transition hidden shadow-inner" placeholder="اكتب اسم التصنيف الجديد هنا (مثال: طاكوس، حلويات)...">
                 </div>
@@ -581,6 +586,7 @@ window.confirmDelete = async function () {
 
         window.showToast("تم حذف الطبق بنجاح", "success");
         window.closeDeleteModal();
+        STATE.cachedMenuItems = null; // Fix caching issue where deleted item's category remained
 
         const newData = await window.fetchMenu();
         window.renderMenuEditor(newData);
@@ -747,5 +753,66 @@ window.submitNewDish = async function () {
         btn.innerHTML = originalBtnText;
         btn.disabled = false;
         btn.classList.remove('opacity-70', 'cursor-not-allowed');
+    }
+};
+
+window.toggleCategoryDeleteBtn = function (select) {
+    const btn = document.getElementById('btn-delete-custom-category');
+    if (!btn) return;
+    const cat = select.value;
+    const defaultCats = ['pizza', 'burger', 'boissons', 'suppléments', 'custom'];
+    if (defaultCats.includes(cat.toLowerCase())) {
+        btn.classList.add('hidden');
+    } else {
+        btn.classList.remove('hidden');
+    }
+};
+
+window.deleteCustomCategory = async function () {
+    const select = document.getElementById('add-category');
+    const category = select.value;
+    const defaultCats = ['pizza', 'burger', 'boissons', 'suppléments', 'custom'];
+
+    if (defaultCats.includes(category.toLowerCase())) {
+        window.showToast("لا يمكن حذف التصنيفات الأساسية", "error");
+        return;
+    }
+
+    if (!confirm(`هل أنت متأكد من حذف تصنيف "${category}" بشكل نهائي؟\nملاحظة: سيتم حذف جميع الأطباق التابعة له أيضاً إذا بقيت موجودة!`)) {
+        return;
+    }
+
+    const btn = document.getElementById('btn-delete-custom-category');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mx-auto"></div>`;
+    btn.disabled = true;
+
+    try {
+        let itemsToDelete = [];
+        if (STATE.cachedMenuItems) {
+            itemsToDelete = STATE.cachedMenuItems.filter(item => {
+                const cat = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || '');
+                return String(cat).trim() === category;
+            });
+        }
+
+        const deletePromises = itemsToDelete.map(item =>
+            fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/${item.id}/`, {
+                method: 'DELETE',
+                headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+            })
+        );
+
+        await Promise.all(deletePromises);
+
+        window.showToast("تم حذف التصنيف بنجاح", "success");
+        STATE.cachedMenuItems = null; // Important: Clear cache to remove the category from memory
+        await window.renderMenuAdd();
+
+    } catch (error) {
+        console.error("Error deleting category:", error);
+        window.showToast("حدث خطأ أثناء الحذف", "error");
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
     }
 };
