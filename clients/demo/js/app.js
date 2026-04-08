@@ -185,6 +185,10 @@ window.toggleCustomCategory = function (select) {
     if (select.value === 'custom') {
         customInput.classList.remove('hidden');
         customInput.focus();
+    } else if (select.value === 'delete_category') {
+        customInput.classList.add('hidden');
+        if (window.openDeleteCategoryModal) window.openDeleteCategoryModal();
+        select.value = 'pizza'; // إرجاع القيمة الافتراضية
     } else {
         customInput.classList.add('hidden');
     }
