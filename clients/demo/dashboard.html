@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,15 +33,28 @@
         }
     </script>
     <style>
-        body { background-color: #111827; color: #fff; }
-        .hidden-section { display: none; }
-        iframe { border: none; width: 100%; height: 100%; }
+        body {
+            background-color: #111827;
+            color: #fff;
+        }
+
+        .hidden-section {
+            display: none;
+        }
+
+        iframe {
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+
         /* تأثير زجاجي خفيف */
         .glass {
             background: rgba(31, 41, 55, 0.7);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         /* تنسيق التحميل */
         .loader-container {
             position: absolute;
@@ -51,41 +65,87 @@
             align-items: center;
             z-index: 10;
         }
+
         /* تحسين شريط التمرير */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #1f2937; }
-        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #FF9900; }
-        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FF9900;
+        }
+
         /* تأثير النبض لزر التحديث المباشر */
         .live-indicator {
-            width: 8px; height: 8px;
+            width: 8px;
+            height: 8px;
             background-color: #10B981;
             border-radius: 50%;
             display: inline-block;
             box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
             animation: pulse-green 2s infinite;
         }
+
         @keyframes pulse-green {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
         }
 
         /* --- تنبيهات الطلبات (New Alerts) --- */
         @keyframes flashYellow {
-            0%, 100% { border-color: #4b5563; box-shadow: none; }
-            50% { border-color: #eab308; box-shadow: 0 0 20px rgba(234, 179, 8, 0.6); }
+
+            0%,
+            100% {
+                border-color: #4b5563;
+                box-shadow: none;
+            }
+
+            50% {
+                border-color: #eab308;
+                box-shadow: 0 0 20px rgba(234, 179, 8, 0.6);
+            }
         }
+
         .animate-new-order {
             animation: flashYellow 1.5s ease-in-out 4;
-            border: 2px solid transparent; 
+            border: 2px solid transparent;
         }
 
         @keyframes flashGreen {
-            0%, 100% { border-color: #4b5563; box-shadow: none; }
-            50% { border-color: #22c55e; box-shadow: 0 0 20px rgba(34, 197, 94, 0.6); }
+
+            0%,
+            100% {
+                border-color: #4b5563;
+                box-shadow: none;
+            }
+
+            50% {
+                border-color: #22c55e;
+                box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+            }
         }
+
         .animate-ready-order {
             animation: flashGreen 1.5s ease-in-out 4;
             border: 2px solid transparent;
@@ -108,20 +168,23 @@
                 size: 80mm auto;
                 margin: 0;
             }
-            body { 
-                background-color: #fff !important; 
-                color: #000 !important; 
-                margin: 0 !important; 
+
+            body {
+                background-color: #fff !important;
+                color: #000 !important;
+                margin: 0 !important;
                 padding: 0 !important;
                 font-family: 'Courier New', Courier, monospace, sans-serif !important;
             }
+
             /* إخفاء كل عناصر الواجهة باستثناء قسم الطباعة */
-            body > *:not(#print-section) { 
-                display: none !important; 
+            body>*:not(#print-section) {
+                display: none !important;
             }
-            #print-section { 
-                display: block !important; 
-                width: 80mm !important; 
+
+            #print-section {
+                display: block !important;
+                width: 80mm !important;
                 margin: 0 auto !important;
                 padding: 5mm !important;
                 font-size: 12px !important;
@@ -131,6 +194,7 @@
         }
     </style>
 </head>
+
 <body class="h-screen flex flex-col overflow-hidden">
 
     <!-- حاوية الطباعة الحرارية المخفية -->
@@ -141,32 +205,38 @@
     <!-- ========================================== -->
     <section id="login-screen" class="flex-grow flex items-center justify-center p-4 relative">
         <div class="absolute inset-0 overflow-hidden z-0 opacity-20">
-            <div class="absolute top-0 left-0 w-64 h-64 bg-brand rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
-            <div class="absolute bottom-0 right-0 w-64 h-64 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
+            <div
+                class="absolute top-0 left-0 w-64 h-64 bg-brand rounded-full mix-blend-multiply filter blur-3xl animate-pulse">
+            </div>
+            <div
+                class="absolute bottom-0 right-0 w-64 h-64 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl animate-pulse">
+            </div>
         </div>
 
         <div class="glass p-8 rounded-2xl shadow-2xl w-full max-w-md z-10 border-t-4 border-brand">
             <div class="text-center mb-8">
-                <h1 class="text-4xl font-extrabold text-white mb-2 tracking-wide">Resto<span class="text-brand">Pro</span></h1>
+                <h1 class="text-4xl font-extrabold text-white mb-2 tracking-wide">Resto<span
+                        class="text-brand">Pro</span></h1>
                 <p class="text-gray-400 text-sm">بوابة إدارة المطاعم الذكية</p>
             </div>
 
             <form id="loginForm" class="space-y-6">
                 <div>
-                    <label for="restaurantName" class="block text-sm font-medium text-gray-300 mb-2">اسم المطعم</label>
-                    <input type="text" id="restaurantName" required 
+                    <label for="restaurantName" class="block text-sm font-medium text-gray-300 mb-2">اسم
+                        المستخدم</label>
+                    <input type="text" id="restaurantName" required
                         class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition text-white placeholder-gray-500"
                         placeholder="أدخل اسم المستخدم">
                 </div>
-                
+
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-300 mb-2">كلمة المرور</label>
-                    <input type="password" id="password" required 
+                    <label for="password" class="block text-sm font-medium text-gray-300 mb-2">الرمز السري</label>
+                    <input type="password" id="password" required
                         class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition text-white placeholder-gray-500"
-                        placeholder="أدخل كلمة المرور">
+                        placeholder="أدخل الرمز السري">
                 </div>
 
-                <button type="submit" 
+                <button type="submit"
                     class="w-full bg-brand hover:bg-brand-dark text-black font-bold py-3 rounded-lg transition transform hover:scale-[1.02] shadow-lg">
                     تسجيل الدخول
                 </button>
@@ -179,122 +249,185 @@
     <!-- لوحة التحكم (The Dashboard) -->
     <!-- ========================================== -->
     <section id="dashboard-screen" class="h-full flex flex-col" style="display: none;">
-        
+
         <!-- الشريط العلوي (Header) -->
         <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center shadow-md z-20">
             <div class="flex items-center gap-3 overflow-hidden">
                 <!-- زر القائمة (Hamburger Menu) - يظهر في الهاتف فقط -->
-                <button onclick="window.toggleSidebar()" class="md:hidden text-gray-400 hover:text-white p-2 focus:outline-none shrink-0">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                <button onclick="window.toggleSidebar()"
+                    class="md:hidden text-gray-400 hover:text-white p-2 focus:outline-none shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
                 </button>
 
-                <div id="header-logo-container" class="bg-brand text-black font-bold rounded-lg p-2 text-xl flex items-center justify-center overflow-hidden w-10 h-10 shrink-0">
+                <div id="header-logo-container"
+                    class="bg-brand text-black font-bold rounded-lg p-2 text-xl flex items-center justify-center overflow-hidden w-10 h-10 shrink-0">
                     <span>RP</span>
                 </div>
                 <div class="truncate">
-                    <h2 id="header-restaurant-name" class="font-bold text-lg leading-tight truncate">Resto<span class="text-brand">Pro</span></h2>
+                    <h2 id="header-restaurant-name" class="font-bold text-lg leading-tight truncate">Resto<span
+                            class="text-brand">Pro</span></h2>
                 </div>
-                
+
                 <!-- العنوان الديناميكي للشاشة الحالية -->
-                <span id="global-page-title" class="text-gray-300 text-sm md:text-base font-bold mr-4 pr-4 border-r border-gray-600 truncate max-w-[150px] md:max-w-xs shrink-0 hidden sm:inline-block">لوحة القيادة</span>
+                <span id="global-page-title"
+                    class="text-gray-300 text-sm md:text-base font-bold mr-4 pr-4 border-r border-gray-600 truncate max-w-[150px] md:max-w-xs shrink-0 hidden sm:inline-block">لوحة
+                    القيادة</span>
             </div>
-            
+
             <div class="flex items-center gap-2 shrink-0">
                 <!-- زر كتم الصوت (Global Mute) -->
-                <button id="btn-mute" onclick="window.toggleMute()" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition" title="كتم/تفعيل الصوت">
-                    <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <button id="btn-mute" onclick="window.toggleMute()"
+                    class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition"
+                    title="كتم/تفعيل الصوت">
+                    <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                     </svg>
-                    <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 01-1-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                    <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden text-red-400"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 01-1-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
                     </svg>
                 </button>
 
                 <!-- زر ملء الشاشة -->
-                <button onclick="window.toggleFullscreen()" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition" title="ملء الشاشة">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                <button onclick="window.toggleFullscreen()"
+                    class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition"
+                    title="ملء الشاشة">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                     </svg>
                 </button>
 
-                <button onclick="window.logout()" class="text-sm text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">
+                <button onclick="window.logout()"
+                    class="text-sm text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition">
                     خروج
                 </button>
             </div>
         </header>
 
         <!-- خلفية شفافة للقائمة الجانبية في الهاتف -->
-        <div id="sidebar-overlay" onclick="window.toggleSidebar()" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+        <div id="sidebar-overlay" onclick="window.toggleSidebar()"
+            class="fixed inset-0 bg-black/60 z-30 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
 
         <!-- المحتوى الرئيسي (Main Layout) -->
         <div class="flex flex-1 overflow-hidden">
-            
+
             <!-- القائمة الجانبية (Sidebar) -->
-            <aside id="sidebar" class="fixed inset-y-0 right-0 z-40 transform translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-gray-900 border-l border-gray-800 flex flex-col justify-between flex-shrink-0 pt-16 md:pt-0">
+            <aside id="sidebar"
+                class="fixed inset-y-0 right-0 z-40 transform translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-gray-900 border-l border-gray-800 flex flex-col justify-between flex-shrink-0 pt-16 md:pt-0">
                 <nav class="p-2 space-y-2 mt-4">
                     <!-- زر المطبخ -->
-                    <button onclick="window.loadView('kds')" id="btn-kds" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
+                    <button onclick="window.loadView('kds')" id="btn-kds"
+                        class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">الطلبات الحالية (KDS)</span>
                     </button>
 
                     <!-- زر الكاشير -->
-                    <button onclick="window.loadView('cashier')" id="btn-cashier" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
+                    <button onclick="window.loadView('cashier')" id="btn-cashier"
+                        class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">سجل المبيعات (Cashier)</span>
                     </button>
 
                     <!-- زر نداءات الطاولات -->
-                    <button onclick="window.loadView('tables')" id="btn-tables" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
+                    <button onclick="window.loadView('tables')" id="btn-tables"
+                        class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">نداءات الطاولات</span>
                         <span id="tables-badge" class="absolute top-3 left-4 flex h-3 w-3 hidden">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                         </span>
                     </button>
 
                     <!-- زر المنيو (قائمة منسدلة) -->
                     <div class="relative">
-                        <button onclick="window.toggleMenuAccordion()" id="btn-menu-parent" class="nav-btn w-full flex justify-between items-center text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition">
+                        <button onclick="window.toggleMenuAccordion()" id="btn-menu-parent"
+                            class="nav-btn w-full flex justify-between items-center text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition">
                             <span class="font-medium">إدارة القائمة (Menu)</span>
-                            <svg id="menu-accordion-icon" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg id="menu-accordion-icon" class="w-4 h-4 transition-transform duration-300" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
                         <!-- الخيارات الفرعية (مخفية افتراضياً) -->
-                        <div id="menu-submenu" class="hidden flex-col gap-1 pl-2 pr-6 py-2 mt-1 bg-gray-800/50 rounded-lg border-r-2 border-gray-700">
-                            <button onclick="window.loadView('menu_quick')" id="btn-menu_quick" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                        <div id="menu-submenu"
+                            class="hidden flex-col gap-1 pl-2 pr-6 py-2 mt-1 bg-gray-800/50 rounded-lg border-r-2 border-gray-700">
+                            <button onclick="window.loadView('menu_quick')" id="btn-menu_quick"
+                                class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
                                 <span class="font-medium">التعديل السريع</span>
                             </button>
-                            <button onclick="window.loadView('menu_add')" id="btn-menu_add" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                            <button onclick="window.loadView('menu_add')" id="btn-menu_add"
+                                class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
                                 <span class="font-medium">إضافة طبق</span>
                             </button>
-                            <button onclick="window.loadView('menu_promo')" id="btn-menu_promo" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                            <button onclick="window.loadView('menu_promo')" id="btn-menu_promo"
+                                class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
                                 <span class="font-medium">إدارة الخصومات</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- زر الإحصائيات -->
-                    <button onclick="window.loadView('analytics')" id="btn-analytics" class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
+                    <button onclick="window.loadView('analytics')" id="menu-analytics"
+                        class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
                         <span class="font-medium">إحصائيات المبيعات</span>
                     </button>
-                    
+
+                    <!-- زر العمال -->
+                    <button onclick="window.loadView('staff')" id="menu-staff"
+                        class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
+                        <span class="font-medium">إدارة العمال</span>
+                    </button>
+
+                    <!-- زر المخزون -->
+                    <button onclick="window.loadView('inventory')" id="menu-inventory"
+                        class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
+                        <span class="font-medium">إدارة المخزون</span>
+                    </button>
+
                     <!-- زر الإعدادات (قائمة منسدلة جديدة) -->
-                    <div class="relative mt-2">
-                        <button onclick="window.toggleSettingsAccordion()" id="btn-settings-parent" class="nav-btn w-full flex justify-between items-center text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition">
+                    <div class="relative mt-2" id="menu-settings">
+                        <button onclick="window.toggleSettingsAccordion()" id="btn-settings-parent"
+                            class="nav-btn w-full flex justify-between items-center text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition">
                             <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                                    </path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
                                 <span class="font-medium">الإعدادات</span>
                             </div>
-                            <svg id="settings-accordion-icon" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg id="settings-accordion-icon" class="w-4 h-4 transition-transform duration-300"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
                         <!-- الخيارات الفرعية (الإعدادات) -->
-                        <div id="settings-submenu" class="hidden flex-col gap-1 pl-2 pr-6 py-2 mt-1 bg-gray-800/50 rounded-lg border-r-2 border-gray-700">
-                            <button onclick="window.loadView('settings_restaurant')" id="btn-settings_restaurant" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                        <div id="settings-submenu"
+                            class="hidden flex-col gap-1 pl-2 pr-6 py-2 mt-1 bg-gray-800/50 rounded-lg border-r-2 border-gray-700">
+                            <button onclick="window.loadView('settings_restaurant')" id="btn-settings_restaurant"
+                                class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
                                 <span class="font-medium">إعدادات المطعم</span>
                             </button>
-                            <button onclick="window.loadView('settings_print')" id="btn-settings_print" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                            <button onclick="window.loadView('settings_print')" id="btn-settings_print"
+                                class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
                                 <span class="font-medium">إعدادات الطباعة</span>
                             </button>
-                            <button onclick="window.loadView('settings_account')" id="btn-settings_account" class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                            <button onclick="window.loadView('settings_account')" id="btn-settings_account"
+                                class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
                                 <span class="font-medium">إدارة الحساب</span>
                             </button>
                         </div>
@@ -317,7 +450,8 @@
                 </div>
 
                 <!-- رسالة ترحيب -->
-                <div id="welcome-state" class="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
+                <div id="welcome-state"
+                    class="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
                     <h3 class="text-xl font-bold text-gray-300">مرحباً بك في لوحة التحكم</h3>
                     <p class="mt-2 text-sm">اختر من القائمة الجانبية للبدء</p>
                 </div>
@@ -331,31 +465,45 @@
     <!-- ========================================== -->
     <!-- نافذة تأكيد الدفع والتحصيل (Checkout Modal) -->
     <!-- ========================================== -->
-    <div id="checkout-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md transition-opacity">
-        <div class="relative bg-gray-800 border-t-4 border-brand rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.8)] p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
+    <div id="checkout-modal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md transition-opacity">
+        <div
+            class="relative bg-gray-800 border-t-4 border-brand rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.8)] p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
             <!-- زر الإغلاق X -->
-            <button onclick="window.closeCheckoutModal()" class="absolute top-4 left-4 text-gray-500 hover:text-white transition focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <button onclick="window.closeCheckoutModal()"
+                class="absolute top-4 left-4 text-gray-500 hover:text-white transition focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
             </button>
 
             <div class="flex items-center gap-3 mb-6 border-b border-gray-700 pb-4 pr-6">
                 <div class="bg-brand text-black p-2 rounded-full shadow-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z">
+                        </path>
+                    </svg>
                 </div>
                 <h3 id="checkout-title" class="text-xl font-bold text-white">تأكيد الدفع</h3>
             </div>
-            
-            <div class="bg-gray-900 rounded-xl p-6 text-center mb-6 border border-gray-700 shadow-inner relative overflow-hidden">
+
+            <div
+                class="bg-gray-900 rounded-xl p-6 text-center mb-6 border border-gray-700 shadow-inner relative overflow-hidden">
                 <div class="absolute inset-0 bg-brand opacity-5 mix-blend-overlay"></div>
                 <p class="text-gray-400 text-sm mb-2 relative z-10">المبلغ المطلوب تحصيله</p>
-                <div id="checkout-amount" class="text-4xl font-extrabold text-brand tracking-wider drop-shadow-md relative z-10">0 DA</div>
+                <div id="checkout-amount"
+                    class="text-4xl font-extrabold text-brand tracking-wider drop-shadow-md relative z-10">0 DA</div>
             </div>
 
             <div class="flex flex-col gap-3">
-                <button onclick="window.confirmPayment(true)" class="w-full bg-brand hover:bg-brand-dark text-black font-bold py-3 rounded-lg transition shadow-[0_0_15px_rgba(255,153,0,0.3)] flex justify-center items-center gap-2 transform hover:scale-[1.02]">
+                <button onclick="window.confirmPayment(true)"
+                    class="w-full bg-brand hover:bg-brand-dark text-black font-bold py-3 rounded-lg transition shadow-[0_0_15px_rgba(255,153,0,0.3)] flex justify-center items-center gap-2 transform hover:scale-[1.02]">
                     <span>تأكيد وطباعة التذكرة</span>
                 </button>
-                <button onclick="window.confirmPayment(false)" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition shadow-lg flex justify-center items-center gap-2 transform hover:scale-[1.02]">
+                <button onclick="window.confirmPayment(false)"
+                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition shadow-lg flex justify-center items-center gap-2 transform hover:scale-[1.02]">
                     <span>تأكيد بدون طباعة</span>
                 </button>
             </div>
@@ -365,20 +513,30 @@
     <!-- ========================================== -->
     <!-- نافذة تعديل الطلب من المنيو (Edit Order Modal) -->
     <!-- ========================================== -->
-    <div id="edit-order-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm transition-opacity">
-        <div class="relative bg-gray-800 border-t-4 border-brand rounded-2xl shadow-2xl p-6 w-full max-w-5xl mx-4 flex flex-col h-[85vh]">
-            <button onclick="window.closeEditOrderModal()" class="absolute top-4 left-4 text-gray-500 hover:text-white transition focus:outline-none">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    <div id="edit-order-modal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm transition-opacity">
+        <div
+            class="relative bg-gray-800 border-t-4 border-brand rounded-2xl shadow-2xl p-6 w-full max-w-5xl mx-4 flex flex-col h-[85vh]">
+            <button onclick="window.closeEditOrderModal()"
+                class="absolute top-4 left-4 text-gray-500 hover:text-white transition focus:outline-none">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
             </button>
-            <h3 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-3"><span id="edit-order-title" class="text-brand">تعديل الطلب</span></h3>
-            
+            <h3 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-3"><span id="edit-order-title"
+                    class="text-brand">تعديل الطلب</span></h3>
+
             <div class="flex flex-col md:flex-row gap-6 flex-1 overflow-hidden">
                 <!-- القسم الأيمن: تفاصيل الطلب -->
-                <div class="w-full md:w-1/3 flex flex-col gap-4 bg-gray-900 p-4 rounded-xl border border-gray-700 overflow-hidden">
+                <div
+                    class="w-full md:w-1/3 flex flex-col gap-4 bg-gray-900 p-4 rounded-xl border border-gray-700 overflow-hidden">
                     <div class="flex-1 overflow-y-auto custom-scrollbar pr-2">
                         <p class="text-xs text-gray-400 mb-2 font-bold">الطلب الأصلي (لا يمكن حذفه هنا):</p>
-                        <div id="edit-order-original-details" class="text-sm text-gray-300 whitespace-pre-line leading-relaxed mb-4 border-b border-gray-700 pb-4"></div>
-                        
+                        <div id="edit-order-original-details"
+                            class="text-sm text-gray-300 whitespace-pre-line leading-relaxed mb-4 border-b border-gray-700 pb-4">
+                        </div>
+
                         <p class="text-xs text-brand mb-2 font-bold">الإضافات الجديدة:</p>
                         <div id="edit-order-new-items" class="space-y-2">
                             <!-- سيتم حقن الإضافات هنا مع زر الحذف -->
@@ -389,19 +547,22 @@
                 <!-- القسم الأيسر: المنيو -->
                 <div class="w-full md:w-2/3 flex flex-col overflow-hidden">
                     <p class="text-sm text-gray-300 mb-3 font-bold">اضغط على أي منتج لإضافته:</p>
-                    <div id="edit-menu-grid" class="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pr-2 custom-scrollbar pb-10">
+                    <div id="edit-menu-grid"
+                        class="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pr-2 custom-scrollbar pb-10">
                         <div class="col-span-full text-center text-sm text-gray-500 py-4">جاري تحميل المنيو...</div>
                     </div>
                 </div>
             </div>
 
             <!-- الشريط السفلي: المجموع والحفظ -->
-            <div class="mt-4 pt-4 border-t border-gray-700 flex justify-between items-center gap-4 bg-gray-900 p-4 rounded-xl shadow-inner">
+            <div
+                class="mt-4 pt-4 border-t border-gray-700 flex justify-between items-center gap-4 bg-gray-900 p-4 rounded-xl shadow-inner">
                 <div class="flex items-center gap-3">
                     <span class="text-lg font-bold text-gray-400">المجموع النهائي:</span>
                     <span id="edit-order-total" class="text-4xl font-black text-brand drop-shadow-md">0 DA</span>
                 </div>
-                <button onclick="window.saveOrderEdit()" id="btn-save-edit" class="bg-brand hover:bg-brand-dark text-black font-bold py-3 px-10 rounded-xl transition shadow-[0_0_15px_rgba(255,153,0,0.3)] transform hover:scale-[1.02] text-xl">
+                <button onclick="window.saveOrderEdit()" id="btn-save-edit"
+                    class="bg-brand hover:bg-brand-dark text-black font-bold py-3 px-10 rounded-xl transition shadow-[0_0_15px_rgba(255,153,0,0.3)] transform hover:scale-[1.02] text-xl">
                     تأكيد وحفظ
                 </button>
             </div>
@@ -411,26 +572,39 @@
     <!-- ========================================== -->
     <!-- نافذة دمج الطلبات (Merge Modal) -->
     <!-- ========================================== -->
-    <div id="merge-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm transition-opacity">
-        <div class="bg-gray-800 border-t-4 border-brand rounded-2xl shadow-2xl p-6 w-full max-w-2xl mx-4 flex flex-col max-h-[85vh]">
+    <div id="merge-modal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm transition-opacity">
+        <div
+            class="bg-gray-800 border-t-4 border-brand rounded-2xl shadow-2xl p-6 w-full max-w-2xl mx-4 flex flex-col max-h-[85vh]">
             <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
                 <h3 class="text-2xl font-bold text-white flex items-center gap-2">
-                    <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                    <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
+                        </path>
+                    </svg>
                     دمج الطلبات المتعددة
                 </h3>
                 <button onclick="window.closeMergeModal()" class="text-gray-500 hover:text-white transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
                 </button>
             </div>
-            
-            <p class="text-sm text-gray-400 mb-4">حدد الطلبات التي تريد دمجها معاً (سيتم جمع التفاصيل والأسعار في أقدم طلب، وحذف الباقي):</p>
-            
+
+            <p class="text-sm text-gray-400 mb-4">حدد الطلبات التي تريد دمجها معاً (سيتم جمع التفاصيل والأسعار في أقدم
+                طلب، وحذف الباقي):</p>
+
             <div id="merge-orders-list" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-3 pr-2 mb-4">
             </div>
 
             <div class="pt-4 border-t border-gray-700 flex justify-between items-center">
-                <span class="text-sm text-gray-300">الطلبات المحددة: <b id="merge-count" class="text-brand text-lg">0</b></span>
-                <button id="btn-confirm-merge" onclick="window.confirmMergeOrders()" class="bg-brand hover:bg-brand-dark text-black font-bold py-3 px-8 rounded-xl transition shadow-lg opacity-50 cursor-not-allowed" disabled>
+                <span class="text-sm text-gray-300">الطلبات المحددة: <b id="merge-count"
+                        class="text-brand text-lg">0</b></span>
+                <button id="btn-confirm-merge" onclick="window.confirmMergeOrders()"
+                    class="bg-brand hover:bg-brand-dark text-black font-bold py-3 px-8 rounded-xl transition shadow-lg opacity-50 cursor-not-allowed"
+                    disabled>
                     تأكيد الدمج
                 </button>
             </div>
@@ -440,18 +614,26 @@
     <!-- ========================================== -->
     <!-- نافذة تأكيد الخروج (Logout Modal) -->
     <!-- ========================================== -->
-    <div id="logout-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity">
-        <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
+    <div id="logout-modal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity">
+        <div
+            class="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
             <div class="flex items-center gap-3 text-red-500 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192 3 1.732 3z" />
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192 3 1.732 3z" />
                 </svg>
                 <h3 class="text-lg font-bold text-white">تأكيد الخروج</h3>
             </div>
-            <p class="text-gray-300 mb-6 text-sm leading-relaxed">هل أنت متأكد أنك تريد إغلاق النظام وتسجيل الخروج؟ سيتم إعادتك لشاشة البداية.</p>
+            <p class="text-gray-300 mb-6 text-sm leading-relaxed">هل أنت متأكد أنك تريد إغلاق النظام وتسجيل الخروج؟ سيتم
+                إعادتك لشاشة البداية.</p>
             <div class="flex justify-end gap-3">
-                <button onclick="window.closeLogoutModal()" class="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition text-sm">إلغاء</button>
-                <button onclick="window.confirmLogout()" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition text-sm shadow-lg">نعم، خروج</button>
+                <button onclick="window.closeLogoutModal()"
+                    class="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition text-sm">إلغاء</button>
+                <button onclick="window.confirmLogout()"
+                    class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition text-sm shadow-lg">نعم،
+                    خروج</button>
             </div>
         </div>
     </div>
@@ -459,27 +641,40 @@
     <!-- ========================================== -->
     <!-- نافذة تأكيد الحذف (Delete Modal) -->
     <!-- ========================================== -->
-    <div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity">
-        <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
+    <div id="delete-modal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity">
+        <div
+            class="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4 transform transition-all scale-100">
             <div class="flex items-center gap-3 text-red-500 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192 3 1.732 3z" />
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192 3 1.732 3z" />
                 </svg>
                 <h3 class="text-lg font-bold text-white">تأكيد الحذف</h3>
             </div>
-            <p class="text-gray-300 mb-6 text-sm leading-relaxed">هل أنت متأكد أنك تريد حذف الطبق: <span id="delete-item-name" class="text-brand font-bold"></span>؟ هذا الإجراء لا يمكن التراجع عنه.</p>
+            <p class="text-gray-300 mb-6 text-sm leading-relaxed">هل أنت متأكد أنك تريد حذف الطبق: <span
+                    id="delete-item-name" class="text-brand font-bold"></span>؟ هذا الإجراء لا يمكن التراجع عنه.</p>
             <div class="flex justify-end gap-3">
-                <button onclick="window.closeDeleteModal()" class="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition text-sm">إلغاء</button>
-                <button id="btn-confirm-delete" onclick="window.confirmDelete()" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition text-sm shadow-lg flex items-center gap-2">نعم، احذف الطبق</button>
+                <button onclick="window.closeDeleteModal()"
+                    class="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition text-sm">إلغاء</button>
+                <button id="btn-confirm-delete" onclick="window.confirmDelete()"
+                    class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition text-sm shadow-lg flex items-center gap-2">نعم،
+                    احذف الطبق</button>
             </div>
         </div>
     </div>
 
     <!-- نافذة النجاح المنبثقة -->
-    <div id="success-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity">
-        <div class="bg-gray-800 border-2 border-green-500 rounded-2xl shadow-[0_0_30px_rgba(34,197,94,0.4)] p-8 text-center transform transition-all scale-100 flex flex-col items-center">
-            <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-4 animate-pulse shadow-lg">
-                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+    <div id="success-modal"
+        class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity">
+        <div
+            class="bg-gray-800 border-2 border-green-500 rounded-2xl shadow-[0_0_30px_rgba(34,197,94,0.4)] p-8 text-center transform transition-all scale-100 flex flex-col items-center">
+            <div
+                class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-4 animate-pulse shadow-lg">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
             </div>
             <h3 class="text-2xl font-extrabold text-white">تم الحفظ بنجاح</h3>
         </div>
@@ -491,14 +686,16 @@
     <!-- ========================================== -->
     <!-- كود الجافاسكربت (JavaScript Logic) -->
     <!-- ========================================== -->
-     <script src="js/config.js"></script>
-     <script src="js/api.js"></script>
-     <script src="js/kds.js"></script>
-     <script src="js/cashier.js"></script>
-     <script src="js/menu.js"></script>
-     <script src="js/settings.js"></script>
-     <script src="js/analytics.js"></script>
-     <script src="js/tables.js"></script>
-     <script src="js/app.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/kds.js"></script>
+    <script src="js/cashier.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/analytics.js"></script>
+    <script src="js/tables.js"></script>
+    <script src="js/staff.js"></script>
+    <script src="js/app.js"></script>
 </body>
+
 </html>
