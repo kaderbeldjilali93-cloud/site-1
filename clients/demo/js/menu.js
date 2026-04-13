@@ -61,13 +61,14 @@ window.openEditOrderModal = async function (orderId) {
     window.openEditOrderModal_DrawMenu();
 };
 
-window.openNewOrderModal = async function () {
+window.openNewOrderModal = async function (type = 'quick') {
     STATE.currentEditOrder = null;
     STATE.newlyAddedItems = [];
     STATE.originalEditDetails = "";
     STATE.originalEditPrice = 0;
+    STATE.newOrderType = type;
 
-    document.getElementById('edit-order-title').innerText = "إنشاء طلب سريع جديد";
+    document.getElementById('edit-order-title').innerText = type === 'table' ? "إنشاء طلب طاولة جديد" : "إنشاء طلب سريع جديد";
     document.getElementById('edit-order-original-details').innerText = "ابدأ بإضافة الأصناف من القائمة على اليسار";
 
     window.updateEditOrderUI();
@@ -165,7 +166,8 @@ window.saveOrderEdit = async function () {
         [priceKey]: String(finalPrice)
     };
     if (isNewOrder) {
-        payload["Table"] = "سفري";
+        payload["Table"] = STATE.newOrderType === 'table' ? "طاولة جديدة" : "سفري";
+        payload["order_type"] = STATE.newOrderType || "quick";
         payload["Status"] = "قيد التحضير";
     }
 
@@ -752,22 +754,22 @@ window.submitNewDish = async function () {
     }
 };
 
-window.openDeleteCategoryModal = function() {
+window.openDeleteCategoryModal = function () {
     const defaultCats = ['pizza', 'burger', 'boissons', 'suppléments'];
     let items = STATE.cachedMenuItems || [];
     const allCats = new Set();
-    
+
     items.forEach(item => {
         let cat = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || '');
         if (cat) allCats.add(String(cat).trim());
     });
-    
+
     defaultCats.forEach(c => {
-        if(!allCats.has(c)) {
+        if (!allCats.has(c)) {
             allCats.add(c);
         }
     });
-    
+
     let optionsHtml = Array.from(allCats).map(cat => `<option value="${cat}">${cat}</option>`).join('\n                ');
 
     const modalHtml = `
@@ -790,12 +792,12 @@ window.openDeleteCategoryModal = function() {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 };
 
-window.confirmDeleteAnyCategory = async function() {
+window.confirmDeleteAnyCategory = async function () {
     const select = document.getElementById('modal-category-select');
-    if(!select) return;
+    if (!select) return;
     const category = select.value;
     const defaultCats = ['pizza', 'burger', 'boissons', 'suppléments', 'custom'];
-    
+
     if (defaultCats.includes(category.toLowerCase())) {
         window.showToast("لا يمكن حذف التصنيفات الأساسية", "error");
         document.getElementById('delete-category-modal').remove();
@@ -823,20 +825,20 @@ window.confirmDeleteAnyCategory = async function() {
             });
         }
 
-        const deletePromises = itemsToDelete.map(item => 
+        const deletePromises = itemsToDelete.map(item =>
             fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/${item.id}/`, {
                 method: 'DELETE',
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
             })
         );
-        
+
         await Promise.all(deletePromises);
 
         window.showToast("تم حذف التصنيف بنجاح", "success");
-        STATE.cachedMenuItems = null; 
+        STATE.cachedMenuItems = null;
         document.getElementById('delete-category-modal').remove();
         await window.renderMenuAdd();
-        
+
     } catch (error) {
         console.error("Error deleting category:", error);
         window.showToast("حدث خطأ أثناء الحذف", "error");

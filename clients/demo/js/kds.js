@@ -2,53 +2,62 @@
 // 👨‍🍳 KDS Logic (شاشة المطبخ)
 // =========================================================
 
-window.setKdsTab = function(tab) {
+window.setKdsTab = function (tab) {
     STATE.kdsActiveTab = tab;
     window.renderKDS(STATE.latestKdsOrders || []);
 };
 
-window.renderKDS = function(orders) {
-    let filteredOrders = [...orders]; 
-    
+window.renderKDS = function (orders) {
+    let filteredOrders = [...orders];
+
     filteredOrders = window.calculateDailySequence(filteredOrders);
     filteredOrders = window.processOrderAlerts(filteredOrders);
 
     const dynamicContent = document.getElementById('dynamic-content');
-    if (!dynamicContent) return; 
+    if (!dynamicContent) return;
 
     dynamicContent.innerHTML = '';
     const getStatus = (o) => (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
-    
+
     const activeOrders = filteredOrders.filter(o => {
         const s = getStatus(o);
         const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
         const isToday = window.isOrderFromToday(rawTime);
-        
+
         return (s === 'قيد التحضير' || s === 'جاهز') && isToday;
     });
 
-    const groupedOrders = { quick: [], delivery: [] };
-    for(let i = 1; i <= 15; i++) groupedOrders[i] = [];
+    const groupedOrders = { quick: [], delivery: [], new_table: [] };
+    for (let i = 1; i <= 15; i++) groupedOrders[i] = [];
 
     activeOrders.forEach(order => {
+        let type = order.order_type || 'quick';
         const tableRaw = String(order.Table || order.table || '').toLowerCase();
         let tNum = parseInt(tableRaw.replace(/[^\d]/g, ''));
-        
+
         if (tableRaw.includes('توصيل') || tableRaw.includes('delivery')) {
             groupedOrders.delivery.push(order);
-        } else if (!isNaN(tNum) && tNum >= 1 && tNum <= 15) {
-            groupedOrders[tNum].push(order);
+        } else if (type === 'table') {
+            if (!isNaN(tNum) && tNum >= 1 && tNum <= 15) {
+                groupedOrders[tNum].push(order);
+            } else {
+                groupedOrders.new_table.push(order);
+            }
         } else {
-            groupedOrders.quick.push(order);
+            if (!isNaN(tNum) && tNum >= 1 && tNum <= 15) {
+                groupedOrders[tNum].push(order);
+            } else {
+                groupedOrders.quick.push(order);
+            }
         }
     });
 
     const header = document.createElement('div');
     header.className = "flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700 gap-4";
-    
+
     const hasNewQuick = groupedOrders.quick.some(o => o.isNew);
     const hasNewDelivery = groupedOrders.delivery.some(o => o.isNew);
-    const hasNewTable = Array.from({length: 15}, (_, i) => i + 1).some(i => groupedOrders[i].some(o => o.isNew));
+    const hasNewTable = Array.from({ length: 15 }, (_, i) => i + 1).some(i => groupedOrders[i].some(o => o.isNew)) || groupedOrders.new_table.some(o => o.isNew);
 
     const getTabClass = (tabName, hasNew) => {
         if (STATE.kdsActiveTab === tabName) return 'bg-brand text-black shadow-md';
@@ -56,22 +65,17 @@ window.renderKDS = function(orders) {
         return 'text-gray-400 hover:bg-gray-700 hover:text-white';
     };
 
-    const isAdmin = STATE.currentRole === 'admin';
-    const newOrderBtn = isAdmin ? `
-        <button onclick="window.openNewOrderModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-lg transition shadow-md flex items-center gap-2 text-sm whitespace-nowrap order-first md:order-last">
-            <span>طلب سريع جديد</span> +
-        </button>
-    ` : '';
+    // إخفاء زر طلب جديد كلياً تلبية لتوجيهات العميل بكون المطبخ شاشة استقبال فقط
+    const newOrderBtn = '';
 
     header.innerHTML = `
         <div class="flex items-center gap-3">
             <span class="live-indicator" title="تحديث مباشر"></span>
-            ${newOrderBtn}
         </div>
         <div class="flex bg-gray-900 p-1 rounded-xl border border-gray-700 shadow-inner flex-wrap gap-1">
-            <button onclick="window.setKdsTab('tables')" class="px-5 py-2 rounded-lg text-sm font-bold transition ${getTabClass('tables', hasNewTable)}">طلبات الطاولات</button>
-            <button onclick="window.setKdsTab('quick')" class="px-5 py-2 rounded-lg text-sm font-bold transition ${getTabClass('quick', hasNewQuick)} relative">طلبات سريعة ${groupedOrders.quick.length > 0 ? `<span class="bg-black/30 px-2 py-0.5 rounded-full ml-1.5 text-xs">${groupedOrders.quick.length}</span>` : ''}</button>
-            <button onclick="window.setKdsTab('delivery')" class="px-5 py-2 rounded-lg text-sm font-bold transition ${getTabClass('delivery', hasNewDelivery)} relative">طلبات التوصيل ${groupedOrders.delivery.length > 0 ? `<span class="bg-black/30 px-2 py-0.5 rounded-full ml-1.5 text-xs">${groupedOrders.delivery.length}</span>` : ''}</button>
+            <button onclick="window.setKdsTab('tables')" class="px-6 py-2.5 rounded-lg text-sm font-bold transition ${getTabClass('tables', hasNewTable)}">طلبات الطاولات</button>
+            <button onclick="window.setKdsTab('quick')" class="px-6 py-2.5 rounded-lg text-sm font-bold transition ${getTabClass('quick', hasNewQuick)} relative">الطلبات السريعة ${groupedOrders.quick.length > 0 ? `<span class="bg-black/30 px-2 py-0.5 rounded-full ml-1.5 text-xs">${groupedOrders.quick.length}</span>` : ''}</button>
+            <button onclick="window.setKdsTab('delivery')" class="px-6 py-2.5 rounded-lg text-sm font-bold transition ${getTabClass('delivery', hasNewDelivery)} relative">طلبات التوصيل ${groupedOrders.delivery.length > 0 ? `<span class="bg-black/30 px-2 py-0.5 rounded-full ml-1.5 text-xs">${groupedOrders.delivery.length}</span>` : ''}</button>
         </div>
         <div class="text-gray-300 font-mono text-sm hidden xl:block">${new Date().toLocaleTimeString('ar-DZ')}</div>
     `;
@@ -87,8 +91,8 @@ window.renderKDS = function(orders) {
             const timerStyle = window.getTimerStyle(elapsedMins);
             const timerText = window.formatTimerText(elapsedMins);
             const s = getStatus(o);
-            
-            const btnHtml = s === 'قيد التحضير' 
+
+            const btnHtml = s === 'قيد التحضير'
                 ? `<button id="btn-done-${o.id}" onclick="window.updateOrderStatus(${o.id}, 'جاهز')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg transition shadow-md flex justify-center items-center gap-2"><span>جاهز</span> ✅</button>`
                 : `<div class="text-center text-green-400 font-bold bg-green-900/30 py-2 rounded-lg border border-green-700/50">جاهز (في انتظار الدفع)</div>`;
 
@@ -107,20 +111,20 @@ window.renderKDS = function(orders) {
     };
 
     if (STATE.kdsActiveTab === 'tables') {
-        for(let i = 1; i <= 15; i++) {
-            const tOrders = groupedOrders[i];
+        const renderTableCard = (i, tOrders, titleOverride) => {
             const card = document.createElement('div');
+            const title = titleOverride || `طاولة ${i}`;
 
-            if(tOrders.length === 0) {
+            if (tOrders.length === 0) {
                 card.className = "bg-green-900/10 border-2 border-green-800/50 rounded-2xl flex flex-col items-center justify-center h-48 text-green-600/70 transition-all opacity-80";
-                card.innerHTML = `<div class="text-4xl mb-3 opacity-50">🍽️</div><div class="text-lg font-medium">طاولة ${i}</div><div class="text-xs mt-1 bg-green-900/30 px-2 py-1 rounded-full border border-green-800/50">فارغة</div>`;
+                card.innerHTML = `<div class="text-4xl mb-3 opacity-50">🍽️</div><div class="text-lg font-medium">${title}</div><div class="text-xs mt-1 bg-green-900/30 px-2 py-1 rounded-full border border-green-800/50">فارغة</div>`;
             } else {
                 const isCooking = tOrders.some(o => getStatus(o) === 'قيد التحضير');
                 const isEating = tOrders.every(o => getStatus(o) === 'جاهز');
-                
+
                 let cardClass = "";
                 let headerClass = "";
-                
+
                 if (isCooking) {
                     const hasNew = tOrders.some(o => o.isNew);
                     cardClass = `bg-gray-800 border-2 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)] rounded-2xl flex flex-col overflow-hidden ${hasNew ? 'animate-pulse' : ''}`;
@@ -128,20 +132,31 @@ window.renderKDS = function(orders) {
                 } else if (isEating) {
                     cardClass = `bg-gray-800 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)] rounded-2xl flex flex-col overflow-hidden`;
                     headerClass = "bg-yellow-500 text-black";
+                } else {
+                    cardClass = `bg-gray-800 border-2 border-gray-500 rounded-2xl flex flex-col overflow-hidden`;
+                    headerClass = "bg-gray-600 text-white";
                 }
 
                 card.className = cardClass.replace('flex-col', 'flex-col h-fit');
-                card.innerHTML = `<div class="${headerClass} font-bold p-3 text-center text-lg flex justify-between items-center shadow-md"><span>طاولة ${i}</span><span class="bg-black/20 text-current text-xs font-bold px-2 py-1 rounded-full border border-black/30">${tOrders.length} طلب</span></div><div class="p-3 flex flex-col gap-3 h-fit">${renderOrderList(tOrders)}</div>`;
+                card.innerHTML = `<div class="${headerClass} font-bold p-3 text-center text-lg flex justify-between items-center shadow-md"><span>${title}</span><span class="bg-black/20 text-current text-xs font-bold px-2 py-1 rounded-full border border-black/30">${tOrders.length} طلب</span></div><div class="p-3 flex flex-col gap-3 h-fit">${renderOrderList(tOrders)}</div>`;
             }
             grid.appendChild(card);
+        };
+
+        if (groupedOrders.new_table.length > 0) {
+            renderTableCard(null, groupedOrders.new_table, "طاولة غير محددة");
+        }
+
+        for (let i = 1; i <= 15; i++) {
+            renderTableCard(i, groupedOrders[i]);
         }
     } else {
         const tkOrders = STATE.kdsActiveTab === 'quick' ? groupedOrders.quick : groupedOrders.delivery;
         const tabTitle = STATE.kdsActiveTab === 'quick' ? 'طلبات سريعة' : 'توصيل';
         const themeBorder = STATE.kdsActiveTab === 'quick' ? 'border-blue-500' : 'border-purple-500';
         const themeBg = STATE.kdsActiveTab === 'quick' ? 'bg-blue-600' : 'bg-purple-600';
-        
-        if(tkOrders.length === 0) {
+
+        if (tkOrders.length === 0) {
             grid.className = "flex flex-col items-center justify-center h-64 text-gray-500 w-full";
             grid.innerHTML = `<div class="text-6xl mb-4 opacity-50">📋</div><div class="text-xl font-medium">لا توجد طلبات حالياً</div>`;
         } else {
@@ -149,19 +164,19 @@ window.renderKDS = function(orders) {
                 const card = document.createElement('div');
                 const hasNew = o.isNew;
                 const s = getStatus(o);
-                
-                let borderColorClass = s === 'قيد التحضير' 
-                    ? `${themeBorder} shadow-[0_0_15px_rgba(100,100,255,0.3)]` 
+
+                let borderColorClass = s === 'قيد التحضير'
+                    ? `${themeBorder} shadow-[0_0_15px_rgba(100,100,255,0.3)]`
                     : 'border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]';
 
                 card.className = `bg-gray-800 border-2 ${borderColorClass} rounded-2xl flex flex-col overflow-hidden h-fit ${hasNew ? 'animate-pulse' : ''}`;
-                
+
                 const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
                 const elapsedMins = window.calculateElapsedMinutes(rawTime);
                 const timerStyle = window.getTimerStyle(elapsedMins);
                 const timerText = window.formatTimerText(elapsedMins);
 
-                const btnHtml = s === 'قيد التحضير' 
+                const btnHtml = s === 'قيد التحضير'
                     ? `<button id="btn-done-${o.id}" onclick="window.updateOrderStatus(${o.id}, 'جاهز')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition shadow-lg flex justify-center items-center gap-2 mt-auto text-lg hover:scale-[1.02]"><span>جاهز للتسليم</span> ✅</button>`
                     : `<div class="text-center text-yellow-400 font-bold bg-yellow-900/30 py-3 rounded-xl border border-yellow-700/50 mt-auto">جاهز (في انتظار الدفع)</div>`;
 
@@ -184,6 +199,6 @@ window.renderKDS = function(orders) {
             });
         }
     }
-    
+
     dynamicContent.appendChild(grid);
 };

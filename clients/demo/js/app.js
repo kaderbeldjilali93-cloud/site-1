@@ -160,7 +160,7 @@ window.applyRolePermissions = function (role) {
     } else if (r === 'cashier') {
         if (menuStaff) menuStaff.style.display = 'none';
     } else if (r === 'waiter') {
-        [btnKds, btnCashier, menuAnalytics, menuStaff, menuInventory, menuSettings].forEach(el => {
+        [btnKds, btnCashier, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuSettings].forEach(el => {
             if (el) el.style.display = 'none';
         });
     } else if (r === 'kitchen') {
