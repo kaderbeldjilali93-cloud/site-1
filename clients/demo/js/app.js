@@ -54,10 +54,14 @@ if (loginForm) {
             const data = await response.json();
             const staffList = data.results;
 
+            console.log("Fetched Staff:", staffList);
+            console.log("Login Attempt:", usernameInput, passwordInput);
+
             // البحث عن العامل بناءً على الاسم (Name) والرمز السري (PIN)
             const user = staffList.find(staff =>
-                (staff.Name === usernameInput) && (staff.PIN == passwordInput)
+                (staff.Name && staff.Name.trim().toLowerCase() === usernameInput.toLowerCase()) && (staff.PIN == passwordInput)
             );
+
 
             if (!user) {
                 window.showToast("اسم المستخدم أو الرمز السري غير صحيح ❌", "error");
