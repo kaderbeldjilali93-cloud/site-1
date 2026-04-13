@@ -18,13 +18,19 @@ window.addEventListener('DOMContentLoaded', () => {
     const savedRole = localStorage.getItem(STATE.storageKeys.role);
     const lastView = localStorage.getItem(STATE.storageKeys.lastView);
 
-    if (savedUser && savedRole && CLIENTS_DB[savedUser]) {
-        window.authenticateUser(savedUser, CLIENTS_DB[savedUser].links, savedRole);
+    if (savedUser && savedRole) {
+        let currentLinks = null;
+        if (typeof CLIENTS_DB !== 'undefined' && CLIENTS_DB['demo']) {
+            currentLinks = CLIENTS_DB['demo'].links;
+        }
+        window.authenticateUser(savedUser, currentLinks, savedRole);
         if (savedRole === 'kitchen') window.loadView('kds');
-        else if (lastView && CLIENTS_DB[savedUser].links[lastView]) window.loadView(lastView);
+        else if (lastView) window.loadView(lastView);
         else window.loadView('kds');
     }
 });
+
+const STAFF_TABLE_ID = "757";
 
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
@@ -38,56 +44,127 @@ if (loginForm) {
         submitBtn.innerHTML = `<span class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-black"></div> جاري التحقق...</span>`;
         submitBtn.disabled = true;
 
-        let role = null;
-        let currentLinks = null;
-
         try {
-            const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${SETTINGS_TABLE_ID}/?user_field_names=true`, {
+            const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/?user_field_names=true`, {
                 method: 'GET',
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
             });
 
             if (!response.ok) throw new Error("API Error");
             const data = await response.json();
+            const staffList = data.results;
 
-            if (data.results && data.results.length > 0) {
-                const row = data.results[0];
-                const adminPass = row.AdminPass ?? '123';
-                const kitchenPass = row.KitchenPass ?? 'k123';
+            // البحث عن العامل بناءً على الاسم (Name) والرمز السري (PIN)
+            const user = staffList.find(staff =>
+                (staff.Name === usernameInput) && (staff.PIN == passwordInput)
+            );
 
-                if (passwordInput === adminPass) role = 'admin';
-                else if (passwordInput === kitchenPass) role = 'kitchen';
+            if (!user) {
+                window.showToast("اسم المستخدم أو الرمز السري غير صحيح ❌", "error");
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                return;
+            }
 
-                if (role) {
-                    currentLinks = CLIENTS_DB[usernameInput] ? CLIENTS_DB[usernameInput].links : CLIENTS_DB['demo'].links;
-                    if (row.Currency) localStorage.setItem('system_currency', row.Currency);
-                }
+            // التحقق من حالة الحساب
+            if (user.Status === false) {
+                window.showToast("عذراً، هذا الحساب موقوف من قبل الإدارة.", "error");
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                return;
+            }
+
+            // استخراج الدور وتحويله لأحرف صغيرة (admin, cashier, kitchen)
+            const roleRaw = (typeof user.Role === 'object' && user.Role !== null) ? user.Role.value : user.Role;
+            const role = roleRaw ? roleRaw.toLowerCase() : 'cashier';
+
+            // حفظ بيانات المستخدم لاستخدامها لاحقاً
+            localStorage.setItem('currentUserData', JSON.stringify({
+                id: user.id,
+                name: user.Name,
+                role: roleRaw
+            }));
+
+            // الافتراض أننا في بيئة الديمو للروابط
+            let currentLinks = null;
+            if (typeof CLIENTS_DB !== 'undefined') {
+                currentLinks = CLIENTS_DB['demo'] ? CLIENTS_DB['demo'].links : null;
+            }
+
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+
+            // توثيق الجلسة
+            window.authenticateUser(user.Name, currentLinks, role);
+
+            // التوجيه
+            if (role === 'admin') {
+                window.loadView('analytics');
+            } else if (role === 'cashier') {
+                window.loadView('cashier');
+            } else if (role === 'kitchen') {
+                window.loadView('kds');
             } else {
-                throw new Error("No data in settings");
+                window.loadView('cashier');
             }
+
+            const displayRole = role === 'admin' ? 'المدير' : (role === 'kitchen' ? 'المطبخ' : 'الكاشير');
+            window.showToast(`مرحباً بك مجدداً، ${user.Name} (${displayRole})`, "success");
+
         } catch (err) {
-            console.warn("Cloud login failed, using fallback:", err);
-            const clientData = CLIENTS_DB[usernameInput];
-            if (clientData) {
-                if (passwordInput === clientData.adminPass) role = 'admin';
-                else if (passwordInput === clientData.kitchenPass) role = 'kitchen';
-                if (role) currentLinks = clientData.links;
-            }
-        }
-
-        submitBtn.innerHTML = originalBtnText;
-        submitBtn.disabled = false;
-
-        if (role) {
-            window.authenticateUser(usernameInput, currentLinks, role);
-            if (role === 'kitchen') window.loadView('kds');
-            else window.loadView('kds');
-            window.showToast(`مرحباً بك! تم تسجيل الدخول بصلاحية ${role === 'admin' ? 'المدير' : 'المطبخ'}`, "success");
-        } else {
-            window.showToast("اسم المستخدم أو كلمة المرور غير صحيحة ❌", "error");
+            console.error("Login Error:", err);
+            window.showToast("حدث خطأ أثناء الاتصال بالخادم ❌", "error");
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
         }
     });
 }
+
+window.applyRolePermissions = function (role) {
+    if (!role) return;
+    const r = role.toLowerCase();
+
+    const btnKds = document.getElementById('btn-kds');
+    const btnCashier = document.getElementById('btn-cashier');
+    const btnTables = document.getElementById('btn-tables');
+    const btnMenuParent = document.getElementById('btn-menu-parent');
+    const menuAnalytics = document.getElementById('menu-analytics');
+    const menuStaff = document.getElementById('menu-staff');
+    const menuInventory = document.getElementById('menu-inventory');
+    const menuSettings = document.getElementById('menu-settings');
+
+    [btnKds, btnCashier, btnTables, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuSettings].forEach(el => {
+        if (el) {
+            if (el.id === 'btn-menu-parent' || el.id === 'menu-settings') {
+                el.style.display = 'flex';
+            } else {
+                el.style.display = 'block';
+            }
+        }
+    });
+
+    let styleEl = document.getElementById('role-styles');
+    if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'role-styles';
+        document.head.appendChild(styleEl);
+    }
+    styleEl.innerHTML = '.financial-stat { display: none !important; }';
+
+    if (r === 'admin') {
+        styleEl.innerHTML = '.financial-stat { display: block !important; }';
+    } else if (r === 'cashier') {
+        if (menuStaff) menuStaff.style.display = 'none';
+    } else if (r === 'waiter') {
+        [btnKds, btnCashier, menuAnalytics, menuStaff, menuInventory, menuSettings].forEach(el => {
+            if (el) el.style.display = 'none';
+        });
+    } else if (r === 'kitchen') {
+        [btnCashier, btnTables, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuSettings].forEach(el => {
+            if (el) el.style.display = 'none';
+        });
+    }
+};
 
 window.authenticateUser = function (username, links, role) {
     localStorage.setItem(STATE.storageKeys.username, username);
@@ -97,17 +174,12 @@ window.authenticateUser = function (username, links, role) {
     STATE.currentLinks = links;
     STATE.currentRole = role;
 
-    const tablesBtn = document.getElementById('btn-tables');
+    window.applyRolePermissions(role);
 
-    if (role === 'kitchen') {
-        sidebar.classList.remove('flex', 'md:relative', 'md:translate-x-0');
-        sidebar.classList.add('hidden');
-        if (tablesBtn) tablesBtn.style.display = 'none';
-    } else {
-        sidebar.classList.remove('hidden');
-        sidebar.classList.add('flex', 'md:relative', 'md:translate-x-0');
-        if (tablesBtn) tablesBtn.style.display = 'flex';
+    sidebar.classList.remove('hidden');
+    sidebar.classList.add('flex', 'md:relative', 'md:translate-x-0');
 
+    if (role !== 'kitchen') {
         window.fetchWaiterCalls();
         if (STATE.waiterInterval) clearInterval(STATE.waiterInterval);
         STATE.waiterInterval = setInterval(window.fetchWaiterCalls, 5000);
@@ -399,6 +471,9 @@ window.loadView = async function (viewType) {
     if (STATE.pollingInterval) { clearInterval(STATE.pollingInterval); STATE.pollingInterval = null; }
 
     if (STATE.currentRole === 'kitchen' && viewType !== 'kds') return;
+    if (STATE.currentRole === 'waiter' && viewType !== 'tables' && viewType !== 'menu_quick') return;
+    if (STATE.currentRole === 'cashier' && viewType === 'staff') return;
+
     if (STATE.currentRole === 'admin') { window.updateNavStyles(viewType); localStorage.setItem(STATE.storageKeys.lastView, viewType); }
 
     welcomeState.style.display = 'none';
@@ -454,6 +529,9 @@ window.loadView = async function (viewType) {
         }
         else if (viewType === 'tables') {
             window.renderTableView();
+        }
+        else if (viewType === 'staff') {
+            if (window.renderStaff) window.renderStaff();
         }
         else if (viewType === 'settings_restaurant') {
             await window.renderSettingsRestaurant();
