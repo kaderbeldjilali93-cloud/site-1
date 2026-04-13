@@ -7,22 +7,22 @@ window.renderTableView = function () {
     if (!dynamicContent) return;
 
     dynamicContent.innerHTML = `
-        <div class="flex flex-col sm:flex-row gap-6 mb-8 mt-2">
-            <button onclick="window.openNewOrderModal('table')" class="flex-1 bg-brand hover:bg-brand-dark text-black font-extrabold py-8 rounded-3xl shadow-[0_0_20px_rgba(255,153,0,0.2)] flex flex-col items-center justify-center gap-4 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(255,153,0,0.4)] border border-brand text-2xl">
-                <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                <span class="tracking-wide">إضافة طلب لطاولة</span>
-            </button>
-            <button onclick="window.openNewOrderModal('quick')" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-extrabold py-8 rounded-3xl shadow-[0_0_20px_rgba(37,99,235,0.2)] flex flex-col items-center justify-center gap-4 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] border border-blue-500 text-2xl">
-                <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                <span class="tracking-wide">إضافة طلب سريع</span>
-            </button>
-        </div>
-        <div class="flex justify-between items-center mb-6 bg-gray-800 py-4 px-6 rounded-xl border border-gray-700 shadow-md">
+        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 bg-gray-800 py-4 px-6 rounded-xl border border-gray-700 shadow-md mt-2 gap-4">
             <div class="flex items-center gap-3">
                 <span class="live-indicator" title="تحديث مباشر"></span>
-                <h3 class="text-white font-bold text-lg">مراقبة نداءات الطاولات</h3>
+                <h3 class="text-white font-bold text-xl">مراقبة الطاولات والطلبات</h3>
             </div>
-            <div class="text-gray-400 text-sm hidden sm:block pointer-events-none">اضغط على الطاولة الحمراء لإلغاء النداء</div>
+            
+            <div id="waiter-action-buttons" class="flex flex-wrap gap-4">
+                <button onclick="window.openNewOrderModal('table')" class="bg-brand hover:bg-brand-dark text-black font-bold px-6 py-3 text-lg w-auto rounded-lg flex items-center gap-2 transition shadow-md">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span>إضافة طلب لطاولة</span>
+                </button>
+                <button onclick="window.openNewOrderModal('quick')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 text-lg w-auto rounded-lg flex items-center gap-2 transition shadow-md">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span>إضافة طلب سريع</span>
+                </button>
+            </div>
         </div>
     `;
     const grid = document.createElement('div');

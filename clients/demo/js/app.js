@@ -156,14 +156,17 @@ window.applyRolePermissions = function (role) {
     styleEl.innerHTML = '.financial-stat { display: none !important; }';
 
     if (r === 'admin') {
-        styleEl.innerHTML = '.financial-stat { display: block !important; }';
+        styleEl.innerHTML = '.financial-stat { display: block !important; } #waiter-action-buttons { display: none !important; }';
     } else if (r === 'cashier') {
+        styleEl.innerHTML += ' #waiter-action-buttons { display: none !important; }';
         if (menuStaff) menuStaff.style.display = 'none';
     } else if (r === 'waiter') {
+        // Waiter can see it natively since it's not hidden
         [btnKds, btnCashier, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuSettings].forEach(el => {
             if (el) el.style.display = 'none';
         });
     } else if (r === 'kitchen') {
+        styleEl.innerHTML += ' #waiter-action-buttons { display: none !important; }';
         [btnCashier, btnTables, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuSettings].forEach(el => {
             if (el) el.style.display = 'none';
         });
