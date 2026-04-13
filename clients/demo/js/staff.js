@@ -2,7 +2,6 @@
 // 👥 إدارة العمال (Staff Management)
 // =========================================================
 
-const STAFF_TABLE_ID = "757";
 
 window.renderStaff = async function () {
     const dynamicContent = document.getElementById('dynamic-content');
