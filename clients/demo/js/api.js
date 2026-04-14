@@ -61,7 +61,13 @@ window.fetchMenu = async function () {
 
 window.updateOrderStatus = async function (rowId, newStatus) {
     const btn = document.getElementById(`btn-done-${rowId}`);
-    if (btn) { btn.innerHTML = `...`; btn.disabled = true; }
+    if (btn) {
+        if (btn.dataset.processing) return;
+        btn.dataset.processing = "true";
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+        btn.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-current mr-2 inline-block"></div>جاري التحويل...`;
+    }
 
     try {
         await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${rowId}/?user_field_names=true`, {
@@ -87,7 +93,12 @@ window.updateOrderStatus = async function (rowId, newStatus) {
     } catch (error) {
         console.warn("API Error:", error.message);
         window.showToast("فشل تحديث الحالة. تأكد من الاتصال.", "error");
-        if (btn) { btn.innerHTML = 'جاهز ✅'; btn.disabled = false; }
+        if (btn) { 
+            btn.innerHTML = '<span>جاهز للتسليم</span> ✅'; 
+            btn.disabled = false; 
+            delete btn.dataset.processing;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+        }
     }
 };
 
