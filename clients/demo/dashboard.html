@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RestoPro | بوابة المطاعم</title>
+    <!-- معالجة خطأ Favicon 404 المفقود -->
+    <link rel="icon" href="data:,">
     <!-- استدعاء خط "تجوال" لخط عربي احترافي -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <!-- استدعاء Chart.js للإحصائيات -->
@@ -273,11 +275,11 @@
 
                 <!-- العنوان الديناميكي للشاشة الحالية -->
                 <span id="global-page-title"
-                    class="text-gray-300 text-sm md:text-base font-bold mr-4 pr-4 border-r border-gray-600 truncate max-w-[150px] md:max-w-xs shrink-0 hidden sm:inline-block">لوحة
+                    class="text-gray-300 text-sm md:text-base font-bold mr-4 pr-4 border-r border-gray-600 truncate max-w-[120px] md:max-w-sm shrink-0 hidden sm:inline-block">لوحة
                     القيادة</span>
             </div>
 
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex items-center gap-4 shrink-0">
                 <!-- زر كتم الصوت (Global Mute) -->
                 <button id="btn-mute" onclick="window.toggleMute()"
                     class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded transition"
