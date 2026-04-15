@@ -569,6 +569,9 @@ window.loadView = async function (viewType) {
         else if (viewType === 'settings_account') {
             await window.renderSettingsAccount();
         }
+        else if (viewType === 'settings_rooms') {
+            await window.renderSettingsRooms();
+        }
 
         const url = STATE.currentLinks[viewType];
         if (url && url !== "api_mode" && !dynamicContent.innerHTML) {
