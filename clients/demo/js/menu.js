@@ -321,7 +321,7 @@ window.renderMenuEditor = function (items) {
                 </div>
                 <div>
                     <label class="text-xs text-gray-400 block mb-1">السعر (${sysCurrency})</label>
-                    <input type="number" id="price-${item.id}" value="${price}" onfocus="this.select()" class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition">
+                    <input type="number" min="0" id="price-${item.id}" value="${price}" onfocus="this.select()" class="w-full bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition">
                 </div>
                 <div class="flex items-center justify-between mt-auto pt-2 gap-2">
                     <input type="hidden" id="status-${item.id}" value="${currentStatus}">
@@ -401,7 +401,7 @@ window.renderPromoEditor = function (items) {
 
                 <div>
                     <label class="text-xs text-brand block mb-1 font-bold">السعر الترويجي (${sysCurrency})</label>
-                    <input type="number" id="promo-${item.id}" value="${hasPromo ? promoPrice : ''}" placeholder="أدخل سعر العرض..." class="w-full bg-gray-900 border border-brand text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition">
+                    <input type="number" min="0" id="promo-${item.id}" value="${hasPromo ? promoPrice : ''}" placeholder="أدخل سعر العرض..." class="w-full bg-gray-900 border border-brand text-white rounded px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition">
                 </div>
 
                 <div class="flex items-center gap-2 mt-auto pt-2">
@@ -479,7 +479,7 @@ window.renderMenuAdd = async function () {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">السعر (${sysCurrency}) <span class="text-red-500">*</span></label>
-                    <input type="number" id="add-price" onfocus="this.select()" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition" placeholder="مثال: 500">
+                    <input type="number" min="0" id="add-price" onfocus="this.select()" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition" placeholder="مثال: 500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">التصنيف</label>
@@ -602,24 +602,25 @@ window.confirmDelete = async function () {
 window.saveMenuItem = async function (id) {
     const newName = document.getElementById(`name-${id}`).value;
     const newDesc = document.getElementById(`desc-${id}`).value;
-    const price = parseFloat(document.getElementById(`price-${id}`).value);
+    const priceRaw = String(document.getElementById(`price-${id}`).value).trim();
     const status = document.getElementById(`status-${id}`).value;
 
-    if (isNaN(price)) {
+    if (priceRaw === '' || Number(priceRaw) < 0) {
         window.showToast("الرجاء إدخال سعر صحيح", "error");
         return;
     }
 
+    const price = Number(priceRaw);
     await window.updateMenuItem(id, { "Name": newName, "Description": newDesc, "Price": price, "Availability": status }, 'btn-save-' + id);
 };
 
 window.savePromoPrice = async function (id) {
-    const promoInput = document.getElementById(`promo-${id}`).value;
-    const promoPrice = parseFloat(promoInput);
-    if (isNaN(promoPrice) || promoPrice <= 0) {
-        window.showToast("الرجاء إدخال سعر ترويجي صحيح أكبر من صفر.", "error");
+    const promoRaw = String(document.getElementById(`promo-${id}`).value).trim();
+    if (promoRaw === '' || Number(promoRaw) < 0) {
+        window.showToast("الرجاء إدخال سعر ترويجي صحيح.", "error");
         return;
     }
+    const promoPrice = Number(promoRaw);
     await window.updateMenuItem(id, { "PromoPrice": promoPrice }, null);
 };
 
@@ -639,7 +640,7 @@ window.submitNewDish = async function () {
 
     const name = nameInput.value.trim();
     const desc = descInput.value.trim();
-    const price = parseFloat(priceInput.value);
+    const priceRaw = priceInput.value.trim();
     const category = catInput.value;
     const imageFile = imgInput.files ? imgInput.files[0] : null;
 
@@ -658,11 +659,14 @@ window.submitNewDish = async function () {
         nameInput.focus();
         return;
     }
-    if (isNaN(price) || price <= 0) {
+
+    if (priceRaw === '' || Number(priceRaw) < 0) {
         window.showToast("الرجاء إدخال سعر صحيح", "error");
         priceInput.focus();
         return;
     }
+
+    const price = Number(priceRaw);
 
     const originalBtnText = btn.innerHTML;
     btn.innerHTML = `<span class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-black"></div> جاري الرفع...</span>`;
