@@ -295,6 +295,7 @@ window.renderCashier = function (orders) {
             statusHTML = `
             <div class="flex gap-2 justify-center">
                 <button onclick="window.openMergeModal(${order.id})" class="px-4 py-1.5 rounded-lg text-xs border border-blue-500 bg-blue-500/20 text-blue-300 font-bold hover:bg-blue-600 hover:text-white transition shadow-sm whitespace-nowrap">دمج</button>
+                <button onclick="window.openSplitModal(${order.id})" class="px-4 py-1.5 rounded-lg text-xs border border-purple-500 bg-purple-500/20 text-purple-300 font-bold hover:bg-purple-600 hover:text-white transition shadow-sm whitespace-nowrap">تقسيم</button>
                 <button onclick="window.openEditOrderModal(${order.id})" class="px-4 py-1.5 rounded-lg text-xs border border-blue-500 bg-blue-500/20 text-blue-300 font-bold hover:bg-blue-600 hover:text-white transition shadow-sm whitespace-nowrap">تعديل</button>
                 <button id="btn-pay-${order.id}" onclick="window.handlePaymentToggle(${order.id})" class="px-4 py-1.5 rounded-lg text-xs border border-brand bg-brand text-black font-bold hover:bg-brand-dark transition shadow-md whitespace-nowrap">تحصيل</button>
             </div>`;
@@ -453,5 +454,300 @@ window.confirmMergeOrders = async function () {
         window.showToast("حدث خطأ أثناء عملية الدمج", "error");
     } finally {
         btn.innerHTML = originalText;
+    }
+};
+
+window.openSplitModal = function (orderId) {
+    const order = STATE.processedCashierOrders.find(o => o.id === orderId);
+    if (!order) {
+        window.showToast("لم يتم العثور على الطلب", "error");
+        return;
+    }
+    STATE.currentSplitOrder = order;
+
+    const details = order.Details || "";
+    const lines = details.split(/\n|,|،/).map(l => l.trim()).filter(l => l && !l.includes('مدمج') && !l.includes('لا توجد تفاصيل'));
+
+    STATE.splitItems = [];
+    lines.forEach((line, index) => {
+        let name = line;
+        let price = 0;
+        let qty = 1;
+
+        const qtyMatch = line.match(/^(\d+)\s*[xX\*]\s*/);
+        if (qtyMatch) {
+            qty = parseInt(qtyMatch[1], 10);
+            name = name.replace(qtyMatch[0], '').trim();
+        }
+
+        if (name.includes('=')) {
+            const parts = name.split('=');
+            price = parseFloat(parts[parts.length - 1].replace(/[^0-9.]/g, '')) || 0;
+            name = parts.slice(0, -1).join('=').trim();
+        } else if (name.includes('-')) {
+            const parts = name.split('-');
+            const lastPart = parts[parts.length - 1];
+            if (/\d/.test(lastPart)) {
+                price = parseFloat(lastPart.replace(/[^0-9.]/g, '')) || 0;
+                name = parts.slice(0, -1).join('-').trim();
+            }
+        }
+
+        STATE.splitItems.push({
+            id: index,
+            name: name,
+            price: price / (qty || 1),
+            qty: qty,
+            originalLine: line,
+            selected: false
+        });
+    });
+
+    let currentPriceKey = 'Total';
+    if ('Total' in order) currentPriceKey = 'Total';
+    else if ('total' in order) currentPriceKey = 'total';
+    else if ('Price' in order) currentPriceKey = 'Price';
+    else if ('price' in order) currentPriceKey = 'price';
+
+    STATE.splitTotalPrice = parseFloat(String(order[currentPriceKey] || 0).replace(/[^0-9.]/g, '')) || 0;
+
+    const titleEl = document.getElementById('split-order-title');
+    if (titleEl) titleEl.innerText = `${order.dailySequence} - ${order.Table || 'سفري'}`;
+
+    const totalAmountEl = document.getElementById('split-total-amount');
+    const manualTotalAmountEl = document.getElementById('split-manual-total-amount');
+    const sysCurrency = localStorage.getItem('system_currency') || 'DA';
+    if (totalAmountEl) totalAmountEl.innerText = `${STATE.splitTotalPrice.toLocaleString()} ${sysCurrency}`;
+    if (manualTotalAmountEl) manualTotalAmountEl.innerText = `${STATE.splitTotalPrice.toLocaleString()} ${sysCurrency}`;
+
+    STATE.splitPersonCount = 2;
+    window.setSplitMode('even');
+    document.getElementById('split-modal').classList.remove('hidden');
+};
+
+window.closeSplitModal = function () {
+    STATE.currentSplitOrder = null;
+    STATE.splitItems = [];
+    STATE.splitTotalPrice = 0;
+    document.getElementById('split-modal').classList.add('hidden');
+};
+
+window.setSplitMode = function (mode) {
+    STATE.splitMode = mode;
+    
+    const btnEven = document.getElementById('split-tab-even');
+    const btnManual = document.getElementById('split-tab-manual');
+    const secEven = document.getElementById('split-even-section');
+    const secManual = document.getElementById('split-manual-section');
+
+    if (mode === 'even') {
+        if (secEven) secEven.classList.remove('hidden');
+        if (secManual) secManual.classList.add('hidden');
+        if (btnEven) { btnEven.classList.add('bg-brand', 'text-black'); btnEven.classList.remove('bg-gray-800', 'text-white'); }
+        if (btnManual) { btnManual.classList.add('bg-gray-800', 'text-white'); btnManual.classList.remove('bg-brand', 'text-black'); }
+
+        window.updateSplitPersonCount(0);
+    } else {
+        if (secManual) secManual.classList.remove('hidden');
+        if (secEven) secEven.classList.add('hidden');
+        if (btnManual) { btnManual.classList.add('bg-brand', 'text-black'); btnManual.classList.remove('bg-gray-800', 'text-white'); }
+        if (btnEven) { btnEven.classList.add('bg-gray-800', 'text-white'); btnEven.classList.remove('bg-brand', 'text-black'); }
+
+        window.renderSplitItems();
+    }
+};
+
+window.updateSplitPersonCount = function (delta) {
+    STATE.splitPersonCount = Math.max(2, Math.min(20, (STATE.splitPersonCount || 2) + delta));
+    const countEl = document.getElementById('split-person-count');
+    if (countEl) countEl.innerText = STATE.splitPersonCount;
+
+    const shareAmount = Math.ceil(STATE.splitTotalPrice / STATE.splitPersonCount);
+
+    const evenShareEl = document.getElementById('split-even-share');
+    const currentAmountEl = document.getElementById('split-current-amount');
+    const sysCurrency = localStorage.getItem('system_currency') || 'DA';
+
+    if (evenShareEl) evenShareEl.innerText = `${shareAmount} ${sysCurrency}`;
+    if (currentAmountEl) currentAmountEl.innerText = `${shareAmount} ${sysCurrency}`;
+};
+
+window.renderSplitItems = function () {
+    const list = document.getElementById('split-items-list');
+    if (!list) return;
+    list.innerHTML = '';
+    const sysCurrency = localStorage.getItem('system_currency') || 'DA';
+
+    STATE.splitItems.forEach((item, index) => {
+        const itemHtml = `
+            <div class="flex items-center justify-between bg-gray-800 p-3 rounded-xl border ${item.selected ? 'border-brand shadow-[0_0_8px_rgba(255,153,0,0.2)]' : 'border-gray-700'} cursor-pointer hover:bg-gray-750 transition" onclick="window.toggleSplitItem(${index})">
+                <div class="flex items-center gap-3">
+                    <div class="w-6 h-6 rounded border ${item.selected ? 'border-brand bg-brand text-black' : 'border-gray-500 bg-gray-900'} flex items-center justify-center transition">
+                        ${item.selected ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                    </div>
+                    <span class="text-white font-bold text-sm select-none">${item.qty}x ${item.name}</span>
+                </div>
+                <span class="text-brand font-mono font-bold select-none">${(item.price * item.qty).toLocaleString()} ${sysCurrency}</span>
+            </div>
+        `;
+        list.insertAdjacentHTML('beforeend', itemHtml);
+    });
+
+    const selectedTotal = STATE.splitItems.filter(i => i.selected).reduce((sum, i) => sum + (i.price * i.qty), 0);
+    const selEl = document.getElementById('split-selected-total');
+    const remEl = document.getElementById('split-remaining-total');
+    const curEl = document.getElementById('split-current-amount');
+
+    if (selEl) selEl.innerText = `${selectedTotal.toLocaleString()} ${sysCurrency}`;
+    if (remEl) remEl.innerText = `${(STATE.splitTotalPrice - selectedTotal).toLocaleString()} ${sysCurrency}`;
+    if (curEl) curEl.innerText = `${selectedTotal.toLocaleString()} ${sysCurrency}`;
+};
+
+window.toggleSplitItem = function (index) {
+    if (STATE.splitItems[index]) {
+        STATE.splitItems[index].selected = !STATE.splitItems[index].selected;
+        window.renderSplitItems();
+    }
+};
+
+window.confirmSplitPayment = async function (shouldPrint) {
+    const order = STATE.currentSplitOrder;
+    if (!order) return;
+
+    const btn = document.getElementById('btn-confirm-split');
+    const originalText = btn ? btn.innerHTML : 'تأكيد ودفع';
+    if (btn) {
+        btn.innerHTML = 'جاري التنفيذ...';
+        btn.disabled = true;
+    }
+
+    let priceKey = 'Total';
+    if ('Total' in order) priceKey = 'Total';
+    else if ('total' in order) priceKey = 'total';
+    else if ('Price' in order) priceKey = 'Price';
+    else if ('price' in order) priceKey = 'price';
+
+    try {
+        if (STATE.splitMode === 'even') {
+            const count = STATE.splitPersonCount;
+            const shareAmount = Math.ceil(STATE.splitTotalPrice / count);
+
+            for (let i = 1; i < count; i++) {
+                const payload = {
+                    "Details": `حصة من تقسيم #${order.dailySequence}`,
+                    [priceKey]: String(shareAmount),
+                    "Table": order.Table || 'سفري',
+                    "Status": "مدفوع",
+                    "order_type": order.order_type || "quick"
+                };
+                const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/?user_field_names=true`, {
+                    method: 'POST',
+                    headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error("Failed to create split order share");
+            }
+
+            const patchPayload = {
+                "Details": `${order.Details || ''}\n-- تم تقسيم الفاتورة (بالتساوي على ${count} أشخاص) --`,
+                [priceKey]: String(shareAmount),
+                "Status": "مدفوع"
+            };
+
+            const patchRes = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${order.id}/?user_field_names=true`, {
+                method: 'PATCH',
+                headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                body: JSON.stringify(patchPayload)
+            });
+            if (!patchRes.ok) throw new Error("Failed to patch original order");
+
+            if (shouldPrint && typeof window.printReceipt === 'function') {
+                for (let i = 1; i <= count; i++) {
+                    setTimeout(() => {
+                        window.printReceipt({
+                            ...order,
+                            dailySequence: `${order.dailySequence} (حصة ${i})`,
+                            Details: `حصة ${i} من ${count}\n${patchPayload.Details}`,
+                            [priceKey]: String(shareAmount)
+                        });
+                    }, i * 1500);
+                }
+            }
+
+        } else if (STATE.splitMode === 'manual') {
+            const selectedItems = STATE.splitItems.filter(i => i.selected);
+            if (selectedItems.length === 0) {
+                window.showToast("الرجاء تحديد صنف واحد على الأقل", "error");
+                if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
+                return;
+            }
+
+            const newDetails = selectedItems.map(i => i.originalLine).join('\n');
+            const newTotal = selectedItems.reduce((sum, i) => sum + (i.price * i.qty), 0);
+
+            const postPayload = {
+                "Details": newDetails,
+                [priceKey]: String(newTotal),
+                "Table": order.Table || 'سفري',
+                "Status": "مدفوع",
+                "order_type": order.order_type || "quick"
+            };
+
+            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/?user_field_names=true`, {
+                method: 'POST',
+                headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                body: JSON.stringify(postPayload)
+            });
+            if (!res.ok) throw new Error("Failed to create manual split order");
+
+            const remainingItems = STATE.splitItems.filter(i => !i.selected);
+            const remainingDetails = remainingItems.map(i => i.originalLine).join('\n');
+            const remainingTotal = remainingItems.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            
+            const rawCurrentStatus = (typeof order.Status === 'object' && order.Status !== null) ? order.Status.value : order.Status;
+            const currentStatus = rawCurrentStatus || "جاهز";
+            const newStatus = remainingItems.length === 0 ? "مدفوع" : currentStatus;
+
+            const patchPayload = {
+                "Details": remainingDetails,
+                [priceKey]: String(remainingTotal),
+                "Status": newStatus
+            };
+
+            const patchRes = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${order.id}/?user_field_names=true`, {
+                method: 'PATCH',
+                headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                body: JSON.stringify(patchPayload)
+            });
+            if (!patchRes.ok) throw new Error("Failed to patch original order - manual mode");
+
+            if (shouldPrint && typeof window.printReceipt === 'function') {
+                setTimeout(() => {
+                    window.printReceipt({
+                        ...order,
+                        dailySequence: `${order.dailySequence} (حصة)`,
+                        Details: newDetails,
+                        [priceKey]: String(newTotal)
+                    });
+                }, 500);
+            }
+        }
+
+        window.showToast("تم تقسيم الفاتورة بنجاح ✅", "success");
+        window.closeSplitModal();
+        const freshData = await window.fetchOrders(ORDERS_TABLE_ID);
+        STATE.lastFetchedOrders = freshData;
+        STATE.latestKdsOrders = freshData;
+        window.renderCashier(freshData);
+        window.showSuccessPopup();
+
+    } catch (e) {
+        console.warn("Split Billing Error:", e);
+        window.showToast("حدث خطأ أثناء التقسيم، راجع الـ Console", "error");
+    } finally {
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
     }
 };
