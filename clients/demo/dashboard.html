@@ -194,6 +194,178 @@
                 color: #000 !important;
             }
         }
+
+        /* === Floor Plan Styles === */
+        .floor-canvas {
+            position: relative;
+            min-height: 500px;
+            background-color: #1a1a2e;
+            background-image:
+                radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            border: 2px dashed rgba(107, 114, 128, 0.3);
+            border-radius: 16px;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .table-element {
+            position: absolute;
+            cursor: grab;
+            transition: box-shadow 0.2s;
+            z-index: 10;
+        }
+
+        .table-element:active {
+            cursor: grabbing;
+            z-index: 100;
+        }
+
+        .table-element:hover {
+            box-shadow: 0 0 20px rgba(255, 153, 0, 0.4);
+        }
+
+        .table-element .table-number-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 900;
+            font-size: 14px;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .table-element .table-delete-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            cursor: pointer;
+            z-index: 30;
+            border: 2px solid #1f2937;
+            line-height: 1;
+        }
+
+        .table-element:hover .table-delete-btn {
+            display: flex;
+        }
+
+        /* Table status colors */
+        .table-status-free svg {
+            fill: #22c55e;
+        }
+
+        .table-status-occupied svg {
+            fill: #f59e0b;
+        }
+
+        .table-status-calling svg {
+            fill: #ef4444;
+            animation: tablePulse 1s infinite;
+        }
+
+        .table-status-paid svg {
+            fill: #3b82f6;
+        }
+
+        @keyframes tablePulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.8));
+            }
+
+            50% {
+                opacity: 0.5;
+                filter: drop-shadow(0 0 15px rgba(239, 68, 68, 1));
+            }
+        }
+
+        /* Room tab styles */
+        .room-tab {
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .room-tab-active {
+            background: #FF9900;
+            color: #000;
+        }
+
+        .room-tab-inactive {
+            background: #374151;
+            color: #9ca3af;
+        }
+
+        .room-tab-inactive:hover {
+            background: #4b5563;
+            color: #fff;
+        }
+
+        /* Shape picker cards */
+        .shape-picker-card {
+            border: 2px solid #374151;
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: #1f2937;
+        }
+
+        .shape-picker-card:hover {
+            border-color: #FF9900;
+            background: #374151;
+        }
+
+        .shape-picker-card.selected {
+            border-color: #FF9900;
+            background: rgba(255, 153, 0, 0.1);
+            box-shadow: 0 0 15px rgba(255, 153, 0, 0.3);
+        }
+
+        /* Calling overlay for waiter view */
+        .calling-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(239, 68, 68, 0.25);
+            border-radius: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 15;
+            animation: tablePulse 1s infinite;
+        }
+
+        .calling-overlay span {
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
     </style>
 </head>
 
@@ -432,6 +604,10 @@
                                 class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
                                 <span class="font-medium">إدارة الحساب</span>
                             </button>
+                            <button onclick="window.loadView('settings_rooms')" id="btn-settings_rooms"
+                                class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                                <span class="font-medium">إعدادات القاعات</span>
+                            </button>
                         </div>
                     </div>
                 </nav>
@@ -640,7 +816,8 @@
             </div>
 
             <!-- وصف قصير -->
-            <p class="text-sm text-gray-400 mb-4">اختر طريقة تقسيم الفاتورة بين العملاء: بالتساوي أو يدوياً حسب الأصناف.</p>
+            <p class="text-sm text-gray-400 mb-4">اختر طريقة تقسيم الفاتورة بين العملاء: بالتساوي أو يدوياً حسب الأصناف.
+            </p>
 
             <!-- محتوى قابل للتمرير -->
             <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 mb-4">
@@ -715,7 +892,8 @@
                         <p class="text-xs text-gray-400 mb-3 font-bold">حدد الأصناف التي تخص هذه الحصة:</p>
 
                         <!-- قائمة الأصناف (تُحقن ديناميكياً) -->
-                        <div id="split-items-list" class="flex flex-col gap-2 max-h-[30vh] overflow-y-auto custom-scrollbar pr-1 relative z-10">
+                        <div id="split-items-list"
+                            class="flex flex-col gap-2 max-h-[30vh] overflow-y-auto custom-scrollbar pr-1 relative z-10">
                             <!-- سيتم حقن الأصناف هنا من JS -->
                             <div class="text-center text-sm text-gray-500 py-6">جاري تحميل الأصناف...</div>
                         </div>
@@ -725,13 +903,11 @@
                             <div class="flex flex-col gap-1">
                                 <div class="flex items-center gap-2">
                                     <span class="text-gray-400 text-sm">الحصة المحددة:</span>
-                                    <span id="split-selected-total"
-                                        class="text-brand font-bold text-lg">0 DA</span>
+                                    <span id="split-selected-total" class="text-brand font-bold text-lg">0 DA</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <span class="text-gray-400 text-sm">المتبقي:</span>
-                                    <span id="split-remaining-total"
-                                        class="text-gray-300 font-bold text-lg">0 DA</span>
+                                    <span id="split-remaining-total" class="text-gray-300 font-bold text-lg">0 DA</span>
                                 </div>
                             </div>
                         </div>
@@ -765,8 +941,8 @@
                     <button onclick="window.confirmSplitPayment(false)"
                         class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg flex justify-center items-center gap-2 transform hover:scale-[1.02]">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M5 13l4 4L19 7"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                            </path>
                         </svg>
                         <span>تحصيل بدون طباعة</span>
                     </button>
