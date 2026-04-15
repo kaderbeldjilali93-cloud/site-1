@@ -614,6 +614,169 @@
     </div>
 
     <!-- ========================================== -->
+    <!-- نافذة تقسيم الفاتورة (Split Bill Modal) -->
+    <!-- ========================================== -->
+    <div id="split-modal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm transition-opacity">
+        <div
+            class="bg-gray-800 border-t-4 border-brand rounded-2xl shadow-2xl p-6 w-full max-w-2xl mx-4 flex flex-col max-h-[85vh]">
+
+            <!-- العنوان (Header) -->
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
+                <h3 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M14.121 14.121A3 3 0 1 0 7.757 7.757m6.364 6.364L7.757 7.757m6.364 6.364L21 21M7.757 7.757L3 3m8.003 8.003l-.003.003">
+                        </path>
+                    </svg>
+                    تقسيم الفاتورة — <span id="split-order-title" class="text-brand text-lg">#D-001</span>
+                </h3>
+                <button onclick="window.closeSplitModal()" class="text-gray-500 hover:text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- وصف قصير -->
+            <p class="text-sm text-gray-400 mb-4">اختر طريقة تقسيم الفاتورة بين العملاء: بالتساوي أو يدوياً حسب الأصناف.</p>
+
+            <!-- محتوى قابل للتمرير -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 mb-4">
+
+                <!-- أزرار اختيار الطريقة (Toggle Tabs) -->
+                <div class="flex gap-2 mb-6">
+                    <button id="split-tab-even" onclick="window.setSplitMode('even')"
+                        class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 bg-brand text-black shadow-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        بالتساوي
+                    </button>
+                    <button id="split-tab-manual" onclick="window.setSplitMode('manual')"
+                        class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 bg-gray-700 text-gray-300 hover:bg-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                            </path>
+                        </svg>
+                        يدوي (حسب الأصناف)
+                    </button>
+                </div>
+
+                <!-- قسم التقسيم بالتساوي -->
+                <div id="split-even-section">
+                    <div class="bg-gray-900 rounded-xl p-5 border border-gray-700">
+                        <!-- المبلغ الإجمالي -->
+                        <div class="text-center mb-5 pb-4 border-b border-gray-700">
+                            <p class="text-gray-400 text-xs mb-1">المبلغ الإجمالي للطلب</p>
+                            <span id="split-total-amount" class="text-2xl font-black text-white">0 DA</span>
+                        </div>
+
+                        <!-- عدد الأشخاص -->
+                        <div class="flex items-center justify-between mb-5 relative z-10">
+                            <span class="text-gray-300 font-medium">عدد الأشخاص:</span>
+                            <div class="flex items-center gap-3">
+                                <button onclick="window.updateSplitPersonCount(-1)"
+                                    class="w-10 h-10 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-bold text-xl flex items-center justify-center transition active:scale-90 border border-gray-600">
+                                    −
+                                </button>
+                                <span id="split-person-count"
+                                    class="text-2xl font-black text-brand w-12 text-center tabular-nums">2</span>
+                                <button onclick="window.updateSplitPersonCount(1)"
+                                    class="w-10 h-10 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-bold text-xl flex items-center justify-center transition active:scale-90 border border-gray-600">
+                                    +
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- حصة كل شخص -->
+                        <div
+                            class="bg-gray-800 rounded-xl p-4 text-center border border-gray-700 shadow-inner relative overflow-hidden">
+                            <div class="absolute inset-0 bg-brand opacity-5 mix-blend-overlay"></div>
+                            <p class="text-gray-400 text-sm mb-2 relative z-10">حصة كل شخص</p>
+                            <span id="split-even-share"
+                                class="text-3xl font-black text-brand drop-shadow-md relative z-10">0 DA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- قسم التقسيم اليدوي -->
+                <div id="split-manual-section" class="hidden">
+                    <div class="bg-gray-900 rounded-xl p-5 border border-gray-700">
+                        <!-- المبلغ الإجمالي -->
+                        <div class="text-center mb-4 pb-3 border-b border-gray-700">
+                            <p class="text-gray-400 text-xs mb-1">المبلغ الإجمالي للطلب</p>
+                            <span id="split-manual-total-amount" class="text-2xl font-black text-white">0 DA</span>
+                        </div>
+
+                        <p class="text-xs text-gray-400 mb-3 font-bold">حدد الأصناف التي تخص هذه الحصة:</p>
+
+                        <!-- قائمة الأصناف (تُحقن ديناميكياً) -->
+                        <div id="split-items-list" class="flex flex-col gap-2 max-h-[30vh] overflow-y-auto custom-scrollbar pr-1 relative z-10">
+                            <!-- سيتم حقن الأصناف هنا من JS -->
+                            <div class="text-center text-sm text-gray-500 py-6">جاري تحميل الأصناف...</div>
+                        </div>
+
+                        <!-- ملخص التقسيم اليدوي -->
+                        <div class="mt-4 pt-3 border-t border-gray-700 flex justify-between items-center gap-4">
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gray-400 text-sm">الحصة المحددة:</span>
+                                    <span id="split-selected-total"
+                                        class="text-brand font-bold text-lg">0 DA</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gray-400 text-sm">المتبقي:</span>
+                                    <span id="split-remaining-total"
+                                        class="text-gray-300 font-bold text-lg">0 DA</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- الشريط السفلي (Footer) -->
+            <div class="pt-4 border-t border-gray-700">
+                <!-- المبلغ المطلوب تحصيله -->
+                <div
+                    class="bg-gray-900 rounded-xl p-4 text-center mb-4 border border-gray-700 shadow-inner relative overflow-hidden">
+                    <div class="absolute inset-0 bg-brand opacity-5 mix-blend-overlay"></div>
+                    <p class="text-gray-400 text-sm mb-1 relative z-10">المبلغ المطلوب تحصيله</p>
+                    <span id="split-current-amount"
+                        class="text-3xl font-black text-brand drop-shadow-md relative z-10">0 DA</span>
+                </div>
+
+                <!-- أزرار التحصيل -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="window.confirmSplitPayment(true)"
+                        class="flex-1 bg-brand hover:bg-brand-dark text-black font-bold py-3 px-6 rounded-xl transition shadow-[0_0_15px_rgba(255,153,0,0.3)] flex justify-center items-center gap-2 transform hover:scale-[1.02]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                            </path>
+                        </svg>
+                        <span>تحصيل هذه الحصة + طباعة</span>
+                    </button>
+                    <button onclick="window.confirmSplitPayment(false)"
+                        class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg flex justify-center items-center gap-2 transform hover:scale-[1.02]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>تحصيل بدون طباعة</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================================== -->
     <!-- نافذة تأكيد الخروج (Logout Modal) -->
     <!-- ========================================== -->
     <div id="logout-modal"
