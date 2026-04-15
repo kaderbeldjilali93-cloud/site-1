@@ -236,9 +236,9 @@ window.renderCashier = function (orders) {
     tableHeader.innerHTML = `
         <div class="flex items-center gap-3">
             <span class="live-indicator" title="تحديث مباشر"></span>
-            <button onclick="window.openNewOrderModal('quick')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-lg transition shadow-md flex items-center gap-2 text-sm whitespace-nowrap">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                <span>طلب سريع جديد</span>
+            <button onclick="window.openNewOrderModal('quick')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-lg transition shadow-md flex items-center gap-2 text-sm whitespace-nowrap shrink-0 sm:shrink-0">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span class="whitespace-nowrap">طلب سريع جديد</span>
             </button>
         </div>
         <div class="relative flex items-center bg-gray-800 border border-gray-600 rounded-lg hover:border-brand focus-within:border-brand focus-within:ring-2 focus-within:ring-brand transition-all overflow-hidden group">

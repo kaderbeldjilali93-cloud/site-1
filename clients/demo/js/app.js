@@ -278,11 +278,11 @@ window.toggleMenuAccordion = function () {
     const icon = document.getElementById('menu-accordion-icon');
     if (submenu.classList.contains('hidden')) {
         submenu.classList.remove('hidden');
-        submenu.classList.add('flex');
+        submenu.classList.add('flex', 'flex-col');
         icon.classList.add('rotate-180');
     } else {
         submenu.classList.add('hidden');
-        submenu.classList.remove('flex');
+        submenu.classList.remove('flex', 'flex-col');
         icon.classList.remove('rotate-180');
     }
 };
@@ -292,11 +292,11 @@ window.toggleSettingsAccordion = function () {
     const icon = document.getElementById('settings-accordion-icon');
     if (submenu.classList.contains('hidden')) {
         submenu.classList.remove('hidden');
-        submenu.classList.add('flex');
+        submenu.classList.add('flex', 'flex-col');
         icon.classList.add('rotate-180');
     } else {
         submenu.classList.add('hidden');
-        submenu.classList.remove('flex');
+        submenu.classList.remove('flex', 'flex-col');
         icon.classList.remove('rotate-180');
     }
 };
@@ -403,27 +403,31 @@ window.formatTimerText = function (minutes) {
 window.isOrderFromToday = function (rawTime) {
     if (!rawTime) return false;
     try {
+        const todayStr = window.getLocalYYYYMMDD();
+        if (rawTime.includes(todayStr)) return true;
+
         const orderDate = window.parseCustomDate(rawTime);
         if (isNaN(orderDate.getTime())) return false;
-        const now = new Date();
-        let businessDayStart = new Date();
-        businessDayStart.setHours(6, 0, 0, 0);
-        if (now.getHours() < 6) businessDayStart.setDate(businessDayStart.getDate() - 1);
-        return orderDate >= businessDayStart;
+
+        const y = orderDate.getFullYear();
+        const m = String(orderDate.getMonth() + 1).padStart(2, '0');
+        const d = String(orderDate.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}` === todayStr;
     } catch (e) { return false; }
 };
 
 window.isOrderFromSelectedDate = function (rawTime, dateString) {
     if (!rawTime || !dateString) return false;
     try {
+        if (rawTime.includes(dateString)) return true;
+
         const orderDate = window.parseCustomDate(rawTime);
         if (isNaN(orderDate.getTime())) return false;
-        const [year, month, day] = dateString.split('-').map(Number);
-        const businessDayStart = new Date(year, month - 1, day);
-        businessDayStart.setHours(6, 0, 0, 0);
-        const businessDayEnd = new Date(businessDayStart);
-        businessDayEnd.setDate(businessDayEnd.getDate() + 1);
-        return orderDate >= businessDayStart && orderDate < businessDayEnd;
+
+        const y = orderDate.getFullYear();
+        const m = String(orderDate.getMonth() + 1).padStart(2, '0');
+        const d = String(orderDate.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}` === dateString;
     } catch (e) {
         return false;
     }
@@ -476,12 +480,16 @@ window.loadView = async function (viewType) {
     }
 
     if (STATE.pollingInterval) { clearInterval(STATE.pollingInterval); STATE.pollingInterval = null; }
+    STATE.currentActiveView = viewType;
 
     if (STATE.currentRole === 'kitchen' && viewType !== 'kds') return;
     if (STATE.currentRole === 'waiter' && viewType !== 'tables' && viewType !== 'menu_quick') return;
     if (STATE.currentRole === 'cashier' && viewType === 'staff') return;
 
-    if (STATE.currentRole === 'admin') { window.updateNavStyles(viewType); localStorage.setItem(STATE.storageKeys.lastView, viewType); }
+    if (STATE.currentRole === 'admin' || STATE.currentRole === 'cashier') {
+        window.updateNavStyles(viewType);
+        localStorage.setItem(STATE.storageKeys.lastView, viewType);
+    }
 
     welcomeState.style.display = 'none';
     contentFrame.classList.add('hidden');
@@ -504,26 +512,37 @@ window.loadView = async function (viewType) {
     try {
         if (viewType === 'kds') {
             const runKDS = async () => {
+                if (STATE.currentActiveView !== 'kds') return;
                 try {
                     const data = await window.fetchOrders(ORDERS_TABLE_ID);
+                    if (STATE.currentActiveView !== 'kds') return;
                     STATE.latestKdsOrders = data;
                     window.renderKDS(data);
                 } catch (e) { console.warn(e); }
             };
             await runKDS();
-            STATE.pollingInterval = setInterval(runKDS, 10000);
+            if (STATE.currentActiveView === 'kds') STATE.pollingInterval = setInterval(runKDS, 10000);
         }
         else if (viewType === 'cashier') {
-            const runCashier = async () => { try { const data = await window.fetchOrders(ORDERS_TABLE_ID); window.renderCashier(data); } catch (e) { console.warn(e); } };
+            const runCashier = async () => {
+                if (STATE.currentActiveView !== 'cashier') return;
+                try {
+                    const data = await window.fetchOrders(ORDERS_TABLE_ID);
+                    if (STATE.currentActiveView !== 'cashier') return;
+                    window.renderCashier(data);
+                } catch (e) { console.warn(e); }
+            };
             await runCashier();
-            STATE.pollingInterval = setInterval(runCashier, 10000);
+            if (STATE.currentActiveView === 'cashier') STATE.pollingInterval = setInterval(runCashier, 10000);
         }
         else if (viewType === 'menu_quick') {
             const data = await window.fetchMenu();
+            if (STATE.currentActiveView !== 'menu_quick') return;
             window.renderMenuEditor(data);
         }
         else if (viewType === 'menu_promo') {
             const data = await window.fetchMenu();
+            if (STATE.currentActiveView !== 'menu_promo') return;
             window.renderPromoEditor(data);
         }
         else if (viewType === 'menu_add') {
@@ -531,6 +550,7 @@ window.loadView = async function (viewType) {
         }
         else if (viewType === 'analytics') {
             const data = await window.fetchOrders(ORDERS_TABLE_ID);
+            if (STATE.currentActiveView !== 'analytics') return;
             STATE.analyticsData = data;
             await window.renderAnalytics(data, 'today');
         }
