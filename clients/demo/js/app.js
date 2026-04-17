@@ -41,7 +41,7 @@ if (loginForm) {
         const submitBtn = loginForm.querySelector('button[type="submit"]');
         const originalBtnText = submitBtn.innerHTML;
 
-        submitBtn.innerHTML = `<span class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-black"></div> جاري التحقق...</span>`;
+        submitBtn.innerHTML = `<span class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-brand mb-4"></div> جاري التحقق...</span>`;
         submitBtn.disabled = true;
 
         try {
@@ -55,13 +55,9 @@ if (loginForm) {
             const staffList = data.results;
 
             console.log("Fetched Staff:", staffList);
-            console.log("Login Attempt:", usernameInput, passwordInput);
-
-            // البحث عن العامل بناءً على الاسم (Name) والرمز السري (PIN)
             const user = staffList.find(staff =>
                 (staff.Name && staff.Name.trim().toLowerCase() === usernameInput.toLowerCase()) && (staff.PIN == passwordInput)
             );
-
 
             if (!user) {
                 window.showToast("اسم المستخدم أو الرمز السري غير صحيح ❌", "error");
@@ -70,7 +66,6 @@ if (loginForm) {
                 return;
             }
 
-            // التحقق من حالة الحساب
             if (user.Status === false) {
                 window.showToast("عذراً، هذا الحساب موقوف من قبل الإدارة.", "error");
                 submitBtn.innerHTML = originalBtnText;
@@ -78,18 +73,15 @@ if (loginForm) {
                 return;
             }
 
-            // استخراج الدور وتحويله لأحرف صغيرة (admin, cashier, kitchen)
             const roleRaw = (typeof user.Role === 'object' && user.Role !== null) ? user.Role.value : user.Role;
             const role = roleRaw ? roleRaw.toLowerCase() : 'cashier';
 
-            // حفظ بيانات المستخدم لاستخدامها لاحقاً
             localStorage.setItem('currentUserData', JSON.stringify({
                 id: user.id,
                 name: user.Name,
                 role: roleRaw
             }));
 
-            // الافتراض أننا في بيئة الديمو للروابط
             let currentLinks = null;
             if (typeof CLIENTS_DB !== 'undefined') {
                 currentLinks = CLIENTS_DB['demo'] ? CLIENTS_DB['demo'].links : null;
@@ -98,10 +90,8 @@ if (loginForm) {
             submitBtn.innerHTML = originalBtnText;
             submitBtn.disabled = false;
 
-            // توثيق الجلسة
             window.authenticateUser(user.Name, currentLinks, role);
 
-            // التوجيه
             if (role === 'admin') {
                 window.loadView('analytics');
             } else if (role === 'cashier') {
@@ -136,8 +126,9 @@ window.applyRolePermissions = function (role) {
     const menuStaff = document.getElementById('menu-staff');
     const menuInventory = document.getElementById('menu-inventory');
     const menuSettings = document.getElementById('menu-settings');
+    const btnSettingsRooms = document.getElementById('btn-settings_rooms');
 
-    [btnKds, btnCashier, btnTables, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuSettings].forEach(el => {
+    [btnKds, btnCashier, btnTables, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuSettings, btnSettingsRooms].forEach(el => {
         if (el) {
             if (el.id === 'btn-menu-parent' || el.id === 'menu-settings') {
                 el.style.display = 'flex';
@@ -160,8 +151,8 @@ window.applyRolePermissions = function (role) {
     } else if (r === 'cashier') {
         styleEl.innerHTML += ' #waiter-action-buttons { display: none !important; }';
         if (menuStaff) menuStaff.style.display = 'none';
+        if (btnSettingsRooms) btnSettingsRooms.style.display = 'none';
     } else if (r === 'waiter') {
-        // Waiter can see it natively since it's not hidden
         [btnKds, btnCashier, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuSettings].forEach(el => {
             if (el) el.style.display = 'none';
         });
