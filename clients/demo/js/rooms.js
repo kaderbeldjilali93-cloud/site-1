@@ -1,8 +1,8 @@
 // clients/demo/js/rooms.js
 
-window.generateTableSVG = function (shape, chairColor = "#22c55e") {
-    const tableColor = "#374151";
-    const strokeColor = "#4b5563";
+window.generateTableSVG = function (shape, chairColor = "#10b981") {
+    const tableColor = "#4b5563"; // Lighter gray for better visibility
+    const strokeColor = "#6b7280";
     let svg = "";
 
     switch (shape) {
@@ -74,7 +74,7 @@ window.generateTableSVG = function (shape, chairColor = "#22c55e") {
             </svg>`;
             break;
         default:
-            svg = `<svg width="70" height="70"><circle cx="35" cy="35" r="25" fill="#374151" stroke="#4b5563"/></svg>`;
+            svg = `<svg width="70" height="70"><circle cx="35" cy="35" r="25" fill="${tableColor}" stroke="${strokeColor}"/></svg>`;
     }
     return svg;
 };
@@ -138,8 +138,8 @@ window.renderSettingsRooms = async function () {
 
         let shapesHtml = shapes.map(s => `
             <div onclick="window.selectShape('${s.id}')" class="shape-picker-card ${STATE.selectedShape === s.id ? 'selected' : ''}">
-                <div class="h-10 flex items-center justify-center transform scale-75">${window.generateTableSVG(s.id)}</div>
-                <span class="text-xs text-gray-300 font-bold whitespace-nowrap">${s.name}</span>
+                <div class="h-16 flex items-center justify-center transform scale-90 mb-1">${window.generateTableSVG(s.id)}</div>
+                <span class="text-[10px] text-gray-400 font-bold whitespace-nowrap">${s.name}</span>
             </div>
         `).join('');
 
@@ -205,7 +205,7 @@ window.renderSettingsRooms = async function () {
                             <span>أرضية ${STATE.currentRoom}</span>
                             <span class="text-sm font-normal text-gray-400 border border-gray-700 rounded-full px-3 py-1 bg-gray-800 shadow-inner">${currentTables.length} طاولات</span>
                         </h3>
-                        <div id="floor-canvas" class="floor-canvas shadow-inner">
+                        <div id="floor-canvas" class="floor-canvas shadow-inner border-2 border-dashed border-gray-700/50 bg-[#161625]">
                             ${floorHtml}
                         </div>
                     </div>
@@ -348,16 +348,20 @@ window.initDragAndDrop = function () {
     const canvas = document.getElementById('floor-canvas');
     if (!canvas) return;
 
-    const newCanvas = canvas.cloneNode(true);
-    canvas.parentNode.replaceChild(newCanvas, canvas);
-
-    newCanvas.addEventListener('mousedown', window.handleDragStart);
+    // Canvas listeners MUST be added every time because the canvas element is replaced on re-render
+    canvas.addEventListener('mousedown', window.handleDragStart);
+    canvas.addEventListener('touchstart', window.handleDragStart, { passive: false });
+    
+    // Document listeners ONLY ONCE
+    if (window._dragListenersAdded) return;
+    
     document.addEventListener('mousemove', window.handleDragMove);
     document.addEventListener('mouseup', window.handleDragEnd);
-
-    newCanvas.addEventListener('touchstart', window.handleDragStart, { passive: false });
+    
     document.addEventListener('touchmove', window.handleDragMove, { passive: false });
     document.addEventListener('touchend', window.handleDragEnd);
+
+    window._dragListenersAdded = true;
 };
 
 window.handleDragStart = function (e) {
