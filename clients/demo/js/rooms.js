@@ -97,6 +97,13 @@ window.renderSettingsRooms = async function () {
         }
 
         let rooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))].sort();
+
+        // Ensure currentRoom is in the rooms list even if it has no tables yet
+        if (STATE.currentRoom && !rooms.includes(STATE.currentRoom)) {
+            rooms.push(STATE.currentRoom);
+            rooms.sort();
+        }
+
         if (!STATE.currentRoom && rooms.length > 0) {
             STATE.currentRoom = rooms[0];
         }
@@ -104,7 +111,7 @@ window.renderSettingsRooms = async function () {
             STATE.selectedShape = 'round-4';
         }
 
-        if (rooms.length === 0) {
+        if (rooms.length === 0 && !STATE.currentRoom) {
             dynamicContent.innerHTML = `
                 <div class="max-w-xl mx-auto mt-10 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 text-center">
                     <h2 class="text-2xl font-bold text-white mb-6">لا توجد قاعات بعد</h2>
