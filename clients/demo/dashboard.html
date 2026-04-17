@@ -592,7 +592,22 @@
                         <!-- الخيارات الفرعية (الإعدادات) -->
                         <div id="settings-submenu"
                             class="hidden flex-col w-full gap-1 pl-2 pr-6 py-2 mt-1 bg-gray-800/50 rounded-lg border-r-2 border-gray-700">
-
+                            <button onclick="window.loadView('settings_restaurant')" id="btn-settings_restaurant"
+                                class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                                <span class="font-medium">إعدادات المطعم</span>
+                            </button>
+                            <button onclick="window.loadView('settings_print')" id="btn-settings_print"
+                                class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                                <span class="font-medium">إعدادات الطباعة</span>
+                            </button>
+                            <button onclick="window.loadView('settings_account')" id="btn-settings_account"
+                                class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                                <span class="font-medium">إدارة الحساب</span>
+                            </button>
+                            <button onclick="window.loadView('settings_rooms')" id="btn-settings_rooms"
+                                class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                                <span class="font-medium">إعدادات القاعات</span>
+                            </button>
                         </div>
                     </div>
                 </nav>
@@ -1010,18 +1025,3 @@
     <div id="toast-container" class="fixed bottom-5 left-5 z-[60] flex flex-col gap-3 pointer-events-none"></div>
 
     <!-- ========================================== -->
-    <!-- كود الجافاسكربت (JavaScript Logic) -->
-    <!-- ========================================== -->
-    <script src="js/config.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/kds.js"></script>
-    <script src="js/cashier.js"></script>
-    <script src="js/menu.js"></script>
-    <script src="js/settings.js"></script>
-    <script src="js/analytics.js"></script>
-    <script src="js/tables.js"></script>
-    <script src="js/staff.js"></script>
-    <script src="js/app.js"></script>
-</body>
-
-</html>
