@@ -1,15 +1,17 @@
 // clients/demo/js/rooms.js
 
-window.generateTableSVG = function (shape, chairColor = "#10b981", scale = 1.0) {
+window.generateTableSVG = function (shape, chairColor = "#10b981", scale = 1.0, rotation = 0) {
     const tableColor = "#4b5563";
     const strokeColor = "#6b7280";
     let svg = "";
 
-    // Parse shape for specific cases or use defaults
+    // Combine scale and rotation in transform
+    const transformStyle = `transform: scale(${scale}) rotate(${rotation}deg); transform-origin: center;`;
+
     switch (shape) {
         case "round-2":
             svg = `
-            <svg width="70" height="70" viewBox="0 0 70 70" style="transform: scale(${scale}); transform-origin: center;">
+            <svg width="70" height="70" viewBox="0 0 70 70" style="${transformStyle}">
                 <ellipse cx="35" cy="8" rx="10" ry="6" fill="${chairColor}"/>
                 <ellipse cx="35" cy="62" rx="10" ry="6" fill="${chairColor}"/>
                 <circle cx="35" cy="35" r="22" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/>
@@ -17,7 +19,7 @@ window.generateTableSVG = function (shape, chairColor = "#10b981", scale = 1.0) 
             break;
         case "round-4":
             svg = `
-            <svg width="90" height="90" viewBox="0 0 90 90" style="transform: scale(${scale}); transform-origin: center;">
+            <svg width="90" height="90" viewBox="0 0 90 90" style="${transformStyle}">
                 <ellipse cx="45" cy="8" rx="12" ry="8" fill="${chairColor}"/>
                 <ellipse cx="45" cy="82" rx="12" ry="8" fill="${chairColor}"/>
                 <ellipse cx="82" cy="45" rx="8" ry="12" fill="${chairColor}"/>
@@ -27,7 +29,7 @@ window.generateTableSVG = function (shape, chairColor = "#10b981", scale = 1.0) 
             break;
         case "square-4":
             svg = `
-            <svg width="80" height="80" viewBox="0 0 80 80" style="transform: scale(${scale}); transform-origin: center;">
+            <svg width="80" height="80" viewBox="0 0 80 80" style="${transformStyle}">
                 <ellipse cx="40" cy="8" rx="12" ry="6" fill="${chairColor}"/>
                 <ellipse cx="40" cy="72" rx="12" ry="6" fill="${chairColor}"/>
                 <ellipse cx="72" cy="40" rx="6" ry="12" fill="${chairColor}"/>
@@ -37,7 +39,7 @@ window.generateTableSVG = function (shape, chairColor = "#10b981", scale = 1.0) 
             break;
         case "rect-6":
             svg = `
-            <svg width="140" height="80" viewBox="0 0 140 80" style="transform: scale(${scale}); transform-origin: center;">
+            <svg width="140" height="80" viewBox="0 0 140 80" style="${transformStyle}">
                 <ellipse cx="35" cy="8" rx="12" ry="6" fill="${chairColor}"/>
                 <ellipse cx="70" cy="8" rx="12" ry="6" fill="${chairColor}"/>
                 <ellipse cx="105" cy="8" rx="12" ry="6" fill="${chairColor}"/>
@@ -49,7 +51,7 @@ window.generateTableSVG = function (shape, chairColor = "#10b981", scale = 1.0) 
             break;
         case "rect-8":
             svg = `
-            <svg width="180" height="80" viewBox="0 0 180 80" style="transform: scale(${scale}); transform-origin: center;">
+            <svg width="180" height="80" viewBox="0 0 180 80" style="${transformStyle}">
                 <ellipse cx="35" cy="8" rx="12" ry="6" fill="${chairColor}"/>
                 <ellipse cx="70" cy="8" rx="12" ry="6" fill="${chairColor}"/>
                 <ellipse cx="105" cy="8" rx="12" ry="6" fill="${chairColor}"/>
@@ -63,13 +65,16 @@ window.generateTableSVG = function (shape, chairColor = "#10b981", scale = 1.0) 
             break;
         case "bar-1":
             svg = `
-            <svg width="40" height="40" viewBox="0 0 40 40" style="transform: scale(${scale}); transform-origin: center;">
+            <svg width="40" height="40" viewBox="0 0 40 40" style="${transformStyle}">
                 <circle cx="20" cy="10" r="6" fill="${chairColor}"/>
                 <rect x="14" y="20" width="12" height="15" rx="3" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/>
             </svg>`;
             break;
         default:
-            svg = `<svg width="70" height="70" style="transform: scale(${scale}); transform-origin: center;"><circle cx="35" cy="35" r="25" fill="${tableColor}" stroke="${strokeColor}"/></svg>`;
+            svg = `
+            <svg width="70" height="70" style="${transformStyle}">
+                <circle cx="35" cy="35" r="25" fill="${tableColor}" stroke="${strokeColor}"/>
+            </svg>`;
     }
     return svg;
 };
@@ -88,12 +93,13 @@ window.renderSettingsRooms = async function () {
             if (res.ok) {
                 const data = await res.json();
                 STATE.tableMapData = data.results || [];
+            } else {
+                throw new Error("Failed to load data from Baserow");
             }
         }
 
         let rooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))].sort();
 
-        // Ensure currentRoom is in the rooms list even if it has no tables yet
         if (STATE.currentRoom && !rooms.includes(STATE.currentRoom)) {
             rooms.push(STATE.currentRoom);
             rooms.sort();
@@ -114,7 +120,7 @@ window.renderSettingsRooms = async function () {
         }
 
         let tabsHtml = rooms.map(r => `
-            <button onclick="window.switchRoom('${r}')" class="room-tab ${STATE.currentRoom === r ? 'room-tab-active' : 'room-tab-inactive'} shadow-sm">
+            <button onclick="window.switchRoom('${r}')" class="room-tab ${STATE.currentRoom === r ? 'room-indicator-active' : 'room-tab-inactive'} shadow-sm">
                 ${r}
             </button>
         `).join('');
@@ -126,11 +132,12 @@ window.renderSettingsRooms = async function () {
             const posX = t.PosX || 50;
             const posY = t.PosY || 50;
             const scale = t.Scale || 1.0;
+            const rotation = t.Rotation || 0;
             const isSelected = STATE.selectedTableId == t.id;
 
             floorHtml += `
                 <div class="table-element ${isSelected ? 'selected-for-edit' : ''}" data-id="${t.id}" style="left: ${posX}px; top: ${posY}px;" onclick="window.selectTableForEdit('${t.id}')">
-                    ${window.generateTableSVG(shapeStr, "#10b981", scale)}
+                    ${window.generateTableSVG(shapeStr, "#10b981", scale, rotation)}
                     <span class="table-number-label">T${t.TableNumber}</span>
                     <div class="table-delete-btn" onclick="window.deleteTable('${t.id}', event)">✕</div>
                 </div>
@@ -170,18 +177,17 @@ window.renderSettingsRooms = async function () {
 
         dynamicContent.innerHTML = html;
         window.initDragAndDrop();
-        window.updateTablePreview();
+        window.updateTableOptions(); // This will auto-fill chairs and update preview
 
     } catch (e) {
         console.error("Rooms Settings Error:", e);
-        dynamicContent.innerHTML = `<div class="p-6 text-center text-red-500 bg-red-900/20 border border-red-800 rounded-lg">فشل تحميل إعدادات القاعات</div>`;
+        dynamicContent.innerHTML = `<div class="p-6 text-center text-red-500 bg-red-900/20 border border-red-800 rounded-lg">فشل تحميل إعدادات القاعات - يرجى مراجعة الاتصال</div>`;
     }
 };
 
 window.renderTableTools = function () {
-    // Check if we are editing an existing table or adding a new one
     const selectedTable = STATE.selectedTableId ? STATE.tableMapData.find(t => t.id == STATE.selectedTableId) : null;
-
+    
     if (selectedTable) {
         return `
             <h3 class="text-lg font-bold text-brand mb-4 border-b border-gray-700 pb-2 flex items-center gap-2">
@@ -189,13 +195,21 @@ window.renderTableTools = function () {
                 تعديل الطاولة T${selectedTable.TableNumber}
             </h3>
             
-            <div class="scale-control-container mb-6">
-                <label class="block text-sm text-gray-300 mb-3 font-bold">تغيير الحجم (Scale): <span id="scale-value-display" class="text-brand">${(selectedTable.Scale || 1.0).toFixed(1)}x</span></label>
+            <div class="scale-control-container mb-4">
+                <label class="block text-xs text-gray-400 mb-2 font-bold">تغيير الحجم: <span id="scale-value-display" class="text-brand">${(selectedTable.Scale || 1.0).toFixed(1)}x</span></label>
                 <input type="range" min="0.5" max="2.5" step="0.1" value="${selectedTable.Scale || 1.0}" 
                     class="brand-slider" oninput="window.updateTableScale(this.value)">
+            </div>
+
+            <div class="scale-control-container mb-6">
+                <label class="block text-xs text-gray-400 mb-2 font-bold">تدوير الطاولة (Snap 45°): <span id="rotation-value-display" class="text-brand">${selectedTable.Rotation || 0}°</span></label>
+                <input type="range" min="0" max="315" step="45" value="${selectedTable.Rotation || 0}" 
+                    class="brand-slider" oninput="window.updateTableRotation(this.value)">
                 <div class="flex justify-between text-[10px] text-gray-500 mt-2">
-                    <span>صغير</span>
-                    <span>كبير جداً</span>
+                    <span>0°</span>
+                    <span>90°</span>
+                    <span>180°</span>
+                    <span>270°</span>
                 </div>
             </div>
 
@@ -223,7 +237,6 @@ window.renderTableTools = function () {
         <div class="mb-4">
             <label class="block text-xs text-gray-400 mb-1.5">عدد الكراسي:</label>
             <select id="tool-table-chairs" onchange="window.updateTablePreview()" class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand outline-none transition appearance-none">
-                <!-- Autopopulated -->
             </select>
         </div>
 
@@ -232,9 +245,7 @@ window.renderTableTools = function () {
             <input type="number" id="new-table-number" min="1" placeholder="أدخل الرقم..." class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand outline-none transition font-bold font-mono">
         </div>
 
-        <div class="live-preview-box" id="table-live-preview">
-            <!-- Preview SVG -->
-        </div>
+        <div class="live-preview-box" id="table-live-preview"></div>
 
         <button onclick="window.addTableToRoom()" class="w-full bg-brand hover:bg-brand-dark text-black font-bold py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2">
             <span>إضافة للقاعة</span>
@@ -244,10 +255,11 @@ window.renderTableTools = function () {
 };
 
 window.updateTableOptions = function () {
-    const type = document.getElementById('tool-table-type').value;
+    const typeSelect = document.getElementById('tool-table-type');
     const chairsSelect = document.getElementById('tool-table-chairs');
-    if (!chairsSelect) return;
+    if (!typeSelect || !chairsSelect) return;
 
+    const type = typeSelect.value;
     let options = [];
     if (type === 'round') options = [2, 4];
     else if (type === 'square') options = [4];
@@ -281,18 +293,20 @@ window.deselectTable = function () {
 
 window.updateTableScale = function (val) {
     const scale = parseFloat(val);
-    document.getElementById('scale-value-display').innerText = `${scale.toFixed(1)}x`;
-
-    // Visually update the table
+    const display = document.getElementById('scale-value-display');
+    if (display) display.innerText = `${scale.toFixed(1)}x`;
+    
     const tableEl = document.querySelector(`.table-element[data-id="${STATE.selectedTableId}"]`);
     if (tableEl) {
-        const svgContainer = tableEl.querySelector('svg');
-        if (svgContainer) {
-            svgContainer.style.transform = `scale(${scale})`;
+        const svg = tableEl.querySelector('svg');
+        if (svg) {
+            // Get current rotation
+            const table = STATE.tableMapData.find(t => t.id == STATE.selectedTableId);
+            const rot = table ? (table.Rotation || 0) : 0;
+            svg.style.transform = `scale(${scale}) rotate(${rot}deg)`;
         }
     }
 
-    // Debounced Save to Baserow
     clearTimeout(window._saveScaleTimeout);
     window._saveScaleTimeout = setTimeout(async () => {
         const tableIndex = STATE.tableMapData.findIndex(t => t.id == STATE.selectedTableId);
@@ -309,24 +323,62 @@ window.updateTableScale = function (val) {
     }, 500);
 };
 
+window.updateTableRotation = function (val) {
+    const deg = parseInt(val);
+    const display = document.getElementById('rotation-value-display');
+    if (display) display.innerText = `${deg}°`;
+    
+    const tableEl = document.querySelector(`.table-element[data-id="${STATE.selectedTableId}"]`);
+    if (tableEl) {
+        const svg = tableEl.querySelector('svg');
+        if (svg) {
+            // Get current scale
+            const table = STATE.tableMapData.find(t => t.id == STATE.selectedTableId);
+            const scale = table ? (table.Scale || 1.0) : 1.0;
+            svg.style.transform = `scale(${scale}) rotate(${deg}deg)`;
+        }
+    }
+
+    clearTimeout(window._saveRotationTimeout);
+    window._saveRotationTimeout = setTimeout(async () => {
+        const tableIndex = STATE.tableMapData.findIndex(t => t.id == STATE.selectedTableId);
+        if (tableIndex > -1) {
+            STATE.tableMapData[tableIndex].Rotation = deg;
+            try {
+                await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${STATE.selectedTableId}/?user_field_names=true`, {
+                    method: 'PATCH',
+                    headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ "Rotation": deg })
+                });
+            } catch (e) { console.error(e); }
+        }
+    }, 500);
+};
+
 // Modal Control
 window.openRoomModal = function (title, value, callback) {
-    document.getElementById('room-modal-title').innerText = title;
-    document.getElementById('room-modal-input').value = value || '';
-    const confirmBtn = document.getElementById('room-modal-confirm-btn');
-    confirmBtn.onclick = () => {
-        const newVal = document.getElementById('room-modal-input').value.trim();
+    const m = document.getElementById('room-modal');
+    const t = document.getElementById('room-modal-title');
+    const i = document.getElementById('room-modal-input');
+    const c = document.getElementById('room-modal-confirm-btn');
+    if (!m || !t || !i || !c) return;
+
+    t.innerText = title;
+    i.value = value || '';
+    c.onclick = () => {
+        const newVal = i.value.trim();
         if (newVal) {
             callback(newVal);
             window.closeRoomModal();
         }
     };
-    document.getElementById('room-modal').classList.remove('hidden');
-    setTimeout(() => document.getElementById('room-modal-input').focus(), 100);
+    m.classList.remove('hidden');
+    setTimeout(() => i.focus(), 100);
 };
 
 window.closeRoomModal = function () {
-    document.getElementById('room-modal').classList.add('hidden');
+    const m = document.getElementById('room-modal');
+    if (m) m.classList.add('hidden');
 };
 
 window.addRoom = function () {
@@ -345,7 +397,7 @@ window.addRoom = function () {
 window.switchRoom = function (r) {
     if (STATE.currentRoom === r) return;
     STATE.currentRoom = r;
-    STATE.selectedTableId = null; // Clear selection on room switch
+    STATE.selectedTableId = null;
     window.renderSettingsRooms();
 };
 
@@ -370,15 +422,14 @@ window.deleteRoom = async function () {
             return;
         }
     }
-
     STATE.currentRoom = null;
     window.renderSettingsRooms();
 };
 
 window.addTableToRoom = async function () {
     const numInput = document.getElementById('new-table-number');
-    const type = document.getElementById('tool-table-type').value;
-    const chairs = document.getElementById('tool-table-chairs').value;
+    const typeSelect = document.getElementById('tool-table-type');
+    const chairsSelect = document.getElementById('tool-table-chairs');
     const room = STATE.currentRoom;
 
     if (!numInput || !numInput.value || !room) {
@@ -386,6 +437,8 @@ window.addTableToRoom = async function () {
         return;
     }
     const num = parseInt(numInput.value, 10);
+    const type = typeSelect.value;
+    const chairs = chairsSelect.value;
     const shapeId = `${type}-${chairs}`;
 
     const exists = STATE.tableMapData.find(t => t.TableNumber == num);
@@ -401,7 +454,8 @@ window.addTableToRoom = async function () {
         "Chairs": parseInt(chairs),
         "PosX": 250,
         "PosY": 200,
-        "Scale": 1.0
+        "Scale": 1.0,
+        "Rotation": 0
     };
 
     const btn = document.querySelector('button[onclick="window.addTableToRoom()"]');
@@ -418,12 +472,12 @@ window.addTableToRoom = async function () {
 
         const data = await res.json();
         STATE.tableMapData.push(data);
-        window.showToast("تم إضافة الطاولة", "success");
+        window.showToast("تم إضافة الطاولة بنجاح", "success");
         window.renderSettingsRooms();
 
     } catch (e) {
         console.error(e);
-        window.showToast("خطأ أثناء الإضافة", "error");
+        window.showToast("حدث خطأ أثناء إضافة الطاولة", "error");
         if (btn) btn.disabled = false;
     }
 };
@@ -445,7 +499,7 @@ window.deleteTable = async function (rowId, e) {
         window.renderSettingsRooms();
     } catch (e) {
         console.error(e);
-        window.showToast("فشل الحذف", "error");
+        window.showToast("فشل في حذف الطاولة", "error");
     }
 };
 
@@ -457,46 +511,37 @@ window.initDragAndDrop = function () {
     canvas.addEventListener('touchstart', window.handleDragStart, { passive: false });
 
     if (window._dragListenersAdded) return;
-
     document.addEventListener('mousemove', window.handleDragMove);
     document.addEventListener('mouseup', window.handleDragEnd);
     document.addEventListener('touchmove', window.handleDragMove, { passive: false });
     document.addEventListener('touchend', window.handleDragEnd);
-
     window._dragListenersAdded = true;
 };
 
 window.handleDragStart = function (e) {
     if (STATE.currentActiveView !== 'settings_rooms') return;
-
     const target = e.target.closest('.table-element');
     if (!target) return;
     if (e.target.closest('.table-delete-btn')) return;
 
     if (e.type === 'touchstart') e.preventDefault();
-
     STATE.isDragging = true;
     STATE.dragTarget = target;
 
     const canvas = document.getElementById('floor-canvas');
-    const canvasRect = canvas.getBoundingClientRect();
-
     let clientX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
     let clientY = (e.type === 'touchstart') ? e.touches[0].clientY : e.clientY;
 
     const targetRect = target.getBoundingClientRect();
-
     STATE.dragOffset = {
         x: clientX - targetRect.left,
         y: clientY - targetRect.top
     };
-
     target.style.zIndex = 1000;
 };
 
 window.handleDragMove = function (e) {
     if (!STATE.isDragging || !STATE.dragTarget) return;
-
     if (e.type === 'touchmove') e.preventDefault();
 
     const canvas = document.getElementById('floor-canvas');
@@ -514,7 +559,6 @@ window.handleDragMove = function (e) {
 
 window.handleDragEnd = async function (e) {
     if (!STATE.isDragging || !STATE.dragTarget) return;
-
     const target = STATE.dragTarget;
     STATE.isDragging = false;
     STATE.dragTarget = null;
@@ -528,14 +572,17 @@ window.handleDragEnd = async function (e) {
     if (tableIndex > -1) {
         STATE.tableMapData[tableIndex].PosX = finalX;
         STATE.tableMapData[tableIndex].PosY = finalY;
-
         try {
-            await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${rowId}/?user_field_names=true`, {
+            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${rowId}/?user_field_names=true`, {
                 method: 'PATCH',
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ "PosX": finalX, "PosY": finalY })
             });
-            window.showToast("تم حفظ الموقع", "success");
-        } catch (err) { console.error(err); }
+            if (res.ok) window.showToast("تم حفظ الموقع", "success");
+            else throw new Error("Save position failed");
+        } catch (err) { 
+            console.error(err);
+            window.showToast("فشل في حفظ موقع الطاولة", "error");
+        }
     }
 };
