@@ -30,7 +30,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-const STAFF_TABLE_ID = "757";
+// STAFF_TABLE_ID is now defined in config.js
 
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {

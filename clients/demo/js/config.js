@@ -4,6 +4,7 @@ const ORDERS_TABLE_ID = "37";
 const MENU_TABLE_ID = "36";
 const CALLS_TABLE_ID = "753";
 const SETTINGS_TABLE_ID = "754";
+const STAFF_TABLE_ID = "757";
 const TABLEMAP_TABLE_ID = "758";
 
 const CLIENTS_DB = {
