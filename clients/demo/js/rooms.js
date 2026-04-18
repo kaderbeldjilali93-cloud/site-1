@@ -154,7 +154,10 @@ window.renderSettingsRooms = async function () {
                         ${tabsHtml}
                         <button onclick="window.addRoom()" class="room-tab bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600 ml-2">➕ إضافة قاعة</button>
                     </div>
-                    <button onclick="window.deleteRoom()" class="room-tab bg-red-900/30 text-red-400 hover:bg-red-600 hover:text-white border border-red-800/50 mr-4">🗑️ حذف القاعة</button>
+                    <button onclick="window.deleteRoom()" class="room-tab bg-gray-700/50 text-gray-400 hover:bg-red-600 hover:text-white border border-gray-600 mr-4 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        حذف القاعة
+                    </button>
                 </div>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -169,7 +172,7 @@ window.renderSettingsRooms = async function () {
                             <span>أرضية ${STATE.currentRoom}</span>
                             <span class="text-sm font-normal text-gray-400 border border-gray-700 rounded-full px-3 py-1 bg-gray-800 shadow-inner">${currentTables.length} طاولات</span>
                         </h3>
-                        <div id="floor-canvas" class="floor-canvas shadow-inner border-2 border-dashed border-gray-700/50 bg-[#161625]"
+                        <div id="floor-canvas" class="floor-canvas max-w-5xl shadow-inner border-2 border-dashed border-gray-700/50 bg-[#161625] mx-auto"
                             onclick="if(event.target === this) window.deselectTable()">
                             ${floorHtml}
                         </div>
@@ -193,8 +196,8 @@ window.renderTableTools = function () {
 
     if (selectedTable) {
         return `
-            <h3 class="text-lg font-bold text-brand mb-4 border-b border-gray-700 pb-2 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            <h3 class="text-lg font-bold text-white mb-4 border-b border-gray-700 pb-2 flex items-center gap-2">
+                <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                 تعديل الطاولة T${selectedTable.TableNumber}
             </h3>
             
@@ -313,20 +316,23 @@ window.updateTableScale = function (val) {
         }
     }
 
-    clearTimeout(window._saveScaleTimeout);
-    window._saveScaleTimeout = setTimeout(async () => {
-        const tableIndex = STATE.tableMapData.findIndex(t => t.id == STATE.selectedTableId);
-        if (tableIndex > -1) {
-            STATE.tableMapData[tableIndex].Scale = scale;
+    const tableIndex = STATE.tableMapData.findIndex(t => t.id == STATE.selectedTableId);
+    if (tableIndex > -1) {
+        STATE.tableMapData[tableIndex].Scale = scale;
+        
+        // Save immediately to Baserow
+        clearTimeout(window._saveScaleTimeout);
+        window._saveScaleTimeout = setTimeout(async () => {
             try {
                 await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${STATE.selectedTableId}/?user_field_names=true`, {
                     method: 'PATCH',
                     headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                     body: JSON.stringify({ "Scale": scale })
                 });
-            } catch (e) { console.error(e); }
-        }
-    }, 500);
+                console.log("Scale saved:", scale);
+            } catch (e) { console.error("Failed to save scale:", e); }
+        }, 500);
+    }
 };
 
 window.updateTableRotation = function (val) {

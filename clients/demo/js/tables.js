@@ -148,7 +148,7 @@ window.renderTableView = async function () {
                 </div>
             </div>
             
-            <div class="max-w-6xl mx-auto shadow-2xl rounded-3xl p-2 bg-gray-800 border border-gray-700">
+            <div class="max-w-5xl mx-auto shadow-2xl rounded-3xl p-2 bg-gray-800 border border-gray-700">
                 <div class="floor-canvas select-none" style="border:none; cursor: default;">
                     ${floorHtml}
                 </div>
