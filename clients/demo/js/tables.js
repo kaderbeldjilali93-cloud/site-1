@@ -111,8 +111,8 @@ window.renderTableView = async function () {
 
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
             // Ensure positions are treated as percentages for consistency across views
-            let leftPct = t.PosX || 50;
-            let topPct = t.PosY || 50;
+            let leftPct = parseFloat(t.PosX || 50);
+            let topPct = parseFloat(t.PosY || 50);
             
             // Retro-compatibility: if values are large, assume they were pixels on a ~1000px base
             if (leftPct > 100) leftPct = (leftPct / 1000) * 100;
