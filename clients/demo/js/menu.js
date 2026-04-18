@@ -44,27 +44,32 @@ window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
         const name = item.Name || item.name;
         const price = parseFloat(item.PromoPrice || item.promoprice) || parseFloat(item.Price || item.price || 0);
         
-        // جلب رابط الصورة
+        // جلب رابط الصورة مع دعم عدة مسميات للحقل
         let imgUrl = 'https://placehold.co/400x300?text=Food';
-        const imgField = item.image || item.Image;
-        if (Array.isArray(imgField) && imgField.length > 0) imgUrl = imgField[0].url;
-        else if (typeof imgField === 'string') imgUrl = imgField;
+        const imgField = item.image || item.Image || item.img || item.Img || item.picture || item.Picture;
+        
+        if (Array.isArray(imgField) && imgField.length > 0) {
+            imgUrl = imgField[0].url || imgField[0].thumbnails?.large?.url || imgField[0].url;
+        } else if (typeof imgField === 'string' && imgField.trim() !== '') {
+            imgUrl = imgField;
+        }
 
         const card = document.createElement('div');
-        card.className = "bg-gray-800 rounded-2xl border border-gray-700/50 overflow-hidden hover:border-brand/50 transition-all cursor-pointer group flex flex-col h-full";
+        card.className = "bg-gray-800/40 rounded-xl border border-gray-700/30 overflow-hidden hover:border-brand/40 transition-all cursor-pointer group flex flex-col h-full shadow-sm";
         card.onclick = () => window.addItemToEditOrder(name, price);
         
         card.innerHTML = `
-            <div class="relative h-28 overflow-hidden">
-                <img src="${imgUrl}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="${name}">
-                <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-gray-900 to-transparent"></div>
+            <div class="relative h-20 sm:h-24 overflow-hidden bg-gray-900/50">
+                <img src="${imgUrl}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" 
+                     onerror="this.src='https://placehold.co/400x300?text=Food'" alt="${name}">
+                <div class="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-gray-800 to-transparent"></div>
             </div>
-            <div class="p-3 flex flex-col flex-1">
-                <span class="text-xs font-bold text-white mb-2 line-clamp-2 min-h-[2.5em] leading-tight">${name}</span>
-                <div class="mt-auto flex items-center justify-between gap-1">
-                    <span class="text-brand font-black text-sm tabular-nums">${price} <small class="text-[9px] font-normal text-gray-400">${sysCurrency}</small></span>
-                    <div class="bg-brand/10 p-1 rounded-md text-brand">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+            <div class="p-2.5 flex flex-col flex-1">
+                <span class="text-[11px] font-bold text-gray-200 mb-2 line-clamp-1 min-h-[1.2em] leading-tight group-hover:text-brand transition-colors">${name}</span>
+                <div class="mt-auto flex items-center justify-between">
+                    <span class="text-brand font-black text-xs tabular-nums">${price.toLocaleString()} <small class="text-[8px] font-normal text-gray-500">${sysCurrency}</small></span>
+                    <div class="bg-brand/10 p-1 rounded-md text-brand group-hover:bg-brand group-hover:text-black transition-all">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
                     </div>
                 </div>
             </div>
