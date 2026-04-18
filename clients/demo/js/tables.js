@@ -68,8 +68,13 @@ window.renderTableView = async function () {
             let orderForTable = null;
 
             tableOrders.forEach(o => {
-                const st = (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
-                if (st !== 'مدفوع' && st !== 'ملغى') {
+                let st = (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
+                st = String(st || '').trim();
+                
+                // قائمة الحالات التي تعني أن الطلب "منتهي" أو "غير نشط"
+                const inactiveStatuses = ['مدفوع', 'ملغى', 'Payé', 'Annulé', 'Paid', 'Cancelled'];
+                
+                if (!inactiveStatuses.includes(st)) {
                     hasActiveOrder = true;
                     orderForTable = o;
                     totalAmount += parseFloat(String(o.total || o.Total || o.price || o.Price || 0).replace(/[^0-9.]/g, '')) || 0;
@@ -116,11 +121,12 @@ window.renderTableView = async function () {
             }
 
             floorHtml += `
-                <div class="table-element ${statusClass}" style="left: ${posX}px; top: ${posY}px; cursor: pointer; pointer-events: auto;" onclick="window.handleTableMapClick('${numStr}', ${isCalling}, ${hasActiveOrder}, ${orderIdArg}, ${totalAmount})">
+                <div class="table-element ${statusClass}" 
+                     style="left: ${posX}px; top: ${posY}px; cursor: pointer; pointer-events: auto;" 
+                     onclick="window.handleTableMapClick('${numStr}', ${isCalling}, ${hasActiveOrder}, ${orderIdArg})">
                     ${window.generateTableSVG ? window.generateTableSVG(shapeStr, chairColor, tScale, tRot) : '<svg width="70" height="70"><circle cx="35" cy="35" r="22" fill="#374151"/></svg>'}
                     <span class="table-number-label">T${t.TableNumber}</span>
                     ${isCalling ? `<div class="calling-overlay"><span>⚠️ نداء</span></div>` : ''}
-                    ${hasActiveOrder && !isCalling ? `<div class="absolute -bottom-6 w-full flex justify-center"><div class="px-2 py-0.5 whitespace-nowrap text-[11px] font-bold bg-black bg-opacity-75 text-brand rounded shadow">${totalAmount.toLocaleString()} ${sysCurrency}</div></div>` : ''}
                 </div>
             `;
         });
@@ -165,38 +171,40 @@ window.switchTableRoom = function (r) {
     window.renderTableView();
 };
 
-window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, orderId, totalAmount) {
+window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, orderId) {
     if (isCalling) {
         window.resolveTableCall(tableNumber);
-    } else if (hasActiveOrder) {
-        if (orderId) {
-            if (typeof window.openEditOrderModal === 'function') {
-                window.openEditOrderModal(orderId);
-            } else {
-                const sysCurrency = localStorage.getItem('system_currency') || 'DA';
-                window.showToast(`الطاولة ${tableNumber} مشغولة (الإجمالي: ${totalAmount.toLocaleString()} ${sysCurrency})`, "error");
-            }
+        return;
+    }
+    
+    if (hasActiveOrder && orderId && orderId !== 'null') {
+        if (typeof window.openEditOrderModal === 'function') {
+            window.openEditOrderModal(orderId);
+        } else {
+            window.showToast(`الطاولة ${tableNumber} مشغولة حالياً`, "info");
         }
-    } else {
-        if (typeof window.openNewOrderModal === 'function') {
-            window.openNewOrderModal('table');
-            setTimeout(() => {
-                const titleEl = document.getElementById('edit-order-title');
-                if (titleEl) titleEl.innerText = `إنشاء طلب سريع لـ طاولة ${tableNumber}`;
-                const sel = document.getElementById('new-order-table');
-                if (sel) {
-                    for (let i = 0; i < sel.options.length; i++) {
-                        if (String(sel.options[i].value).trim() === String(tableNumber).trim() ||
-                            String(sel.options[i].text).trim() === `طاولة ${tableNumber}` ||
-                            String(sel.options[i].text).trim() === String(tableNumber)) {
-                            sel.selectedIndex = i;
-                            break;
-                        }
+        return;
+    }
+    
+    // إذا كانت فارغة (أو لم ينجح فتح الطلب النشط)
+    if (typeof window.openNewOrderModal === 'function') {
+        window.openNewOrderModal('table');
+        setTimeout(() => {
+            const titleEl = document.getElementById('edit-order-title');
+            if (titleEl) titleEl.innerText = `إنشاء طلب سريع لـ طاولة ${tableNumber}`;
+            const sel = document.getElementById('new-order-table');
+            if (sel) {
+                for (let i = 0; i < sel.options.length; i++) {
+                    if (String(sel.options[i].value).trim() === String(tableNumber).trim() ||
+                        String(sel.options[i].text).trim() === `طاولة ${tableNumber}` ||
+                        String(sel.options[i].text).trim() === String(tableNumber)) {
+                        sel.selectedIndex = i;
+                        break;
                     }
                 }
-            }, 300);
-        } else {
-            window.showToast(`لا يمكنك إنشاء طلب من هنا بدون صلاحية الكاشير`, "error");
-        }
+            }
+        }, 300);
+    } else {
+        window.showToast(`لا يمكنك إنشاء طلب بدون صلاحية الكاشير`, "error");
     }
 };
