@@ -557,9 +557,6 @@ window.loadView = async function (viewType) {
         else if (viewType === 'settings_print') {
             await window.renderSettingsPrint();
         }
-        else if (viewType === 'settings_account') {
-            await window.renderSettingsAccount();
-        }
         else if (viewType === 'settings_rooms') {
             await window.renderSettingsRooms();
         }
