@@ -77,34 +77,47 @@ window.renderTableView = async function () {
             });
 
             let statusClass = "table-status-free";
-            let chairColor = "#22c55e";
+            let chairColor = "#22c55e"; // Default Green (Free/Paid)
 
             if (isCalling) {
                 statusClass = "table-status-calling";
-                chairColor = "#ef4444";
+                chairColor = "#ef4444"; // Red for Calling
             } else if (hasActiveOrder) {
                 statusClass = "table-status-occupied";
-                chairColor = "#f59e0b";
+                
+                // Color Logic based on Order Status
+                let isReady = false;
+                let isNewOrPrep = false;
+                
+                tableOrders.forEach(o => {
+                    const st = (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
+                    if (st === 'جاهز') isReady = true;
+                    else if (st === 'جديد' || st === 'قيد التحضير') isNewOrPrep = true;
+                });
+
+                if (isNewOrPrep) {
+                    chairColor = "#ef4444"; // Red (Not ready yet)
+                } else if (isReady) {
+                    chairColor = "#eab308"; // Yellow (Ready)
+                } else {
+                    chairColor = "#f59e0b"; // Fallback Orange
+                }
             }
 
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
             const posX = t.PosX || 50;
             const posY = t.PosY || 50;
+            const tScale = t.Scale || 1.0;
+            const tRot = t.Rotation || 0;
 
-            let escapedOrder = '';
-            if (orderForTable) {
-                const cleanOrder = {
-                    id: orderForTable.id,
-                    Details: orderForTable.Details,
-                    Status: orderForTable.Status,
-                    dailySequence: orderForTable.dailySequence
-                };
-                escapedOrder = escape(JSON.stringify(cleanOrder));
+            let orderIdArg = 'null';
+            if (orderForTable && orderForTable.id) {
+                orderIdArg = `'${orderForTable.id}'`;
             }
 
             floorHtml += `
-                <div class="table-element ${statusClass}" style="left: ${posX}px; top: ${posY}px; cursor: pointer; pointer-events: auto;" onclick="window.handleTableMapClick('${numStr}', ${isCalling}, ${hasActiveOrder}, '${escapedOrder}', ${totalAmount})">
-                    ${window.generateTableSVG ? window.generateTableSVG(shapeStr, chairColor) : '<svg width="70" height="70"><circle cx="35" cy="35" r="22" fill="#374151"/></svg>'}
+                <div class="table-element ${statusClass}" style="left: ${posX}px; top: ${posY}px; cursor: pointer; pointer-events: auto;" onclick="window.handleTableMapClick('${numStr}', ${isCalling}, ${hasActiveOrder}, ${orderIdArg}, ${totalAmount})">
+                    ${window.generateTableSVG ? window.generateTableSVG(shapeStr, chairColor, tScale, tRot) : '<svg width="70" height="70"><circle cx="35" cy="35" r="22" fill="#374151"/></svg>'}
                     <span class="table-number-label">T${t.TableNumber}</span>
                     ${isCalling ? `<div class="calling-overlay"><span>⚠️ نداء</span></div>` : ''}
                     ${hasActiveOrder && !isCalling ? `<div class="absolute -bottom-6 w-full flex justify-center"><div class="px-2 py-0.5 whitespace-nowrap text-[11px] font-bold bg-black bg-opacity-75 text-brand rounded shadow">${totalAmount.toLocaleString()} ${sysCurrency}</div></div>` : ''}
@@ -152,15 +165,13 @@ window.switchTableRoom = function (r) {
     window.renderTableView();
 };
 
-window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, orderStr, totalAmount) {
+window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, orderId, totalAmount) {
     if (isCalling) {
         window.resolveTableCall(tableNumber);
     } else if (hasActiveOrder) {
-        let order = null;
-        try { if (orderStr) order = JSON.parse(unescape(orderStr)); } catch (e) { }
-        if (order && order.id) {
+        if (orderId) {
             if (typeof window.openEditOrderModal === 'function') {
-                window.openEditOrderModal(order.id);
+                window.openEditOrderModal(orderId);
             } else {
                 const sysCurrency = localStorage.getItem('system_currency') || 'DA';
                 window.showToast(`الطاولة ${tableNumber} مشغولة (الإجمالي: ${totalAmount.toLocaleString()} ${sysCurrency})`, "error");

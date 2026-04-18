@@ -190,7 +190,11 @@ window.fetchWaiterCalls = async function () {
             else badge.classList.add('hidden');
         }
 
-        if (localStorage.getItem(STATE.storageKeys.lastView) === 'tables') window.renderTableView();
+        if (localStorage.getItem(STATE.storageKeys.lastView) === 'tables') {
+            const freshOrders = await window.fetchOrders(ORDERS_TABLE_ID);
+            STATE.lastFetchedOrders = freshOrders;
+            window.renderTableView();
+        }
 
     } catch (e) {
         console.warn("Failed to fetch waiter calls (Network Error):", e.message);
