@@ -60,7 +60,7 @@ window.renderTableView = async function () {
 
         currentTables.forEach(t => {
             const numStr = String(t.TableNumber);
-            const isCalling = activeCalls.includes(numStr) || activeCalls.includes(t.TableNumber);
+            const isCalling = activeCalls.some(c => String(c) === numStr);
 
             const tableOrders = orders.filter(o => o.Table && String(o.Table).replace(/[^0-9]/g, '') === numStr);
             let hasActiveOrder = false;

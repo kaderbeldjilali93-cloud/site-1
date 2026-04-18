@@ -187,7 +187,7 @@ window.renderSettingsRooms = async function () {
 
 window.renderTableTools = function () {
     const selectedTable = STATE.selectedTableId ? STATE.tableMapData.find(t => t.id == STATE.selectedTableId) : null;
-    
+
     if (selectedTable) {
         return `
             <h3 class="text-lg font-bold text-brand mb-4 border-b border-gray-700 pb-2 flex items-center gap-2">
@@ -196,14 +196,14 @@ window.renderTableTools = function () {
             </h3>
             
             <div class="scale-control-container mb-4">
-                <label class="block text-xs text-gray-400 mb-2 font-bold">تغيير الحجم: <span id="scale-value-display" class="text-brand">${(selectedTable.Scale || 1.0).toFixed(1)}x</span></label>
+                <label class="block text-xs text-gray-400 mb-2 font-bold">تغيير الحجم: <span id="scale-value-display" class="text-brand">${parseFloat(selectedTable.Scale || 1.0).toFixed(1)}x</span></label>
                 <input type="range" min="0.5" max="2.5" step="0.1" value="${selectedTable.Scale || 1.0}" 
                     class="brand-slider" oninput="window.updateTableScale(this.value)">
             </div>
 
             <div class="scale-control-container mb-6">
-                <label class="block text-xs text-gray-400 mb-2 font-bold">تدوير الطاولة (Snap 45°): <span id="rotation-value-display" class="text-brand">${selectedTable.Rotation || 0}°</span></label>
-                <input type="range" min="0" max="315" step="45" value="${selectedTable.Rotation || 0}" 
+                <label class="block text-xs text-gray-400 mb-2 font-bold">تدوير الطاولة (Snap 45°): <span id="rotation-value-display" class="text-brand">${parseInt(selectedTable.Rotation || 0)}°</span></label>
+                <input type="range" min="0" max="315" step="45" value="${parseInt(selectedTable.Rotation || 0)}" 
                     class="brand-slider" oninput="window.updateTableRotation(this.value)">
                 <div class="flex justify-between text-[10px] text-gray-500 mt-2">
                     <span>0°</span>
@@ -295,7 +295,7 @@ window.updateTableScale = function (val) {
     const scale = parseFloat(val);
     const display = document.getElementById('scale-value-display');
     if (display) display.innerText = `${scale.toFixed(1)}x`;
-    
+
     const tableEl = document.querySelector(`.table-element[data-id="${STATE.selectedTableId}"]`);
     if (tableEl) {
         const svg = tableEl.querySelector('svg');
@@ -327,7 +327,7 @@ window.updateTableRotation = function (val) {
     const deg = parseInt(val);
     const display = document.getElementById('rotation-value-display');
     if (display) display.innerText = `${deg}°`;
-    
+
     const tableEl = document.querySelector(`.table-element[data-id="${STATE.selectedTableId}"]`);
     if (tableEl) {
         const svg = tableEl.querySelector('svg');
@@ -580,7 +580,7 @@ window.handleDragEnd = async function (e) {
             });
             if (res.ok) window.showToast("تم حفظ الموقع", "success");
             else throw new Error("Save position failed");
-        } catch (err) { 
+        } catch (err) {
             console.error(err);
             window.showToast("فشل في حفظ موقع الطاولة", "error");
         }

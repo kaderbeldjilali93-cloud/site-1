@@ -93,9 +93,9 @@ window.updateOrderStatus = async function (rowId, newStatus) {
     } catch (error) {
         console.warn("API Error:", error.message);
         window.showToast("فشل تحديث الحالة. تأكد من الاتصال.", "error");
-        if (btn) { 
-            btn.innerHTML = '<span>جاهز للتسليم</span> ✅'; 
-            btn.disabled = false; 
+        if (btn) {
+            btn.innerHTML = '<span>جاهز للتسليم</span> ✅';
+            btn.disabled = false;
             delete btn.dataset.processing;
             btn.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
         }
@@ -218,7 +218,7 @@ window.resolveTableCall = async function (tableNum) {
         console.warn("Failed to update call status on server, updating UI locally:", e.message);
     }
 
-    STATE.activeCalls = STATE.activeCalls.filter(t => t !== tableNum);
+    STATE.activeCalls = STATE.activeCalls.filter(t => String(t) !== String(tableNum));
     delete STATE.activeCallRows[tableNum];
 
     window.renderTableView();
