@@ -190,11 +190,8 @@ window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, o
     if (typeof window.openNewOrderModal === 'function') {
         window.openNewOrderModal('table');
         setTimeout(() => {
-            const titleEl = document.getElementById('edit-order-title');
-            if (titleEl) titleEl.innerText = `إنشاء طلب جديد لـ طاولة ${tableNumber}`;
-            
-            const manualInput = document.getElementById('manual-table-number');
-            if (manualInput) manualInput.value = tableNumber;
+            const manualSelect = document.getElementById('manual-table-number');
+            if (manualSelect) manualSelect.value = tableNumber;
         }, 300);
     } else {
         window.showToast(`لا يمكنك إنشاء طلب بدون صلاحية الكاشير`, "error");

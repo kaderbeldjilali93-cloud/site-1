@@ -4,43 +4,73 @@
 
 // --- 1. دوال تعديل وإنشاء الطلبات ---
 
-window.openEditOrderModal_DrawMenu = async function () {
+window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
     if (!STATE.cachedMenuItems) {
         STATE.cachedMenuItems = await window.fetchMenu();
     }
 
     const grid = document.getElementById('edit-menu-grid');
+    const catContainer = document.getElementById('edit-menu-categories');
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
-    grid.innerHTML = '';
-
+    
+    // 1. استخراج كل التصنيفات الفريدة
     const availableItems = STATE.cachedMenuItems.filter(item => {
         const avail = (typeof item.Availability === 'object' && item.Availability) ? item.Availability.value : item.Availability;
         return avail !== 'نفذت الكمية';
     });
 
-    const groupedItems = {};
-    availableItems.forEach(item => {
+    const categories = [...new Set(availableItems.map(item => 
+        (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'أخرى')
+    ))];
+
+    if (!categoryToSelect && categories.length > 0) categoryToSelect = categories[0];
+
+    // 2. رسم تصنيفات (Tabs)
+    catContainer.innerHTML = categories.map(cat => `
+        <button onclick="window.openEditOrderModal_DrawMenu('${cat}')" 
+            class="px-5 py-2 rounded-xl whitespace-nowrap font-bold text-xs transition-all ${categoryToSelect === cat ? 'bg-brand text-black shadow-lg shadow-brand/20 scale-105' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}">
+            ${cat}
+        </button>
+    `).join('');
+
+    // 3. رسم الأصناف (Cards with Images)
+    grid.innerHTML = '';
+    const filteredItems = availableItems.filter(item => {
         const cat = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'أخرى');
-        if (!groupedItems[cat]) groupedItems[cat] = [];
-        groupedItems[cat].push(item);
+        return cat === categoryToSelect;
     });
 
-    for (const [category, items] of Object.entries(groupedItems)) {
-        const catHeader = document.createElement('div');
-        catHeader.className = "col-span-full text-brand font-black border-b-2 border-gray-600 pb-2 mt-4 text-xl sticky top-0 bg-gray-900 z-10 pt-2 shadow-sm";
-        catHeader.innerText = category;
-        grid.appendChild(catHeader);
+    filteredItems.forEach(item => {
+        const name = item.Name || item.name;
+        const price = parseFloat(item.PromoPrice || item.promoprice) || parseFloat(item.Price || item.price || 0);
+        
+        // جلب رابط الصورة
+        let imgUrl = 'https://placehold.co/400x300?text=Food';
+        const imgField = item.image || item.Image;
+        if (Array.isArray(imgField) && imgField.length > 0) imgUrl = imgField[0].url;
+        else if (typeof imgField === 'string') imgUrl = imgField;
 
-        items.forEach(item => {
-            const name = item.Name || item.name;
-            const price = parseFloat(item.PromoPrice || item.promoprice) || parseFloat(item.Price || item.price || 0);
-            const btn = document.createElement('button');
-            btn.className = "bg-gray-800 hover:bg-gray-700 border-2 border-gray-700 hover:border-brand text-white p-3 rounded-xl transition text-right flex flex-col justify-between h-28 shadow-sm group transform hover:-translate-y-1";
-            btn.innerHTML = `<span class="font-bold truncate w-full text-base group-hover:text-brand transition" title="${name.replace(/"/g, '&quot;')}">${name}</span><span class="text-gray-300 font-mono mt-auto bg-gray-900 px-3 py-1 rounded-lg w-fit border border-gray-600 group-hover:border-brand/50">${price} ${sysCurrency}</span>`;
-            btn.onclick = () => window.addItemToEditOrder(name, price);
-            grid.appendChild(btn);
-        });
-    }
+        const card = document.createElement('div');
+        card.className = "bg-gray-800 rounded-2xl border border-gray-700/50 overflow-hidden hover:border-brand/50 transition-all cursor-pointer group flex flex-col h-full";
+        card.onclick = () => window.addItemToEditOrder(name, price);
+        
+        card.innerHTML = `
+            <div class="relative h-28 overflow-hidden">
+                <img src="${imgUrl}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="${name}">
+                <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-gray-900 to-transparent"></div>
+            </div>
+            <div class="p-3 flex flex-col flex-1">
+                <span class="text-xs font-bold text-white mb-2 line-clamp-2 min-h-[2.5em] leading-tight">${name}</span>
+                <div class="mt-auto flex items-center justify-between gap-1">
+                    <span class="text-brand font-black text-sm tabular-nums">${price} <small class="text-[9px] font-normal text-gray-400">${sysCurrency}</small></span>
+                    <div class="bg-brand/10 p-1 rounded-md text-brand">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                    </div>
+                </div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
 };
 
 window.openEditOrderModal = async function (orderId) {
@@ -76,11 +106,34 @@ window.openNewOrderModal = async function (type = 'quick') {
     STATE.originalEditPrice = 0;
     STATE.newOrderType = type;
 
-    document.getElementById('edit-order-title').innerText = type === 'table' ? "إنشاء طلب طاولة جديد" : "إنشاء طلب سريع جديد";
+    // 1. تعبئة قائمة الطاولات المتوفرة من STATE.tableMapData
+    const select = document.getElementById('manual-table-number');
     const container = document.getElementById('new-order-table-container');
-    const input = document.getElementById('manual-table-number');
+    
+    if (select) {
+        select.innerHTML = '<option value="" disabled selected>إختر رقم الطاولة...</option>';
+        const allRooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))];
+        
+        allRooms.forEach(room => {
+            const roomTables = STATE.tableMapData.filter(t => t.Room === room);
+            if (roomTables.length > 0) {
+                const group = document.createElement('optgroup');
+                group.label = `📍 ${room}`;
+                roomTables.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.TableNumber;
+                    opt.innerText = `طاولة ${t.TableNumber}`;
+                    group.appendChild(opt);
+                });
+                select.appendChild(group);
+            }
+        });
+    }
+
     if (container) container.classList.remove('hidden');
-    if (input) input.value = type === 'table' ? "" : "سفري";
+    
+    STATE.originalEditDetails = "";
+    document.getElementById('edit-order-original-details').innerText = "ابدأ بإضافة الأصناف...";
 
     window.updateEditOrderUI();
     document.getElementById('edit-order-modal').classList.remove('hidden');
