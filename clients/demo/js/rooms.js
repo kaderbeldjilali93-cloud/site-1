@@ -6,7 +6,9 @@ window.generateTableSVG = function (shape, chairColor = "#10b981", scale = 1.0, 
     let svg = "";
 
     // Combine scale and rotation in transform
-    const transformStyle = `transform: scale(${scale}) rotate(${rotation}deg); transform-origin: center;`;
+    const s = parseFloat(scale || 1.0);
+    const r = parseInt(rotation || 0);
+    const transformStyle = `transform: scale(${s}) rotate(${r}deg); transform-origin: center;`;
 
     switch (shape) {
         case "round-2":

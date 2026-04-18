@@ -191,18 +191,10 @@ window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, o
         window.openNewOrderModal('table');
         setTimeout(() => {
             const titleEl = document.getElementById('edit-order-title');
-            if (titleEl) titleEl.innerText = `إنشاء طلب سريع لـ طاولة ${tableNumber}`;
-            const sel = document.getElementById('new-order-table');
-            if (sel) {
-                for (let i = 0; i < sel.options.length; i++) {
-                    if (String(sel.options[i].value).trim() === String(tableNumber).trim() ||
-                        String(sel.options[i].text).trim() === `طاولة ${tableNumber}` ||
-                        String(sel.options[i].text).trim() === String(tableNumber)) {
-                        sel.selectedIndex = i;
-                        break;
-                    }
-                }
-            }
+            if (titleEl) titleEl.innerText = `إنشاء طلب جديد لـ طاولة ${tableNumber}`;
+            
+            const manualInput = document.getElementById('manual-table-number');
+            if (manualInput) manualInput.value = tableNumber;
         }, 300);
     } else {
         window.showToast(`لا يمكنك إنشاء طلب بدون صلاحية الكاشير`, "error");

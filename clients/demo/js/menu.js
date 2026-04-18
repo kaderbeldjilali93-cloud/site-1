@@ -44,8 +44,16 @@ window.openEditOrderModal_DrawMenu = async function () {
 };
 
 window.openEditOrderModal = async function (orderId) {
-    const order = STATE.processedCashierOrders.find(o => o.id === orderId);
-    if (!order) return;
+    const allOrders = [
+        ...(STATE.processedCashierOrders || []),
+        ...(STATE.lastFetchedOrders || []),
+        ...(STATE.latestKdsOrders || [])
+    ];
+    const order = allOrders.find(o => String(o.id) === String(orderId));
+    if (!order) {
+        window.showToast("لم يتم العثور على بيانات الطلب", "error");
+        return;
+    }
 
     STATE.currentEditOrder = order;
     STATE.originalEditDetails = order.Details || "";
@@ -69,7 +77,10 @@ window.openNewOrderModal = async function (type = 'quick') {
     STATE.newOrderType = type;
 
     document.getElementById('edit-order-title').innerText = type === 'table' ? "إنشاء طلب طاولة جديد" : "إنشاء طلب سريع جديد";
-    document.getElementById('edit-order-original-details').innerText = "ابدأ بإضافة الأصناف من القائمة على اليسار";
+    const container = document.getElementById('new-order-table-container');
+    const input = document.getElementById('manual-table-number');
+    if (container) container.classList.remove('hidden');
+    if (input) input.value = type === 'table' ? "" : "سفري";
 
     window.updateEditOrderUI();
     document.getElementById('edit-order-modal').classList.remove('hidden');
@@ -166,7 +177,8 @@ window.saveOrderEdit = async function () {
         [priceKey]: String(finalPrice)
     };
     if (isNewOrder) {
-        payload["Table"] = STATE.newOrderType === 'table' ? "طاولة جديدة" : "سفري";
+        const manualTable = document.getElementById('manual-table-number')?.value || "";
+        payload["Table"] = manualTable || (STATE.newOrderType === 'table' ? "طاولة جديدة" : "سفري");
         payload["order_type"] = STATE.newOrderType || "quick";
         payload["Status"] = "قيد التحضير";
     }
