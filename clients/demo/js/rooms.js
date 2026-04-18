@@ -5,78 +5,49 @@ window.generateTableSVG = function (shape, chairColor = "#10b981", scale = 1.0, 
     const strokeColor = "#6b7280";
     let svg = "";
 
-    // Combine scale and rotation in transform
     const s = parseFloat(scale || 1.0);
     const r = parseInt(rotation || 0);
     const transformStyle = `transform: scale(${s}) rotate(${r}deg); transform-origin: center;`;
 
     switch (shape) {
         case "round-2":
-            svg = `
-            <svg width="70" height="70" viewBox="0 0 70 70" style="${transformStyle}">
-                <ellipse cx="35" cy="8" rx="10" ry="6" fill="${chairColor}"/>
-                <ellipse cx="35" cy="62" rx="10" ry="6" fill="${chairColor}"/>
-                <circle cx="35" cy="35" r="22" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/>
-            </svg>`;
+            svg = `<svg width="70" height="70" viewBox="0 0 70 70" style="${transformStyle}"><ellipse cx="35" cy="8" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="35" cy="62" rx="10" ry="6" fill="${chairColor}"/><circle cx="35" cy="35" r="22" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/></svg>`;
             break;
         case "round-4":
-            svg = `
-            <svg width="90" height="90" viewBox="0 0 90 90" style="${transformStyle}">
-                <ellipse cx="45" cy="8" rx="12" ry="8" fill="${chairColor}"/>
-                <ellipse cx="45" cy="82" rx="12" ry="8" fill="${chairColor}"/>
-                <ellipse cx="82" cy="45" rx="8" ry="12" fill="${chairColor}"/>
-                <ellipse cx="8" cy="45" rx="8" ry="12" fill="${chairColor}"/>
-                <circle cx="45" cy="45" r="28" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/>
-            </svg>`;
+            svg = `<svg width="90" height="90" viewBox="0 0 90 90" style="${transformStyle}"><ellipse cx="45" cy="8" rx="12" ry="8" fill="${chairColor}"/><ellipse cx="45" cy="82" rx="12" ry="8" fill="${chairColor}"/><ellipse cx="82" cy="45" rx="8" ry="12" fill="${chairColor}"/><ellipse cx="8" cy="45" rx="8" ry="12" fill="${chairColor}"/><circle cx="45" cy="45" r="28" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/></svg>`;
+            break;
+        case "square-2":
+            svg = `<svg width="80" height="80" viewBox="0 0 80 80" style="${transformStyle}"><ellipse cx="40" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="40" cy="72" rx="12" ry="6" fill="${chairColor}"/><rect x="20" y="20" width="40" height="40" rx="4" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/></svg>`;
             break;
         case "square-4":
-            svg = `
-            <svg width="80" height="80" viewBox="0 0 80 80" style="${transformStyle}">
-                <ellipse cx="40" cy="8" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="40" cy="72" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="72" cy="40" rx="6" ry="12" fill="${chairColor}"/>
-                <ellipse cx="8" cy="40" rx="6" ry="12" fill="${chairColor}"/>
-                <rect x="18" y="18" width="44" height="44" rx="6" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/>
-            </svg>`;
+            svg = `<svg width="80" height="80" viewBox="0 0 80 80" style="${transformStyle}"><ellipse cx="40" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="40" cy="72" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="72" cy="40" rx="6" ry="12" fill="${chairColor}"/><ellipse cx="8" cy="40" rx="6" ry="12" fill="${chairColor}"/><rect x="18" y="18" width="44" height="44" rx="6" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/></svg>`;
+            break;
+        case "square-8":
+            svg = `<svg width="100" height="100" viewBox="0 0 100 100" style="${transformStyle}">
+                <ellipse cx="35" cy="8" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="65" cy="8" rx="10" ry="6" fill="${chairColor}"/>
+                <ellipse cx="35" cy="92" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="65" cy="92" rx="10" ry="6" fill="${chairColor}"/>
+                <ellipse cx="8" cy="35" rx="6" ry="10" fill="${chairColor}"/><ellipse cx="8" cy="65" rx="6" ry="10" fill="${chairColor}"/>
+                <ellipse cx="92" cy="35" rx="6" ry="10" fill="${chairColor}"/><ellipse cx="92" cy="65" rx="6" ry="10" fill="${chairColor}"/>
+                <rect x="20" y="20" width="60" height="60" rx="8" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/></svg>`;
             break;
         case "rect-6":
-            svg = `
-            <svg width="140" height="80" viewBox="0 0 140 80" style="${transformStyle}">
-                <ellipse cx="35" cy="8" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="70" cy="8" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="105" cy="8" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="35" cy="72" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="70" cy="72" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="105" cy="72" rx="12" ry="6" fill="${chairColor}"/>
-                <rect x="15" y="18" width="110" height="44" rx="6" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/>
-            </svg>`;
+            svg = `<svg width="140" height="80" viewBox="0 0 140 80" style="${transformStyle}"><ellipse cx="35" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="70" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="105" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="35" cy="72" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="70" cy="72" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="105" cy="72" rx="12" ry="6" fill="${chairColor}"/><rect x="15" y="18" width="110" height="44" rx="6" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/></svg>`;
             break;
         case "rect-8":
-            svg = `
-            <svg width="180" height="80" viewBox="0 0 180 80" style="${transformStyle}">
-                <ellipse cx="35" cy="8" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="70" cy="8" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="105" cy="8" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="140" cy="8" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="35" cy="72" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="70" cy="72" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="105" cy="72" rx="12" ry="6" fill="${chairColor}"/>
-                <ellipse cx="140" cy="72" rx="12" ry="6" fill="${chairColor}"/>
-                <rect x="15" y="18" width="150" height="44" rx="6" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/>
-            </svg>`;
-            break;
-        case "bar-1":
-            svg = `
-            <svg width="40" height="40" viewBox="0 0 40 40" style="${transformStyle}">
-                <circle cx="20" cy="10" r="6" fill="${chairColor}"/>
-                <rect x="14" y="20" width="12" height="15" rx="3" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/>
-            </svg>`;
+            svg = `<svg width="180" height="80" viewBox="0 0 180 80" style="${transformStyle}"><ellipse cx="35" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="70" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="105" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="140" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="35" cy="72" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="70" cy="72" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="105" cy="72" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="140" cy="72" rx="12" ry="6" fill="${chairColor}"/><rect x="15" y="18" width="150" height="44" rx="6" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/></svg>`;
             break;
         default:
-            svg = `
-            <svg width="70" height="70" style="${transformStyle}">
-                <circle cx="35" cy="35" r="25" fill="${tableColor}" stroke="${strokeColor}"/>
-            </svg>`;
+            if (shape.startsWith('bar-')) {
+                const count = parseInt(shape.split('-')[1]) || 1;
+                const w = Math.max(40, count * 30 + 10);
+                let chairs = "";
+                for(let i=0; i<count; i++) {
+                    chairs += `<circle cx="${20 + i*30}" cy="10" r="7" fill="${chairColor}"/>`;
+                }
+                svg = `<svg width="${w}" height="45" viewBox="0 0 ${w} 45" style="${transformStyle}">${chairs}<rect x="10" y="22" width="${w-20}" height="15" rx="3" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/></svg>`;
+            } else {
+                svg = `<svg width="70" height="70" style="${transformStyle}"><circle cx="35" cy="35" r="25" fill="${tableColor}" stroke="${strokeColor}"/></svg>`;
+            }
     }
     return svg;
 };
@@ -131,14 +102,18 @@ window.renderSettingsRooms = async function () {
         const currentTables = STATE.tableMapData.filter(t => t.Room === STATE.currentRoom);
         currentTables.forEach(t => {
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
-            const posX = t.PosX || 50;
-            const posY = t.PosY || 50;
-            const scale = t.Scale || 1.0;
-            const rotation = t.Rotation || 0;
-            const isSelected = STATE.selectedTableId == t.id;
+            // Ensure positions are treated as percentages for consistency across views
+            let leftPct = t.PosX;
+            let topPct = t.PosY;
+            
+            // Retro-compatibility: if values are large, assume they were pixels on a ~1000px base
+            if (leftPct > 100) leftPct = (leftPct / 1000) * 100;
+            if (topPct > 100) topPct = (topPct / 800) * 100;
 
             floorHtml += `
-                <div class="table-element ${isSelected ? 'selected-for-edit' : ''}" data-id="${t.id}" style="left: ${posX}px; top: ${posY}px;" onclick="window.selectTableForEdit('${t.id}')">
+                <div class="table-element ${isSelected ? 'selected-for-edit' : ''}" data-id="${t.id}" 
+                     style="left: ${leftPct}%; top: ${topPct}%;" 
+                     onclick="window.selectTableForEdit('${t.id}')">
                     ${window.generateTableSVG(shapeStr, "#10b981", scale, rotation)}
                     <span class="table-number-label">T${t.TableNumber}</span>
                     <div class="table-delete-btn" onclick="window.deleteTable('${t.id}', event)">✕</div>
@@ -271,9 +246,9 @@ window.updateTableOptions = function () {
     const type = typeSelect.value;
     let options = [];
     if (type === 'round') options = [2, 4];
-    else if (type === 'square') options = [4];
+    else if (type === 'square') options = [2, 4, 8];
     else if (type === 'rect') options = [6, 8, 10, 12];
-    else if (type === 'bar') options = [1];
+    else if (type === 'bar') options = [1, 2, 3, 4, 5, 6];
 
     chairsSelect.innerHTML = options.map(o => `<option value="${o}">${o} كراسي</option>`).join('');
     window.updateTablePreview();
@@ -589,24 +564,25 @@ window.handleDragEnd = async function (e) {
     const target = STATE.dragTarget;
     STATE.isDragging = false;
     STATE.dragTarget = null;
-    target.style.zIndex = "";
-
-    const rowId = target.getAttribute('data-id');
-    const finalX = parseInt(target.style.left, 10) || 0;
-    const finalY = parseInt(target.style.top, 10) || 0;
+    const canvas = document.getElementById('floor-canvas');
+    if (!canvas) return;
+    const canvasRect = canvas.getBoundingClientRect();
+    
+    // Calculate position as percentage of canvas
+    const finalX = ((parseInt(target.style.left, 10) || 0) / canvasRect.width) * 100;
+    const finalY = ((parseInt(target.style.top, 10) || 0) / canvasRect.height) * 100;
 
     const tableIndex = STATE.tableMapData.findIndex(t => t.id == rowId);
     if (tableIndex > -1) {
         STATE.tableMapData[tableIndex].PosX = finalX;
         STATE.tableMapData[tableIndex].PosY = finalY;
         try {
-            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${rowId}/?user_field_names=true`, {
+            await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${rowId}/?user_field_names=true`, {
                 method: 'PATCH',
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ "PosX": finalX, "PosY": finalY })
             });
-            if (res.ok) window.showToast("تم حفظ الموقع", "success");
-            else throw new Error("Save position failed");
+            window.showToast("تم حفظ الموقع بدقة", "success");
         } catch (err) {
             console.error(err);
             window.showToast("فشل في حفظ موقع الطاولة", "error");

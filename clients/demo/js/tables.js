@@ -110,8 +110,14 @@ window.renderTableView = async function () {
             }
 
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
-            const posX = t.PosX || 50;
-            const posY = t.PosY || 50;
+            // Ensure positions are treated as percentages for consistency across views
+            let leftPct = t.PosX || 50;
+            let topPct = t.PosY || 50;
+            
+            // Retro-compatibility: if values are large, assume they were pixels on a ~1000px base
+            if (leftPct > 100) leftPct = (leftPct / 1000) * 100;
+            if (topPct > 100) topPct = (topPct / 800) * 100;
+
             const tScale = t.Scale || 1.0;
             const tRot = t.Rotation || 0;
 
@@ -122,7 +128,7 @@ window.renderTableView = async function () {
 
             floorHtml += `
                 <div class="table-element ${statusClass}" 
-                     style="left: ${posX}px; top: ${posY}px; cursor: pointer; pointer-events: auto;" 
+                     style="left: ${leftPct}%; top: ${topPct}%; cursor: pointer; pointer-events: auto;" 
                      onclick="window.handleTableMapClick('${numStr}', ${isCalling}, ${hasActiveOrder}, ${orderIdArg})">
                     ${window.generateTableSVG ? window.generateTableSVG(shapeStr, chairColor, tScale, tRot) : '<svg width="70" height="70"><circle cx="35" cy="35" r="22" fill="#374151"/></svg>'}
                     <span class="table-number-label">T${t.TableNumber}</span>
