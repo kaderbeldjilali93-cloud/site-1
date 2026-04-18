@@ -770,8 +770,15 @@
                     </path>
                 </svg>
             </button>
-            <h3 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-3"><span id="edit-order-title"
+            <h3 class="text-2xl font-bold text-white mb-2 border-b border-gray-700 pb-3"><span id="edit-order-title"
                     class="text-brand">تعديل الطلب</span></h3>
+
+            <!-- حقل رقم الطاولة (يظهر فقط عند إنشاء طلب جديد) -->
+            <div id="new-order-table-container" class="mb-4 bg-gray-900 p-3 rounded-lg border border-gray-700 hidden">
+                <label class="block text-xs text-gray-400 mb-1.5 font-bold">رقم الطاولة / النوع:</label>
+                <input type="text" id="manual-table-number" placeholder="مثلاً: 5 أو سفري" 
+                    class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand outline-none transition font-bold">
+            </div>
 
             <div class="flex flex-col md:flex-row gap-6 flex-1 overflow-hidden">
                 <!-- القسم الأيمن: تفاصيل الطلب -->
