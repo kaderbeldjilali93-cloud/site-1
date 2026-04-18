@@ -13,6 +13,27 @@ const logoutModal = document.getElementById('logout-modal');
 const checkoutModal = document.getElementById('checkout-modal');
 const sidebar = document.getElementById('sidebar');
 
+window.showDeleteConfirm = function(title, msg, onConfirm) {
+    const m = document.getElementById('delete-confirm-modal');
+    const t = document.getElementById('delete-confirm-title');
+    const d = document.getElementById('delete-confirm-msg');
+    const btn = document.getElementById('delete-confirm-btn');
+    if(!m) return;
+
+    t.innerText = title || "هل أنت متأكد؟";
+    d.innerText = msg || "لا يمكن التراجع عن هذا الإجراء.";
+    btn.onclick = () => {
+        onConfirm();
+        window.closeDeleteConfirm();
+    };
+    m.classList.remove('hidden');
+};
+
+window.closeDeleteConfirm = function() {
+    const m = document.getElementById('delete-confirm-modal');
+    if(m) m.classList.add('hidden');
+};
+
 window.addEventListener('DOMContentLoaded', () => {
     const savedUser = localStorage.getItem(STATE.storageKeys.username);
     const savedRole = localStorage.getItem(STATE.storageKeys.role);

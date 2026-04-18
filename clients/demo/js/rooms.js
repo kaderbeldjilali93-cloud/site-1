@@ -169,7 +169,8 @@ window.renderSettingsRooms = async function () {
                             <span>أرضية ${STATE.currentRoom}</span>
                             <span class="text-sm font-normal text-gray-400 border border-gray-700 rounded-full px-3 py-1 bg-gray-800 shadow-inner">${currentTables.length} طاولات</span>
                         </h3>
-                        <div id="floor-canvas" class="floor-canvas shadow-inner border-2 border-dashed border-gray-700/50 bg-[#161625]">
+                        <div id="floor-canvas" class="floor-canvas shadow-inner border-2 border-dashed border-gray-700/50 bg-[#161625]"
+                            onclick="if(event.target === this) window.deselectTable()">
                             ${floorHtml}
                         </div>
                     </div>
@@ -215,8 +216,11 @@ window.renderTableTools = function () {
                 </div>
             </div>
 
-            <button onclick="window.deselectTable()" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-xl transition mb-3">إلغاء التحديد</button>
-            <button onclick="window.deleteTable('${selectedTable.id}')" class="w-full bg-red-900/30 text-red-400 border border-red-800/50 hover:bg-red-600 hover:text-white font-bold py-3 rounded-xl transition">حذف الطاولة</button>
+            <button onclick="window.saveTableMap()" class="w-full bg-brand hover:bg-brand-dark text-black font-black py-3 rounded-xl transition shadow-lg mb-3 flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                حفظ التعديلات
+            </button>
+            <button onclick="window.deleteTable('${selectedTable.id}')" class="w-full bg-red-900/10 text-red-500 border border-red-800/20 hover:bg-red-600 hover:text-white font-bold py-3 rounded-xl transition">حذف الطاولة</button>
         `;
     }
 
@@ -403,29 +407,39 @@ window.switchRoom = function (r) {
     window.renderSettingsRooms();
 };
 
+window.saveTableMap = function() {
+    window.renderSettingsRooms(); // Just re-render for now as updates are auto-saved or handled by dragEnd
+    window.showToast("تم حفظ جميع التعديلات بنجاح", "success");
+};
+
 window.deleteRoom = async function () {
     if (!STATE.currentRoom) return;
-    if (!confirm(`سيتم حذف كل الطاولات في قاعة "${STATE.currentRoom}" نهائياً! هل أنت متأكد؟`)) return;
 
-    const currentTables = STATE.tableMapData.filter(t => t.Room === STATE.currentRoom);
-    if (currentTables.length > 0) {
-        window.showToast("جاري الحذف...", "success");
-        try {
-            for (const table of currentTables) {
-                await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${table.id}/`, {
-                    method: 'DELETE',
-                    headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
-                });
+    window.showDeleteConfirm(
+        "حذف القاعة؟",
+        `سيتم حذف كل الطاولات في قاعة "${STATE.currentRoom}" نهائياً! هل أنت متأكد؟`,
+        async () => {
+            const currentTables = STATE.tableMapData.filter(t => t.Room === STATE.currentRoom);
+            if (currentTables.length > 0) {
+                window.showToast("جاري الحذف...", "success");
+                try {
+                    for (const table of currentTables) {
+                        await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${table.id}/`, {
+                            method: 'DELETE',
+                            headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+                        });
+                    }
+                    STATE.tableMapData = STATE.tableMapData.filter(t => t.Room !== STATE.currentRoom);
+                } catch (e) {
+                    console.error(e);
+                    window.showToast("حدث خطأ أثناء حذف القاعة", "error");
+                    return;
+                }
             }
-            STATE.tableMapData = STATE.tableMapData.filter(t => t.Room !== STATE.currentRoom);
-        } catch (e) {
-            console.error(e);
-            window.showToast("حدث خطأ أثناء حذف القاعة", "error");
-            return;
+            STATE.currentRoom = null;
+            window.renderSettingsRooms();
         }
-    }
-    STATE.currentRoom = null;
-    window.renderSettingsRooms();
+    );
 };
 
 window.addTableToRoom = async function () {
@@ -486,23 +500,28 @@ window.addTableToRoom = async function () {
 
 window.deleteTable = async function (rowId, e) {
     if (e) e.stopPropagation();
-    if (!confirm("هل تريد حذف هذه الطاولة؟")) return;
 
-    try {
-        const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${rowId}/`, {
-            method: 'DELETE',
-            headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
-        });
-        if (!res.ok) throw new Error("Failed to delete table");
+    window.showDeleteConfirm(
+        "حذف الطاولة؟",
+        "هل أنت متأكد من رغبتك في حذف هذه الطاولة؟ لا يمكن التراجع عن هذا الإجراء.",
+        async () => {
+            try {
+                const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${rowId}/`, {
+                    method: 'DELETE',
+                    headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+                });
+                if (!res.ok) throw new Error("Failed to delete table");
 
-        STATE.tableMapData = STATE.tableMapData.filter(t => t.id != rowId);
-        STATE.selectedTableId = null;
-        window.showToast("تم الحذف بنجاح", "success");
-        window.renderSettingsRooms();
-    } catch (e) {
-        console.error(e);
-        window.showToast("فشل في حذف الطاولة", "error");
-    }
+                STATE.tableMapData = STATE.tableMapData.filter(t => t.id != rowId);
+                STATE.selectedTableId = null;
+                window.showToast("تم الحذف بنجاح", "success");
+                window.renderSettingsRooms();
+            } catch (e) {
+                console.error(e);
+                window.showToast("فشل في حذف الطاولة", "error");
+            }
+        }
+    );
 };
 
 window.initDragAndDrop = function () {
