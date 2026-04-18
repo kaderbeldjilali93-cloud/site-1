@@ -44,7 +44,6 @@ window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
         const name = item.Name || item.name;
         const price = parseFloat(item.PromoPrice || item.promoprice) || parseFloat(item.Price || item.price || 0);
         
-        // جلب رابط الصورة مع دعم عدة مسميات للحقل
         let imgUrl = 'https://placehold.co/400x300?text=Food';
         const imgField = item.image || item.Image || item.img || item.Img || item.picture || item.Picture;
         
@@ -55,21 +54,22 @@ window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
         }
 
         const card = document.createElement('div');
-        card.className = "bg-gray-800/40 rounded-xl border border-gray-700/30 overflow-hidden hover:border-brand/40 transition-all cursor-pointer group flex flex-col h-full shadow-sm";
+        // توحيد طول البطاقة بالكامل (h-48) لضمان الاصطفاف
+        card.className = "bg-gray-800/60 rounded-xl border border-gray-700/50 overflow-hidden hover:border-brand/50 transition-all cursor-pointer group flex flex-col h-48 shadow-lg";
         card.onclick = () => window.addItemToEditOrder(name, price);
         
         card.innerHTML = `
-            <div class="relative h-20 sm:h-24 overflow-hidden bg-gray-900/50">
-                <img src="${imgUrl}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" 
+            <div class="relative h-24 shrink-0 bg-gray-900/80 flex items-center justify-center p-2">
+                <img src="${imgUrl}" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" 
                      onerror="this.src='https://placehold.co/400x300?text=Food'" alt="${name}">
-                <div class="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-gray-800 to-transparent"></div>
+                <div class="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-gray-900/40 to-transparent"></div>
             </div>
-            <div class="p-2.5 flex flex-col flex-1">
-                <span class="text-[11px] font-bold text-gray-200 mb-2 line-clamp-1 min-h-[1.2em] leading-tight group-hover:text-brand transition-colors">${name}</span>
-                <div class="mt-auto flex items-center justify-between">
+            <div class="p-3 flex flex-col justify-between flex-1">
+                <span class="text-[11px] font-bold text-gray-200 line-clamp-2 leading-tight group-hover:text-brand transition-colors text-center">${name}</span>
+                <div class="flex items-center justify-between mt-2">
                     <span class="text-brand font-black text-xs tabular-nums">${price.toLocaleString()} <small class="text-[8px] font-normal text-gray-500">${sysCurrency}</small></span>
-                    <div class="bg-brand/10 p-1 rounded-md text-brand group-hover:bg-brand group-hover:text-black transition-all">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
+                    <div class="bg-brand/10 p-1.5 rounded-lg text-brand group-hover:bg-brand group-hover:text-black transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
                     </div>
                 </div>
             </div>
@@ -122,20 +122,28 @@ window.openNewOrderModal = async function (type = 'quick') {
         allRooms.forEach(room => {
             const roomTables = STATE.tableMapData.filter(t => t.Room === room);
             if (roomTables.length > 0) {
-                const group = document.createElement('optgroup');
-                group.label = `📍 ${room}`;
+                // إضافة اسم القاعة كخيار غير قابل للاختيار بدلاً من optgroup لتجنب السطر الأبيض
+                const header = document.createElement('option');
+                header.disabled = true;
+                header.className = "bg-gray-800 text-brand font-bold py-2";
+                header.innerText = `─── ${room} ───`;
+                select.appendChild(header);
+
                 roomTables.forEach(t => {
                     const opt = document.createElement('option');
                     opt.value = t.TableNumber;
                     opt.innerText = `طاولة ${t.TableNumber}`;
-                    group.appendChild(opt);
+                    opt.className = "bg-gray-900 text-white";
+                    select.appendChild(opt);
                 });
-                select.appendChild(group);
             }
         });
     }
 
-    if (container) container.classList.remove('hidden');
+    if (container) {
+        if (type === 'quick') container.classList.add('hidden');
+        else container.classList.remove('hidden');
+    }
     
     STATE.originalEditDetails = "";
     document.getElementById('edit-order-original-details').innerText = "ابدأ بإضافة الأصناف...";
