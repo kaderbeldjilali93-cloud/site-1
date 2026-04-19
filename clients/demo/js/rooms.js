@@ -57,16 +57,33 @@ window.renderSettingsRooms = async function () {
     dynamicContent.innerHTML = `<div class="flex items-center justify-center p-10"><div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-brand"></div></div>`;
 
     try {
-        if (!STATE.tableMapData || STATE.tableMapData.length === 0) {
-            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true&size=200`, {
-                headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                STATE.tableMapData = data.results || [];
-            } else {
-                throw new Error("Failed to load data from Baserow");
+        // Always reload fresh data from Baserow to guarantee persistence
+        const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true&size=200`, {
+            headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            STATE.tableMapData = data.results || [];
+            
+            // One-time migration: convert any legacy pixel values (>95) to percentages
+            for (const t of STATE.tableMapData) {
+                const px = parseFloat(t.PosX) || 0;
+                const py = parseFloat(t.PosY) || 0;
+                if (px > 95 || py > 95) {
+                    const newX = Math.min(90, (px / 1200) * 100);
+                    const newY = Math.min(90, (py / 700) * 100);
+                    t.PosX = newX;
+                    t.PosY = newY;
+                    // Save corrected values back to Baserow silently
+                    fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${t.id}/?user_field_names=true`, {
+                        method: 'PATCH',
+                        headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ "PosX": newX, "PosY": newY })
+                    }).catch(e => console.warn('Migration save error:', e));
+                }
             }
+        } else {
+            throw new Error("Failed to load data from Baserow");
         }
 
         let rooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))].sort();
@@ -100,13 +117,9 @@ window.renderSettingsRooms = async function () {
         const currentTables = STATE.tableMapData.filter(t => t.Room === STATE.currentRoom);
         currentTables.forEach(t => {
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
-            // Standardized coordinate loading
-            let leftPct = parseFloat(t.PosX || 0);
-            let topPct = parseFloat(t.PosY || 0);
-            
-            // Auto-correct legacy pixel data once
-            if (leftPct > 100) leftPct = (leftPct / 1200) * 100;
-            if (topPct > 100) topPct = (topPct / 800) * 100;
+            // Positions are stored as percentages (0-100)
+            let leftPct = parseFloat(t.PosX) || 10;
+            let topPct = parseFloat(t.PosY) || 10;
 
             const scale = t.Scale || 1.0;
             const rotation = t.Rotation || 0;
@@ -451,8 +464,8 @@ window.addTableToRoom = async function () {
         "TableNumber": num,
         "Shape": shapeId,
         "Chairs": parseInt(chairs),
-        "PosX": 250,
-        "PosY": 200,
+        "PosX": 30,
+        "PosY": 30,
         "Scale": 1.0,
         "Rotation": 0
     };
@@ -572,31 +585,37 @@ window.handleDragEnd = async function (e) {
     if (!canvas) return;
     const canvasRect = canvas.getBoundingClientRect();
     
-    // Calculate position as a normalized value (0-100 range for percentages)
-    // We save as % but with high precision
-    const finalX = (parseFloat(target.style.left) / canvasRect.width) * 100;
-    const finalY = (parseFloat(target.style.top) / canvasRect.height) * 100;
+    // target.style.left is in pixels (set by handleDragMove)
+    // Convert pixel offset relative to canvas into percentage
+    const pxLeft = parseFloat(target.style.left) || 0;
+    const pxTop = parseFloat(target.style.top) || 0;
+    const finalX = Math.max(0, Math.min(95, (pxLeft / canvasRect.width) * 100));
+    const finalY = Math.max(0, Math.min(95, (pxTop / canvasRect.height) * 100));
 
     const rowId = target.getAttribute('data-id');
     const tableIndex = STATE.tableMapData.findIndex(t => t.id == rowId);
     
     if (tableIndex > -1) {
+        // Update local state FIRST
         STATE.tableMapData[tableIndex].PosX = finalX;
         STATE.tableMapData[tableIndex].PosY = finalY;
 
+        // Apply percentage immediately so it doesn't jump
+        target.style.left = finalX + '%';
+        target.style.top = finalY + '%';
+
         try {
-            await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${rowId}/?user_field_names=true`, {
+            const resp = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${rowId}/?user_field_names=true`, {
                 method: 'PATCH',
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ "PosX": finalX, "PosY": finalY })
             });
-
-            target.style.left = finalX + '%';
-            target.style.top = finalY + '%';
-            window.showToast("تم حفظ التعديلات بنجاح", "success");
+            if (!resp.ok) throw new Error('Save failed');
+            console.log(`Saved table ${rowId}: PosX=${finalX.toFixed(2)}%, PosY=${finalY.toFixed(2)}%`);
+            window.showToast("تم حفظ الموقع", "success");
         } catch (err) {
             console.error(err);
-            window.showToast("فشل الحفظ في قاعدة البيانات", "error");
+            window.showToast("فشل في حفظ الموقع", "error");
         }
     }
 };

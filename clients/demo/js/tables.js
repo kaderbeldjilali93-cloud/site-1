@@ -11,14 +11,13 @@ window.renderTableView = async function () {
     }
 
     try {
-        if (!STATE.tableMapData || STATE.tableMapData.length === 0) {
-            const tableRes = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true&size=200`, {
-                headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
-            });
-            if (tableRes.ok) {
-                const mapData = await tableRes.json();
-                STATE.tableMapData = mapData.results || [];
-            }
+        // Always reload fresh data from Baserow
+        const tableRes = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true&size=200`, {
+            headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+        });
+        if (tableRes.ok) {
+            const mapData = await tableRes.json();
+            STATE.tableMapData = mapData.results || [];
         }
 
         let rooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))].sort();
@@ -110,13 +109,9 @@ window.renderTableView = async function () {
             }
 
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
-            // Standardized coordinate loading for 16:9 aspect ratio
-            let leftPct = parseFloat(t.PosX || 0);
-            let topPct = parseFloat(t.PosY || 0);
-            
-            // Auto-correct legacy pixel data if still present
-            if (leftPct > 100) leftPct = (leftPct / 1200) * 100;
-            if (topPct > 100) topPct = (topPct / 800) * 100;
+            // Positions are stored as percentages (0-100)
+            let leftPct = parseFloat(t.PosX) || 10;
+            let topPct = parseFloat(t.PosY) || 10;
 
             const tScale = t.Scale || 1.0;
             const tRot = t.Rotation || 0;
@@ -178,21 +173,23 @@ window.switchTableRoom = function (r) {
 };
 
 window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, orderId) {
+    // Handle calling tables - resolve the call
     if (isCalling) {
         window.resolveTableCall(tableNumber);
         return;
     }
     
-    if (hasActiveOrder && orderId && orderId !== 'null') {
+    // Handle tables with active orders (yellow/red) - open edit modal
+    if (hasActiveOrder && orderId && orderId !== 'null' && orderId !== null) {
         if (typeof window.openEditOrderModal === 'function') {
             window.openEditOrderModal(orderId);
         } else {
-            window.showToast(`الطاولة ${tableNumber} مشغولة حالياً`, "info");
+            window.showToast(`الطاولة ${tableNumber} - لا يمكن فتح الطلب حالياً`, "info");
         }
         return;
     }
     
-    // إذا كانت فارغة (أو لم ينجح فتح الطلب النشط)
+    // Handle free tables (green) - open new order modal
     if (typeof window.openNewOrderModal === 'function') {
         window.openNewOrderModal('table');
         setTimeout(() => {
