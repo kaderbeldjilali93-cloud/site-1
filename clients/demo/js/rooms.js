@@ -566,28 +566,40 @@ window.handleDragEnd = async function (e) {
     const target = STATE.dragTarget;
     STATE.isDragging = false;
     STATE.dragTarget = null;
+    target.style.zIndex = "";
+
     const canvas = document.getElementById('floor-canvas');
     if (!canvas) return;
     const canvasRect = canvas.getBoundingClientRect();
     
-    // Calculate position as percentage of canvas
-    const finalX = ((parseInt(target.style.left, 10) || 0) / canvasRect.width) * 100;
-    const finalY = ((parseInt(target.style.top, 10) || 0) / canvasRect.height) * 100;
+    // Exact percentage calculation based on current dropped position
+    const finalX = (parseFloat(target.style.left) / canvasRect.width) * 100;
+    const finalY = (parseFloat(target.style.top) / canvasRect.height) * 100;
 
+    const rowId = target.getAttribute('data-id');
     const tableIndex = STATE.tableMapData.findIndex(t => t.id == rowId);
+    
     if (tableIndex > -1) {
+        // Update local state immediately to prevent jumping back on next render
         STATE.tableMapData[tableIndex].PosX = finalX;
         STATE.tableMapData[tableIndex].PosY = finalY;
+
         try {
             await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${rowId}/?user_field_names=true`, {
                 method: 'PATCH',
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ "PosX": finalX, "PosY": finalY })
             });
-            window.showToast("تم حفظ الموقع بدقة", "success");
+
+            // Re-apply percentage style to normalize the element
+            target.style.left = finalX + '%';
+            target.style.top = finalY + '%';
+            
+            window.showToast("تم حفظ الموقع الجديد", "success");
         } catch (err) {
             console.error(err);
-            window.showToast("فشل في حفظ موقع الطاولة", "error");
+            window.showToast("فشل في حفظ الموقع", "error");
+            // If failed, we might want to revert, but usually, a refresh will fix UI
         }
     }
 };
