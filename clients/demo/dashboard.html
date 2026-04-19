@@ -198,7 +198,8 @@
         /* === Floor Plan Styles === */
         .floor-canvas {
             position: relative;
-            min-height: 500px;
+            width: 100%;
+            aspect-ratio: 16 / 9; /* Fixed aspect ratio to keep coordinates consistent */
             background-color: #1a1a2e;
             background-image:
                 radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
