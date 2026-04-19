@@ -100,14 +100,13 @@ window.renderSettingsRooms = async function () {
         const currentTables = STATE.tableMapData.filter(t => t.Room === STATE.currentRoom);
         currentTables.forEach(t => {
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
-            // Using a logical grid of 1000 units for high precision and consistency
-            let posX = parseFloat(t.PosX || 0);
-            let posY = parseFloat(t.PosY || 0);
+            // Standardized coordinate loading
+            let leftPct = parseFloat(t.PosX || 0);
+            let topPct = parseFloat(t.PosY || 0);
             
-            // Conversion logic: if it's legacy pixel data (>100 or specific check), normalize to 1000-grid
-            // We assume anything above 100 was definitely pixels. Anything below is already percentages/grid.
-            let leftPct = (posX > 100) ? (posX / 1000) * 100 : posX;
-            let topPct = (posY > 100) ? (posY / 800) * 100 : posY;
+            // Auto-correct legacy pixel data once
+            if (leftPct > 100) leftPct = (leftPct / 1200) * 100;
+            if (topPct > 100) topPct = (topPct / 800) * 100;
 
             const scale = t.Scale || 1.0;
             const rotation = t.Rotation || 0;

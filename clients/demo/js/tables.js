@@ -110,13 +110,13 @@ window.renderTableView = async function () {
             }
 
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
-            // Using the standardized 1000-unit grid logic for consistency
-            let posX = parseFloat(t.PosX || 0);
-            let posY = parseFloat(t.PosY || 0);
+            // Standardized coordinate loading for 16:9 aspect ratio
+            let leftPct = parseFloat(t.PosX || 0);
+            let topPct = parseFloat(t.PosY || 0);
             
-            // Conversion logic: normalize legacy pixels to percentages
-            let leftPct = (posX > 100) ? (posX / 1000) * 100 : posX;
-            let topPct = (posY > 100) ? (posY / 800) * 100 : posY;
+            // Auto-correct legacy pixel data if still present
+            if (leftPct > 100) leftPct = (leftPct / 1200) * 100;
+            if (topPct > 100) topPct = (topPct / 800) * 100;
 
             const tScale = t.Scale || 1.0;
             const tRot = t.Rotation || 0;
