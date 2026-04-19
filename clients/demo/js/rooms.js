@@ -57,33 +57,34 @@ window.renderSettingsRooms = async function () {
     dynamicContent.innerHTML = `<div class="flex items-center justify-center p-10"><div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-brand"></div></div>`;
 
     try {
-        // Always reload fresh data from Baserow to guarantee persistence
-        const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true&size=200`, {
-            headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
-        });
-        if (res.ok) {
-            const data = await res.json();
-            STATE.tableMapData = data.results || [];
-            
-            // One-time migration: convert any legacy pixel values (>95) to percentages
-            for (const t of STATE.tableMapData) {
-                const px = parseFloat(t.PosX) || 0;
-                const py = parseFloat(t.PosY) || 0;
-                if (px > 95 || py > 95) {
-                    const newX = Math.min(90, (px / 1200) * 100);
-                    const newY = Math.min(90, (py / 700) * 100);
-                    t.PosX = newX;
-                    t.PosY = newY;
-                    // Save corrected values back to Baserow silently
-                    fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${t.id}/?user_field_names=true`, {
-                        method: 'PATCH',
-                        headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
-                        body: JSON.stringify({ "PosX": newX, "PosY": newY })
-                    }).catch(e => console.warn('Migration save error:', e));
+        // Only load from Baserow if we don't have data yet (first load / page refresh)
+        if (!STATE.tableMapData || STATE.tableMapData.length === 0) {
+            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true&size=200`, {
+                headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                STATE.tableMapData = data.results || [];
+                
+                // One-time migration: convert any legacy pixel values (>95) to percentages
+                for (const t of STATE.tableMapData) {
+                    const px = parseFloat(t.PosX) || 0;
+                    const py = parseFloat(t.PosY) || 0;
+                    if (px > 95 || py > 95) {
+                        const newX = Math.min(90, (px / 1200) * 100);
+                        const newY = Math.min(90, (py / 700) * 100);
+                        t.PosX = newX;
+                        t.PosY = newY;
+                        fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${t.id}/?user_field_names=true`, {
+                            method: 'PATCH',
+                            headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                            body: JSON.stringify({ "PosX": newX, "PosY": newY })
+                        }).catch(e => console.warn('Migration save error:', e));
+                    }
                 }
+            } else {
+                throw new Error("Failed to load data from Baserow");
             }
-        } else {
-            throw new Error("Failed to load data from Baserow");
         }
 
         let rooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))].sort();
@@ -403,9 +404,41 @@ window.switchRoom = function (r) {
     window.renderSettingsRooms();
 };
 
-window.saveTableMap = function() {
-    window.renderSettingsRooms(); // Just re-render for now as updates are auto-saved or handled by dragEnd
-    window.showToast("تم حفظ جميع التعديلات بنجاح", "success");
+window.saveTableMap = async function() {
+    const currentTables = STATE.tableMapData.filter(t => t.Room === STATE.currentRoom);
+    if (currentTables.length === 0) {
+        window.showToast("لا توجد طاولات للحفظ", "info");
+        return;
+    }
+    
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (const t of currentTables) {
+        try {
+            const posX = Math.round(parseFloat(t.PosX) * 100) / 100;
+            const posY = Math.round(parseFloat(t.PosY) * 100) / 100;
+            const scale = parseFloat(t.Scale) || 1.0;
+            const rotation = parseInt(t.Rotation) || 0;
+            
+            const resp = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${t.id}/?user_field_names=true`, {
+                method: 'PATCH',
+                headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ "PosX": posX, "PosY": posY, "Scale": scale, "Rotation": rotation })
+            });
+            if (resp.ok) successCount++;
+            else failCount++;
+        } catch (e) {
+            console.error(`Failed to save table ${t.id}:`, e);
+            failCount++;
+        }
+    }
+    
+    if (failCount === 0) {
+        window.showToast(`تم حفظ ${successCount} طاولات بنجاح ✓`, "success");
+    } else {
+        window.showToast(`فشل حفظ ${failCount} طاولة من ${currentTables.length}`, "error");
+    }
 };
 
 window.deleteRoom = async function () {
@@ -585,12 +618,11 @@ window.handleDragEnd = async function (e) {
     if (!canvas) return;
     const canvasRect = canvas.getBoundingClientRect();
     
-    // target.style.left is in pixels (set by handleDragMove)
-    // Convert pixel offset relative to canvas into percentage
+    // Convert pixel position to percentage (rounded to 2 decimals for Baserow compatibility)
     const pxLeft = parseFloat(target.style.left) || 0;
     const pxTop = parseFloat(target.style.top) || 0;
-    const finalX = Math.max(0, Math.min(95, (pxLeft / canvasRect.width) * 100));
-    const finalY = Math.max(0, Math.min(95, (pxTop / canvasRect.height) * 100));
+    const finalX = Math.round(Math.max(0, Math.min(90, (pxLeft / canvasRect.width) * 100)) * 100) / 100;
+    const finalY = Math.round(Math.max(0, Math.min(90, (pxTop / canvasRect.height) * 100)) * 100) / 100;
 
     const rowId = target.getAttribute('data-id');
     const tableIndex = STATE.tableMapData.findIndex(t => t.id == rowId);
@@ -604,18 +636,19 @@ window.handleDragEnd = async function (e) {
         target.style.left = finalX + '%';
         target.style.top = finalY + '%';
 
+        // Save to Baserow in background (don't block UI)
         try {
             const resp = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${rowId}/?user_field_names=true`, {
                 method: 'PATCH',
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ "PosX": finalX, "PosY": finalY })
             });
-            if (!resp.ok) throw new Error('Save failed');
-            console.log(`Saved table ${rowId}: PosX=${finalX.toFixed(2)}%, PosY=${finalY.toFixed(2)}%`);
-            window.showToast("تم حفظ الموقع", "success");
+            if (!resp.ok) {
+                const errText = await resp.text();
+                console.error(`Baserow PATCH failed (${resp.status}):`, errText);
+            }
         } catch (err) {
-            console.error(err);
-            window.showToast("فشل في حفظ الموقع", "error");
+            console.error('Network error saving position:', err);
         }
     }
 };
