@@ -100,13 +100,14 @@ window.renderSettingsRooms = async function () {
         const currentTables = STATE.tableMapData.filter(t => t.Room === STATE.currentRoom);
         currentTables.forEach(t => {
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
-            // Ensure positions are treated as percentages for consistency across views
-            let leftPct = parseFloat(t.PosX || 50);
-            let topPct = parseFloat(t.PosY || 50);
+            // Using a logical grid of 1000 units for high precision and consistency
+            let posX = parseFloat(t.PosX || 0);
+            let posY = parseFloat(t.PosY || 0);
             
-            // Retro-compatibility: if values are large, assume they were pixels on a ~1000px base
-            if (leftPct > 100) leftPct = (leftPct / 1000) * 100;
-            if (topPct > 100) topPct = (topPct / 800) * 100;
+            // Conversion logic: if it's legacy pixel data (>100 or specific check), normalize to 1000-grid
+            // We assume anything above 100 was definitely pixels. Anything below is already percentages/grid.
+            let leftPct = (posX > 100) ? (posX / 1000) * 100 : posX;
+            let topPct = (posY > 100) ? (posY / 800) * 100 : posY;
 
             const scale = t.Scale || 1.0;
             const rotation = t.Rotation || 0;
@@ -572,7 +573,8 @@ window.handleDragEnd = async function (e) {
     if (!canvas) return;
     const canvasRect = canvas.getBoundingClientRect();
     
-    // Exact percentage calculation based on current dropped position
+    // Calculate position as a normalized value (0-100 range for percentages)
+    // We save as % but with high precision
     const finalX = (parseFloat(target.style.left) / canvasRect.width) * 100;
     const finalY = (parseFloat(target.style.top) / canvasRect.height) * 100;
 
@@ -580,7 +582,6 @@ window.handleDragEnd = async function (e) {
     const tableIndex = STATE.tableMapData.findIndex(t => t.id == rowId);
     
     if (tableIndex > -1) {
-        // Update local state immediately to prevent jumping back on next render
         STATE.tableMapData[tableIndex].PosX = finalX;
         STATE.tableMapData[tableIndex].PosY = finalY;
 
@@ -591,15 +592,12 @@ window.handleDragEnd = async function (e) {
                 body: JSON.stringify({ "PosX": finalX, "PosY": finalY })
             });
 
-            // Re-apply percentage style to normalize the element
             target.style.left = finalX + '%';
             target.style.top = finalY + '%';
-            
-            window.showToast("تم حفظ الموقع الجديد", "success");
+            window.showToast("تم حفظ التعديلات بنجاح", "success");
         } catch (err) {
             console.error(err);
-            window.showToast("فشل في حفظ الموقع", "error");
-            // If failed, we might want to revert, but usually, a refresh will fix UI
+            window.showToast("فشل الحفظ في قاعدة البيانات", "error");
         }
     }
 };
