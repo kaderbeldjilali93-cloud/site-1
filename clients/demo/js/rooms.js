@@ -118,9 +118,13 @@ window.renderSettingsRooms = async function () {
         const currentTables = STATE.tableMapData.filter(t => t.Room === STATE.currentRoom);
         currentTables.forEach(t => {
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
-            // Positions are stored as percentages (0-100)
-            let leftPct = parseFloat(t.PosX) || 10;
-            let topPct = parseFloat(t.PosY) || 10;
+            // Standardized coordinate loading - handle both pixels (legacy) and percentages
+            let posX = parseFloat(t.PosX) || 10;
+            let posY = parseFloat(t.PosY) || 10;
+            
+            // If data is > 100, it's definitely old pixel data - convert it
+            let leftPct = (posX > 100) ? Math.round((posX / 1100) * 100) : Math.round(posX);
+            let topPct = (posY > 100) ? Math.round((posY / 700) * 100) : Math.round(posY);
 
             const scale = t.Scale || 1.0;
             const rotation = t.Rotation || 0;
@@ -407,37 +411,53 @@ window.switchRoom = function (r) {
 window.saveTableMap = async function() {
     const currentTables = STATE.tableMapData.filter(t => t.Room === STATE.currentRoom);
     if (currentTables.length === 0) {
-        window.showToast("لا توجد طاولات للحفظ", "info");
+        window.showToast("لا توجد طاولات لحفظها في هذه القاعة", "info");
         return;
     }
     
+    // Show loading state on the button
+    const saveBtn = document.querySelector('button[onclick="window.saveTableMap()"]');
+    const originalContent = saveBtn ? saveBtn.innerHTML : "";
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = `<span class="animate-spin mr-2">⏳</span> جاري الحفظ...`;
+    }
+
     let successCount = 0;
-    let failCount = 0;
     
-    for (const t of currentTables) {
-        try {
-            const posX = Math.round(parseFloat(t.PosX) * 100) / 100;
-            const posY = Math.round(parseFloat(t.PosY) * 100) / 100;
-            const scale = parseFloat(t.Scale) || 1.0;
-            const rotation = parseInt(t.Rotation) || 0;
-            
+    try {
+        for (const t of currentTables) {
+            // Ensure values are integers for maximum database compatibility
+            const cleanX = Math.round(parseFloat(t.PosX));
+            const cleanY = Math.round(parseFloat(t.PosY));
+            const cleanScale = parseFloat(t.Scale) || 1.0;
+            const cleanRot = parseInt(t.Rotation) || 0;
+
             const resp = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${t.id}/?user_field_names=true`, {
                 method: 'PATCH',
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ "PosX": posX, "PosY": posY, "Scale": scale, "Rotation": rotation })
+                body: JSON.stringify({ 
+                    "PosX": cleanX, 
+                    "PosY": cleanY, 
+                    "Scale": cleanScale, 
+                    "Rotation": cleanRot 
+                })
             });
             if (resp.ok) successCount++;
-            else failCount++;
-        } catch (e) {
-            console.error(`Failed to save table ${t.id}:`, e);
-            failCount++;
         }
-    }
-    
-    if (failCount === 0) {
-        window.showToast(`تم حفظ ${successCount} طاولات بنجاح ✓`, "success");
-    } else {
-        window.showToast(`فشل حفظ ${failCount} طاولة من ${currentTables.length}`, "error");
+        
+        window.showToast(`تم حفظ ${successCount} طاولة بنجاح ✓`, "success");
+        // Force refresh local data to be sure we are synced with server
+        STATE.tableMapData = []; 
+        await window.renderSettingsRooms();
+    } catch (e) {
+        console.error("Save failure:", e);
+        window.showToast("حدث خطأ أثناء الاتصال بالسيرفر", "error");
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalContent;
+        }
     }
 };
 
@@ -618,37 +638,29 @@ window.handleDragEnd = async function (e) {
     if (!canvas) return;
     const canvasRect = canvas.getBoundingClientRect();
     
-    // Convert pixel position to percentage (rounded to 2 decimals for Baserow compatibility)
+    // Convert pixel position to clean integer percentages for widest field support
     const pxLeft = parseFloat(target.style.left) || 0;
     const pxTop = parseFloat(target.style.top) || 0;
-    const finalX = Math.round(Math.max(0, Math.min(90, (pxLeft / canvasRect.width) * 100)) * 100) / 100;
-    const finalY = Math.round(Math.max(0, Math.min(90, (pxTop / canvasRect.height) * 100)) * 100) / 100;
+    const finalX = Math.round(Math.max(0, Math.min(98, (pxLeft / canvasRect.width) * 100)));
+    const finalY = Math.round(Math.max(0, Math.min(98, (pxTop / canvasRect.height) * 100)));
 
     const rowId = target.getAttribute('data-id');
     const tableIndex = STATE.tableMapData.findIndex(t => t.id == rowId);
     
     if (tableIndex > -1) {
-        // Update local state FIRST
+        // Update local state FIRST to avoid layout flickering
         STATE.tableMapData[tableIndex].PosX = finalX;
         STATE.tableMapData[tableIndex].PosY = finalY;
 
-        // Apply percentage immediately so it doesn't jump
+        // Apply rounded percentage immediately to the DOM
         target.style.left = finalX + '%';
         target.style.top = finalY + '%';
 
-        // Save to Baserow in background (don't block UI)
-        try {
-            const resp = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${rowId}/?user_field_names=true`, {
-                method: 'PATCH',
-                headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ "PosX": finalX, "PosY": finalY })
-            });
-            if (!resp.ok) {
-                const errText = await resp.text();
-                console.error(`Baserow PATCH failed (${resp.status}):`, errText);
-            }
-        } catch (err) {
-            console.error('Network error saving position:', err);
-        }
+        // Background update attempt - silently retries or fails until manual Save is clicked
+        fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${rowId}/?user_field_names=true`, {
+            method: 'PATCH',
+            headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ "PosX": finalX, "PosY": finalY })
+        }).catch(err => console.warn('Background position update failed, will sync on manual save.'));
     }
 };

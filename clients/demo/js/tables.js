@@ -109,9 +109,13 @@ window.renderTableView = async function () {
             }
 
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
-            // Positions are stored as percentages (0-100)
-            let leftPct = parseFloat(t.PosX) || 10;
-            let topPct = parseFloat(t.PosY) || 10;
+            // Standardized coordinate loading - handle both pixels (legacy) and percentages
+            let posX = parseFloat(t.PosX) || 10;
+            let posY = parseFloat(t.PosY) || 10;
+            
+            // Sync logic with rooms.js
+            let leftPct = (posX > 100) ? Math.round((posX / 1100) * 100) : Math.round(posX);
+            let topPct = (posY > 100) ? Math.round((posY / 700) * 100) : Math.round(posY);
 
             const tScale = t.Scale || 1.0;
             const tRot = t.Rotation || 0;
