@@ -142,39 +142,29 @@ window.openNewOrderModal = async function (type = 'quick', isPreSelected = false
     STATE.originalEditPrice = 0;
     STATE.newOrderType = type;
 
-    // 1. تعبئة قائمة الطاولات المتوفرة من STATE.tableMapData
-    const select = document.getElementById('manual-table-number');
+    // 1. تعبئة قائمة القاعات المتوفرة من STATE.tableMapData
+    const roomSelect = document.getElementById('manual-room-select');
+    const tableSelect = document.getElementById('manual-table-select');
     const container = document.getElementById('new-order-table-container');
 
-    if (select) {
-        select.innerHTML = '<option value="" disabled selected>إختر رقم الطاولة...</option>';
-        const allRooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))];
+    if (roomSelect) {
+        roomSelect.innerHTML = '<option value="" disabled selected>إختر القاعة...</option>';
+        const allRooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))].sort();
 
         allRooms.forEach(room => {
-            const roomTables = STATE.tableMapData.filter(t => t.Room === room);
-            if (roomTables.length > 0) {
-                // إضافة اسم القاعة كخيار غير قابل للاختيار بدلاً من optgroup لتجنب السطر الأبيض
-                const header = document.createElement('option');
-                header.disabled = true;
-                header.className = "bg-gray-800 text-brand font-bold py-2";
-                header.innerText = `─── ${room} ───`;
-                select.appendChild(header);
-
-                roomTables.forEach(t => {
-                    const opt = document.createElement('option');
-                    // التنسيق الموحد لأسماء الطاولات عبر النظام بالكامل لضمان المزامنة في نداءات الطاولات
-                    const formattedValue = `الطاولة ${t.TableNumber} - ${room}`;
-                    opt.value = formattedValue;
-                    opt.innerText = `طاولة ${t.TableNumber} (${room})`;
-                    opt.className = "bg-gray-900 text-white";
-                    select.appendChild(opt);
-                });
-            }
+            const opt = document.createElement('option');
+            opt.value = room;
+            opt.innerText = room;
+            opt.className = "bg-gray-900 text-white";
+            roomSelect.appendChild(opt);
         });
     }
 
+    if (tableSelect) {
+        tableSelect.innerHTML = '<option value="" disabled selected>إختر الطاولة...</option>';
+    }
+
     if (container) {
-        // إخفاء خانة اختيار الطاولة إذا كانت طاولة سريعة أو إذا تم النقر عليها مباشرة من الخريطة
         if (type === 'quick' || isPreSelected) {
             container.classList.add('hidden');
         } else {
@@ -194,8 +184,31 @@ window.openNewOrderModal = async function (type = 'quick', isPreSelected = false
     window.updateEditOrderUI();
     const modal = document.getElementById('edit-order-modal');
     if (modal) modal.classList.remove('hidden');
+};
 
-    window.openEditOrderModal_DrawMenu();
+window.updateTableListByRoom = function () {
+    const roomSelect = document.getElementById('manual-room-select');
+    const tableSelect = document.getElementById('manual-table-select');
+    if (!roomSelect || !tableSelect) return;
+
+    const selectedRoom = roomSelect.value;
+    tableSelect.innerHTML = '<option value="" disabled selected>إختر الطاولة...</option>';
+
+    if (selectedRoom) {
+        const roomTables = STATE.tableMapData
+            .filter(t => t.Room === selectedRoom)
+            .sort((a, b) => parseInt(a.TableNumber) - parseInt(b.TableNumber));
+
+        roomTables.forEach(t => {
+            const opt = document.createElement('option');
+            // التنسيق الموحد لأسماء الطاولات (الطاولة X - القاعة Y)
+            const formattedValue = `الطاولة ${t.TableNumber} - ${selectedRoom}`;
+            opt.value = formattedValue;
+            opt.innerText = `طاولة ${t.TableNumber}`;
+            opt.className = "bg-gray-900 text-white";
+            tableSelect.appendChild(opt);
+        });
+    }
 };
 
 window.addItemToEditOrder = function (name, price) {
@@ -330,15 +343,21 @@ window.saveOrderEdit = async function () {
         [priceKey]: String(finalPrice)
     };
     if (isNewOrder) {
-        const manualTable = document.getElementById('manual-table-number')?.value || "";
+        const roomVal = document.getElementById('manual-room-select')?.value;
+        const tableVal = document.getElementById('manual-table-select')?.value;
+        
+        // إذا كان هناك اختيار يدوي للطاولة، نستخدمه. وإلا نستخدم القيمة الافتراضية بناءً على النوع
+        const manualTable = tableVal || ""; 
         payload["Table"] = manualTable || (STATE.newOrderType === 'table' ? "طاولة جديدة" : "سفري");
         
-        // إذا تم اختيار طاولة، يجب أن يكون نوع الطلب table تلقائياً لضمان التصنيف الصحيح
         if (manualTable || STATE.newOrderType === 'table') {
             payload["order_type"] = "table";
-            // استخراج اسم القاعة وحفظه كحقل منفصل لتسهيل المطابقة في نداءات الطاولات والمطبخ
-            const roomMatch = manualTable.match(/-\s*(.+)$/);
-            if (roomMatch) payload["Room"] = roomMatch[1].trim();
+            // استخراج اسم القاعة وحفظه كحقل منفصل
+            if (manualTable) {
+                const roomMatch = manualTable.match(/-\s*(.+)$/);
+                if (roomMatch) payload["Room"] = roomMatch[1].trim();
+                else if (roomVal) payload["Room"] = roomVal;
+            }
         } else {
             payload["order_type"] = STATE.newOrderType || "quick";
         }
@@ -727,6 +746,23 @@ window.removeAddDishImage = function () {
     if (container) container.classList.add('hidden');
     const wrapper = document.getElementById('add-image-upload-wrapper');
     if (wrapper) wrapper.classList.remove('hidden');
+};
+
+window.toggleCustomCategory = function (select) {
+    const customInput = document.getElementById('custom-category-input');
+    if (!customInput) return;
+
+    if (select.value === 'custom') {
+        customInput.classList.remove('hidden');
+        customInput.focus();
+    } else if (select.value === 'delete_category') {
+        window.openDeleteCategoryModal();
+        // ارجاع القيمة للأصل لتجنب بقاء الخيار "حذف" مختاراً
+        select.value = 'pizza';
+        customInput.classList.add('hidden');
+    } else {
+        customInput.classList.add('hidden');
+    }
 };
 
 window.openDeleteModal = function (id, name) {
