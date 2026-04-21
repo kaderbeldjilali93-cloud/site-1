@@ -187,6 +187,26 @@ window.renderSettingsRooms = async function () {
 };
 
 window.renderTableTools = function () {
+    if (!STATE.selectedTableIds) STATE.selectedTableIds = [];
+
+    if (STATE.selectedTableIds.length > 1) {
+        return `
+            <h3 class="text-lg font-bold text-white mb-4 border-b border-gray-700 pb-2 flex items-center gap-2">
+                <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                تم تحديد ${STATE.selectedTableIds.length} طاولات
+            </h3>
+            
+            <button onclick="window.copySelectedTables()" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-xl transition shadow-lg mb-3 flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" transform="scale(-1, 1)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                نسخ الطاولات (Ctrl+C)
+            </button>
+            <button onclick="window.deleteSelectedTables()" class="w-full bg-red-900/10 text-red-500 border border-red-800/20 hover:bg-red-600 hover:text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                حذف الطاولات (Delete)
+            </button>
+        `;
+    }
+
     const selectedTable = STATE.selectedTableId ? STATE.tableMapData.find(t => t.id == STATE.selectedTableId) : null;
 
     if (selectedTable) {
@@ -293,11 +313,21 @@ window.updateTablePreview = function () {
 };
 
 window.selectTableForEdit = function (id) {
-    if (STATE.selectedTableId == id) return;
-    STATE.selectedTableId = id;
-    
+    if (!STATE.selectedTableIds) STATE.selectedTableIds = [];
+    if (!window._isCtrlPressed) {
+        STATE.selectedTableIds = [String(id)];
+        STATE.selectedTableId = id;
+    } else {
+        if (STATE.selectedTableIds.includes(String(id))) {
+            STATE.selectedTableIds = STATE.selectedTableIds.filter(x => x !== String(id));
+        } else {
+            STATE.selectedTableIds.push(String(id));
+        }
+        STATE.selectedTableId = STATE.selectedTableIds.length === 1 ? STATE.selectedTableIds[0] : null;
+    }
+
     document.querySelectorAll('.table-element').forEach(el => {
-        if (el.getAttribute('data-id') == id) {
+        if (STATE.selectedTableIds.includes(String(el.getAttribute('data-id')))) {
             el.classList.add('selected-for-edit');
         } else {
             el.classList.remove('selected-for-edit');
@@ -312,6 +342,7 @@ window.selectTableForEdit = function (id) {
 
 window.deselectTable = function () {
     STATE.selectedTableId = null;
+    STATE.selectedTableIds = [];
     
     document.querySelectorAll('.table-element').forEach(el => {
         el.classList.remove('selected-for-edit');
@@ -667,12 +698,56 @@ window.initDragAndDrop = function () {
 window.handleDragStart = function (e) {
     if (STATE.currentActiveView !== 'settings_rooms') return;
     const target = e.target.closest('.table-element');
-    if (!target) return;
+    
+    // Starting lasso selection
+    if (!target) {
+        if (e.target.closest('#floor-canvas') || e.target.id === 'floor-canvas') {
+            if (e.type === 'touchstart') e.preventDefault();
+            STATE.isLassoing = true;
+            STATE.lassoStart = { x: (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX, y: (e.type === 'touchstart') ? e.touches[0].clientY : e.clientY };
+            STATE.selectedTableId = null;
+            STATE.selectedTableIds = [];
+            
+            let existingBox = document.getElementById('lasso-box');
+            if (existingBox) existingBox.remove();
+            
+            const box = document.createElement('div');
+            box.id = 'lasso-box';
+            box.style.position = 'fixed';
+            box.style.border = '2px dashed #00b894';
+            box.style.backgroundColor = 'rgba(0, 184, 148, 0.15)';
+            box.style.zIndex = '9999';
+            box.style.left = STATE.lassoStart.x + 'px';
+            box.style.top = STATE.lassoStart.y + 'px';
+            box.style.width = '0px';
+            box.style.height = '0px';
+            box.style.pointerEvents = 'none';
+            document.body.appendChild(box);
+            
+            window.deselectTable();
+        }
+        return;
+    }
+
     if (e.target.closest('.table-delete-btn')) return;
 
     if (e.type === 'touchstart') e.preventDefault();
+    
+    // Multi-select dragging setup
+    if (!STATE.selectedTableIds) STATE.selectedTableIds = [];
+    const targetId = target.getAttribute('data-id');
+    
+    if (!STATE.selectedTableIds.includes(targetId)) {
+        if (!window._isCtrlPressed) {
+            window.selectTableForEdit(targetId);
+        } else {
+            STATE.selectedTableIds.push(targetId);
+        }
+    }
+
     STATE.isDragging = true;
     STATE.dragTarget = target;
+    STATE.dragOffsets = {};
 
     const canvas = document.getElementById('floor-canvas');
     const canvasRect = canvas.getBoundingClientRect();
@@ -680,83 +755,134 @@ window.handleDragStart = function (e) {
     let clientX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
     let clientY = (e.type === 'touchstart') ? e.touches[0].clientY : e.clientY;
 
-    const currentLeftPct = parseFloat(target.style.left) || 0;
-    const currentTopPct = parseFloat(target.style.top) || 0;
-    
-    const currentLeftPx = (currentLeftPct / 100) * canvasRect.width;
-    const currentTopPx = (currentTopPct / 100) * canvasRect.height;
-    
-    const mouseXInCanvas = clientX - canvasRect.left;
-    const mouseYInCanvas = clientY - canvasRect.top;
-
-    STATE.dragOffset = {
-        x: mouseXInCanvas - currentLeftPx,
-        y: mouseYInCanvas - currentTopPx
-    };
-    target.style.zIndex = 1000;
+    STATE.selectedTableIds.forEach(id => {
+        const el = document.querySelector(`.table-element[data-id="${id}"]`);
+        if (el) {
+            const currentLeftPct = parseFloat(el.style.left) || 0;
+            const currentTopPct = parseFloat(el.style.top) || 0;
+            const currentLeftPx = (currentLeftPct / 100) * canvasRect.width;
+            const currentTopPx = (currentTopPct / 100) * canvasRect.height;
+            const mouseXInCanvas = clientX - canvasRect.left;
+            const mouseYInCanvas = clientY - canvasRect.top;
+            
+            STATE.dragOffsets[id] = {
+                x: mouseXInCanvas - currentLeftPx,
+                y: mouseYInCanvas - currentTopPx
+            };
+            el.style.zIndex = 1000;
+        }
+    });
 };
 
 window.handleDragMove = function (e) {
-    if (!STATE.isDragging || !STATE.dragTarget) return;
     if (e.type === 'touchmove') e.preventDefault();
+    let clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
+    let clientY = (e.type === 'touchmove') ? e.touches[0].clientY : e.clientY;
+
+    // Lasso drawing and bounding box checking
+    if (STATE.isLassoing) {
+        const box = document.getElementById('lasso-box');
+        if (!box) return;
+        
+        const left = Math.min(clientX, STATE.lassoStart.x);
+        const top = Math.min(clientY, STATE.lassoStart.y);
+        const width = Math.abs(clientX - STATE.lassoStart.x);
+        const height = Math.abs(clientY - STATE.lassoStart.y);
+        
+        box.style.left = left + 'px';
+        box.style.top = top + 'px';
+        box.style.width = width + 'px';
+        box.style.height = height + 'px';
+        
+        const boxRect = box.getBoundingClientRect();
+        STATE.selectedTableIds = [];
+        
+        document.querySelectorAll('.table-element').forEach(el => {
+            const rect = el.getBoundingClientRect();
+            if (!(rect.right < boxRect.left || rect.left > boxRect.right || rect.bottom < boxRect.top || rect.top > boxRect.bottom)) {
+                el.classList.add('selected-for-edit');
+                STATE.selectedTableIds.push(el.getAttribute('data-id'));
+            } else {
+                el.classList.remove('selected-for-edit');
+            }
+        });
+        
+        STATE.selectedTableId = STATE.selectedTableIds.length === 1 ? STATE.selectedTableIds[0] : null;
+        
+        const toolsPanel = document.getElementById('rooms-tools-panel');
+        if (toolsPanel) toolsPanel.innerHTML = window.renderTableTools();
+        return;
+    }
+
+    if (!STATE.isDragging || !STATE.dragTarget) return;
 
     const canvas = document.getElementById('floor-canvas');
     const canvasRect = canvas.getBoundingClientRect();
-
-    let clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
-    let clientY = (e.type === 'touchmove') ? e.touches[0].clientY : e.clientY;
 
     let mouseXInCanvas = clientX - canvasRect.left;
     let mouseYInCanvas = clientY - canvasRect.top;
 
-    let rawX = mouseXInCanvas - STATE.dragOffset.x;
-    let rawY = mouseYInCanvas - STATE.dragOffset.y;
-
-    STATE.dragTarget.style.left = `${(rawX / canvasRect.width) * 100}%`;
-    STATE.dragTarget.style.top = `${(rawY / canvasRect.height) * 100}%`;
+    // Move all selected tables
+    STATE.selectedTableIds.forEach(id => {
+        const el = document.querySelector(`.table-element[data-id="${id}"]`);
+        if (el && STATE.dragOffsets[id]) {
+            let rawX = mouseXInCanvas - STATE.dragOffsets[id].x;
+            let rawY = mouseYInCanvas - STATE.dragOffsets[id].y;
+            
+            el.style.left = `${(rawX / canvasRect.width) * 100}%`;
+            el.style.top = `${(rawY / canvasRect.height) * 100}%`;
+        }
+    });
 };
 
 window.handleDragEnd = async function (e) {
+    if (STATE.isLassoing) {
+        STATE.isLassoing = false;
+        const box = document.getElementById('lasso-box');
+        if (box) box.remove();
+        return;
+    }
+
     if (!STATE.isDragging || !STATE.dragTarget) return;
-    const target = STATE.dragTarget;
+    
     STATE.isDragging = false;
     STATE.dragTarget = null;
-    target.style.zIndex = "";
 
     const canvas = document.getElementById('floor-canvas');
     if (!canvas) return;
-    
     const canvasRect = canvas.getBoundingClientRect();
-    const svg = target.querySelector('svg');
-    const boundingNode = svg ? svg : target;
-    const targetRect = boundingNode.getBoundingClientRect();
-    
-    const elWidthPct = (targetRect.width / canvasRect.width) * 100;
-    const elHeightPct = (targetRect.height / canvasRect.height) * 100;
 
-    let currentXPct = parseFloat(target.style.left) || 0;
-    let currentYPct = parseFloat(target.style.top) || 0;
+    // Snap and save multiple targets
+    STATE.selectedTableIds.forEach(id => {
+        const el = document.querySelector(`.table-element[data-id="${id}"]`);
+        if (el) {
+            el.style.zIndex = "";
+            const svg = el.querySelector('svg') || el;
+            const targetRect = svg.getBoundingClientRect();
+            
+            const elWidthPct = (targetRect.width / canvasRect.width) * 100;
+            const elHeightPct = (targetRect.height / canvasRect.height) * 100;
 
-    const finalX = Math.round(Math.max(0, Math.min(100 - elWidthPct, currentXPct)));
-    const finalY = Math.round(Math.max(0, Math.min(100 - elHeightPct, currentYPct)));
+            let currentXPct = parseFloat(el.style.left) || 0;
+            let currentYPct = parseFloat(el.style.top) || 0;
 
-    const rowId = target.getAttribute('data-id');
-    const tableIndex = STATE.tableMapData.findIndex(t => t.id == rowId);
-    
-    if (tableIndex > -1) {
-        // Update local state FIRST to avoid layout flickering
-        STATE.tableMapData[tableIndex].PosX = finalX;
-        STATE.tableMapData[tableIndex].PosY = finalY;
+            const finalX = Math.round(Math.max(0, Math.min(100 - elWidthPct, currentXPct)));
+            const finalY = Math.round(Math.max(0, Math.min(100 - elHeightPct, currentYPct)));
 
-        // Apply rounded percentage immediately to the DOM
-        target.style.left = finalX + '%';
-        target.style.top = finalY + '%';
+            const tableIndex = STATE.tableMapData.findIndex(t => t.id == id);
+            if (tableIndex > -1) {
+                STATE.tableMapData[tableIndex].PosX = finalX;
+                STATE.tableMapData[tableIndex].PosY = finalY;
 
-        // Background update attempt - silently retries or fails until manual Save is clicked
-        fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${rowId}/?user_field_names=true`, {
-            method: 'PATCH',
-            headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ "PosX": finalX, "PosY": finalY })
-        }).catch(err => console.warn('Background position update failed, will sync on manual save.'));
-    }
+                el.style.left = finalX + '%';
+                el.style.top = finalY + '%';
+
+                fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${id}/?user_field_names=true`, {
+                    method: 'PATCH',
+                    headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ "PosX": finalX, "PosY": finalY })
+                }).catch(() => {});
+            }
+        }
+    });
 };
