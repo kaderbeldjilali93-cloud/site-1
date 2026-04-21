@@ -19,7 +19,7 @@ window.renderTableView = async function () {
             const mapData = await tableRes.json();
             STATE.tableMapData = mapData.results || [];
         }
-        
+
         // التحقق من وجود طلبات جديدة قبل الرسم لضمان الاستجابة اللحظية
         const freshOrders = await window.fetchOrders(ORDERS_TABLE_ID);
         STATE.lastFetchedOrders = freshOrders;
@@ -70,16 +70,16 @@ window.renderTableView = async function () {
 
             const tableOrders = orders.filter(o => {
                 if (!o.Table) return false;
-                
+
                 // استخدام الدالة القياسية للتحقق من تاريخ اليوم لضمان الدقة وتوافق الصيغة
                 const rawTime = o['Created at'] || o.Time || o.time || o.created_on || o.CreatedOn || o.Date || '';
                 if (!window.isOrderFromToday(rawTime)) return false;
 
                 const tbl = String(o.Table || '').trim();
-                
+
                 // 1. المطابقة الدقيقة مع النظام الجديد: 'الطاولة X - القاعة'
                 if (tbl === expectedTableFormat) return true;
-                
+
                 // 2. المطابقة إذا كان الاسم يحتوي على الرقم والقاعة ولكن بتنسيق مختلف
                 if (tbl.includes(` ${numStr} `) && tbl.includes(STATE.currentRoom)) return true;
                 if (tbl.includes(`طاولة ${numStr}`) && tbl.includes(STATE.currentRoom)) return true;
@@ -92,7 +92,7 @@ window.renderTableView = async function () {
                     if (orderRoom && orderRoom !== STATE.currentRoom) return false;
                     return true;
                 }
-                
+
                 return false;
             });
 
@@ -104,7 +104,7 @@ window.renderTableView = async function () {
             for (const o of tableOrders) {
                 let st = (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
                 st = String(st || '').trim();
-                
+
                 if (activeStatuses.includes(st)) {
                     hasActiveOrder = true;
                     orderForTable = o;
@@ -120,11 +120,11 @@ window.renderTableView = async function () {
                 chairColor = "#ef4444"; // Red for Calling
             } else if (hasActiveOrder) {
                 statusClass = "table-status-occupied";
-                
+
                 // Color Logic based on Order Status
                 let isReady = false;
                 let isNewOrPrep = false;
-                
+
                 tableOrders.forEach(o => {
                     const st = (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
                     if (st === 'جاهز') isReady = true;
@@ -144,7 +144,7 @@ window.renderTableView = async function () {
             // Standardized coordinate loading - handle both pixels (legacy) and percentages
             let posX = parseFloat(t.PosX) || 10;
             let posY = parseFloat(t.PosY) || 10;
-            
+
             // Sync logic with rooms.js
             let leftPct = (posX > 100) ? Math.round((posX / 1100) * 100) : Math.round(posX);
             let topPct = (posY > 100) ? Math.round((posY / 700) * 100) : Math.round(posY);
