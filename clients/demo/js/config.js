@@ -9,6 +9,14 @@ const CALLS_TABLE_ID = '753';
 const MENU_TABLE_ID = '36';
 const STAFF_TABLE_ID = '757'; // Added for staff system
 
+window.getLocalYYYYMMDD = function() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+};
+
 const STATE = {
     currentUser: null,
     currentRole: null,
