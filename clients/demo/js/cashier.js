@@ -210,6 +210,11 @@ window.printReceipt = function (order) {
     }, 100);
 };
 
+window.setCashierRoomFilter = function (room) {
+    STATE.cashierRoomFilter = room;
+    window.renderCashier(STATE.lastFetchedOrders);
+};
+
 window.renderCashier = function (orders) {
     STATE.lastFetchedOrders = orders;
     const getPrice = (o) => parseFloat((o.total || o.Total || o.price || o.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
@@ -225,23 +230,43 @@ window.renderCashier = function (orders) {
     baseOrders = window.processOrderAlerts(baseOrders);
     STATE.processedCashierOrders = baseOrders;
 
+    // ========== تصفية حسب القاعة ==========
+    let roomFilteredOrders = baseOrders;
+    if (STATE.cashierRoomFilter === 'طلبات سريعة') {
+        roomFilteredOrders = baseOrders.filter(o => {
+            const ot = o.order_type || '';
+            const tbl = String(o.Table || '').trim();
+            return ot !== 'table' || !tbl || tbl === 'سفري' || tbl === 'طاولة جديدة';
+        });
+    } else if (STATE.cashierRoomFilter !== 'الكل') {
+        roomFilteredOrders = baseOrders.filter(o => {
+            const tbl = String(o.Table || '').trim();
+            const room = String(o.Room || o.room || '').trim();
+            if (room === STATE.cashierRoomFilter) return true;
+            if (tbl.includes('- ' + STATE.cashierRoomFilter)) return true;
+            return false;
+        });
+    }
+
+    // ========== تصفية حسب الحالة ==========
     let filteredOrders = STATE.cashierStatusFilter === 'الكل'
-        ? baseOrders
-        : baseOrders.filter(o => getStatus(o) === STATE.cashierStatusFilter);
+        ? roomFilteredOrders
+        : roomFilteredOrders.filter(o => getStatus(o) === STATE.cashierStatusFilter);
 
     const dynamicContent = document.getElementById('dynamic-content');
     if (!dynamicContent) return;
     dynamicContent.innerHTML = '';
 
-    let totalSales = 0; baseOrders.forEach(o => totalSales += getPrice(o));
-    const avgOrderValue = baseOrders.length > 0 ? (totalSales / baseOrders.length).toFixed(2) : 0;
+    let totalSales = 0; roomFilteredOrders.forEach(o => totalSales += getPrice(o));
+    const avgOrderValue = roomFilteredOrders.length > 0 ? (totalSales / roomFilteredOrders.length).toFixed(2) : 0;
 
+    // ========== الهيدر ==========
     const tableHeader = document.createElement('div');
     tableHeader.className = "flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700 gap-4";
     tableHeader.innerHTML = `
         <div class="flex items-center gap-3">
             <span class="live-indicator" title="تحديث مباشر"></span>
-            <button onclick="window.openNewOrderModal('quick')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-lg transition shadow-md flex items-center gap-2 text-sm whitespace-nowrap shrink-0 sm:shrink-0">
+            <button onclick="window.openNewOrderModal('quick')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-lg transition shadow-md flex items-center gap-2 text-sm whitespace-nowrap shrink-0">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 <span class="whitespace-nowrap">طلب سريع جديد</span>
             </button>
@@ -257,15 +282,33 @@ window.renderCashier = function (orders) {
     `;
     dynamicContent.appendChild(tableHeader);
 
+    // ========== KPI ==========
     const kpiSection = document.createElement('div');
     kpiSection.className = "grid grid-cols-1 md:grid-cols-3 gap-6 mb-8";
     kpiSection.innerHTML = `
         <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-brand shadow-lg"><p class="text-gray-400 text-sm mb-1">إجمالي المبيعات</p><h3 class="text-3xl font-bold text-white">${totalSales.toLocaleString()} <span class="text-sm text-brand">${sysCurrency}</span></h3></div>
-        <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-blue-500 shadow-lg"><p class="text-gray-400 text-sm mb-1">إجمالي الطلبات</p><h3 class="text-3xl font-bold text-white">${baseOrders.length}</h3></div>
+        <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-blue-500 shadow-lg"><p class="text-gray-400 text-sm mb-1">إجمالي الطلبات</p><h3 class="text-3xl font-bold text-white">${roomFilteredOrders.length}</h3></div>
         <div class="bg-gray-800 p-5 rounded-xl border-r-4 border-green-500 shadow-lg"><p class="text-gray-400 text-sm mb-1">متوسط السلة</p><h3 class="text-3xl font-bold text-white">${avgOrderValue} <span class="text-sm text-green-500">${sysCurrency}</span></h3></div>
     `;
     dynamicContent.appendChild(kpiSection);
 
+    // ========== فلتر القاعات (جديد) ==========
+    const allRooms = [...new Set((STATE.tableMapData || []).map(t => t.Room).filter(Boolean))].sort();
+    const roomOptions = ['الكل', ...allRooms, 'طلبات سريعة'];
+
+    const roomFiltersContainer = document.createElement('div');
+    roomFiltersContainer.className = "flex gap-2 mb-4 overflow-x-auto pb-2 custom-scrollbar";
+    roomFiltersContainer.innerHTML = roomOptions.map(room => {
+        const isActive = STATE.cashierRoomFilter === room;
+        const icon = room === 'طلبات سريعة' ? '⚡' : (room === 'الكل' ? '📋' : '🏠');
+        const btnClass = isActive
+            ? 'bg-brand text-black font-bold shadow-[0_0_10px_rgba(255,153,0,0.3)]'
+            : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500';
+        return `<button onclick="window.setCashierRoomFilter('${room}')" class="px-5 py-2 rounded-xl text-sm transition whitespace-nowrap ${btnClass}">${icon} ${room}</button>`;
+    }).join('');
+    dynamicContent.appendChild(roomFiltersContainer);
+
+    // ========== فلتر الحالة ==========
     const filtersContainer = document.createElement('div');
     filtersContainer.className = "flex gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar";
     const statuses = ['الكل', 'قيد التحضير', 'جاهز', 'مدفوع'];
@@ -278,9 +321,10 @@ window.renderCashier = function (orders) {
     }).join('');
     dynamicContent.appendChild(filtersContainer);
 
+    // ========== الجدول ==========
     const tableContainer = document.createElement('div');
     tableContainer.className = "overflow-x-auto bg-gray-800 rounded-lg shadow border border-gray-700";
-    let tableHTML = `<table class="w-full text-left border-collapse"><thead><tr class="bg-gray-700 text-gray-300 text-sm"><th class="p-4 text-right">رقم الطلب</th><th class="p-4 text-right">الوقت</th><th class="p-4 text-right">الطاولة</th><th class="p-4 text-right w-1/3">التفاصيل</th><th class="p-4 text-left">السعر</th><th class="p-4 text-center">الحالة الإجراء</th></tr></thead><tbody class="divide-y divide-gray-700 text-gray-300 text-sm">`;
+    let tableHTML = `<table class="w-full text-left border-collapse"><thead><tr class="bg-gray-700 text-gray-300 text-sm"><th class="p-4 text-right">رقم الطلب</th><th class="p-4 text-right">الوقت</th><th class="p-4 text-right">الطاولة</th><th class="p-4 text-right w-1/3">التفاصيل</th><th class="p-4 text-left">السعر</th><th class="p-4 text-center">الحالة / الإجراء</th></tr></thead><tbody class="divide-y divide-gray-700 text-gray-300 text-sm">`;
 
     filteredOrders.forEach(order => {
         const statusVal = getStatus(order) || 'Unknown';
@@ -306,7 +350,7 @@ window.renderCashier = function (orders) {
             </div>`;
         }
 
-        tableHTML += `<tr class="hover:bg-gray-750 transition duration-150 ${rowAlertClass}"><td class="p-4 text-right font-mono font-bold text-white">${order.dailySequence}</td><td class="p-4 text-right text-gray-400">${window.formatOrderTime(order)}</td><td class="p-4 text-right font-bold">${order.Table || 'Takeaway'}</td><td class="p-4 text-right truncate max-w-xs">${order.Details || '-'}</td><td class="p-4 text-left font-bold text-white">${getPrice(order).toLocaleString()} ${sysCurrency}</td><td class="p-4 text-center">${statusHTML}</td></tr>`;
+        tableHTML += `<tr class="hover:bg-gray-750 transition duration-150 ${rowAlertClass}"><td class="p-4 text-right font-mono font-bold text-white">${order.dailySequence}</td><td class="p-4 text-right text-gray-400">${window.formatOrderTime(order)}</td><td class="p-4 text-right font-bold">${order.Table || 'سفري'}</td><td class="p-4 text-right truncate max-w-xs">${order.Details || '-'}</td><td class="p-4 text-left font-bold text-white">${getPrice(order).toLocaleString()} ${sysCurrency}</td><td class="p-4 text-center">${statusHTML}</td></tr>`;
     });
     tableHTML += `</tbody></table>`;
     tableContainer.innerHTML = tableHTML;

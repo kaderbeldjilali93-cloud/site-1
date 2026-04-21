@@ -259,6 +259,9 @@ window.saveOrderEdit = async function () {
         // إذا تم اختيار طاولة، يجب أن يكون نوع الطلب table تلقائياً لضمان التصنيف الصحيح
         if (manualTable || STATE.newOrderType === 'table') {
             payload["order_type"] = "table";
+            // استخراج اسم القاعة وحفظه كحقل منفصل لتسهيل المطابقة في نداءات الطاولات والمطبخ
+            const roomMatch = manualTable.match(/-\s*(.+)$/);
+            if (roomMatch) payload["Room"] = roomMatch[1].trim();
         } else {
             payload["order_type"] = STATE.newOrderType || "quick";
         }

@@ -536,6 +536,18 @@ window.loadView = async function (viewType) {
             if (STATE.currentActiveView === 'kds') STATE.pollingInterval = setInterval(runKDS, 10000);
         }
         else if (viewType === 'cashier') {
+            // جلب بيانات القاعات لفلتر القاعات في الكاشير
+            if (!STATE.tableMapData || STATE.tableMapData.length === 0) {
+                try {
+                    const tmRes = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true&size=200`, {
+                        headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+                    });
+                    if (tmRes.ok) {
+                        const tmData = await tmRes.json();
+                        STATE.tableMapData = tmData.results || [];
+                    }
+                } catch (e) { console.warn('Failed to fetch table map for cashier:', e); }
+            }
             const runCashier = async () => {
                 if (STATE.currentActiveView !== 'cashier') return;
                 try {

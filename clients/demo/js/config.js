@@ -42,6 +42,7 @@ const STATE = {
     processedCashierOrders: [],
     kdsActiveTab: 'tables',
     cashierStatusFilter: 'الكل',
+    cashierRoomFilter: 'الكل',
     currentCheckoutOrder: null,
     currentEditOrder: null,
     originalEditDetails: "",

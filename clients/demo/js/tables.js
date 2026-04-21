@@ -11,30 +11,24 @@ window.renderTableView = async function () {
     }
 
     try {
-        // 1. Fresh fetch of table positions and rooms
         const tableRes = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true&size=200`, {
             headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
         });
-        
         if (tableRes.ok) {
             const mapData = await tableRes.json();
             STATE.tableMapData = mapData.results || [];
         }
-        
-        // 2. Fresh fetch of all orders
+
         const freshOrders = await window.fetchOrders(ORDERS_TABLE_ID);
         STATE.lastFetchedOrders = freshOrders || [];
 
-        // 3. Extract unique rooms and set default if needed
         let rooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))].sort();
-        
         if (rooms.length > 0 && (!STATE.currentRoom || !rooms.includes(STATE.currentRoom))) {
             STATE.currentRoom = rooms[0];
         }
 
         const orders = STATE.lastFetchedOrders;
         const activeCalls = STATE.activeCalls || [];
-        const sysCurrency = localStorage.getItem('system_currency') || 'DA';
 
         const topBarHTML = `
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-sm mb-6">
@@ -43,7 +37,7 @@ window.renderTableView = async function () {
                     <h3 class="text-white font-bold text-xl">مراقبة الطاولات والطلبات</h3>
                 </div>
                 <div class="flex items-center gap-2 w-full md:w-auto">
-                    <button onclick="window.renderTableView()" class="bg-gray-700 hover:bg-gray-600 text-white p-2.5 rounded-lg transition shadow flex items-center justify-center gap-2" title="تحديث البيانات">
+                    <button onclick="window.renderTableView()" class="bg-gray-700 hover:bg-gray-600 text-white p-2.5 rounded-lg transition shadow flex items-center justify-center" title="تحديث البيانات">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     </button>
                     <button onclick="window.openNewOrderModal('table')" class="flex-1 md:flex-none bg-brand hover:bg-brand-dark text-black font-bold py-2.5 px-6 rounded-lg transition shadow flex items-center justify-center gap-2">
@@ -72,37 +66,38 @@ window.renderTableView = async function () {
             const expectedTableFormat = `الطاولة ${numStr} - ${STATE.currentRoom}`;
             const isCalling = activeCalls.some(c => String(c) === numStr || String(c) === expectedTableFormat);
 
+            // ========== مطابقة الطلبات بالطاولة - نظام صارم ==========
             const tableOrders = orders.filter(o => {
                 const tblRaw = String(o.Table || '').trim();
                 if (!tblRaw) return false;
-                
+
                 const rawTime = o['Created at'] || o.Time || o.time || o.created_on || o.CreatedOn || o.Date || '';
                 if (!window.isOrderFromToday(rawTime)) return false;
 
-                // 1. Exact Match (The Standard)
+                // 1. المطابقة الدقيقة (الأساسية) — "الطاولة X - القاعة"
                 if (tblRaw === expectedTableFormat) return true;
-                
-                // 2. Fuzzy Match (Fallback)
-                if (tblRaw.includes(` ${numStr} `) && tblRaw.includes(STATE.currentRoom)) return true;
-                if (tblRaw.startsWith(`الطاولة ${numStr}`) && tblRaw.includes(STATE.currentRoom)) return true;
-                if (tblRaw.startsWith(`طاولة ${numStr}`) && tblRaw.includes(STATE.currentRoom)) return true;
 
-                // 3. Legacy compatibility
-                const numericOnly = tblRaw.replace(/[^0-9]/g, '');
-                if (numericOnly === numStr && !tblRaw.includes('-')) {
+                // 2. استخراج رقم الطاولة واسم القاعة بـ Regex لتجنب المطابقة الخاطئة
+                const parsed = tblRaw.match(/^(?:الطاولة|طاولة|Table)\s*(\d+)\s*-\s*(.+)$/i);
+                if (parsed) {
+                    return parsed[1] === numStr && parsed[2].trim() === STATE.currentRoom;
+                }
+
+                // 3. التوافق مع الطلبات القديمة: رقم فقط بدون قاعة
+                if (/^\d+$/.test(tblRaw) && tblRaw === numStr) {
                     const orderRoom = String(o.Room || o.room || '').trim();
                     if (orderRoom && orderRoom !== STATE.currentRoom) return false;
                     return true;
                 }
-                
+
                 return false;
             });
 
+            // ========== تحديد حالة الطاولة ==========
             let hasActiveOrder = false;
             let orderForTable = null;
-            const activeStatuses = ['جديد', 'قيد التحضير', 'جاهز', 'مستلم', 'سداد', 'New', 'Preparing', 'Ready', 'Delivered', 'Payment', 'Nouveau', 'En préparation', 'Prêt'];
+            const activeStatuses = ['جديد', 'قيد التحضير', 'جاهز', 'مستلم', 'سداد', 'New', 'Preparing', 'Ready', 'Delivered', 'Payment'];
 
-            // Find the most recent active order (first one in the reversed array)
             for (const o of tableOrders) {
                 const st = (typeof o.Status === 'object' && o.Status) ? String(o.Status.value || '').trim() : String(o.Status || '').trim();
                 if (activeStatuses.includes(st)) {
@@ -112,43 +107,40 @@ window.renderTableView = async function () {
                 }
             }
 
+            // ========== تحديد اللون ==========
             let statusClass = "table-status-free";
-            let chairColor = "#22c55e"; // Default Green (Free)
+            let chairColor = "#22c55e"; // أخضر = فارغة
 
             if (isCalling) {
                 statusClass = "table-status-calling";
-                chairColor = "#ef4444"; // Red for Calling
+                chairColor = "#ef4444";
             } else if (hasActiveOrder) {
                 statusClass = "table-status-occupied";
-                
-                let isReady = false;
-                let isNewOrPrep = false;
-                
-                tableOrders.forEach(o => {
-                    const st = (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
-                    if (st === 'جاهز') isReady = true;
-                    else if (st === 'جديد' || st === 'قيد التحضير') isNewOrPrep = true;
-                });
+                const orderSt = (typeof orderForTable.Status === 'object' && orderForTable.Status) 
+                    ? String(orderForTable.Status.value || '').trim() 
+                    : String(orderForTable.Status || '').trim();
 
-                if (isNewOrPrep) chairColor = "#ef4444"; // Red
-                else if (isReady) chairColor = "#eab308"; // Yellow
-                else chairColor = "#f59e0b"; // Orange
+                if (orderSt === 'جديد' || orderSt === 'قيد التحضير') {
+                    chairColor = "#ef4444"; // أحمر = قيد التحضير
+                } else if (orderSt === 'جاهز') {
+                    chairColor = "#eab308"; // أصفر = جاهز
+                } else {
+                    chairColor = "#f59e0b"; // برتقالي = أخرى
+                }
             }
 
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
             let posX = parseFloat(t.PosX) || 10;
             let posY = parseFloat(t.PosY) || 10;
-            
             let leftPct = (posX > 100) ? Math.round((posX / 1100) * 100) : Math.round(posX);
             let topPct = (posY > 100) ? Math.round((posY / 700) * 100) : Math.round(posY);
             const tScale = t.Scale || 1.0;
             const tRot = t.Rotation || 0;
-
             const orderIdArg = (orderForTable && orderForTable.id) ? `'${orderForTable.id}'` : 'null';
 
             floorHtml += `
-                <div class="table-element ${statusClass}" 
-                     style="left: ${leftPct}%; top: ${topPct}%; cursor: pointer; pointer-events: auto;" 
+                <div class="table-element ${statusClass}"
+                     style="left: ${leftPct}%; top: ${topPct}%; cursor: pointer; pointer-events: auto;"
                      onclick="window.handleTableMapClick('${numStr}', ${isCalling}, ${hasActiveOrder}, ${orderIdArg})">
                     ${window.generateTableSVG ? window.generateTableSVG(shapeStr, chairColor, tScale, tRot) : '<svg width="70" height="70"><circle cx="35" cy="35" r="22" fill="#374151"/></svg>'}
                     <span class="table-number-label">T${t.TableNumber}</span>
@@ -160,8 +152,8 @@ window.renderTableView = async function () {
         const Legend = `
         <div class="flex items-center gap-5 text-sm font-bold bg-gray-800 p-4 rounded-xl border border-gray-700 w-fit mx-auto shadow mt-6">
             <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-green-500"></div> فارغة</div>
+            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-500"></div> قيد التحضير</div>
             <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-yellow-500"></div> جاهزة</div>
-            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-500"></div> مشغولة</div>
             <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-500 animate-pulse outline outline-2 outline-offset-1 outline-red-500"></div> نداء</div>
         </div>
         `;
@@ -183,7 +175,7 @@ window.renderTableView = async function () {
 
     } catch (e) {
         console.error("TableView Error:", e);
-        dynamicContent.innerHTML = `<div class="p-8 text-center text-red-red-400 font-bold bg-red-900/20 border border-red-800 rounded-2xl max-w-lg mx-auto mt-20 shadow-xl">⚠️ فشل تحميل واجهة القاعات.<br><br><span class="text-sm font-normal mt-2 block">حدث خطأ برمي أثناء التحميل: ${e.message}</span></div>`;
+        dynamicContent.innerHTML = `<div class="p-8 text-center text-red-400 font-bold bg-red-900/20 border border-red-800 rounded-2xl max-w-lg mx-auto mt-20 shadow-xl">⚠️ فشل تحميل واجهة القاعات.<br><br><span class="text-sm font-normal mt-2 block">خطأ: ${e.message}</span></div>`;
     }
 };
 
@@ -207,12 +199,11 @@ window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, o
     }
 
     if (typeof window.openNewOrderModal === 'function') {
-        window.openNewOrderModal('table', true); 
+        window.openNewOrderModal('table', true);
         setTimeout(() => {
             const manualSelect = document.getElementById('manual-table-number');
             if (manualSelect) {
-                const targetValue = `الطاولة ${tableNumber} - ${STATE.currentRoom}`;
-                manualSelect.value = targetValue;
+                manualSelect.value = `الطاولة ${tableNumber} - ${STATE.currentRoom}`;
             }
         }, 300);
     }
