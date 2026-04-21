@@ -196,6 +196,14 @@ window.renderTableTools = function () {
                 تعديل الطاولة T${selectedTable.TableNumber}
             </h3>
             
+            <div class="mb-4">
+                <label class="block text-xs text-gray-400 mb-1.5 font-bold">رقم الطاولة:</label>
+                <div class="flex gap-2">
+                    <input type="number" id="edit-table-number" min="1" value="${selectedTable.TableNumber}" class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand outline-none transition font-bold font-mono">
+                    <button onclick="window.updateTableNumber()" class="bg-gray-700 hover:bg-brand hover:text-black text-white px-4 rounded-lg font-bold transition text-sm">تحديث</button>
+                </div>
+            </div>
+
             <div class="scale-control-container mb-4">
                 <label class="block text-xs text-gray-400 mb-2 font-bold">تغيير الحجم: <span id="scale-value-display" class="text-brand">${parseFloat(selectedTable.Scale || 1.0).toFixed(1)}x</span></label>
                 <input type="range" min="0.5" max="2.5" step="0.1" value="${selectedTable.Scale || 1.0}" 
@@ -287,12 +295,33 @@ window.updateTablePreview = function () {
 window.selectTableForEdit = function (id) {
     if (STATE.selectedTableId == id) return;
     STATE.selectedTableId = id;
-    window.renderSettingsRooms();
+    
+    document.querySelectorAll('.table-element').forEach(el => {
+        if (el.getAttribute('data-id') == id) {
+            el.classList.add('selected-for-edit');
+        } else {
+            el.classList.remove('selected-for-edit');
+        }
+    });
+
+    const toolsPanel = document.getElementById('rooms-tools-panel');
+    if (toolsPanel) {
+        toolsPanel.innerHTML = window.renderTableTools();
+    }
 };
 
 window.deselectTable = function () {
     STATE.selectedTableId = null;
-    window.renderSettingsRooms();
+    
+    document.querySelectorAll('.table-element').forEach(el => {
+        el.classList.remove('selected-for-edit');
+    });
+
+    const toolsPanel = document.getElementById('rooms-tools-panel');
+    if (toolsPanel) {
+        toolsPanel.innerHTML = window.renderTableTools();
+        window.updateTableOptions();
+    }
 };
 
 window.updateTableScale = function (val) {
@@ -362,6 +391,45 @@ window.updateTableRotation = function (val) {
     }, 500);
 };
 
+window.updateTableNumber = async function () {
+    const input = document.getElementById('edit-table-number');
+    if (!input || !STATE.selectedTableId) return;
+
+    const newNum = parseInt(input.value, 10);
+    if (isNaN(newNum) || newNum < 1) {
+        window.showToast("رقم الطاولة غير صالح", "error");
+        return;
+    }
+
+    const tableIndex = STATE.tableMapData.findIndex(t => t.id == STATE.selectedTableId);
+    if (tableIndex === -1) return;
+
+    const table = STATE.tableMapData[tableIndex];
+
+    const exists = STATE.tableMapData.find(t => t.TableNumber == newNum && t.Room === table.Room && t.id != STATE.selectedTableId);
+    if (exists) {
+        window.showToast(`الطاولة رقم ${newNum} موجودة مسبقاً في قاعة ${table.Room}`, "error");
+        return;
+    }
+
+    try {
+        const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${STATE.selectedTableId}/?user_field_names=true`, {
+            method: 'PATCH',
+            headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ "TableNumber": newNum })
+        });
+        
+        if (!res.ok) throw new Error("Failed to update table number");
+        
+        STATE.tableMapData[tableIndex].TableNumber = newNum;
+        window.showToast("تم تحديث رقم الطاولة بنجاح", "success");
+        window.renderSettingsRooms();
+    } catch (err) {
+        console.error(err);
+        window.showToast("حدث خطأ أثناء تحديث رقم الطاولة", "error");
+    }
+};
+
 // Modal Control
 window.openRoomModal = function (title, value, callback) {
     const m = document.getElementById('room-modal');
@@ -409,6 +477,9 @@ window.switchRoom = function (r) {
 };
 
 window.saveTableMap = async function() {
+    clearTimeout(window._saveScaleTimeout);
+    clearTimeout(window._saveRotationTimeout);
+
     const currentTables = STATE.tableMapData.filter(t => t.Room === STATE.currentRoom);
     if (currentTables.length === 0) {
         window.showToast("لا توجد طاولات لحفظها في هذه القاعة", "info");
@@ -506,19 +577,24 @@ window.addTableToRoom = async function () {
     const chairs = chairsSelect.value;
     const shapeId = `${type}-${chairs}`;
 
-    const exists = STATE.tableMapData.find(t => t.TableNumber == num);
+    const exists = STATE.tableMapData.find(t => t.TableNumber == num && t.Room === room);
     if (exists) {
         window.showToast(`الطاولة رقم ${num} موجودة مسبقاً في قاعة ${exists.Room}`, "error");
         return;
     }
+
+    const existingTablesInRoom = STATE.tableMapData.filter(t => t.Room === room).length;
+    // Offset each table so they don't stack directly on top of each other
+    const offsetX = 30 + (existingTablesInRoom * 5) % 40;
+    const offsetY = 30 + (existingTablesInRoom * 5) % 40;
 
     const payload = {
         "Room": room,
         "TableNumber": num,
         "Shape": shapeId,
         "Chairs": parseInt(chairs),
-        "PosX": 30,
-        "PosY": 30,
+        "PosX": offsetX,
+        "PosY": offsetY,
         "Scale": 1.0,
         "Rotation": 0
     };
@@ -599,13 +675,23 @@ window.handleDragStart = function (e) {
     STATE.dragTarget = target;
 
     const canvas = document.getElementById('floor-canvas');
+    const canvasRect = canvas.getBoundingClientRect();
+    
     let clientX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
     let clientY = (e.type === 'touchstart') ? e.touches[0].clientY : e.clientY;
 
-    const targetRect = target.getBoundingClientRect();
+    const currentLeftPct = parseFloat(target.style.left) || 0;
+    const currentTopPct = parseFloat(target.style.top) || 0;
+    
+    const currentLeftPx = (currentLeftPct / 100) * canvasRect.width;
+    const currentTopPx = (currentTopPct / 100) * canvasRect.height;
+    
+    const mouseXInCanvas = clientX - canvasRect.left;
+    const mouseYInCanvas = clientY - canvasRect.top;
+
     STATE.dragOffset = {
-        x: clientX - targetRect.left,
-        y: clientY - targetRect.top
+        x: mouseXInCanvas - currentLeftPx,
+        y: mouseYInCanvas - currentTopPx
     };
     target.style.zIndex = 1000;
 };
@@ -620,11 +706,14 @@ window.handleDragMove = function (e) {
     let clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
     let clientY = (e.type === 'touchmove') ? e.touches[0].clientY : e.clientY;
 
-    let rawX = clientX - canvasRect.left - STATE.dragOffset.x;
-    let rawY = clientY - canvasRect.top - STATE.dragOffset.y;
+    let mouseXInCanvas = clientX - canvasRect.left;
+    let mouseYInCanvas = clientY - canvasRect.top;
 
-    STATE.dragTarget.style.left = `${rawX}px`;
-    STATE.dragTarget.style.top = `${rawY}px`;
+    let rawX = mouseXInCanvas - STATE.dragOffset.x;
+    let rawY = mouseYInCanvas - STATE.dragOffset.y;
+
+    STATE.dragTarget.style.left = `${(rawX / canvasRect.width) * 100}%`;
+    STATE.dragTarget.style.top = `${(rawY / canvasRect.height) * 100}%`;
 };
 
 window.handleDragEnd = async function (e) {
@@ -636,13 +725,20 @@ window.handleDragEnd = async function (e) {
 
     const canvas = document.getElementById('floor-canvas');
     if (!canvas) return;
-    const canvasRect = canvas.getBoundingClientRect();
     
-    // Convert pixel position to clean integer percentages for widest field support
-    const pxLeft = parseFloat(target.style.left) || 0;
-    const pxTop = parseFloat(target.style.top) || 0;
-    const finalX = Math.round(Math.max(0, Math.min(98, (pxLeft / canvasRect.width) * 100)));
-    const finalY = Math.round(Math.max(0, Math.min(98, (pxTop / canvasRect.height) * 100)));
+    const canvasRect = canvas.getBoundingClientRect();
+    const svg = target.querySelector('svg');
+    const boundingNode = svg ? svg : target;
+    const targetRect = boundingNode.getBoundingClientRect();
+    
+    const elWidthPct = (targetRect.width / canvasRect.width) * 100;
+    const elHeightPct = (targetRect.height / canvasRect.height) * 100;
+
+    let currentXPct = parseFloat(target.style.left) || 0;
+    let currentYPct = parseFloat(target.style.top) || 0;
+
+    const finalX = Math.round(Math.max(0, Math.min(100 - elWidthPct, currentXPct)));
+    const finalY = Math.round(Math.max(0, Math.min(100 - elHeightPct, currentYPct)));
 
     const rowId = target.getAttribute('data-id');
     const tableIndex = STATE.tableMapData.findIndex(t => t.id == rowId);
