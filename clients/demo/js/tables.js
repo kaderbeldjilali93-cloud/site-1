@@ -19,6 +19,10 @@ window.renderTableView = async function () {
             const mapData = await tableRes.json();
             STATE.tableMapData = mapData.results || [];
         }
+        
+        // التحقق من وجود طلبات جديدة قبل الرسم لضمان الاستجابة اللحظية
+        const freshOrders = await window.fetchOrders(ORDERS_TABLE_ID);
+        STATE.lastFetchedOrders = freshOrders;
 
         let rooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))].sort();
         if (!STATE.currentRoom && rooms.length > 0) {
@@ -35,7 +39,9 @@ window.renderTableView = async function () {
                     <span class="live-indicator" title="تحديث مباشر"></span>
                     <h3 class="text-white font-bold text-xl">مراقبة الطاولات والطلبات</h3>
                 </div>
-                <div class="flex gap-2 w-full md:w-auto">
+                    <button onclick="window.renderTableView()" class="bg-gray-700 hover:bg-gray-600 text-white p-2.5 rounded-lg transition shadow flex items-center justify-center gap-2" title="تحديث البيانات">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    </button>
                     <button onclick="window.openNewOrderModal('table')" class="flex-1 md:flex-none bg-brand hover:bg-brand-dark text-black font-bold py-2.5 px-6 rounded-lg transition shadow flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         لطاولة جديدة
@@ -65,47 +71,46 @@ window.renderTableView = async function () {
             const tableOrders = orders.filter(o => {
                 if (!o.Table) return false;
                 
-                // تجاهل الطلبات القديمة أو الطلبات التي ليس لها تاريخ لتجنب الطاولات الوهمية
-                const todayStr = window.getLocalYYYYMMDD ? window.getLocalYYYYMMDD() : new Date().toISOString().split('T')[0];
-                const orderRawDate = o.CreatedOn || o.Date || '';
-                if (!orderRawDate) return false; // منع الطاولات الوهمية للطلبات التي لا تاريخ لها
+                // استخدام الدالة القياسية للتحقق من تاريخ اليوم لضمان الدقة وتوافق الصيغة
+                const rawTime = o['Created at'] || o.Time || o.time || o.created_on || o.CreatedOn || o.Date || '';
+                if (!window.isOrderFromToday(rawTime)) return false;
 
-                const orderDate = orderRawDate.split('T')[0].split(' ')[0];
-                if (orderDate !== todayStr) return false;
-
-                const tbl = String(o.Table).trim();
+                const tbl = String(o.Table || '').trim();
                 
-                // المطابقة الدقيقة مع النظام الجديد: 'الطاولة X - القاعة'
+                // 1. المطابقة الدقيقة مع النظام الجديد: 'الطاولة X - القاعة'
                 if (tbl === expectedTableFormat) return true;
                 
-                // التوافق مع الطلبات القديمة: إذا كان يحتوي على الرقم فقط بدون أسماء قاعات (بدون ' - ')
+                // 2. المطابقة إذا كان الاسم يحتوي على الرقم والقاعة ولكن بتنسيق مختلف
+                if (tbl.includes(` ${numStr} `) && tbl.includes(STATE.currentRoom)) return true;
+                if (tbl.includes(`طاولة ${numStr}`) && tbl.includes(STATE.currentRoom)) return true;
+
+                // 3. التوافق مع الطلبات القديمة: إذا كان يحتوي على الرقم فقط بدون أسماء قاعات (بدون ' - ')
                 const legacyMatch = tbl.replace(/[^0-9]/g, '') === numStr;
                 if (legacyMatch && !tbl.includes('-')) {
                     // إذا كان لدينا حقل لاسم القاعة في الطلب، نستخدمه للمطابقة
-                    if (o.Room && o.Room !== STATE.currentRoom) return false;
+                    const orderRoom = String(o.Room || '').trim();
+                    if (orderRoom && orderRoom !== STATE.currentRoom) return false;
                     return true;
                 }
                 
                 return false;
             });
 
-            let hasActiveOrder = false;
-            let totalAmount = 0;
-            let orderForTable = null;
+            // قائمة الحالات النشطة (التي تظهر الطاولة كمشغولة)
+            const activeStatuses = ['جديد', 'قيد التحضير', 'جاهز', 'مستلم', 'سداد', 'New', 'Preparing', 'Ready', 'Delivered', 'Payment', 'Nouveau', 'En préparation', 'Prêt'];
 
-            tableOrders.forEach(o => {
+            // البحث عن أحدث طلب نشط لهذه الطاولة
+            // المصفوفة مرتبة من الأحدث (في api.js reverse)، لذا نأخذ أول طلب نشط نجده
+            for (const o of tableOrders) {
                 let st = (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
                 st = String(st || '').trim();
-                
-                // قائمة الحالات التي تحدد أن الطلب نشط فعلياً (تمنع ظهور الطاولات الوهمية)
-                const activeStatuses = ['جديد', 'قيد التحضير', 'جاهز', 'مستلم', 'سداد', 'New', 'Preparing', 'Ready', 'Delivered', 'Payment', 'Nouveau', 'En préparation', 'Prêt'];
                 
                 if (activeStatuses.includes(st)) {
                     hasActiveOrder = true;
                     orderForTable = o;
-                    totalAmount += parseFloat(String(o.total || o.Total || o.price || o.Price || 0).replace(/[^0-9.]/g, '')) || 0;
+                    break; // وجدنا الأحدث، نكتفي به
                 }
-            });
+            }
 
             let statusClass = "table-status-free";
             let chairColor = "#22c55e"; // Default Green (Free/Paid)
