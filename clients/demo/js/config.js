@@ -3,11 +3,11 @@
 // =========================================================
 
 const BASEROW_TOKEN = 'LpAnBclY00v4o4h3fC6b2ZqS3XN3O0qD';
-const ORDERS_TABLE_ID = '376510';
-const TABLEMAP_TABLE_ID = '388277';
-const CALLS_TABLE_ID = '388280';
-const MENU_TABLE_ID = '376511';
-const STAFF_TABLE_ID = '376512'; // Added for staff system
+const ORDERS_TABLE_ID = '37';
+const TABLEMAP_TABLE_ID = '758';
+const CALLS_TABLE_ID = '753';
+const MENU_TABLE_ID = '36';
+const STAFF_TABLE_ID = '757'; // Added for staff system
 
 const STATE = {
     currentUser: null,
@@ -50,8 +50,8 @@ window.isOrderFromToday = function (timeStr) {
     const orderDate = new Date(timeStr);
     const today = new Date();
     return orderDate.getDate() === today.getDate() &&
-           orderDate.getMonth() === today.getMonth() &&
-           orderDate.getFullYear() === today.getFullYear();
+        orderDate.getMonth() === today.getMonth() &&
+        orderDate.getFullYear() === today.getFullYear();
 };
 
 window.isOrderFromSelectedDate = function (timeStr, selectedDateStr) {
@@ -59,6 +59,6 @@ window.isOrderFromSelectedDate = function (timeStr, selectedDateStr) {
     const orderDate = new Date(timeStr);
     const [year, month, day] = selectedDateStr.split('-').map(Number);
     return orderDate.getFullYear() === year &&
-           orderDate.getMonth() === (month - 1) &&
-           orderDate.getDate() === day;
+        orderDate.getMonth() === (month - 1) &&
+        orderDate.getDate() === day;
 };
