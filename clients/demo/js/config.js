@@ -1,27 +1,12 @@
-// js/config.js
-const BASEROW_TOKEN = "DfaoAk1o41H4iPUtkblY2ZKzXcbHxizb";
-const ORDERS_TABLE_ID = "37";
-const MENU_TABLE_ID = "36";
-const CALLS_TABLE_ID = "753";
-const SETTINGS_TABLE_ID = "754";
-const STAFF_TABLE_ID = "757";
-const TABLEMAP_TABLE_ID = "758";
+// =========================================================
+// ⚙️ System Configuration & State Management
+// =========================================================
 
-const CLIENTS_DB = {
-    "demo": { adminPass: "123", kitchenPass: "k123", links: { kds: "api_mode", cashier: "api_mode", menu_quick: "api_mode", menu_add: "api_mode", menu_promo: "api_mode", settings_restaurant: "api_mode", settings_print: "api_mode", settings_account: "api_mode", settings_rooms: "api_mode" } },
-    "burger_king": { adminPass: "0000", kitchenPass: "k0000", links: { kds: "api_mode", cashier: "api_mode", menu_quick: "api_mode", menu_add: "api_mode", menu_promo: "api_mode", settings_restaurant: "api_mode", settings_print: "api_mode", settings_account: "api_mode", settings_rooms: "api_mode" } }
-};
-
-window.getLocalYYYYMMDD = function () {
-    const d = new Date();
-    if (d.getHours() < 6) d.setDate(d.getDate() - 1);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
-
-let currentDeleteItemId = null;
+const BASEROW_TOKEN = 'LpAnBclY00v4o4h3fC6b2ZqS3XN3O0qD';
+const ORDERS_TABLE_ID = '376510';
+const TABLEMAP_TABLE_ID = '388277';
+const CALLS_TABLE_ID = '388280';
+const MENU_TABLE_ID = '376511';
 
 const STATE = {
     currentUser: null,
@@ -47,6 +32,7 @@ const STATE = {
     currentEditOrder: null,
     originalEditDetails: "",
     originalEditPrice: 0,
+    originalItemsList: [], // أضيفت للسماح بحذف الأصناف الأصلية
     newlyAddedItems: [],
     cachedMenuItems: null,
     tableMapData: [],
@@ -56,4 +42,22 @@ const STATE = {
     dragTarget: null,
     dragOffset: { x: 0, y: 0 },
     storageKeys: { username: "rp_username", role: "rp_role", lastView: "rp_last_view" }
+};
+
+window.isOrderFromToday = function (timeStr) {
+    if (!timeStr) return false;
+    const orderDate = new Date(timeStr);
+    const today = new Date();
+    return orderDate.getDate() === today.getDate() &&
+           orderDate.getMonth() === today.getMonth() &&
+           orderDate.getFullYear() === today.getFullYear();
+};
+
+window.isOrderFromSelectedDate = function (timeStr, selectedDateStr) {
+    if (!timeStr || !selectedDateStr) return false;
+    const orderDate = new Date(timeStr);
+    const [year, month, day] = selectedDateStr.split('-').map(Number);
+    return orderDate.getFullYear() === year &&
+           orderDate.getMonth() === (month - 1) &&
+           orderDate.getDate() === day;
 };

@@ -94,15 +94,37 @@ window.openEditOrderModal = async function (orderId) {
     STATE.originalEditDetails = order.Details || "";
     STATE.originalEditPrice = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
     STATE.newlyAddedItems = [];
+    
+    // تحويل التفاصيل النصية إلى قائمة أصناف قابلة للحذف
+    STATE.originalItemsList = [];
+    if (STATE.originalEditDetails) {
+        const lines = STATE.originalEditDetails.split('\n').filter(l => l.trim() !== "");
+        lines.forEach(line => {
+            // محاولة استخراج الاسم والسعر من الصيغة: "1x اسم المنتج = 100"
+            const match = line.match(/(.*)\s*=\s*(\d+)/);
+            if (match) {
+                STATE.originalItemsList.push({
+                    id: Math.random(),
+                    text: line,
+                    name: match[1].trim(),
+                    price: parseFloat(match[2])
+                });
+            } else {
+                STATE.originalItemsList.push({
+                    id: Math.random(),
+                    text: line,
+                    name: line,
+                    price: 0 // إذا لم نجد السعر نعتبره 0 لتجنب أخطاء الحساب
+                });
+            }
+        });
+    }
 
     const titleLabel = order.dailySequence || `#${order.id}`;
     const titleEl = document.getElementById('edit-order-title');
     if (titleEl) titleEl.innerText = `${titleLabel} - ${order.Table || 'سفري'}`;
 
-    const detailsEl = document.getElementById('edit-order-original-details');
-    if (detailsEl) detailsEl.innerText = STATE.originalEditDetails || "لا توجد تفاصيل";
-
-    // إخفاء خانة اختيار الطاولة لأننا نقوم بتعديل طلب موجود مسبقاً في طاولة معينة
+    // إخفاء خانة اختيار الطاولة لأننا نقوم بتعديل طلب موجود مسبقاً
     const tableContainer = document.getElementById('new-order-table-container');
     if (tableContainer) tableContainer.classList.add('hidden');
 
@@ -181,22 +203,51 @@ window.removeAddedItem = function (itemId) {
 
 window.updateEditOrderUI = function () {
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
-    let addedTotal = 0;
-    const container = document.getElementById('edit-order-new-items');
-    if (!container) return;
-    container.innerHTML = '';
+    const containerNew = document.getElementById('edit-order-new-items');
+    const containerOriginal = document.getElementById('edit-order-original-details');
+    
+    if (!containerNew || !containerOriginal) return;
 
+    // 1. رسم الأصناف الأصلية مع إمكانية الحذف
+    containerOriginal.innerHTML = '';
+    let currentTotal = 0;
+    
+    if (!STATE.currentEditOrder) {
+        containerOriginal.innerHTML = '<p class="text-xs text-brand font-bold">بدء طلب جديد...</p>';
+    } else if (STATE.originalItemsList.length === 0) {
+        containerOriginal.innerHTML = '<p class="text-xs text-gray-500 italic">لا توجد أصناف أصلية (أو تم حذفها بالكامل).</p>';
+    } else {
+        STATE.originalItemsList.forEach(item => {
+            currentTotal += item.price;
+            containerOriginal.innerHTML += `
+                <div class="flex justify-between items-center bg-gray-800/40 p-2 rounded mb-2 border border-gray-700/50">
+                    <span class="text-xs text-gray-300 truncate flex-1">${item.name}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-gray-500 font-mono">${item.price}</span>
+                        <button onclick="window.removeOriginalItem(${item.id})" class="text-red-400 hover:text-red-300 p-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // 2. رسم الأصناف الجديدة المضافة
+    containerNew.innerHTML = '';
+    let addedTotal = 0;
+    
     if (STATE.newlyAddedItems.length === 0) {
-        container.innerHTML = '<p class="text-xs text-gray-500 italic bg-gray-800 p-2 rounded">لم يتم إضافة شيء بعد.</p>';
+        containerNew.innerHTML = '<p class="text-xs text-gray-500 italic bg-gray-800/40 p-2 rounded">لم يتم إضافة جديد.</p>';
     } else {
         STATE.newlyAddedItems.forEach(item => {
             addedTotal += item.price;
-            container.innerHTML += `
-                <div class="flex justify-between items-center bg-gray-800 p-3 rounded-lg border border-gray-600 shadow-sm animate-fade-in">
+            containerNew.innerHTML += `
+                <div class="flex justify-between items-center bg-brand/5 p-2 rounded border border-brand/20 shadow-sm animate-fade-in">
                     <span class="text-sm font-bold text-white truncate flex-1 pl-2 border-l-2 border-brand">${item.name}</span>
                     <div class="flex items-center gap-3">
-                        <span class="text-sm text-gray-300 font-mono">${item.price}</span>
-                        <button onclick="window.removeAddedItem(${item.id})" class="text-red-500 hover:text-red-400 hover:bg-red-500/20 p-1.5 rounded transition" title="إلغاء الإضافة">
+                        <span class="text-sm text-brand font-mono">${item.price}</span>
+                        <button onclick="window.removeAddedItem(${item.id})" class="text-red-500 hover:text-red-400 p-1.5 rounded" title="إلغاء الإضافة">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
@@ -205,13 +256,14 @@ window.updateEditOrderUI = function () {
         });
     }
 
-    const finalPrice = STATE.originalEditPrice + addedTotal;
+    const finalPrice = currentTotal + addedTotal;
     const totalEl = document.getElementById('edit-order-total');
     if (totalEl) totalEl.innerText = `${finalPrice.toLocaleString()} ${sysCurrency}`;
+};
 
-    if (container.parentElement) {
-        container.parentElement.scrollTop = container.parentElement.scrollHeight;
-    }
+window.removeOriginalItem = function (itemId) {
+    STATE.originalItemsList = STATE.originalItemsList.filter(item => item.id !== itemId);
+    window.updateEditOrderUI();
 };
 
 window.closeEditOrderModal = function () {
@@ -228,16 +280,16 @@ window.saveOrderEdit = async function () {
         return;
     }
 
-    const btn = document.getElementById('btn-save-edit');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = 'جاري الحفظ...';
-    btn.disabled = true;
-
+    const originalTotal = STATE.originalItemsList.reduce((sum, item) => sum + item.price, 0);
     const addedTotal = STATE.newlyAddedItems.reduce((sum, item) => sum + item.price, 0);
-    const finalPrice = STATE.originalEditPrice + addedTotal;
+    const finalPrice = originalTotal + addedTotal;
 
+    const originalLines = STATE.originalItemsList.map(item => item.text).join('\n');
     const addedLines = STATE.newlyAddedItems.map(item => `1x ${item.name} = ${item.price}`).join('\n');
-    const finalDetails = STATE.originalEditDetails ? `${STATE.originalEditDetails}\n${addedLines}` : addedLines;
+    
+    let finalDetails = "";
+    if (originalLines && addedLines) finalDetails = `${originalLines}\n${addedLines}`;
+    else finalDetails = originalLines || addedLines;
 
     let priceKey = 'Total';
     if (!isNewOrder) {
@@ -254,7 +306,7 @@ window.saveOrderEdit = async function () {
     const method = isNewOrder ? 'POST' : 'PATCH';
 
     const payload = {
-        "Details": isNewOrder ? addedLines : finalDetails,
+        "Details": finalDetails,
         [priceKey]: String(finalPrice)
     };
     if (isNewOrder) {

@@ -66,37 +66,25 @@ window.renderTableView = async function () {
             const expectedTableFormat = `الطاولة ${numStr} - ${STATE.currentRoom}`;
             const isCalling = activeCalls.some(c => String(c) === numStr || String(c) === expectedTableFormat);
 
-            // ========== مطابقة الطلبات بالطاولة - نظام صارم ==========
+            // ========== مطابقة الطلبات بالطاولة ==========
             const tableOrders = orders.filter(o => {
                 const tblRaw = String(o.Table || '').trim();
-                if (!tblRaw) return false;
-
                 const rawTime = o['Created at'] || o.Time || o.time || o.created_on || o.CreatedOn || o.Date || '';
                 if (!window.isOrderFromToday(rawTime)) return false;
 
-                // 1. المطابقة الدقيقة (الأساسية) — "الطاولة X - القاعة"
                 if (tblRaw === expectedTableFormat) return true;
-
-                // 2. استخراج رقم الطاولة واسم القاعة بـ Regex لتجنب المطابقة الخاطئة
                 const parsed = tblRaw.match(/^(?:الطاولة|طاولة|Table)\s*(\d+)\s*-\s*(.+)$/i);
-                if (parsed) {
-                    return parsed[1] === numStr && parsed[2].trim() === STATE.currentRoom;
-                }
-
-                // 3. التوافق مع الطلبات القديمة: رقم فقط بدون قاعة
+                if (parsed) return parsed[1] === numStr && parsed[2].trim() === STATE.currentRoom;
                 if (/^\d+$/.test(tblRaw) && tblRaw === numStr) {
-                    const orderRoom = String(o.Room || o.room || '').trim();
-                    if (orderRoom && orderRoom !== STATE.currentRoom) return false;
-                    return true;
+                    const r = String(o.Room || o.room || '').trim();
+                    return !r || r === STATE.currentRoom;
                 }
-
                 return false;
             });
 
-            // ========== تحديد حالة الطاولة ==========
             let hasActiveOrder = false;
             let orderForTable = null;
-            const activeStatuses = ['جديد', 'قيد التحضير', 'جاهز', 'مستلم', 'سداد', 'New', 'Preparing', 'Ready', 'Delivered', 'Payment'];
+            const activeStatuses = ['جديد', 'قيد التحضير', 'جاهز', 'مستلم', 'سداد'];
 
             for (const o of tableOrders) {
                 const st = (typeof o.Status === 'object' && o.Status) ? String(o.Status.value || '').trim() : String(o.Status || '').trim();
@@ -107,9 +95,8 @@ window.renderTableView = async function () {
                 }
             }
 
-            // ========== تحديد اللون ==========
             let statusClass = "table-status-free";
-            let chairColor = "#22c55e"; // أخضر = فارغة
+            let chairColor = "#22c55e"; // أخضر
 
             if (isCalling) {
                 statusClass = "table-status-calling";
@@ -120,13 +107,8 @@ window.renderTableView = async function () {
                     ? String(orderForTable.Status.value || '').trim() 
                     : String(orderForTable.Status || '').trim();
 
-                if (orderSt === 'جديد' || orderSt === 'قيد التحضير') {
-                    chairColor = "#ef4444"; // أحمر = قيد التحضير
-                } else if (orderSt === 'جاهز') {
-                    chairColor = "#eab308"; // أصفر = جاهز
-                } else {
-                    chairColor = "#f59e0b"; // برتقالي = أخرى
-                }
+                if (orderSt === 'جاهز') chairColor = "#eab308"; // أصفر
+                else chairColor = "#ef4444"; // أحمر
             }
 
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
@@ -136,25 +118,27 @@ window.renderTableView = async function () {
             let topPct = (posY > 100) ? Math.round((posY / 700) * 100) : Math.round(posY);
             const tScale = t.Scale || 1.0;
             const tRot = t.Rotation || 0;
-            const orderIdArg = (orderForTable && orderForTable.id) ? `'${orderForTable.id}'` : 'null';
+            
+            // تأكد من تمرير المعرف بشكل صحيح
+            const orderIdVal = orderForTable ? orderForTable.id : null;
 
             floorHtml += `
-                <div class="table-element ${statusClass}"
-                     style="left: ${leftPct}%; top: ${topPct}%; cursor: pointer; pointer-events: auto;"
-                     onclick="window.handleTableMapClick('${numStr}', ${isCalling}, ${hasActiveOrder}, ${orderIdArg})">
+                <div class="table-element ${statusClass}" 
+                     style="left: ${leftPct}%; top: ${topPct}%; cursor: pointer; pointer-events: auto; z-index: 10;" 
+                     onclick="window.handleTableMapClick('${numStr}', ${isCalling}, ${hasActiveOrder}, ${orderIdVal})">
                     ${window.generateTableSVG ? window.generateTableSVG(shapeStr, chairColor, tScale, tRot) : '<svg width="70" height="70"><circle cx="35" cy="35" r="22" fill="#374151"/></svg>'}
-                    <span class="table-number-label">T${t.TableNumber}</span>
+                    <span class="table-number-label">T${numStr}</span>
                     ${isCalling ? `<div class="calling-overlay"><span>⚠️ نداء</span></div>` : ''}
                 </div>
             `;
         });
 
         const Legend = `
-        <div class="flex items-center gap-5 text-sm font-bold bg-gray-800 p-4 rounded-xl border border-gray-700 w-fit mx-auto shadow mt-6">
-            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-green-500"></div> فارغة</div>
-            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-500"></div> قيد التحضير</div>
-            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-yellow-500"></div> جاهزة</div>
-            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-500 animate-pulse outline outline-2 outline-offset-1 outline-red-500"></div> نداء</div>
+        <div class="flex flex-wrap items-center justify-center gap-5 text-xs font-bold bg-gray-800 p-4 rounded-xl border border-gray-700 w-fit mx-auto shadow mt-6">
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-green-500"></div> فارغة</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-red-500"></div> قيد التحضير</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-yellow-500"></div> جاهزة</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-red-500 animate-pulse outline outline-2 outline-offset-1 outline-red-500"></div> نداء نادل</div>
         </div>
         `;
 
@@ -165,8 +149,8 @@ window.renderTableView = async function () {
                     ${tabsHtml || '<span class="text-gray-400 text-sm px-4 py-2">لا توجد قاعات مضافة.</span>'}
                 </div>
             </div>
-            <div class="max-w-5xl mx-auto shadow-2xl rounded-3xl p-2 bg-gray-800 border border-gray-700">
-                <div class="floor-canvas select-none" style="border:none; cursor: default; min-height: 400px; position: relative;">
+            <div class="max-w-5xl mx-auto shadow-2xl rounded-3xl p-2 bg-gray-800/50 border border-gray-700/50 relative overflow-hidden">
+                <div class="floor-canvas" style="min-height: 500px; position: relative;">
                     ${floorHtml}
                 </div>
             </div>
@@ -175,35 +159,42 @@ window.renderTableView = async function () {
 
     } catch (e) {
         console.error("TableView Error:", e);
-        dynamicContent.innerHTML = `<div class="p-8 text-center text-red-400 font-bold bg-red-900/20 border border-red-800 rounded-2xl max-w-lg mx-auto mt-20 shadow-xl">⚠️ فشل تحميل واجهة القاعات.<br><br><span class="text-sm font-normal mt-2 block">خطأ: ${e.message}</span></div>`;
+        dynamicContent.innerHTML = `<div class="p-8 text-center text-white bg-red-600/20 border border-red-600 rounded-xl">⚠️ خطأ في تحميل الطاولات: ${e.message}</div>`;
     }
 };
 
 window.switchTableRoom = function (r) {
-    if (STATE.currentRoom === r) return;
     STATE.currentRoom = r;
     window.renderTableView();
 };
 
 window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, orderId) {
+    console.log("Table Clicked:", { tableNumber, isCalling, hasActiveOrder, orderId });
+
     if (isCalling) {
-        if (typeof window.resolveTableCall === 'function') window.resolveTableCall(tableNumber);
+        if (typeof window.resolveTableCall === 'function') {
+            window.resolveTableCall(tableNumber);
+        }
         return;
     }
 
-    if (hasActiveOrder && orderId && String(orderId) !== 'null') {
+    // إذا كانت الطاولة مشغولة ولديها طلب، نفتح مودال التعديل فوراً
+    if (hasActiveOrder && orderId) {
         if (typeof window.openEditOrderModal === 'function') {
             window.openEditOrderModal(orderId);
             return;
+        } else {
+            console.error("openEditOrderModal function not found!");
         }
     }
 
+    // إذا كانت فارغة، تفتح مودال طلب جديد
     if (typeof window.openNewOrderModal === 'function') {
         window.openNewOrderModal('table', true);
         setTimeout(() => {
-            const manualSelect = document.getElementById('manual-table-number');
-            if (manualSelect) {
-                manualSelect.value = `الطاولة ${tableNumber} - ${STATE.currentRoom}`;
+            const select = document.getElementById('manual-table-number');
+            if (select) {
+                select.value = `الطاولة ${tableNumber} - ${STATE.currentRoom}`;
             }
         }, 300);
     }
