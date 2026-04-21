@@ -283,6 +283,12 @@ window.renderTableTools = function () {
             <span>إضافة للقاعة</span>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
         </button>
+        
+        ${(STATE.copiedTables && STATE.copiedTables.length > 0) ? `
+        <button onclick="window.pasteCopiedTables()" class="w-full bg-gray-700/50 hover:bg-gray-600 border border-gray-600 text-white font-bold py-3 rounded-xl transition shadow-md mt-3 flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            لصق (${STATE.copiedTables.length}) طاولات تم نسخها
+        </button>` : ''}
     `;
 };
 
@@ -1009,12 +1015,12 @@ document.addEventListener('keydown', function(e) {
             e.preventDefault();
             window.deleteSelectedTables();
         }
-    } else if (e.ctrlKey && (e.key === 'c' || e.key === 'C')) {
+    } else if (e.ctrlKey && (e.code === 'KeyC' || e.key === 'c' || e.key === 'C' || e.key === 'ؤ')) {
         if (STATE.selectedTableIds && STATE.selectedTableIds.length > 0) {
             e.preventDefault();
             window.copySelectedTables();
         }
-    } else if (e.ctrlKey && (e.key === 'v' || e.key === 'V')) {
+    } else if (e.ctrlKey && (e.code === 'KeyV' || e.key === 'v' || e.key === 'V' || e.key === 'ر')) {
         if (STATE.copiedTables && STATE.copiedTables.length > 0) {
             e.preventDefault();
             window.pasteCopiedTables();

@@ -1,4 +1,4 @@
-﻿// =========================================================
+// =========================================================
 // 🔔 Tables Logic (نداءات الطاولات)
 // =========================================================
 
@@ -64,6 +64,12 @@ window.renderTableView = async function () {
 
             const tableOrders = orders.filter(o => {
                 if (!o.Table) return false;
+                
+                // تجاهل الطلبات القديمة التي لم يتم إغلاقها لتجنب الطاولات الوهمية
+                const todayStr = window.getLocalYYYYMMDD ? window.getLocalYYYYMMDD() : new Date().toISOString().split('T')[0];
+                const orderDate = (o.CreatedOn || o.Date || '').split('T')[0].split(' ')[0];
+                if (orderDate && orderDate !== todayStr && orderDate !== '') return false;
+
                 const tbl = String(o.Table).trim();
                 
                 // المطابقة الدقيقة مع النظام الجديد: 'الطاولة X - القاعة'
