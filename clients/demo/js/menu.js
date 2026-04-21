@@ -95,15 +95,20 @@ window.openEditOrderModal = async function (orderId) {
     STATE.originalEditPrice = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
     STATE.newlyAddedItems = [];
 
-    document.getElementById('edit-order-title').innerText = `${order.dailySequence} - ${order.Table || 'سفري'}`;
-    document.getElementById('edit-order-original-details').innerText = STATE.originalEditDetails || "لا توجد تفاصيل";
+    const titleLabel = order.dailySequence || `#${order.id}`;
+    const titleEl = document.getElementById('edit-order-title');
+    if (titleEl) titleEl.innerText = `${titleLabel} - ${order.Table || 'سفري'}`;
+
+    const detailsEl = document.getElementById('edit-order-original-details');
+    if (detailsEl) detailsEl.innerText = STATE.originalEditDetails || "لا توجد تفاصيل";
 
     // إخفاء خانة اختيار الطاولة لأننا نقوم بتعديل طلب موجود مسبقاً في طاولة معينة
     const tableContainer = document.getElementById('new-order-table-container');
     if (tableContainer) tableContainer.classList.add('hidden');
 
     window.updateEditOrderUI();
-    document.getElementById('edit-order-modal').classList.remove('hidden');
+    const modal = document.getElementById('edit-order-modal');
+    if (modal) modal.classList.remove('hidden');
 
     window.openEditOrderModal_DrawMenu();
 };
