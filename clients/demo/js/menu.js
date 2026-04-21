@@ -183,10 +183,17 @@ window.openNewOrderModal = async function (type = 'quick', isPreSelected = false
     }
 
     STATE.originalEditDetails = "";
-    document.getElementById('edit-order-original-details').innerText = "ابدأ بإضافة الأصناف...";
+    STATE.originalItemsList = [];
+
+    const detailsEl = document.getElementById('edit-order-original-details');
+    if (detailsEl) detailsEl.innerText = "ابدأ بإضافة الأصناف...";
+
+    const titleEl = document.getElementById('edit-order-title');
+    if (titleEl) titleEl.innerText = "طلب جديد";
 
     window.updateEditOrderUI();
-    document.getElementById('edit-order-modal').classList.remove('hidden');
+    const modal = document.getElementById('edit-order-modal');
+    if (modal) modal.classList.remove('hidden');
 
     window.openEditOrderModal_DrawMenu();
 };
@@ -275,9 +282,22 @@ window.closeEditOrderModal = function () {
 window.saveOrderEdit = async function () {
     const isNewOrder = STATE.currentEditOrder === null;
 
-    if (STATE.newlyAddedItems.length === 0) {
-        window.showToast(isNewOrder ? "الرجاء إضافة منتج للطلب" : "لم تقم بإضافة أي شيء جديد للطلب", "error");
+    // للطلب الجديد: يجب إضافة صنف واحد على الأقل
+    // لتعديل طلب موجود: يمكن الحفظ حتى لو حذفنا أصناف فقط بدون إضافة جديدة
+    if (isNewOrder && STATE.newlyAddedItems.length === 0) {
+        window.showToast("الرجاء إضافة منتج للطلب", "error");
         return;
+    }
+    if (!isNewOrder && STATE.newlyAddedItems.length === 0 && STATE.originalItemsList.length === 0) {
+        window.showToast("لا يمكن حفظ طلب فارغ بالكامل", "error");
+        return;
+    }
+
+    const btn = document.getElementById('btn-save-edit');
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.innerHTML = 'جاري الحفظ...';
+        btn.disabled = true;
     }
 
     const originalTotal = STATE.originalItemsList.reduce((sum, item) => sum + item.price, 0);
@@ -354,8 +374,10 @@ window.saveOrderEdit = async function () {
     } catch (e) {
         window.showToast("حدث خطأ أثناء الحفظ", "error");
     } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
     }
 };
 

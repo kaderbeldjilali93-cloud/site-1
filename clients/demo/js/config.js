@@ -2,12 +2,13 @@
 // ⚙️ System Configuration & State Management
 // =========================================================
 
-const BASEROW_TOKEN = 'LpAnBclY00v4o4h3fC6b2ZqS3XN3O0qD';
+const BASEROW_TOKEN = 'DfaoAk1o41H4iPUtkblY2ZKzXcbHxizb';
 const ORDERS_TABLE_ID = '37';
 const TABLEMAP_TABLE_ID = '758';
 const CALLS_TABLE_ID = '753';
 const MENU_TABLE_ID = '36';
-const STAFF_TABLE_ID = '757'; // Added for staff system
+const STAFF_TABLE_ID = '757';
+const SETTINGS_TABLE_ID = '754';
 
 window.getLocalYYYYMMDD = function() {
     const now = new Date();
@@ -21,6 +22,7 @@ const STATE = {
     currentUser: null,
     currentRole: null,
     currentLinks: {},
+    currentActiveView: null,
     pollingInterval: null,
     knownOrders: {},
     isFirstFetch: true,
@@ -41,15 +43,25 @@ const STATE = {
     currentEditOrder: null,
     originalEditDetails: "",
     originalEditPrice: 0,
-    originalItemsList: [], // أضيفت للسماح بحذف الأصناف الأصلية
+    originalItemsList: [],
     newlyAddedItems: [],
+    newOrderType: 'quick',
     cachedMenuItems: null,
     tableMapData: [],
     currentRoom: null,
     selectedShape: null,
+    selectedTableId: null,
+    selectedTableIds: [],
+    copiedTables: [],
     isDragging: false,
     dragTarget: null,
     dragOffset: { x: 0, y: 0 },
+    // Split bill state
+    currentSplitOrder: null,
+    splitItems: [],
+    splitTotalPrice: 0,
+    splitPersonCount: 2,
+    splitMode: 'even',
     storageKeys: { username: "rp_username", role: "rp_role", lastView: "rp_last_view" }
 };
 
