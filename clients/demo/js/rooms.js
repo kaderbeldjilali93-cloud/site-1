@@ -65,7 +65,7 @@ window.renderSettingsRooms = async function () {
             if (res.ok) {
                 const data = await res.json();
                 STATE.tableMapData = data.results || [];
-                
+
                 // One-time migration: convert any legacy pixel values (>95) to percentages
                 for (const t of STATE.tableMapData) {
                     const px = parseFloat(t.PosX) || 0;
@@ -121,7 +121,7 @@ window.renderSettingsRooms = async function () {
             // Standardized coordinate loading - handle both pixels (legacy) and percentages
             let posX = parseFloat(t.PosX) || 10;
             let posY = parseFloat(t.PosY) || 10;
-            
+
             // If data is > 100, it's definitely old pixel data - convert it
             let leftPct = (posX > 100) ? Math.round((posX / 1100) * 100) : Math.round(posX);
             let topPct = (posY > 100) ? Math.round((posY / 700) * 100) : Math.round(posY);
@@ -168,7 +168,7 @@ window.renderSettingsRooms = async function () {
                             <span class="text-sm font-normal text-gray-400 border border-gray-700 rounded-full px-3 py-1 bg-gray-800 shadow-inner">${currentTables.length} طاولات</span>
                         </h3>
                         <div id="floor-canvas" class="floor-canvas max-w-5xl shadow-inner border-2 border-dashed border-gray-700/50 bg-[#161625] mx-auto"
-                            onclick="if(event.target === this) window.deselectTable()">
+                            onclick="if(event.target === this && !STATE.wasLassoing && !STATE.wasDragging) window.deselectTable()">
                             ${floorHtml}
                         </div>
                     </div>
@@ -343,7 +343,7 @@ window.selectTableForEdit = function (id) {
 window.deselectTable = function () {
     STATE.selectedTableId = null;
     STATE.selectedTableIds = [];
-    
+
     document.querySelectorAll('.table-element').forEach(el => {
         el.classList.remove('selected-for-edit');
     });
@@ -374,7 +374,7 @@ window.updateTableScale = function (val) {
     const tableIndex = STATE.tableMapData.findIndex(t => t.id == STATE.selectedTableId);
     if (tableIndex > -1) {
         STATE.tableMapData[tableIndex].Scale = scale;
-        
+
         // Save immediately to Baserow
         clearTimeout(window._saveScaleTimeout);
         window._saveScaleTimeout = setTimeout(async () => {
@@ -449,9 +449,9 @@ window.updateTableNumber = async function () {
             headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
             body: JSON.stringify({ "TableNumber": newNum })
         });
-        
+
         if (!res.ok) throw new Error("Failed to update table number");
-        
+
         STATE.tableMapData[tableIndex].TableNumber = newNum;
         window.showToast("تم تحديث رقم الطاولة بنجاح", "success");
         window.renderSettingsRooms();
@@ -507,7 +507,7 @@ window.switchRoom = function (r) {
     window.renderSettingsRooms();
 };
 
-window.saveTableMap = async function() {
+window.saveTableMap = async function () {
     clearTimeout(window._saveScaleTimeout);
     clearTimeout(window._saveRotationTimeout);
 
@@ -516,7 +516,7 @@ window.saveTableMap = async function() {
         window.showToast("لا توجد طاولات لحفظها في هذه القاعة", "info");
         return;
     }
-    
+
     // Show loading state on the button
     const saveBtn = document.querySelector('button[onclick="window.saveTableMap()"]');
     const originalContent = saveBtn ? saveBtn.innerHTML : "";
@@ -526,7 +526,7 @@ window.saveTableMap = async function() {
     }
 
     let successCount = 0;
-    
+
     try {
         for (const t of currentTables) {
             // Ensure values are integers for maximum database compatibility
@@ -538,19 +538,19 @@ window.saveTableMap = async function() {
             const resp = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${t.id}/?user_field_names=true`, {
                 method: 'PATCH',
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    "PosX": cleanX, 
-                    "PosY": cleanY, 
-                    "Scale": cleanScale, 
-                    "Rotation": cleanRot 
+                body: JSON.stringify({
+                    "PosX": cleanX,
+                    "PosY": cleanY,
+                    "Scale": cleanScale,
+                    "Rotation": cleanRot
                 })
             });
             if (resp.ok) successCount++;
         }
-        
+
         window.showToast(`تم حفظ ${successCount} طاولة بنجاح ✓`, "success");
         // Force refresh local data to be sure we are synced with server
-        STATE.tableMapData = []; 
+        STATE.tableMapData = [];
         await window.renderSettingsRooms();
     } catch (e) {
         console.error("Save failure:", e);
@@ -698,7 +698,7 @@ window.initDragAndDrop = function () {
 window.handleDragStart = function (e) {
     if (STATE.currentActiveView !== 'settings_rooms') return;
     const target = e.target.closest('.table-element');
-    
+
     // Starting lasso selection
     if (!target) {
         if (e.target.closest('#floor-canvas') || e.target.id === 'floor-canvas') {
@@ -707,10 +707,10 @@ window.handleDragStart = function (e) {
             STATE.lassoStart = { x: (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX, y: (e.type === 'touchstart') ? e.touches[0].clientY : e.clientY };
             STATE.selectedTableId = null;
             STATE.selectedTableIds = [];
-            
+
             let existingBox = document.getElementById('lasso-box');
             if (existingBox) existingBox.remove();
-            
+
             const box = document.createElement('div');
             box.id = 'lasso-box';
             box.style.position = 'fixed';
@@ -723,7 +723,7 @@ window.handleDragStart = function (e) {
             box.style.height = '0px';
             box.style.pointerEvents = 'none';
             document.body.appendChild(box);
-            
+
             window.deselectTable();
         }
         return;
@@ -732,30 +732,29 @@ window.handleDragStart = function (e) {
     if (e.target.closest('.table-delete-btn')) return;
 
     if (e.type === 'touchstart') e.preventDefault();
-    
+
     // Multi-select dragging setup
     if (!STATE.selectedTableIds) STATE.selectedTableIds = [];
     const targetId = target.getAttribute('data-id');
-    
-    if (!STATE.selectedTableIds.includes(targetId)) {
-        if (!window._isCtrlPressed) {
-            window.selectTableForEdit(targetId);
-        } else {
-            STATE.selectedTableIds.push(targetId);
-        }
+
+    // If dragging an unselected item, temporarily make it the only drag target, but if it is selected, drag all selected
+    let dragIds = [targetId];
+    if (STATE.selectedTableIds.includes(targetId)) {
+        dragIds = STATE.selectedTableIds;
     }
 
     STATE.isDragging = true;
     STATE.dragTarget = target;
     STATE.dragOffsets = {};
+    STATE.wasDragging = false; // Resets drag flag
 
     const canvas = document.getElementById('floor-canvas');
     const canvasRect = canvas.getBoundingClientRect();
-    
+
     let clientX = (e.type === 'touchstart') ? e.touches[0].clientX : e.clientX;
     let clientY = (e.type === 'touchstart') ? e.touches[0].clientY : e.clientY;
 
-    STATE.selectedTableIds.forEach(id => {
+    dragIds.forEach(id => {
         const el = document.querySelector(`.table-element[data-id="${id}"]`);
         if (el) {
             const currentLeftPct = parseFloat(el.style.left) || 0;
@@ -764,7 +763,7 @@ window.handleDragStart = function (e) {
             const currentTopPx = (currentTopPct / 100) * canvasRect.height;
             const mouseXInCanvas = clientX - canvasRect.left;
             const mouseYInCanvas = clientY - canvasRect.top;
-            
+
             STATE.dragOffsets[id] = {
                 x: mouseXInCanvas - currentLeftPx,
                 y: mouseYInCanvas - currentTopPx
@@ -783,20 +782,20 @@ window.handleDragMove = function (e) {
     if (STATE.isLassoing) {
         const box = document.getElementById('lasso-box');
         if (!box) return;
-        
+
         const left = Math.min(clientX, STATE.lassoStart.x);
         const top = Math.min(clientY, STATE.lassoStart.y);
         const width = Math.abs(clientX - STATE.lassoStart.x);
         const height = Math.abs(clientY - STATE.lassoStart.y);
-        
+
         box.style.left = left + 'px';
         box.style.top = top + 'px';
         box.style.width = width + 'px';
         box.style.height = height + 'px';
-        
+
         const boxRect = box.getBoundingClientRect();
         STATE.selectedTableIds = [];
-        
+
         document.querySelectorAll('.table-element').forEach(el => {
             const rect = el.getBoundingClientRect();
             if (!(rect.right < boxRect.left || rect.left > boxRect.right || rect.bottom < boxRect.top || rect.top > boxRect.bottom)) {
@@ -806,9 +805,9 @@ window.handleDragMove = function (e) {
                 el.classList.remove('selected-for-edit');
             }
         });
-        
+
         STATE.selectedTableId = STATE.selectedTableIds.length === 1 ? STATE.selectedTableIds[0] : null;
-        
+
         const toolsPanel = document.getElementById('rooms-tools-panel');
         if (toolsPanel) toolsPanel.innerHTML = window.renderTableTools();
         return;
@@ -822,13 +821,14 @@ window.handleDragMove = function (e) {
     let mouseXInCanvas = clientX - canvasRect.left;
     let mouseYInCanvas = clientY - canvasRect.top;
 
-    // Move all selected tables
-    STATE.selectedTableIds.forEach(id => {
+    // Move all dragged tables
+    let dragIds = STATE.dragOffsets ? Object.keys(STATE.dragOffsets) : [];
+    dragIds.forEach(id => {
         const el = document.querySelector(`.table-element[data-id="${id}"]`);
         if (el && STATE.dragOffsets[id]) {
             let rawX = mouseXInCanvas - STATE.dragOffsets[id].x;
             let rawY = mouseYInCanvas - STATE.dragOffsets[id].y;
-            
+
             el.style.left = `${(rawX / canvasRect.width) * 100}%`;
             el.style.top = `${(rawY / canvasRect.height) * 100}%`;
         }
@@ -838,13 +838,16 @@ window.handleDragMove = function (e) {
 window.handleDragEnd = async function (e) {
     if (STATE.isLassoing) {
         STATE.isLassoing = false;
+        STATE.wasLassoing = true;
+        setTimeout(() => STATE.wasLassoing = false, 100);
+
         const box = document.getElementById('lasso-box');
         if (box) box.remove();
         return;
     }
 
     if (!STATE.isDragging || !STATE.dragTarget) return;
-    
+
     STATE.isDragging = false;
     STATE.dragTarget = null;
 
@@ -853,13 +856,16 @@ window.handleDragEnd = async function (e) {
     const canvasRect = canvas.getBoundingClientRect();
 
     // Snap and save multiple targets
-    STATE.selectedTableIds.forEach(id => {
+    let dragIds = STATE.dragOffsets ? Object.keys(STATE.dragOffsets) : [];
+    if (dragIds.length === 0 && target) dragIds = [target.getAttribute('data-id')];
+
+    dragIds.forEach(id => {
         const el = document.querySelector(`.table-element[data-id="${id}"]`);
         if (el) {
             el.style.zIndex = "";
             const svg = el.querySelector('svg') || el;
             const targetRect = svg.getBoundingClientRect();
-            
+
             const elWidthPct = (targetRect.width / canvasRect.width) * 100;
             const elHeightPct = (targetRect.height / canvasRect.height) * 100;
 
@@ -881,7 +887,7 @@ window.handleDragEnd = async function (e) {
                     method: 'PATCH',
                     headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                     body: JSON.stringify({ "PosX": finalX, "PosY": finalY })
-                }).catch(() => {});
+                }).catch(() => { });
             }
         }
     });
