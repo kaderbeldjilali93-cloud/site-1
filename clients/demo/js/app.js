@@ -604,10 +604,16 @@ window.loadView = async function (viewType) {
             await window.renderSettingsRooms();
         }
 
-        const url = STATE.currentLinks[viewType];
-        if (url && url !== "api_mode" && !dynamicContent.innerHTML) {
-            if (url.includes("YOUR_DEMO")) window.showToast("⚠️ هذا حساب تجريبي. البيانات غير حقيقية.", "error");
-            else window.showToast("الرابط غير متوفر أو قيد التطوير.", "error");
+        // التحقق من وجود روابط خارجية (فقط إذا لم يتم رسم محتوى ديناميكي)
+        if (!dynamicContent.innerHTML) {
+            const url = STATE.currentLinks ? STATE.currentLinks[viewType] : null;
+            if (url && url !== "api_mode") {
+                if (url.includes("YOUR_DEMO")) {
+                    window.showToast("⚠️ هذا حساب تجريبي. البيانات غير حقيقية.", "error");
+                } else {
+                    window.showToast("الرابط غير متوفر أو قيد التطوير.", "error");
+                }
+            }
         }
     } catch (e) {
         console.error("Router Error:", e);
