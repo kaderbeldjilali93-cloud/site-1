@@ -1,4 +1,4 @@
-// =========================================================
+﻿// =========================================================
 // 🔔 Tables Logic (نداءات الطاولات)
 // =========================================================
 
@@ -59,9 +59,27 @@ window.renderTableView = async function () {
 
         currentTables.forEach(t => {
             const numStr = String(t.TableNumber);
-            const isCalling = activeCalls.some(c => String(c) === numStr);
+            const expectedTableFormat = `الطاولة ${numStr} - ${STATE.currentRoom}`;
+            const isCalling = activeCalls.some(c => String(c) === numStr || String(c) === expectedTableFormat);
 
-            const tableOrders = orders.filter(o => o.Table && String(o.Table).replace(/[^0-9]/g, '') === numStr);
+            const tableOrders = orders.filter(o => {
+                if (!o.Table) return false;
+                const tbl = String(o.Table).trim();
+                
+                // المطابقة الدقيقة مع النظام الجديد: 'الطاولة X - القاعة'
+                if (tbl === expectedTableFormat) return true;
+                
+                // التوافق مع الطلبات القديمة: إذا كان يحتوي على الرقم فقط بدون أسماء قاعات (بدون ' - ')
+                const legacyMatch = tbl.replace(/[^0-9]/g, '') === numStr;
+                if (legacyMatch && !tbl.includes('-')) {
+                    // إذا كان لدينا حقل لاسم القاعة في الطلب، نستخدمه للمطابقة
+                    if (o.Room && o.Room !== STATE.currentRoom) return false;
+                    return true;
+                }
+                
+                return false;
+            });
+
             let hasActiveOrder = false;
             let totalAmount = 0;
             let orderForTable = null;
@@ -70,10 +88,10 @@ window.renderTableView = async function () {
                 let st = (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
                 st = String(st || '').trim();
                 
-                // قائمة الحالات التي تعني أن الطلب "منتهي" أو "غير نشط"
-                const inactiveStatuses = ['مدفوع', 'ملغى', 'Payé', 'Annulé', 'Paid', 'Cancelled'];
+                // قائمة الحالات التي تحدد أن الطلب نشط فعلياً (تمنع ظهور الطاولات الوهمية)
+                const activeStatuses = ['جديد', 'قيد التحضير', 'جاهز', 'مستلم', 'سداد', 'New', 'Preparing', 'Ready', 'Delivered', 'Payment', 'Nouveau', 'En préparation', 'Prêt'];
                 
-                if (!inactiveStatuses.includes(st)) {
+                if (activeStatuses.includes(st)) {
                     hasActiveOrder = true;
                     orderForTable = o;
                     totalAmount += parseFloat(String(o.total || o.Total || o.price || o.Price || 0).replace(/[^0-9.]/g, '')) || 0;
@@ -195,10 +213,10 @@ window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, o
     
     // Handle free tables (green) - open new order modal
     if (typeof window.openNewOrderModal === 'function') {
-        window.openNewOrderModal('table');
+        window.openNewOrderModal('table', true); // Pass true to indicate it's pre-selected
         setTimeout(() => {
             const manualSelect = document.getElementById('manual-table-number');
-            if (manualSelect) manualSelect.value = tableNumber;
+            if (manualSelect) manualSelect.value = `الطاولة ${tableNumber} - ${STATE.currentRoom}`;
         }, 300);
     } else {
         window.showToast(`لا يمكنك إنشاء طلب بدون صلاحية الكاشير`, "error");

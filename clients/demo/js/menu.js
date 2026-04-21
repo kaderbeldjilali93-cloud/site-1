@@ -98,13 +98,17 @@ window.openEditOrderModal = async function (orderId) {
     document.getElementById('edit-order-title').innerText = `${order.dailySequence} - ${order.Table || 'سفري'}`;
     document.getElementById('edit-order-original-details').innerText = STATE.originalEditDetails || "لا توجد تفاصيل";
 
+    // إخفاء خانة اختيار الطاولة لأننا نقوم بتعديل طلب موجود مسبقاً في طاولة معينة
+    const tableContainer = document.getElementById('new-order-table-container');
+    if (tableContainer) tableContainer.classList.add('hidden');
+
     window.updateEditOrderUI();
     document.getElementById('edit-order-modal').classList.remove('hidden');
 
     window.openEditOrderModal_DrawMenu();
 };
 
-window.openNewOrderModal = async function (type = 'quick') {
+window.openNewOrderModal = async function (type = 'quick', isPreSelected = false) {
     STATE.currentEditOrder = null;
     STATE.newlyAddedItems = [];
     STATE.originalEditDetails = "";
@@ -131,8 +135,8 @@ window.openNewOrderModal = async function (type = 'quick') {
 
                 roomTables.forEach(t => {
                     const opt = document.createElement('option');
-                    opt.value = t.TableNumber;
-                    opt.innerText = `طاولة ${t.TableNumber}`;
+                    opt.value = `الطاولة ${t.TableNumber} - ${room}`;
+                    opt.innerText = `طاولة ${t.TableNumber} (${room})`;
                     opt.className = "bg-gray-900 text-white";
                     select.appendChild(opt);
                 });
@@ -141,8 +145,12 @@ window.openNewOrderModal = async function (type = 'quick') {
     }
 
     if (container) {
-        if (type === 'quick') container.classList.add('hidden');
-        else container.classList.remove('hidden');
+        // إخفاء خانة اختيار الطاولة إذا كانت طاولة سريعة أو إذا تم النقر عليها مباشرة من الخريطة
+        if (type === 'quick' || isPreSelected) {
+            container.classList.add('hidden');
+        } else {
+            container.classList.remove('hidden');
+        }
     }
     
     STATE.originalEditDetails = "";

@@ -892,3 +892,132 @@ window.handleDragEnd = async function (e) {
         }
     });
 };
+
+window.deleteSelectedTables = async function () {
+    if (!STATE.selectedTableIds || STATE.selectedTableIds.length === 0) return;
+
+    window.showDeleteConfirm(
+        "حذف الطاولات المحددة؟",
+        `سيتم حذف ${STATE.selectedTableIds.length} طاولات نهائياً! هل أنت متأكد؟`,
+        async () => {
+            window.showToast("جاري الحذف...", "success");
+            try {
+                for (const id of STATE.selectedTableIds) {
+                    await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${id}/`, {
+                        method: 'DELETE',
+                        headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+                    });
+                }
+                STATE.tableMapData = STATE.tableMapData.filter(t => !STATE.selectedTableIds.includes(String(t.id)));
+                STATE.selectedTableIds = [];
+                STATE.selectedTableId = null;
+                window.showToast("تم الحذف بنجاح", "success");
+                window.renderSettingsRooms();
+            } catch (e) {
+                console.error(e);
+                window.showToast("حدث خطأ أثناء حذف الطاولات", "error");
+            }
+        }
+    );
+};
+
+window.copySelectedTables = function () {
+    if (!STATE.selectedTableIds || STATE.selectedTableIds.length === 0) return;
+    
+    STATE.copiedTables = STATE.tableMapData.filter(t => STATE.selectedTableIds.includes(String(t.id)));
+    window.showToast(`تم نسخ ${STATE.copiedTables.length} طاولات`, "success");
+};
+
+window.pasteCopiedTables = async function () {
+    if (!STATE.copiedTables || STATE.copiedTables.length === 0) {
+        window.showToast("لا يوجد شيء للصقه", "info");
+        return;
+    }
+
+    const room = STATE.currentRoom;
+    if (!room) return;
+
+    window.showToast("جاري لصق الطاولات...", "info");
+    
+    let addedCount = 0;
+    for (const tableToCopy of STATE.copiedTables) {
+        // Generate a new unique TableNumber for the room
+        let maxTableNum = 0;
+        STATE.tableMapData.forEach(t => {
+            if (t.Room === room) {
+                const num = parseInt(t.TableNumber);
+                if (!isNaN(num) && num > maxTableNum) {
+                    maxTableNum = num;
+                }
+            }
+        });
+        const newTableNum = maxTableNum + 1;
+
+        // Offset position slightly (+5%) to not overlap exactly
+        let newX = Math.min(95, parseFloat(tableToCopy.PosX) + 5);
+        let newY = Math.min(95, parseFloat(tableToCopy.PosY) + 5);
+
+        const shapeVal = (typeof tableToCopy.Shape === 'object' && tableToCopy.Shape) ? tableToCopy.Shape.value : (tableToCopy.Shape || 'round-4');
+
+        const payload = {
+            "Room": room,
+            "TableNumber": newTableNum,
+            "Shape": shapeVal,
+            "Chairs": parseInt(tableToCopy.Chairs) || 4,
+            "PosX": newX,
+            "PosY": newY,
+            "Scale": parseFloat(tableToCopy.Scale) || 1.0,
+            "Rotation": parseInt(tableToCopy.Rotation) || 0
+        };
+
+        try {
+            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true`, {
+                method: 'POST',
+                headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                STATE.tableMapData.push(data);
+                addedCount++;
+            }
+        } catch (e) {
+            console.error("Paste error", e);
+        }
+    }
+
+    if (addedCount > 0) {
+        window.showToast(`تم لصق ${addedCount} طاولات بنجاح`, "success");
+        window.renderSettingsRooms();
+    } else {
+        window.showToast("حدث خطأ أثناء اللصق", "error");
+    }
+};
+
+// Global keydown listeners for shortcuts
+document.addEventListener('keydown', function(e) {
+    if (STATE.currentActiveView !== 'settings_rooms') return;
+    
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable)) {
+        return;
+    }
+
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (STATE.selectedTableIds && STATE.selectedTableIds.length > 0) {
+            e.preventDefault();
+            window.deleteSelectedTables();
+        }
+    } else if (e.ctrlKey && (e.key === 'c' || e.key === 'C')) {
+        if (STATE.selectedTableIds && STATE.selectedTableIds.length > 0) {
+            e.preventDefault();
+            window.copySelectedTables();
+        }
+    } else if (e.ctrlKey && (e.key === 'v' || e.key === 'V')) {
+        if (STATE.copiedTables && STATE.copiedTables.length > 0) {
+            e.preventDefault();
+            window.pasteCopiedTables();
+        }
+    }
+});
