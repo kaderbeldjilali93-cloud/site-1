@@ -8,6 +8,7 @@ window.setKdsTab = function (tab) {
 };
 
 window.renderKDS = function (orders) {
+    if (!STATE.kdsActiveTab) STATE.kdsActiveTab = 'tables';
     let filteredOrders = [...orders];
 
     filteredOrders = window.calculateDailySequence(filteredOrders);
@@ -27,28 +28,21 @@ window.renderKDS = function (orders) {
         return (s === 'قيد التحضير' || s === 'جاهز') && isToday;
     });
 
-    const groupedOrders = { quick: [], delivery: [], new_table: [] };
-    for (let i = 1; i <= 15; i++) groupedOrders[i] = [];
+    const groupedOrders = { quick: [], delivery: [], rooms: {} };
 
     activeOrders.forEach(order => {
         let type = order.order_type || 'quick';
-        const tableRaw = String(order.Table || order.table || '').toLowerCase();
-        let tNum = parseInt(tableRaw.replace(/[^\d]/g, ''));
+        const tableRaw = String(order.Table || order.table || '').trim();
+        const roomName = order.Room || order.room || 'عام';
 
-        if (tableRaw.includes('توصيل') || tableRaw.includes('delivery')) {
+        if (tableRaw.toLowerCase().includes('توصيل') || tableRaw.toLowerCase().includes('delivery')) {
             groupedOrders.delivery.push(order);
-        } else if (type === 'table') {
-            if (!isNaN(tNum) && tNum >= 1 && tNum <= 15) {
-                groupedOrders[tNum].push(order);
-            } else {
-                groupedOrders.new_table.push(order);
-            }
+        } else if (type === 'table' || tableRaw.includes('طاولة') || tableRaw.includes('Table') || tableRaw.includes('-')) {
+            if (!groupedOrders.rooms[roomName]) groupedOrders.rooms[roomName] = {};
+            if (!groupedOrders.rooms[roomName][tableRaw]) groupedOrders.rooms[roomName][tableRaw] = [];
+            groupedOrders.rooms[roomName][tableRaw].push(order);
         } else {
-            if (!isNaN(tNum) && tNum >= 1 && tNum <= 15) {
-                groupedOrders[tNum].push(order);
-            } else {
-                groupedOrders.quick.push(order);
-            }
+            groupedOrders.quick.push(order);
         }
     });
 
@@ -57,16 +51,15 @@ window.renderKDS = function (orders) {
 
     const hasNewQuick = groupedOrders.quick.some(o => o.isNew);
     const hasNewDelivery = groupedOrders.delivery.some(o => o.isNew);
-    const hasNewTable = Array.from({ length: 15 }, (_, i) => i + 1).some(i => groupedOrders[i].some(o => o.isNew)) || groupedOrders.new_table.some(o => o.isNew);
+    const hasNewTable = Object.values(groupedOrders.rooms).some(room => 
+        Object.values(room).some(tOrders => tOrders.some(o => o.isNew))
+    );
 
     const getTabClass = (tabName, hasNew) => {
         if (STATE.kdsActiveTab === tabName) return 'bg-brand text-black shadow-md';
         if (hasNew) return 'bg-red-600 animate-pulse text-white shadow-[0_0_15px_rgba(220,38,38,0.6)]';
         return 'text-gray-400 hover:bg-gray-700 hover:text-white';
     };
-
-    // إخفاء زر طلب جديد كلياً تلبية لتوجيهات العميل بكون المطبخ شاشة استقبال فقط
-    const newOrderBtn = '';
 
     header.innerHTML = `
         <div class="flex items-center gap-3">
@@ -111,44 +104,55 @@ window.renderKDS = function (orders) {
     };
 
     if (STATE.kdsActiveTab === 'tables') {
-        const renderTableCard = (i, tOrders, titleOverride) => {
-            const card = document.createElement('div');
-            const title = titleOverride || `طاولة ${i}`;
+        const roomEntries = Object.entries(groupedOrders.rooms);
+        if (roomEntries.length === 0) {
+            grid.className = "flex flex-col items-center justify-center h-64 text-gray-500 w-full";
+            grid.innerHTML = `<div class="text-6xl mb-4 opacity-50">🍽️</div><div class="text-xl font-medium">لا توجد طلبات طاولات نشطة حالياً</div>`;
+        } else {
+            roomEntries.forEach(([roomName, tables]) => {
+                // عنوان القاعة
+                const roomHeader = document.createElement('div');
+                roomHeader.className = "col-span-full mt-4 mb-2 text-xl font-bold text-brand border-b border-gray-700 pb-2 flex items-center gap-2";
+                roomHeader.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    <span>${roomName}</span>
+                `;
+                grid.appendChild(roomHeader);
 
-            if (tOrders.length === 0) {
-                card.className = "bg-green-900/10 border-2 border-green-800/50 rounded-2xl flex flex-col items-center justify-center h-48 text-green-600/70 transition-all opacity-80";
-                card.innerHTML = `<div class="text-4xl mb-3 opacity-50">🍽️</div><div class="text-lg font-medium">${title}</div><div class="text-xs mt-1 bg-green-900/30 px-2 py-1 rounded-full border border-green-800/50">فارغة</div>`;
-            } else {
-                const isCooking = tOrders.some(o => getStatus(o) === 'قيد التحضير');
-                const isEating = tOrders.every(o => getStatus(o) === 'جاهز');
+                // رسم كروت الطاولات لهذه القاعة
+                Object.entries(tables).forEach(([tableName, tOrders]) => {
+                    const card = document.createElement('div');
+                    const isCooking = tOrders.some(o => getStatus(o) === 'قيد التحضير');
+                    const isEating = tOrders.every(o => getStatus(o) === 'جاهز');
+                    
+                    let cardClass = "";
+                    let headerClass = "";
 
-                let cardClass = "";
-                let headerClass = "";
+                    if (isCooking) {
+                        const hasNew = tOrders.some(o => o.isNew);
+                        cardClass = `bg-gray-800 border-2 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)] rounded-2xl flex flex-col overflow-hidden ${hasNew ? 'animate-pulse' : ''}`;
+                        headerClass = "bg-red-600 text-white";
+                    } else if (isEating) {
+                        cardClass = `bg-gray-800 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)] rounded-2xl flex flex-col overflow-hidden`;
+                        headerClass = "bg-yellow-500 text-black";
+                    } else {
+                        cardClass = `bg-gray-800 border-2 border-gray-500 rounded-2xl flex flex-col overflow-hidden`;
+                        headerClass = "bg-gray-600 text-white";
+                    }
 
-                if (isCooking) {
-                    const hasNew = tOrders.some(o => o.isNew);
-                    cardClass = `bg-gray-800 border-2 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)] rounded-2xl flex flex-col overflow-hidden ${hasNew ? 'animate-pulse' : ''}`;
-                    headerClass = "bg-red-600 text-white";
-                } else if (isEating) {
-                    cardClass = `bg-gray-800 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)] rounded-2xl flex flex-col overflow-hidden`;
-                    headerClass = "bg-yellow-500 text-black";
-                } else {
-                    cardClass = `bg-gray-800 border-2 border-gray-500 rounded-2xl flex flex-col overflow-hidden`;
-                    headerClass = "bg-gray-600 text-white";
-                }
-
-                card.className = cardClass.replace('flex-col', 'flex-col h-fit');
-                card.innerHTML = `<div class="${headerClass} font-bold p-3 text-center text-lg flex justify-between items-center shadow-md"><span>${title}</span><span class="bg-black/20 text-current text-xs font-bold px-2 py-1 rounded-full border border-black/30">${tOrders.length} طلب</span></div><div class="p-3 flex flex-col gap-3 h-fit">${renderOrderList(tOrders)}</div>`;
-            }
-            grid.appendChild(card);
-        };
-
-        if (groupedOrders.new_table.length > 0) {
-            renderTableCard(null, groupedOrders.new_table, "طاولة غير محددة");
-        }
-
-        for (let i = 1; i <= 15; i++) {
-            renderTableCard(i, groupedOrders[i]);
+                    card.className = cardClass.replace('flex-col', 'flex-col h-fit');
+                    card.innerHTML = `
+                        <div class="${headerClass} font-bold p-3 text-center text-lg flex justify-between items-center shadow-md">
+                            <span class="truncate max-w-[70%]">${tableName}</span>
+                            <span class="bg-black/20 text-current text-xs font-bold px-2 py-1 rounded-full border border-black/30">${tOrders.length} طلبيات</span>
+                        </div>
+                        <div class="p-3 flex flex-col gap-3 h-fit">
+                            ${renderOrderList(tOrders)}
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            });
         }
     } else {
         const tkOrders = STATE.kdsActiveTab === 'quick' ? groupedOrders.quick : groupedOrders.delivery;
