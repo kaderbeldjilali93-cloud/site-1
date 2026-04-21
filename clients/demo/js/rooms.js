@@ -89,13 +89,21 @@ window.renderSettingsRooms = async function () {
 
         let rooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))].sort();
 
-        if (STATE.currentRoom && !rooms.includes(STATE.currentRoom)) {
-            rooms.push(STATE.currentRoom);
-            rooms.sort();
-        }
+        // حفظ القاعات الجديدة المضافة يدوياً في الجلسة لمنع اختفائها قبل إضافة طاولة
+        if (!STATE.sessionRooms) STATE.sessionRooms = [];
+        STATE.sessionRooms.forEach(sr => {
+            if (!rooms.includes(sr)) rooms.push(sr);
+        });
+        rooms.sort();
 
         if (!STATE.currentRoom && rooms.length > 0) {
             STATE.currentRoom = rooms[0];
+        }
+
+        // التأكد من أن القاعة الحالية موجودة في القائمة حتى لو كانت جديدة وفارغة
+        if (STATE.currentRoom && !rooms.includes(STATE.currentRoom)) {
+            rooms.push(STATE.currentRoom);
+            rooms.sort();
         }
 
         if (rooms.length === 0 && !STATE.currentRoom) {
@@ -496,11 +504,17 @@ window.closeRoomModal = function () {
 window.addRoom = function () {
     window.openRoomModal("إضافة قاعة جديدة", "", (name) => {
         const cleanName = name.trim();
+        if (!cleanName) return;
+
         const rooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))];
-        if (rooms.includes(cleanName)) {
+        if (rooms.includes(cleanName) || (STATE.sessionRooms && STATE.sessionRooms.includes(cleanName))) {
             window.showToast("هذه القاعة موجودة مسبقاً", "error");
             return;
         }
+
+        if (!STATE.sessionRooms) STATE.sessionRooms = [];
+        STATE.sessionRooms.push(cleanName);
+
         STATE.currentRoom = cleanName;
         window.renderSettingsRooms();
     });
@@ -592,6 +606,9 @@ window.deleteRoom = async function () {
                     window.showToast("حدث خطأ أثناء حذف القاعة", "error");
                     return;
                 }
+            }
+            if (STATE.sessionRooms) {
+                STATE.sessionRooms = STATE.sessionRooms.filter(sr => sr !== STATE.currentRoom);
             }
             STATE.currentRoom = null;
             window.renderSettingsRooms();

@@ -65,10 +65,13 @@ window.renderTableView = async function () {
             const tableOrders = orders.filter(o => {
                 if (!o.Table) return false;
                 
-                // تجاهل الطلبات القديمة التي لم يتم إغلاقها لتجنب الطاولات الوهمية
+                // تجاهل الطلبات القديمة أو الطلبات التي ليس لها تاريخ لتجنب الطاولات الوهمية
                 const todayStr = window.getLocalYYYYMMDD ? window.getLocalYYYYMMDD() : new Date().toISOString().split('T')[0];
-                const orderDate = (o.CreatedOn || o.Date || '').split('T')[0].split(' ')[0];
-                if (orderDate && orderDate !== todayStr && orderDate !== '') return false;
+                const orderRawDate = o.CreatedOn || o.Date || '';
+                if (!orderRawDate) return false; // منع الطاولات الوهمية للطلبات التي لا تاريخ لها
+
+                const orderDate = orderRawDate.split('T')[0].split(' ')[0];
+                if (orderDate !== todayStr) return false;
 
                 const tbl = String(o.Table).trim();
                 
@@ -201,30 +204,39 @@ window.switchTableRoom = function (r) {
 };
 
 window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, orderId) {
-    // Handle calling tables - resolve the call
+    console.log("Table clicked:", { tableNumber, isCalling, hasActiveOrder, orderId });
+
+    // 1. التعامل مع نداءات الطاولات (الحالة ذات الأولوية القصوى)
     if (isCalling) {
-        window.resolveTableCall(tableNumber);
-        return;
-    }
-    
-    // Handle tables with active orders (yellow/red) - open edit modal
-    if (hasActiveOrder && orderId && orderId !== 'null' && orderId !== null) {
-        if (typeof window.openEditOrderModal === 'function') {
-            window.openEditOrderModal(orderId);
+        if (typeof window.resolveTableCall === 'function') {
+            window.resolveTableCall(tableNumber);
         } else {
-            window.showToast(`الطاولة ${tableNumber} - لا يمكن فتح الطلب حالياً`, "info");
+            window.showToast(`نداء من الطاولة ${tableNumber}`, "info");
         }
         return;
     }
-    
-    // Handle free tables (green) - open new order modal
+
+    // 2. التعامل مع الطاولات المشغولة (فتح نافذة تعديل الطلب)
+    // نتحقق من وجود orderId وأنه ليس 'null' كنص أو قيمة فارغة
+    if (hasActiveOrder && orderId && String(orderId) !== 'null') {
+        if (typeof window.openEditOrderModal === 'function') {
+            window.openEditOrderModal(orderId);
+            return;
+        }
+    }
+
+    // 3. التعامل مع الطاولات الفارغة (فتح نافذة طلب جديد) - أو كخيار بديل في حال فشل تعديل طلب موجود
     if (typeof window.openNewOrderModal === 'function') {
-        window.openNewOrderModal('table', true); // Pass true to indicate it's pre-selected
+        window.openNewOrderModal('table', true); // تمرير true للإشارة إلى أن الطاولة محددة مسبقاً
         setTimeout(() => {
             const manualSelect = document.getElementById('manual-table-number');
-            if (manualSelect) manualSelect.value = `الطاولة ${tableNumber} - ${STATE.currentRoom}`;
+            if (manualSelect) {
+                // محاولة تحديد الطاولة في القائمة المنسدلة
+                const targetValue = `الطاولة ${tableNumber} - ${STATE.currentRoom}`;
+                manualSelect.value = targetValue;
+            }
         }, 300);
     } else {
-        window.showToast(`لا يمكنك إنشاء طلب بدون صلاحية الكاشير`, "error");
+        window.showToast(`لا تملك صلاحيات لفتح هذا الطلب`, "error");
     }
 };
