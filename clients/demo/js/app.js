@@ -567,7 +567,14 @@ window.loadView = async function (viewType) {
             await window.renderAnalytics(data, 'today');
         }
         else if (viewType === 'tables') {
-            window.renderTableView();
+            const runTables = async () => {
+                if (STATE.currentActiveView !== 'tables') return;
+                try {
+                    await window.renderTableView();
+                } catch (e) { console.warn('Tables polling error:', e); }
+            };
+            await runTables();
+            if (STATE.currentActiveView === 'tables') STATE.pollingInterval = setInterval(runTables, 10000);
         }
         else if (viewType === 'staff') {
             if (window.renderStaff) window.renderStaff();

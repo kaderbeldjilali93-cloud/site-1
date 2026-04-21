@@ -12,14 +12,14 @@ window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
     const grid = document.getElementById('edit-menu-grid');
     const catContainer = document.getElementById('edit-menu-categories');
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
-    
+
     // 1. استخراج كل التصنيفات الفريدة
     const availableItems = STATE.cachedMenuItems.filter(item => {
         const avail = (typeof item.Availability === 'object' && item.Availability) ? item.Availability.value : item.Availability;
         return avail !== 'نفذت الكمية';
     });
 
-    const categories = [...new Set(availableItems.map(item => 
+    const categories = [...new Set(availableItems.map(item =>
         (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'أخرى')
     ))];
 
@@ -43,10 +43,10 @@ window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
     filteredItems.forEach(item => {
         const name = item.Name || item.name;
         const price = parseFloat(item.PromoPrice || item.promoprice) || parseFloat(item.Price || item.price || 0);
-        
+
         let imgUrl = 'https://placehold.co/400x300?text=Food';
         const imgField = item.image || item.Image || item.img || item.Img || item.picture || item.Picture;
-        
+
         if (Array.isArray(imgField) && imgField.length > 0) {
             imgUrl = imgField[0].url || imgField[0].thumbnails?.large?.url || imgField[0].url;
         } else if (typeof imgField === 'string' && imgField.trim() !== '') {
@@ -57,7 +57,7 @@ window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
         // توحيد طول البطاقة بالكامل (h-48) لضمان الاصطفاف
         card.className = "bg-gray-800/60 rounded-xl border border-gray-700/50 overflow-hidden hover:border-brand/50 transition-all cursor-pointer group flex flex-col h-48 shadow-lg";
         card.onclick = () => window.addItemToEditOrder(name, price);
-        
+
         card.innerHTML = `
             <div class="relative h-24 shrink-0 bg-gray-900/80 flex items-center justify-center p-2">
                 <img src="${imgUrl}" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" 
@@ -118,11 +118,11 @@ window.openNewOrderModal = async function (type = 'quick', isPreSelected = false
     // 1. تعبئة قائمة الطاولات المتوفرة من STATE.tableMapData
     const select = document.getElementById('manual-table-number');
     const container = document.getElementById('new-order-table-container');
-    
+
     if (select) {
         select.innerHTML = '<option value="" disabled selected>إختر رقم الطاولة...</option>';
         const allRooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))];
-        
+
         allRooms.forEach(room => {
             const roomTables = STATE.tableMapData.filter(t => t.Room === room);
             if (roomTables.length > 0) {
@@ -135,7 +135,9 @@ window.openNewOrderModal = async function (type = 'quick', isPreSelected = false
 
                 roomTables.forEach(t => {
                     const opt = document.createElement('option');
-                    opt.value = `الطاولة ${t.TableNumber} - ${room}`;
+                    // التنسيق الموحد لأسماء الطاولات عبر النظام بالكامل لضمان المزامنة في نداءات الطاولات
+                    const formattedValue = `الطاولة ${t.TableNumber} - ${room}`;
+                    opt.value = formattedValue;
                     opt.innerText = `طاولة ${t.TableNumber} (${room})`;
                     opt.className = "bg-gray-900 text-white";
                     select.appendChild(opt);
@@ -152,7 +154,7 @@ window.openNewOrderModal = async function (type = 'quick', isPreSelected = false
             container.classList.remove('hidden');
         }
     }
-    
+
     STATE.originalEditDetails = "";
     document.getElementById('edit-order-original-details').innerText = "ابدأ بإضافة الأصناف...";
 
@@ -253,7 +255,14 @@ window.saveOrderEdit = async function () {
     if (isNewOrder) {
         const manualTable = document.getElementById('manual-table-number')?.value || "";
         payload["Table"] = manualTable || (STATE.newOrderType === 'table' ? "طاولة جديدة" : "سفري");
-        payload["order_type"] = STATE.newOrderType || "quick";
+        
+        // إذا تم اختيار طاولة، يجب أن يكون نوع الطلب table تلقائياً لضمان التصنيف الصحيح
+        if (manualTable || STATE.newOrderType === 'table') {
+            payload["order_type"] = "table";
+        } else {
+            payload["order_type"] = STATE.newOrderType || "quick";
+        }
+        
         payload["Status"] = "قيد التحضير";
     }
 
@@ -273,11 +282,13 @@ window.saveOrderEdit = async function () {
         STATE.latestKdsOrders = data;
         STATE.lastFetchedOrders = data;
 
-        const currentView = localStorage.getItem(STATE.storageKeys.lastView);
+        const currentView = STATE.currentActiveView || localStorage.getItem(STATE.storageKeys.lastView);
         if (STATE.currentRole === 'kitchen' || currentView === 'kds') {
             window.renderKDS(data);
         } else if (currentView === 'cashier') {
             window.renderCashier(data);
+        } else if (currentView === 'tables') {
+            window.renderTableView();
         }
 
     } catch (e) {

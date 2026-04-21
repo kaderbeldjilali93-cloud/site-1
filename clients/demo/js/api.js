@@ -4,7 +4,7 @@
 
 window.fetchOrders = async function (tableId) {
     try {
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true`, {
+        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true&size=200`, {
             method: 'GET',
             headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
         });
@@ -79,13 +79,16 @@ window.updateOrderStatus = async function (rowId, newStatus) {
         STATE.latestKdsOrders = data;
         STATE.lastFetchedOrders = data;
 
-        const currentView = localStorage.getItem(STATE.storageKeys.lastView);
+        // تحديث الشاشة الحالية بالبيانات الجديدة
+        const currentView = STATE.currentActiveView || localStorage.getItem(STATE.storageKeys.lastView);
         if (STATE.currentRole === 'kitchen' || currentView === 'kds') {
             window.renderKDS(data);
         } else if (currentView === 'cashier') {
             window.renderCashier(data);
         } else if (currentView === 'analytics') {
             window.renderAnalytics(data, 'today');
+        } else if (currentView === 'tables') {
+            window.renderTableView();
         } else {
             window.renderKDS(data);
         }
@@ -190,11 +193,8 @@ window.fetchWaiterCalls = async function () {
             else badge.classList.add('hidden');
         }
 
-        if (localStorage.getItem(STATE.storageKeys.lastView) === 'tables') {
-            const freshOrders = await window.fetchOrders(ORDERS_TABLE_ID);
-            STATE.lastFetchedOrders = freshOrders;
-            window.renderTableView();
-        }
+        // لا نحتاج استدعاء renderTableView هنا لأن الطاولات الآن لديها تحديث تلقائي كل 10 ثوانٍ
+        // نكتفي بتحديث STATE.activeCalls وسيتم استخدامها في الرسم التالي
 
     } catch (e) {
         console.warn("Failed to fetch waiter calls (Network Error):", e.message);

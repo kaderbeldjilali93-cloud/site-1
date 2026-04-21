@@ -86,23 +86,28 @@ window.processPayment = async function (rowId, shouldPrint) {
 
         window.showToast("تم تأكيد الدفع بنجاح", "success");
 
+        // مزامنة فورية بعد الدفع - تحديث كل الشاشات بدون انتظار
         setTimeout(async () => {
             try {
-                const currentView = localStorage.getItem(STATE.storageKeys.lastView);
-                if (currentView === 'cashier') {
-                    window.renderCashier(STATE.lastFetchedOrders);
-                } else if (currentView === 'analytics') {
-                    window.renderAnalytics(STATE.analyticsData, 'today');
-                }
-
                 const freshData = await window.fetchOrders(ORDERS_TABLE_ID);
                 STATE.latestKdsOrders = freshData;
                 STATE.lastFetchedOrders = freshData;
 
+                // تحديث الشاشة الحالية
+                const currentView = STATE.currentActiveView || localStorage.getItem(STATE.storageKeys.lastView);
+                if (currentView === 'cashier') {
+                    window.renderCashier(freshData);
+                } else if (currentView === 'tables') {
+                    window.renderTableView();
+                } else if (currentView === 'analytics') {
+                    window.renderAnalytics(STATE.analyticsData, 'today');
+                } else if (currentView === 'kds') {
+                    window.renderKDS(freshData);
+                }
             } catch (e) {
-                console.warn("حدث خطأ أثناء المزامنة بعد التأخير:", e);
+                console.warn("حدث خطأ أثناء المزامنة بعد الدفع:", e);
             }
-        }, 2000);
+        }, 500);
 
     } catch (error) {
         console.warn("API Error:", error.message);
@@ -211,8 +216,8 @@ window.renderCashier = function (orders) {
     const getStatus = (o) => (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
 
-    let baseOrders = orders.filter(o => {
-        const time = o['Created at'] || o.Time || o.time || o.created_on;
+    let baseOrders = (orders || []).filter(o => {
+        const time = o['Created at'] || o.Time || o.time || o.created_on || o.CreatedOn || o.Date || '';
         return window.isOrderFromSelectedDate(time, STATE.selectedCashierDate);
     });
 
@@ -734,11 +739,18 @@ window.confirmSplitPayment = async function (shouldPrint) {
         }
 
         window.showToast("تم تقسيم الفاتورة بنجاح ✅", "success");
-        window.closeSplitModal();
         const freshData = await window.fetchOrders(ORDERS_TABLE_ID);
         STATE.lastFetchedOrders = freshData;
         STATE.latestKdsOrders = freshData;
-        window.renderCashier(freshData);
+        
+        const currentView = STATE.currentActiveView || localStorage.getItem(STATE.storageKeys.lastView);
+        if (currentView === 'cashier') {
+            window.renderCashier(freshData);
+        } else if (currentView === 'tables') {
+            window.renderTableView();
+        } else if (currentView === 'kds') {
+            window.renderKDS(freshData);
+        }
         window.showSuccessPopup();
 
     } catch (e) {

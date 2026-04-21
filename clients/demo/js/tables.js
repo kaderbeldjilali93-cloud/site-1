@@ -11,25 +11,28 @@ window.renderTableView = async function () {
     }
 
     try {
-        // Always reload fresh data from Baserow
+        // 1. Fresh fetch of table positions and rooms
         const tableRes = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true&size=200`, {
             headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
         });
+        
         if (tableRes.ok) {
             const mapData = await tableRes.json();
             STATE.tableMapData = mapData.results || [];
         }
-
-        // التحقق من وجود طلبات جديدة قبل الرسم لضمان الاستجابة اللحظية
+        
+        // 2. Fresh fetch of all orders
         const freshOrders = await window.fetchOrders(ORDERS_TABLE_ID);
-        STATE.lastFetchedOrders = freshOrders;
+        STATE.lastFetchedOrders = freshOrders || [];
 
+        // 3. Extract unique rooms and set default if needed
         let rooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))].sort();
-        if (!STATE.currentRoom && rooms.length > 0) {
+        
+        if (rooms.length > 0 && (!STATE.currentRoom || !rooms.includes(STATE.currentRoom))) {
             STATE.currentRoom = rooms[0];
         }
 
-        const orders = STATE.lastFetchedOrders || [];
+        const orders = STATE.lastFetchedOrders;
         const activeCalls = STATE.activeCalls || [];
         const sysCurrency = localStorage.getItem('system_currency') || 'DA';
 
@@ -39,6 +42,7 @@ window.renderTableView = async function () {
                     <span class="live-indicator" title="تحديث مباشر"></span>
                     <h3 class="text-white font-bold text-xl">مراقبة الطاولات والطلبات</h3>
                 </div>
+                <div class="flex items-center gap-2 w-full md:w-auto">
                     <button onclick="window.renderTableView()" class="bg-gray-700 hover:bg-gray-600 text-white p-2.5 rounded-lg transition shadow flex items-center justify-center gap-2" title="تحديث البيانات">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     </button>
@@ -69,93 +73,78 @@ window.renderTableView = async function () {
             const isCalling = activeCalls.some(c => String(c) === numStr || String(c) === expectedTableFormat);
 
             const tableOrders = orders.filter(o => {
-                if (!o.Table) return false;
-
-                // استخدام الدالة القياسية للتحقق من تاريخ اليوم لضمان الدقة وتوافق الصيغة
+                const tblRaw = String(o.Table || '').trim();
+                if (!tblRaw) return false;
+                
                 const rawTime = o['Created at'] || o.Time || o.time || o.created_on || o.CreatedOn || o.Date || '';
                 if (!window.isOrderFromToday(rawTime)) return false;
 
-                const tbl = String(o.Table || '').trim();
+                // 1. Exact Match (The Standard)
+                if (tblRaw === expectedTableFormat) return true;
+                
+                // 2. Fuzzy Match (Fallback)
+                if (tblRaw.includes(` ${numStr} `) && tblRaw.includes(STATE.currentRoom)) return true;
+                if (tblRaw.startsWith(`الطاولة ${numStr}`) && tblRaw.includes(STATE.currentRoom)) return true;
+                if (tblRaw.startsWith(`طاولة ${numStr}`) && tblRaw.includes(STATE.currentRoom)) return true;
 
-                // 1. المطابقة الدقيقة مع النظام الجديد: 'الطاولة X - القاعة'
-                if (tbl === expectedTableFormat) return true;
-
-                // 2. المطابقة إذا كان الاسم يحتوي على الرقم والقاعة ولكن بتنسيق مختلف
-                if (tbl.includes(` ${numStr} `) && tbl.includes(STATE.currentRoom)) return true;
-                if (tbl.includes(`طاولة ${numStr}`) && tbl.includes(STATE.currentRoom)) return true;
-
-                // 3. التوافق مع الطلبات القديمة: إذا كان يحتوي على الرقم فقط بدون أسماء قاعات (بدون ' - ')
-                const legacyMatch = tbl.replace(/[^0-9]/g, '') === numStr;
-                if (legacyMatch && !tbl.includes('-')) {
-                    // إذا كان لدينا حقل لاسم القاعة في الطلب، نستخدمه للمطابقة
-                    const orderRoom = String(o.Room || '').trim();
+                // 3. Legacy compatibility
+                const numericOnly = tblRaw.replace(/[^0-9]/g, '');
+                if (numericOnly === numStr && !tblRaw.includes('-')) {
+                    const orderRoom = String(o.Room || o.room || '').trim();
                     if (orderRoom && orderRoom !== STATE.currentRoom) return false;
                     return true;
                 }
-
+                
                 return false;
             });
 
-            // قائمة الحالات النشطة (التي تظهر الطاولة كمشغولة)
+            let hasActiveOrder = false;
+            let orderForTable = null;
             const activeStatuses = ['جديد', 'قيد التحضير', 'جاهز', 'مستلم', 'سداد', 'New', 'Preparing', 'Ready', 'Delivered', 'Payment', 'Nouveau', 'En préparation', 'Prêt'];
 
-            // البحث عن أحدث طلب نشط لهذه الطاولة
-            // المصفوفة مرتبة من الأحدث (في api.js reverse)، لذا نأخذ أول طلب نشط نجده
+            // Find the most recent active order (first one in the reversed array)
             for (const o of tableOrders) {
-                let st = (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
-                st = String(st || '').trim();
-
+                const st = (typeof o.Status === 'object' && o.Status) ? String(o.Status.value || '').trim() : String(o.Status || '').trim();
                 if (activeStatuses.includes(st)) {
                     hasActiveOrder = true;
                     orderForTable = o;
-                    break; // وجدنا الأحدث، نكتفي به
+                    break;
                 }
             }
 
             let statusClass = "table-status-free";
-            let chairColor = "#22c55e"; // Default Green (Free/Paid)
+            let chairColor = "#22c55e"; // Default Green (Free)
 
             if (isCalling) {
                 statusClass = "table-status-calling";
                 chairColor = "#ef4444"; // Red for Calling
             } else if (hasActiveOrder) {
                 statusClass = "table-status-occupied";
-
-                // Color Logic based on Order Status
+                
                 let isReady = false;
                 let isNewOrPrep = false;
-
+                
                 tableOrders.forEach(o => {
                     const st = (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
                     if (st === 'جاهز') isReady = true;
                     else if (st === 'جديد' || st === 'قيد التحضير') isNewOrPrep = true;
                 });
 
-                if (isNewOrPrep) {
-                    chairColor = "#ef4444"; // Red (Not ready yet)
-                } else if (isReady) {
-                    chairColor = "#eab308"; // Yellow (Ready)
-                } else {
-                    chairColor = "#f59e0b"; // Fallback Orange
-                }
+                if (isNewOrPrep) chairColor = "#ef4444"; // Red
+                else if (isReady) chairColor = "#eab308"; // Yellow
+                else chairColor = "#f59e0b"; // Orange
             }
 
             const shapeStr = (typeof t.Shape === 'object' && t.Shape) ? t.Shape.value : (t.Shape || 'round-4');
-            // Standardized coordinate loading - handle both pixels (legacy) and percentages
             let posX = parseFloat(t.PosX) || 10;
             let posY = parseFloat(t.PosY) || 10;
-
-            // Sync logic with rooms.js
+            
             let leftPct = (posX > 100) ? Math.round((posX / 1100) * 100) : Math.round(posX);
             let topPct = (posY > 100) ? Math.round((posY / 700) * 100) : Math.round(posY);
-
             const tScale = t.Scale || 1.0;
             const tRot = t.Rotation || 0;
 
-            let orderIdArg = 'null';
-            if (orderForTable && orderForTable.id) {
-                orderIdArg = `'${orderForTable.id}'`;
-            }
+            const orderIdArg = (orderForTable && orderForTable.id) ? `'${orderForTable.id}'` : 'null';
 
             floorHtml += `
                 <div class="table-element ${statusClass}" 
@@ -168,37 +157,33 @@ window.renderTableView = async function () {
             `;
         });
 
-        let Legend = `
+        const Legend = `
         <div class="flex items-center gap-5 text-sm font-bold bg-gray-800 p-4 rounded-xl border border-gray-700 w-fit mx-auto shadow mt-6">
             <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-green-500"></div> فارغة</div>
-            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-yellow-500"></div> مشغولة</div>
-            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-500 animate-pulse outline outline-2 outline-offset-1 outline-red-500"></div> نداء طاولة</div>
+            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-yellow-500"></div> جاهزة</div>
+            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-500"></div> مشغولة</div>
+            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-500 animate-pulse outline outline-2 outline-offset-1 outline-red-500"></div> نداء</div>
         </div>
         `;
 
-        const html = `
+        dynamicContent.innerHTML = `
             ${topBarHTML}
-            
             <div class="flex items-center justify-center mb-6 bg-gray-800 p-2 rounded-xl border border-gray-700 overflow-x-auto mx-auto w-fit max-w-full shadow-sm">
                 <div class="flex items-center gap-2">
-                    ${tabsHtml || '<span class="text-gray-400 text-sm px-4 py-2">لا توجد قاعات مضافة عبر إعدادات القاعات.</span>'}
+                    ${tabsHtml || '<span class="text-gray-400 text-sm px-4 py-2">لا توجد قاعات مضافة.</span>'}
                 </div>
             </div>
-            
             <div class="max-w-5xl mx-auto shadow-2xl rounded-3xl p-2 bg-gray-800 border border-gray-700">
-                <div class="floor-canvas select-none" style="border:none; cursor: default;">
+                <div class="floor-canvas select-none" style="border:none; cursor: default; min-height: 400px; position: relative;">
                     ${floorHtml}
                 </div>
             </div>
-            
             ${Legend}
         `;
 
-        dynamicContent.innerHTML = html;
-
     } catch (e) {
         console.error("TableView Error:", e);
-        dynamicContent.innerHTML = `<div class="p-8 text-center text-red-400 font-bold bg-red-900/20 border border-red-800 rounded-2xl max-w-lg mx-auto mt-20 shadow-xl">⚠️ فشل تحميل واجهة القاعات.<br><br><span class="text-sm font-normal mt-2 block">تأكد من إعداد الطاولات في شاشة "إعدادات القاعات" وأن اتصالك بالإنترنت مستقر.</span></div>`;
+        dynamicContent.innerHTML = `<div class="p-8 text-center text-red-red-400 font-bold bg-red-900/20 border border-red-800 rounded-2xl max-w-lg mx-auto mt-20 shadow-xl">⚠️ فشل تحميل واجهة القاعات.<br><br><span class="text-sm font-normal mt-2 block">حدث خطأ برمي أثناء التحميل: ${e.message}</span></div>`;
     }
 };
 
@@ -209,20 +194,11 @@ window.switchTableRoom = function (r) {
 };
 
 window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, orderId) {
-    console.log("Table clicked:", { tableNumber, isCalling, hasActiveOrder, orderId });
-
-    // 1. التعامل مع نداءات الطاولات (الحالة ذات الأولوية القصوى)
     if (isCalling) {
-        if (typeof window.resolveTableCall === 'function') {
-            window.resolveTableCall(tableNumber);
-        } else {
-            window.showToast(`نداء من الطاولة ${tableNumber}`, "info");
-        }
+        if (typeof window.resolveTableCall === 'function') window.resolveTableCall(tableNumber);
         return;
     }
 
-    // 2. التعامل مع الطاولات المشغولة (فتح نافذة تعديل الطلب)
-    // نتحقق من وجود orderId وأنه ليس 'null' كنص أو قيمة فارغة
     if (hasActiveOrder && orderId && String(orderId) !== 'null') {
         if (typeof window.openEditOrderModal === 'function') {
             window.openEditOrderModal(orderId);
@@ -230,18 +206,14 @@ window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, o
         }
     }
 
-    // 3. التعامل مع الطاولات الفارغة (فتح نافذة طلب جديد) - أو كخيار بديل في حال فشل تعديل طلب موجود
     if (typeof window.openNewOrderModal === 'function') {
-        window.openNewOrderModal('table', true); // تمرير true للإشارة إلى أن الطاولة محددة مسبقاً
+        window.openNewOrderModal('table', true); 
         setTimeout(() => {
             const manualSelect = document.getElementById('manual-table-number');
             if (manualSelect) {
-                // محاولة تحديد الطاولة في القائمة المنسدلة
                 const targetValue = `الطاولة ${tableNumber} - ${STATE.currentRoom}`;
                 manualSelect.value = targetValue;
             }
         }, 300);
-    } else {
-        window.showToast(`لا تملك صلاحيات لفتح هذا الطلب`, "error");
     }
 };
