@@ -117,11 +117,10 @@ window.processPayment = async function (rowId, shouldPrint) {
             if (!ordersArray) return;
             const order = ordersArray.find(o => o.id === rowId);
             if (order) {
-                if (typeof order.Status === 'object' && order.Status !== null) {
-                    order.Status.value = 'جاهز';
-                } else {
-                    order.Status = 'جاهز';
-                }
+                // Remove reverting back to "جاهز", keep it "مدفوع" or handle it gracefully.
+                // Reverting it creates a UI inconsistency where table turns yellow again.
+                // We just keep the UI in its intended state for the cashier, but we log the error.
+                console.warn(`Silently failing to update baserow for order ${rowId}. Check if "مدفوع" is a valid option.`);
             }
         };
         revertLocalStatus(STATE.lastFetchedOrders);
@@ -236,7 +235,8 @@ window.renderCashier = function (orders) {
         roomFilteredOrders = baseOrders.filter(o => {
             const ot = o.order_type || '';
             const tbl = String(o.Table || '').trim();
-            return ot !== 'table' || !tbl || tbl === 'سفري' || tbl === 'طاولة جديدة';
+            const isTableOrder = ot === 'table' || (tbl && tbl.includes('الطاولة'));
+            return !isTableOrder || tbl === 'سفري' || tbl === 'طاولة جديدة';
         });
     } else if (STATE.cashierRoomFilter !== 'الكل') {
         roomFilteredOrders = baseOrders.filter(o => {

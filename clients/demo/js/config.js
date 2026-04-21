@@ -7,6 +7,7 @@ const ORDERS_TABLE_ID = '376510';
 const TABLEMAP_TABLE_ID = '388277';
 const CALLS_TABLE_ID = '388280';
 const MENU_TABLE_ID = '376511';
+const STAFF_TABLE_ID = '376512'; // Added for staff system
 
 const STATE = {
     currentUser: null,

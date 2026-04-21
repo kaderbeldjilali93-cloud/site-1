@@ -84,7 +84,7 @@ window.renderTableView = async function () {
 
             let hasActiveOrder = false;
             let orderForTable = null;
-            const activeStatuses = ['جديد', 'قيد التحضير', 'جاهز', 'مستلم', 'سداد'];
+            const activeStatuses = ['جديد', 'قيد التحضير', 'جاهز', 'مستلم']; // Removed 'سداد' and 'مدفوع' so tables return to green
 
             for (const o of tableOrders) {
                 const st = (typeof o.Status === 'object' && o.Status) ? String(o.Status.value || '').trim() : String(o.Status || '').trim();
@@ -175,10 +175,11 @@ window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, o
         if (typeof window.resolveTableCall === 'function') {
             window.resolveTableCall(tableNumber);
         }
-        return;
+        // Do NOT return here, so that if the table also has an order, the edit modal will still open.
     }
 
     // إذا كانت الطاولة مشغولة ولديها طلب، نفتح مودال التعديل فوراً
+
     if (hasActiveOrder && orderId) {
         if (typeof window.openEditOrderModal === 'function') {
             window.openEditOrderModal(orderId);

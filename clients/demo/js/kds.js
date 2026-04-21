@@ -33,7 +33,14 @@ window.renderKDS = function (orders) {
     activeOrders.forEach(order => {
         let type = order.order_type || 'quick';
         const tableRaw = String(order.Table || order.table || '').trim();
-        const roomName = order.Room || order.room || 'عام';
+        let roomName = order.Room || order.room || '';
+
+        // استخراج اسم القاعة من حقل الطاولة إذا كان مفقوداً
+        if (!roomName && tableRaw.includes('-')) {
+            const match = tableRaw.match(/-\s*(.+)$/);
+            if (match) roomName = match[1].trim();
+        }
+        if (!roomName) roomName = 'عام';
 
         if (tableRaw.toLowerCase().includes('توصيل') || tableRaw.toLowerCase().includes('delivery')) {
             groupedOrders.delivery.push(order);
