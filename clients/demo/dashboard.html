@@ -804,6 +804,24 @@
                     color: white;
                     padding: 10px;
                 }
+                /* سهم منسدل مخصص لخانتي القاعة والطاولة */
+                #manual-room-select, #manual-table-select {
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ff9900' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+                    background-repeat: no-repeat;
+                    background-position: left 4px center;
+                    padding-left: 20px;
+                    cursor: pointer;
+                }
+                #manual-room-select:hover, #manual-table-select:hover {
+                    color: #ff9900;
+                }
+                /* سهم لقوائم اعدادات القاعات ايضا */
+                #tool-table-type, #tool-table-chairs {
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ff9900' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+                    background-repeat: no-repeat;
+                    background-position: left 10px center;
+                    padding-left: 28px;
+                }
             </style>
 
             <div class="flex flex-col md:flex-row gap-6 flex-1 overflow-hidden">
