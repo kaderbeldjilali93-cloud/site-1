@@ -132,7 +132,10 @@ window.openEditOrderModal = async function (orderId) {
     const modal = document.getElementById('edit-order-modal');
     if (modal) modal.classList.remove('hidden');
 
-    window.openEditOrderModal_DrawMenu();
+    // تأكيد رسم المنيو
+    if (typeof window.openEditOrderModal_DrawMenu === 'function') {
+        window.openEditOrderModal_DrawMenu();
+    }
 };
 
 window.openNewOrderModal = async function (type = 'quick', isPreSelected = false) {
