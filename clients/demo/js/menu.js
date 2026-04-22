@@ -1064,3 +1064,76 @@ window.confirmDeleteAnyCategory = async function () {
         document.getElementById('delete-category-modal').remove();
     }
 };
+
+// =========================================================
+// 🍴 Menu Rendering in Modals (رسم المنيو في النوافذ)
+// =========================================================
+
+window.openEditOrderModal_DrawMenu = async function () {
+    const container = document.getElementById('edit-order-menu-items');
+    if (!container) return;
+
+    container.innerHTML = '<div class="col-span-full py-10 text-center"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-brand mx-auto mb-2"></div><span class="text-gray-500">جاري تحميل القائمة...</span></div>';
+
+    try {
+        if (!STATE.cachedMenuItems) {
+            STATE.cachedMenuItems = await window.fetchMenu(MENU_TABLE_ID);
+        }
+        
+        const items = STATE.cachedMenuItems || [];
+        if (items.length === 0) {
+            container.innerHTML = '<div class="col-span-full py-10 text-center text-gray-500">لا توجد أصناف في القائمة</div>';
+            return;
+        }
+
+        // رسم الفئات (Categories)
+        const categories = [...new Set(items.map(i => i.Category).filter(Boolean))];
+        const categoryTabs = document.getElementById('edit-order-categories');
+        if (categoryTabs) {
+            categoryTabs.innerHTML = `
+                <button onclick="window.filterEditMenu('الكل')" class="px-4 py-2 rounded-xl bg-brand text-white font-bold whitespace-nowrap">الكل</button>
+                ${categories.map(cat => `
+                    <button onclick="window.filterEditMenu('${cat}')" class="px-4 py-2 rounded-xl bg-gray-800 text-gray-400 hover:bg-gray-700 whitespace-nowrap transition-colors">${cat}</button>
+                `).join('')}
+            `;
+        }
+
+        window.filterEditMenu('الكل');
+    } catch (e) {
+        console.error("Menu Draw Error:", e);
+        container.innerHTML = '<div class="col-span-full py-10 text-center text-red-500">فشل تحميل القائمة</div>';
+    }
+};
+
+window.filterEditMenu = function (category) {
+    const container = document.getElementById('edit-order-menu-items');
+    if (!container || !STATE.cachedMenuItems) return;
+
+    // تحديث شكل الأزرار (Active Tab)
+    const tabs = document.querySelectorAll('#edit-order-categories button');
+    tabs.forEach(tab => {
+        if (tab.innerText === category) {
+            tab.classList.remove('bg-gray-800', 'text-gray-400');
+            tab.classList.add('bg-brand', 'text-white');
+        } else {
+            tab.classList.add('bg-gray-800', 'text-gray-400');
+            tab.classList.remove('bg-brand', 'text-white');
+        }
+    });
+
+    const filtered = category === 'الكل' 
+        ? STATE.cachedMenuItems 
+        : STATE.cachedMenuItems.filter(i => i.Category === category);
+
+    container.innerHTML = filtered.map(item => `
+        <button onclick="window.addItemToEditOrder('${item.Name}', ${item.Price})" 
+            class="group relative bg-gray-800/40 border border-gray-700/50 p-4 rounded-2xl hover:border-brand/50 hover:bg-gray-700/50 transition-all text-right overflow-hidden shadow-sm hover:shadow-brand/10">
+            <div class="relative z-10">
+                <div class="text-white font-bold text-sm mb-1 group-hover:text-brand transition-colors">${item.Name}</div>
+                <div class="text-brand text-xs font-black">${item.Price} <span class="text-[8px] opacity-70">DA</span></div>
+            </div>
+            <!-- خلفية زخرفية خفيفة -->
+            <div class="absolute -bottom-2 -left-2 w-12 h-12 bg-brand/5 rounded-full blur-xl group-hover:bg-brand/10 transition-all"></div>
+        </button>
+    `).join('');
+};
