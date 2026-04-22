@@ -5,12 +5,14 @@
 // --- 1. دوال تعديل وإنشاء الطلبات ---
 
 window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
-    if (!STATE.cachedMenuItems) {
+    // دائماً نجلب القائمة إذا كانت فارغة أو null لضمان ظهور المنيو
+    if (!STATE.cachedMenuItems || STATE.cachedMenuItems.length === 0) {
         STATE.cachedMenuItems = await window.fetchMenu();
     }
 
     const grid = document.getElementById('edit-menu-grid');
     const catContainer = document.getElementById('edit-menu-categories');
+    if (!grid || !catContainer) return; // حماية من الأخطاء إذا لم يكن الـ DOM جاهز
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
 
     // 1. استخراج كل التصنيفات الفريدة

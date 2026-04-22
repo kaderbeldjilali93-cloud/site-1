@@ -43,6 +43,15 @@ window.generateTableSVG = function (shape, chairColor = "#10b981", scale = 1.0, 
             case "rect-8":
                 svg = `<svg width="180" height="80" viewBox="0 0 180 80" style="${transformStyle}"><ellipse cx="35" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="70" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="105" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="140" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="35" cy="72" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="70" cy="72" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="105" cy="72" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="140" cy="72" rx="12" ry="6" fill="${chairColor}"/><rect x="15" y="18" width="150" height="44" rx="6" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/></svg>`;
                 break;
+            case "rect-10":
+                svg = `<svg width="220" height="80" viewBox="0 0 220 80" style="${transformStyle}"><ellipse cx="30" cy="8" rx="11" ry="6" fill="${chairColor}"/><ellipse cx="62" cy="8" rx="11" ry="6" fill="${chairColor}"/><ellipse cx="94" cy="8" rx="11" ry="6" fill="${chairColor}"/><ellipse cx="126" cy="8" rx="11" ry="6" fill="${chairColor}"/><ellipse cx="158" cy="8" rx="11" ry="6" fill="${chairColor}"/><ellipse cx="30" cy="72" rx="11" ry="6" fill="${chairColor}"/><ellipse cx="62" cy="72" rx="11" ry="6" fill="${chairColor}"/><ellipse cx="94" cy="72" rx="11" ry="6" fill="${chairColor}"/><ellipse cx="126" cy="72" rx="11" ry="6" fill="${chairColor}"/><ellipse cx="158" cy="72" rx="11" ry="6" fill="${chairColor}"/><rect x="12" y="18" width="176" height="44" rx="6" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/></svg>`;
+                break;
+            case "rect-12":
+                svg = `<svg width="260" height="80" viewBox="0 0 260 80" style="${transformStyle}"><ellipse cx="28" cy="8" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="56" cy="8" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="84" cy="8" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="112" cy="8" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="140" cy="8" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="168" cy="8" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="28" cy="72" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="56" cy="72" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="84" cy="72" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="112" cy="72" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="140" cy="72" rx="10" ry="6" fill="${chairColor}"/><ellipse cx="168" cy="72" rx="10" ry="6" fill="${chairColor}"/><rect x="10" y="18" width="200" height="44" rx="6" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/></svg>`;
+                break;
+            case "rect-4":
+                svg = `<svg width="120" height="80" viewBox="0 0 120 80" style="${transformStyle}"><ellipse cx="40" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="80" cy="8" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="40" cy="72" rx="12" ry="6" fill="${chairColor}"/><ellipse cx="80" cy="72" rx="12" ry="6" fill="${chairColor}"/><rect x="15" y="18" width="90" height="44" rx="6" fill="${tableColor}" stroke="${strokeColor}" stroke-width="2"/></svg>`;
+                break;
             default:
                 svg = `<svg width="70" height="70" style="${transformStyle}"><circle cx="35" cy="35" r="25" fill="${tableColor}" stroke="${strokeColor}"/></svg>`;
         }
@@ -226,10 +235,7 @@ window.renderTableTools = function () {
             
             <div class="mb-4">
                 <label class="block text-xs text-gray-400 mb-1.5 font-bold">رقم الطاولة:</label>
-                <div class="flex gap-2">
-                    <input type="number" id="edit-table-number" min="1" value="${selectedTable.TableNumber}" class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand outline-none transition font-bold font-mono">
-                    <button onclick="window.updateTableNumber()" class="bg-gray-700 hover:bg-brand hover:text-black text-white px-4 rounded-lg font-bold transition text-sm">تحديث</button>
-                </div>
+                <input type="number" id="edit-table-number" min="1" value="${selectedTable.TableNumber}" class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand outline-none transition font-bold font-mono">
             </div>
 
             <div class="scale-control-container mb-4">
@@ -309,7 +315,7 @@ window.updateTableOptions = function () {
     let options = [];
     if (type === 'round') options = [2, 4];
     else if (type === 'square') options = [2, 4, 8];
-    else if (type === 'rect') options = [6, 8, 10, 12];
+    else if (type === 'rect') options = [4, 6, 8, 10, 12];
     else if (type === 'bar') options = [1, 2, 3, 4, 5, 6];
 
     chairsSelect.innerHTML = options.map(o => `<option value="${o}">${o} كراسي</option>`).join('');
@@ -548,25 +554,45 @@ window.saveTableMap = async function () {
     let successCount = 0;
 
     try {
-        for (const t of currentTables) {
-            // Ensure values are integers for maximum database compatibility
+        // التحقق من تغيير رقم الطاولة المحددة قبل الحفظ
+        const editInput = document.getElementById('edit-table-number');
+        if (editInput && STATE.selectedTableId) {
+            const newNum = parseInt(editInput.value, 10);
+            const selIdx = STATE.tableMapData.findIndex(t => t.id == STATE.selectedTableId);
+            if (selIdx > -1 && !isNaN(newNum) && newNum >= 1) {
+                const oldNum = STATE.tableMapData[selIdx].TableNumber;
+                if (oldNum != newNum) {
+                    const dup = STATE.tableMapData.find(t => t.TableNumber == newNum && t.Room === STATE.currentRoom && t.id != STATE.selectedTableId);
+                    if (dup) {
+                        window.showToast(`الطاولة رقم ${newNum} موجودة مسبقاً في القاعة`, "error");
+                        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = originalContent; }
+                        return;
+                    }
+                    STATE.tableMapData[selIdx].TableNumber = newNum;
+                }
+            }
+        }
+
+        const savePromises = currentTables.map(t => {
             const cleanX = Math.round(parseFloat(t.PosX));
             const cleanY = Math.round(parseFloat(t.PosY));
             const cleanScale = parseFloat(t.Scale) || 1.0;
             const cleanRot = parseInt(t.Rotation) || 0;
 
-            const resp = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${t.id}/?user_field_names=true`, {
+            return fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/${t.id}/?user_field_names=true`, {
                 method: 'PATCH',
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
+                    "TableNumber": t.TableNumber,
                     "PosX": cleanX,
                     "PosY": cleanY,
                     "Scale": cleanScale,
                     "Rotation": cleanRot
                 })
-            });
-            if (resp.ok) successCount++;
-        }
+            }).then(r => r.ok ? 1 : 0).catch(() => 0);
+        });
+        const results = await Promise.all(savePromises);
+        successCount = results.reduce((a, b) => a + b, 0);
 
         window.showToast(`تم حفظ ${successCount} طاولة بنجاح ✓`, "success");
         // Force refresh local data to be sure we are synced with server
@@ -962,24 +988,20 @@ window.pasteCopiedTables = async function () {
 
     window.showToast("جاري لصق الطاولات...", "info");
     
-    let addedCount = 0;
-    for (const tableToCopy of STATE.copiedTables) {
-        // Generate a new unique TableNumber for the room
-        let maxTableNum = 0;
-        STATE.tableMapData.forEach(t => {
-            if (t.Room === room) {
-                const num = parseInt(t.TableNumber);
-                if (!isNaN(num) && num > maxTableNum) {
-                    maxTableNum = num;
-                }
-            }
-        });
-        const newTableNum = maxTableNum + 1;
+    // حساب أعلى رقم طاولة مرة واحدة فقط
+    let maxTableNum = 0;
+    STATE.tableMapData.forEach(t => {
+        if (t.Room === room) {
+            const num = parseInt(t.TableNumber);
+            if (!isNaN(num) && num > maxTableNum) maxTableNum = num;
+        }
+    });
 
-        // Offset position slightly (+5%) to not overlap exactly
-        let newX = Math.min(95, parseFloat(tableToCopy.PosX) + 5);
-        let newY = Math.min(95, parseFloat(tableToCopy.PosY) + 5);
-
+    // بناء كل الطلبات دفعة واحدة بالتوازي (أسرع بكثير)
+    const pastePromises = STATE.copiedTables.map((tableToCopy, idx) => {
+        const newTableNum = maxTableNum + 1 + idx;
+        let newX = Math.min(95, parseFloat(tableToCopy.PosX) + 3 + idx * 2);
+        let newY = Math.min(95, parseFloat(tableToCopy.PosY) + 3 + idx * 2);
         const shapeVal = (typeof tableToCopy.Shape === 'object' && tableToCopy.Shape) ? tableToCopy.Shape.value : (tableToCopy.Shape || 'round-4');
 
         const payload = {
@@ -993,22 +1015,22 @@ window.pasteCopiedTables = async function () {
             "Rotation": parseInt(tableToCopy.Rotation) || 0
         };
 
-        try {
-            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true`, {
-                method: 'POST',
-                headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-
+        return fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true`, {
+            method: 'POST',
+            headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        }).then(async res => {
             if (res.ok) {
                 const data = await res.json();
                 STATE.tableMapData.push(data);
-                addedCount++;
+                return 1;
             }
-        } catch (e) {
-            console.error("Paste error", e);
-        }
-    }
+            return 0;
+        }).catch(() => 0);
+    });
+
+    const results = await Promise.all(pastePromises);
+    const addedCount = results.reduce((a, b) => a + b, 0);
 
     if (addedCount > 0) {
         window.showToast(`تم لصق ${addedCount} طاولات بنجاح`, "success");
