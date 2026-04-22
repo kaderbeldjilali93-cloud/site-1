@@ -5,79 +5,125 @@
 // --- 1. دوال تعديل وإنشاء الطلبات ---
 
 window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
-    // دائماً نجلب القائمة إذا كانت فارغة أو null لضمان ظهور المنيو
-    if (!STATE.cachedMenuItems || STATE.cachedMenuItems.length === 0) {
-        STATE.cachedMenuItems = await window.fetchMenu();
-    }
-
     const grid = document.getElementById('edit-menu-grid');
     const catContainer = document.getElementById('edit-menu-categories');
-    if (!grid || !catContainer) return; // حماية من الأخطاء إذا لم يكن الـ DOM جاهز
+
+    if (!grid || !catContainer) {
+        console.error('DrawMenu: grid or catContainer not found');
+        return;
+    }
+
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
 
-    // 1. استخراج كل التصنيفات الفريدة
-    const availableItems = STATE.cachedMenuItems.filter(item => {
-        const avail = (typeof item.Availability === 'object' && item.Availability) ? item.Availability.value : item.Availability;
-        return avail !== 'نفذت الكمية';
-    });
+    // === 1. جلب المنيو مع حماية كاملة ===
+    try {
+        if (!STATE.cachedMenuItems || !Array.isArray(STATE.cachedMenuItems) || STATE.cachedMenuItems.length === 0) {
+            grid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center py-10 opacity-50"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand mb-3"></div><p class="text-sm">جاري جلب القائمة...</p></div>';
+            catContainer.innerHTML = '';
 
-    const categories = [...new Set(availableItems.map(item =>
-        (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'أخرى')
-    ))];
+            const fetchedItems = await window.fetchMenu();
 
-    if (!categoryToSelect && categories.length > 0) categoryToSelect = categories[0];
+            if (fetchedItems && Array.isArray(fetchedItems) && fetchedItems.length > 0) {
+                STATE.cachedMenuItems = fetchedItems;
+            } else {
+                // محاولة ثانية
+                await new Promise(resolve => setTimeout(resolve, 1200));
+                const retryItems = await window.fetchMenu();
+                if (retryItems && Array.isArray(retryItems) && retryItems.length > 0) {
+                    STATE.cachedMenuItems = retryItems;
+                } else {
+                    grid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center py-10 text-center"><p class="text-gray-400 mb-3 text-lg">⚠️ لم يتم العثور على أصناف</p><p class="text-gray-500 text-xs mb-4">تأكد من وجود أصناف في قائمة المنيو</p><button onclick="STATE.cachedMenuItems=null;window.openEditOrderModal_DrawMenu()" class="bg-brand text-black font-bold px-5 py-2.5 rounded-lg hover:bg-brand-dark transition">🔄 إعادة المحاولة</button></div>';
+                    return;
+                }
+            }
+        }
+    } catch (fetchErr) {
+        console.error('DrawMenu fetch error:', fetchErr);
+        grid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center py-10 text-center"><p class="text-red-400 mb-1 font-bold text-lg">❌ خطأ في الاتصال</p><p class="text-gray-500 text-sm mb-4">تأكد من اتصال الإنترنت وأعد المحاولة</p><button onclick="STATE.cachedMenuItems=null;window.openEditOrderModal_DrawMenu()" class="bg-brand text-black font-bold px-5 py-2.5 rounded-lg hover:bg-brand-dark transition">🔄 إعادة المحاولة</button></div>';
+        return;
+    }
 
-    // 2. رسم تصنيفات (Tabs)
-    catContainer.innerHTML = categories.map(cat => `
-        <button onclick="window.openEditOrderModal_DrawMenu('${cat}')" 
-            class="px-5 py-2 rounded-xl whitespace-nowrap font-bold text-xs transition-all ${categoryToSelect === cat ? 'bg-brand text-black shadow-lg shadow-brand/20 scale-105' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}">
-            ${cat}
-        </button>
-    `).join('');
+    // === 2. رسم التصنيفات والأصناف ===
+    try {
+        const menuItems = STATE.cachedMenuItems || [];
+        const availableItems = menuItems.filter(function(item) {
+            const avail = (typeof item.Availability === 'object' && item.Availability) ? item.Availability.value : item.Availability;
+            return avail !== 'نفذت الكمية';
+        });
 
-    // 3. رسم الأصناف (Cards with Images)
-    grid.innerHTML = '';
-    const filteredItems = availableItems.filter(item => {
-        const cat = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'أخرى');
-        return cat === categoryToSelect;
-    });
+        const categories = [];
+        availableItems.forEach(function(item) {
+            const cat = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'أخرى');
+            if (!categories.includes(cat)) categories.push(cat);
+        });
 
-    filteredItems.forEach(item => {
-        const name = item.Name || item.name;
-        const price = parseFloat(item.PromoPrice || item.promoprice) || parseFloat(item.Price || item.price || 0);
-
-        let imgUrl = 'https://placehold.co/400x300?text=Food';
-        const imgField = item.image || item.Image || item.img || item.Img || item.picture || item.Picture;
-
-        if (Array.isArray(imgField) && imgField.length > 0) {
-            imgUrl = imgField[0].url || imgField[0].thumbnails?.large?.url || imgField[0].url;
-        } else if (typeof imgField === 'string' && imgField.trim() !== '') {
-            imgUrl = imgField;
+        if (categories.length === 0) {
+            grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500"><p>لا توجد أصناف متوفرة حالياً</p></div>';
+            catContainer.innerHTML = '';
+            return;
         }
 
-        const card = document.createElement('div');
-        // توحيد طول البطاقة بالكامل (h-48) لضمان الاصطفاف
-        card.className = "bg-gray-800/60 rounded-xl border border-gray-700/50 overflow-hidden hover:border-brand/50 transition-all cursor-pointer group flex flex-col h-48 shadow-lg";
-        card.onclick = () => window.addItemToEditOrder(name, price);
+        if (!categoryToSelect || !categories.includes(categoryToSelect)) {
+            categoryToSelect = categories[0];
+        }
 
-        card.innerHTML = `
-            <div class="relative h-24 shrink-0 bg-gray-900/80 flex items-center justify-center p-2">
-                <img src="${imgUrl}" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" 
-                     onerror="this.src='https://placehold.co/400x300?text=Food'" alt="${name}">
-                <div class="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-gray-900/40 to-transparent"></div>
-            </div>
-            <div class="p-3 flex flex-col justify-between flex-1">
-                <span class="text-[11px] font-bold text-gray-200 line-clamp-2 leading-tight group-hover:text-brand transition-colors text-center">${name}</span>
-                <div class="flex items-center justify-between mt-2">
-                    <span class="text-brand font-black text-xs tabular-nums">${price.toLocaleString()} <small class="text-[8px] font-normal text-gray-500">${sysCurrency}</small></span>
-                    <div class="bg-brand/10 p-1.5 rounded-lg text-brand group-hover:bg-brand group-hover:text-black transition-all">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
-                    </div>
-                </div>
-            </div>
-        `;
-        grid.appendChild(card);
-    });
+        // رسم أزرار التصنيفات
+        var catHtml = '';
+        categories.forEach(function(cat) {
+            var isActive = (categoryToSelect === cat);
+            var cls = isActive
+                ? 'bg-brand text-black shadow-lg shadow-brand/20 scale-105'
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700';
+            catHtml += '<button onclick="window.openEditOrderModal_DrawMenu(\'' + cat.replace(/'/g, "\\'") + '\')" class="px-5 py-2 rounded-xl whitespace-nowrap font-bold text-xs transition-all ' + cls + '">' + cat + '</button>';
+        });
+        catContainer.innerHTML = catHtml;
+
+        // رسم بطاقات الأصناف
+        grid.innerHTML = '';
+        var filteredItems = availableItems.filter(function(item) {
+            var cat = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'أخرى');
+            return cat === categoryToSelect;
+        });
+
+        if (filteredItems.length === 0) {
+            grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500"><p>لا توجد أصناف في هذا التصنيف</p></div>';
+            return;
+        }
+
+        filteredItems.forEach(function(item) {
+            var name = item.Name || item.name || 'بدون اسم';
+            var price = parseFloat(item.PromoPrice || item.promoprice) || parseFloat(item.Price || item.price || 0);
+
+            var imgUrl = 'https://placehold.co/400x300?text=Food';
+            var imgField = item.image || item.Image || item.img || item.Img || item.picture || item.Picture;
+
+            if (Array.isArray(imgField) && imgField.length > 0) {
+                imgUrl = imgField[0].url || (imgField[0].thumbnails && imgField[0].thumbnails.large ? imgField[0].thumbnails.large.url : imgField[0].url);
+            } else if (typeof imgField === 'string' && imgField.trim() !== '') {
+                imgUrl = imgField;
+            }
+
+            var card = document.createElement('div');
+            card.className = 'bg-gray-800/60 rounded-xl border border-gray-700/50 overflow-hidden hover:border-brand/50 transition-all cursor-pointer group flex flex-col h-48 shadow-lg';
+            card.onclick = function() { window.addItemToEditOrder(name, price); };
+
+            card.innerHTML = '<div class="relative h-24 shrink-0 bg-gray-900/80 flex items-center justify-center p-2">' +
+                '<img src="' + imgUrl + '" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" onerror="this.src=\'https://placehold.co/400x300?text=Food\'" alt="' + name + '">' +
+                '<div class="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-gray-900/40 to-transparent"></div>' +
+                '</div>' +
+                '<div class="p-3 flex flex-col justify-between flex-1">' +
+                '<span class="text-[11px] font-bold text-gray-200 line-clamp-2 leading-tight group-hover:text-brand transition-colors text-center">' + name + '</span>' +
+                '<div class="flex items-center justify-between mt-2">' +
+                '<span class="text-brand font-black text-xs tabular-nums">' + price.toLocaleString() + ' <small class="text-[8px] font-normal text-gray-500">' + sysCurrency + '</small></span>' +
+                '<div class="bg-brand/10 p-1.5 rounded-lg text-brand group-hover:bg-brand group-hover:text-black transition-all">' +
+                '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>' +
+                '</div></div></div>';
+            grid.appendChild(card);
+        });
+    } catch (renderErr) {
+        console.error('DrawMenu render error:', renderErr);
+        grid.innerHTML = '<div class="col-span-full text-center py-10 text-red-400"><p>خطأ في عرض القائمة: ' + renderErr.message + '</p><button onclick="window.openEditOrderModal_DrawMenu()" class="mt-3 bg-brand text-black font-bold px-4 py-2 rounded-lg">إعادة المحاولة</button></div>';
+    }
 };
 
 window.openEditOrderModal = async function (orderId) {
@@ -136,7 +182,7 @@ window.openEditOrderModal = async function (orderId) {
 
     // تأكيد رسم المنيو
     if (typeof window.openEditOrderModal_DrawMenu === 'function') {
-        window.openEditOrderModal_DrawMenu();
+        await window.openEditOrderModal_DrawMenu();
     }
 };
 
@@ -197,7 +243,7 @@ window.openNewOrderModal = async function (type = 'quick', isPreSelected = false
     if (modal) modal.classList.remove('hidden');
 
     // تصحيح: استدعاء رسم المنيو لضمان ظهور الصور
-    window.openEditOrderModal_DrawMenu();
+    await window.openEditOrderModal_DrawMenu();
 };
 
 window.updateTableListByRoom = function () {
@@ -1080,74 +1126,7 @@ window.confirmDeleteAnyCategory = async function () {
 };
 
 // =========================================================
-// 🍴 Menu Rendering in Modals (رسم المنيو في النوافذ)
+// 🍴 Menu Rendering - تم توحيد الدالة في الأعلى (السطر 7)
 // =========================================================
-
-window.openEditOrderModal_DrawMenu = async function () {
-    const container = document.getElementById('edit-order-menu-items');
-    if (!container) return;
-
-    container.innerHTML = '<div class="col-span-full py-10 text-center"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-brand mx-auto mb-2"></div><span class="text-gray-500">جاري تحميل القائمة...</span></div>';
-
-    try {
-        if (!STATE.cachedMenuItems) {
-            STATE.cachedMenuItems = await window.fetchMenu(MENU_TABLE_ID);
-        }
-        
-        const items = STATE.cachedMenuItems || [];
-        if (items.length === 0) {
-            container.innerHTML = '<div class="col-span-full py-10 text-center text-gray-500">لا توجد أصناف في القائمة</div>';
-            return;
-        }
-
-        // رسم الفئات (Categories)
-        const categories = [...new Set(items.map(i => i.Category).filter(Boolean))];
-        const categoryTabs = document.getElementById('edit-order-categories');
-        if (categoryTabs) {
-            categoryTabs.innerHTML = `
-                <button onclick="window.filterEditMenu('الكل')" class="px-4 py-2 rounded-xl bg-brand text-white font-bold whitespace-nowrap">الكل</button>
-                ${categories.map(cat => `
-                    <button onclick="window.filterEditMenu('${cat}')" class="px-4 py-2 rounded-xl bg-gray-800 text-gray-400 hover:bg-gray-700 whitespace-nowrap transition-colors">${cat}</button>
-                `).join('')}
-            `;
-        }
-
-        window.filterEditMenu('الكل');
-    } catch (e) {
-        console.error("Menu Draw Error:", e);
-        container.innerHTML = '<div class="col-span-full py-10 text-center text-red-500">فشل تحميل القائمة</div>';
-    }
-};
-
-window.filterEditMenu = function (category) {
-    const container = document.getElementById('edit-order-menu-items');
-    if (!container || !STATE.cachedMenuItems) return;
-
-    // تحديث شكل الأزرار (Active Tab)
-    const tabs = document.querySelectorAll('#edit-order-categories button');
-    tabs.forEach(tab => {
-        if (tab.innerText === category) {
-            tab.classList.remove('bg-gray-800', 'text-gray-400');
-            tab.classList.add('bg-brand', 'text-white');
-        } else {
-            tab.classList.add('bg-gray-800', 'text-gray-400');
-            tab.classList.remove('bg-brand', 'text-white');
-        }
-    });
-
-    const filtered = category === 'الكل' 
-        ? STATE.cachedMenuItems 
-        : STATE.cachedMenuItems.filter(i => i.Category === category);
-
-    container.innerHTML = filtered.map(item => `
-        <button onclick="window.addItemToEditOrder('${item.Name}', ${item.Price})" 
-            class="group relative bg-gray-800/40 border border-gray-700/50 p-4 rounded-2xl hover:border-brand/50 hover:bg-gray-700/50 transition-all text-right overflow-hidden shadow-sm hover:shadow-brand/10">
-            <div class="relative z-10">
-                <div class="text-white font-bold text-sm mb-1 group-hover:text-brand transition-colors">${item.Name}</div>
-                <div class="text-brand text-xs font-black">${item.Price} <span class="text-[8px] opacity-70">DA</span></div>
-            </div>
-            <!-- خلفية زخرفية خفيفة -->
-            <div class="absolute -bottom-2 -left-2 w-12 h-12 bg-brand/5 rounded-full blur-xl group-hover:bg-brand/10 transition-all"></div>
-        </button>
-    `).join('');
-};
+// ملاحظة: لا تضف دالة openEditOrderModal_DrawMenu هنا!
+// الدالة الرئيسية موجودة في أعلى الملف وتتولى كل المهام
