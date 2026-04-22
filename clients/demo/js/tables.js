@@ -196,13 +196,17 @@ window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, o
             const roomSelect = document.getElementById('manual-room-select');
             const tableSelect = document.getElementById('manual-table-select');
             
-            if (roomSelect && tableSelect) {
+            if (roomSelect && STATE.currentRoom) {
                 roomSelect.value = STATE.currentRoom;
-                // تحديث قائمة الطاولات بناءً على القاعة المختارة
+                // يجب تحديث قائمة الطاولات أولاً قبل اختيار الطاولة
                 if (typeof window.updateTableListByRoom === 'function') {
                     window.updateTableListByRoom();
                 }
-                tableSelect.value = `الطاولة ${tableNumber} - ${STATE.currentRoom}`;
+                
+                if (tableSelect) {
+                    const expectedValue = `الطاولة ${tableNumber} - ${STATE.currentRoom}`;
+                    tableSelect.value = expectedValue;
+                }
             }
         }, 300);
     }

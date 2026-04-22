@@ -161,6 +161,12 @@ window.openNewOrderModal = async function (type = 'quick', isPreSelected = false
             opt.className = "bg-gray-900 text-white";
             roomSelect.appendChild(opt);
         });
+
+        // إذا كنا في وضع "الخريطة" نختار القاعة الحالية تلقائياً
+        if (STATE.currentRoom) {
+            roomSelect.value = STATE.currentRoom;
+            window.updateTableListByRoom();
+        }
     }
 
     if (tableSelect) {
@@ -187,6 +193,9 @@ window.openNewOrderModal = async function (type = 'quick', isPreSelected = false
     window.updateEditOrderUI();
     const modal = document.getElementById('edit-order-modal');
     if (modal) modal.classList.remove('hidden');
+
+    // تصحيح: استدعاء رسم المنيو لضمان ظهور الصور
+    window.openEditOrderModal_DrawMenu();
 };
 
 window.updateTableListByRoom = function () {
