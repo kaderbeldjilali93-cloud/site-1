@@ -23,6 +23,12 @@ window.renderTableView = async function () {
         STATE.lastFetchedOrders = freshOrders || [];
 
         let rooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))].sort();
+
+        // --- Routing Logic: Waiter Restriction ---
+        if (STATE.currentRole === 'waiter' && STATE.assignedRoom) {
+            STATE.currentRoom = STATE.assignedRoom;
+        }
+
         if (rooms.length > 0 && (!STATE.currentRoom || !rooms.includes(STATE.currentRoom))) {
             STATE.currentRoom = rooms[0];
         }
@@ -57,6 +63,11 @@ window.renderTableView = async function () {
                 ${r}
             </button>
         `).join('');
+
+        // Hide tabs if restricted to assigned room
+        if (STATE.currentRole === 'waiter' && STATE.assignedRoom) {
+            tabsHtml = '';
+        }
 
         let floorHtml = '';
         const currentTables = STATE.tableMapData.filter(t => t.Room === STATE.currentRoom);
@@ -103,8 +114,8 @@ window.renderTableView = async function () {
                 chairColor = "#ef4444";
             } else if (hasActiveOrder) {
                 statusClass = "table-status-occupied";
-                const orderSt = (typeof orderForTable.Status === 'object' && orderForTable.Status) 
-                    ? String(orderForTable.Status.value || '').trim() 
+                const orderSt = (typeof orderForTable.Status === 'object' && orderForTable.Status)
+                    ? String(orderForTable.Status.value || '').trim()
                     : String(orderForTable.Status || '').trim();
 
                 if (orderSt === 'جاهز') chairColor = "#eab308"; // أصفر
@@ -118,7 +129,7 @@ window.renderTableView = async function () {
             let topPct = (posY > 100) ? Math.round((posY / 700) * 100) : Math.round(posY);
             const tScale = t.Scale || 1.0;
             const tRot = t.Rotation || 0;
-            
+
             // تأكد من تمرير المعرف بشكل صحيح
             const orderIdVal = orderForTable ? orderForTable.id : null;
 
@@ -195,14 +206,14 @@ window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, o
         setTimeout(() => {
             const roomSelect = document.getElementById('manual-room-select');
             const tableSelect = document.getElementById('manual-table-select');
-            
+
             if (roomSelect && STATE.currentRoom) {
                 roomSelect.value = STATE.currentRoom;
                 // يجب تحديث قائمة الطاولات أولاً قبل اختيار الطاولة
                 if (typeof window.updateTableListByRoom === 'function') {
                     window.updateTableListByRoom();
                 }
-                
+
                 if (tableSelect) {
                     const expectedValue = `الطاولة ${tableNumber} - ${STATE.currentRoom}`;
                     tableSelect.value = expectedValue;

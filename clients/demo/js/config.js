@@ -31,6 +31,8 @@ const STATE = {
     activeCallRows: {},
     waiterInterval: null,
     isMuted: false,
+    assignedRoom: null,
+    assignedStation: null,
     selectedCashierDate: window.getLocalYYYYMMDD(),
     selectedAnalyticsDate: window.getLocalYYYYMMDD(),
     lastFetchedOrders: [],
@@ -62,7 +64,13 @@ const STATE = {
     splitTotalPrice: 0,
     splitPersonCount: 2,
     splitMode: 'even',
-    storageKeys: { username: "rp_username", role: "rp_role", lastView: "rp_last_view" }
+    storageKeys: { 
+        username: "rp_username", 
+        role: "rp_role", 
+        lastView: "rp_last_view",
+        room: "rp_assigned_room",
+        station: "rp_assigned_station"
+    }
 };
 
 window.isOrderFromToday = function (timeStr) {

@@ -46,13 +46,13 @@ window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
     // === 2. رسم التصنيفات والأصناف ===
     try {
         const menuItems = STATE.cachedMenuItems || [];
-        const availableItems = menuItems.filter(function(item) {
+        const availableItems = menuItems.filter(function (item) {
             const avail = (typeof item.Availability === 'object' && item.Availability) ? item.Availability.value : item.Availability;
             return avail !== 'نفذت الكمية';
         });
 
         const categories = [];
-        availableItems.forEach(function(item) {
+        availableItems.forEach(function (item) {
             const cat = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'أخرى');
             if (!categories.includes(cat)) categories.push(cat);
         });
@@ -69,7 +69,7 @@ window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
 
         // رسم أزرار التصنيفات
         var catHtml = '';
-        categories.forEach(function(cat) {
+        categories.forEach(function (cat) {
             var isActive = (categoryToSelect === cat);
             var cls = isActive
                 ? 'bg-brand text-black shadow-lg shadow-brand/20 scale-105'
@@ -80,7 +80,7 @@ window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
 
         // رسم بطاقات الأصناف
         grid.innerHTML = '';
-        var filteredItems = availableItems.filter(function(item) {
+        var filteredItems = availableItems.filter(function (item) {
             var cat = (typeof item.Category === 'object' && item.Category) ? item.Category.value : (item.Category || 'أخرى');
             return cat === categoryToSelect;
         });
@@ -90,7 +90,7 @@ window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
             return;
         }
 
-        filteredItems.forEach(function(item) {
+        filteredItems.forEach(function (item) {
             var name = item.Name || item.name || 'بدون اسم';
             var price = parseFloat(item.PromoPrice || item.promoprice) || parseFloat(item.Price || item.price || 0);
 
@@ -105,7 +105,7 @@ window.openEditOrderModal_DrawMenu = async function (categoryToSelect = null) {
 
             var card = document.createElement('div');
             card.className = 'bg-gray-800/60 rounded-xl border border-gray-700/50 overflow-hidden hover:border-brand/50 transition-all cursor-pointer group flex flex-col h-48 shadow-lg';
-            card.onclick = function() { window.addItemToEditOrder(name, price); };
+            card.onclick = function () { window.addItemToEditOrder(name, price); };
 
             card.innerHTML = '<div class="relative h-24 shrink-0 bg-gray-900/80 flex items-center justify-center p-2">' +
                 '<img src="' + imgUrl + '" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" onerror="this.src=\'https://placehold.co/400x300?text=Food\'" alt="' + name + '">' +
@@ -142,7 +142,7 @@ window.openEditOrderModal = async function (orderId) {
     STATE.originalEditDetails = order.Details || "";
     STATE.originalEditPrice = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
     STATE.newlyAddedItems = [];
-    
+
     // تحويل التفاصيل النصية إلى قائمة أصناف قابلة للحذف
     STATE.originalItemsList = [];
     if (STATE.originalEditDetails) {
@@ -285,13 +285,13 @@ window.updateEditOrderUI = function () {
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
     const containerNew = document.getElementById('edit-order-new-items');
     const containerOriginal = document.getElementById('edit-order-original-details');
-    
+
     if (!containerNew || !containerOriginal) return;
 
     // 1. رسم الأصناف الأصلية مع إمكانية الحذف
     containerOriginal.innerHTML = '';
     let currentTotal = 0;
-    
+
     if (!STATE.currentEditOrder) {
         containerOriginal.innerHTML = '<p class="text-xs text-brand font-bold">بدء طلب جديد...</p>';
     } else if (STATE.originalItemsList.length === 0) {
@@ -316,7 +316,7 @@ window.updateEditOrderUI = function () {
     // 2. رسم الأصناف الجديدة المضافة
     containerNew.innerHTML = '';
     let addedTotal = 0;
-    
+
     if (STATE.newlyAddedItems.length === 0) {
         containerNew.innerHTML = '<p class="text-xs text-gray-500 italic bg-gray-800/40 p-2 rounded">لم يتم إضافة جديد.</p>';
     } else {
@@ -379,7 +379,7 @@ window.saveOrderEdit = async function () {
 
     const originalLines = STATE.originalItemsList.map(item => item.text).join('\n');
     const addedLines = STATE.newlyAddedItems.map(item => `1x ${item.name} = ${item.price}`).join('\n');
-    
+
     let finalDetails = "";
     if (originalLines && addedLines) finalDetails = `${originalLines}\n${addedLines}`;
     else finalDetails = originalLines || addedLines;
@@ -405,23 +405,27 @@ window.saveOrderEdit = async function () {
     if (isNewOrder) {
         const roomVal = document.getElementById('manual-room-select')?.value;
         const tableVal = document.getElementById('manual-table-select')?.value;
-        
+
         // إذا كان هناك اختيار يدوي للطاولة، نستخدمه. وإلا نستخدم القيمة الافتراضية بناءً على النوع
-        const manualTable = tableVal || ""; 
+        const manualTable = tableVal || "";
         payload["Table"] = manualTable || (STATE.newOrderType === 'table' ? "طاولة جديدة" : "سفري");
-        
+
         if (manualTable || STATE.newOrderType === 'table') {
             payload["order_type"] = "table";
-            // استخراج اسم القاعة وحفظه كحقل منفصل
             if (manualTable) {
                 const roomMatch = manualTable.match(/-\s*(.+)$/);
                 if (roomMatch) payload["Room"] = roomMatch[1].trim();
                 else if (roomVal) payload["Room"] = roomVal;
+                else if (STATE.currentRoom) payload["Room"] = STATE.currentRoom;
+            } else {
+                if (roomVal) payload["Room"] = roomVal;
+                else if (STATE.currentRoom) payload["Room"] = STATE.currentRoom;
             }
         } else {
             payload["order_type"] = STATE.newOrderType || "quick";
+            if (STATE.currentRoom) payload["Room"] = STATE.currentRoom;
         }
-        
+
         payload["Status"] = "قيد التحضير";
     }
 

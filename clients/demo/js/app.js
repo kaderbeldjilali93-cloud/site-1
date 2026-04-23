@@ -37,6 +37,8 @@ window.closeDeleteConfirm = function() {
 window.addEventListener('DOMContentLoaded', () => {
     const savedUser = localStorage.getItem(STATE.storageKeys.username);
     const savedRole = localStorage.getItem(STATE.storageKeys.role);
+    const savedRoom = localStorage.getItem(STATE.storageKeys.room);
+    const savedStation = localStorage.getItem(STATE.storageKeys.station);
     const lastView = localStorage.getItem(STATE.storageKeys.lastView);
 
     if (savedUser && savedRole) {
@@ -44,7 +46,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (typeof CLIENTS_DB !== 'undefined' && CLIENTS_DB['demo']) {
             currentLinks = CLIENTS_DB['demo'].links;
         }
-        window.authenticateUser(savedUser, currentLinks, savedRole);
+        window.authenticateUser(savedUser, currentLinks, savedRole, savedRoom, savedStation);
         if (savedRole === 'kitchen') window.loadView('kds');
         else if (lastView) window.loadView(lastView);
         else window.loadView('kds');
@@ -100,7 +102,9 @@ if (loginForm) {
             localStorage.setItem('currentUserData', JSON.stringify({
                 id: user.id,
                 name: user.Name,
-                role: roleRaw
+                role: roleRaw,
+                assignedRoom: user.AssignedRoom,
+                assignedStation: user.AssignedStation
             }));
 
             let currentLinks = null;
@@ -111,7 +115,7 @@ if (loginForm) {
             submitBtn.innerHTML = originalBtnText;
             submitBtn.disabled = false;
 
-            window.authenticateUser(user.Name, currentLinks, role);
+            window.authenticateUser(user.Name, currentLinks, role, user.AssignedRoom, user.AssignedStation);
 
             if (role === 'admin') {
                 window.loadView('analytics');
@@ -185,13 +189,20 @@ window.applyRolePermissions = function (role) {
     }
 };
 
-window.authenticateUser = function (username, links, role) {
+window.authenticateUser = function (username, links, role, assignedRoom, assignedStation) {
     localStorage.setItem(STATE.storageKeys.username, username);
     localStorage.setItem(STATE.storageKeys.role, role);
+    if (assignedRoom) localStorage.setItem(STATE.storageKeys.room, assignedRoom);
+    else localStorage.removeItem(STATE.storageKeys.room);
+    
+    if (assignedStation) localStorage.setItem(STATE.storageKeys.station, assignedStation);
+    else localStorage.removeItem(STATE.storageKeys.station);
 
     STATE.currentUser = username;
     STATE.currentLinks = links;
     STATE.currentRole = role;
+    STATE.assignedRoom = assignedRoom;
+    STATE.assignedStation = assignedStation;
 
     window.applyRolePermissions(role);
 
@@ -217,6 +228,8 @@ window.confirmLogout = function () {
 
     localStorage.removeItem(STATE.storageKeys.username);
     localStorage.removeItem(STATE.storageKeys.role);
+    localStorage.removeItem(STATE.storageKeys.room);
+    localStorage.removeItem(STATE.storageKeys.station);
     localStorage.removeItem(STATE.storageKeys.lastView);
 
     STATE.currentUser = null;
@@ -529,6 +542,10 @@ window.loadView = async function (viewType) {
             const runKDS = async () => {
                 if (STATE.currentActiveView !== 'kds') return;
                 try {
+                    // Fetch menu if missing for station filtering
+                    if (!STATE.cachedMenuItems) {
+                        window.fetchMenu().then(m => STATE.cachedMenuItems = m);
+                    }
                     const data = await window.fetchOrders(ORDERS_TABLE_ID);
                     if (STATE.currentActiveView !== 'kds') return;
                     STATE.latestKdsOrders = data;

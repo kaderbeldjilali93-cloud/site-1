@@ -58,7 +58,7 @@ window.renderKDS = function (orders) {
 
     const hasNewQuick = groupedOrders.quick.some(o => o.isNew);
     const hasNewDelivery = groupedOrders.delivery.some(o => o.isNew);
-    const hasNewTable = Object.values(groupedOrders.rooms).some(room => 
+    const hasNewTable = Object.values(groupedOrders.rooms).some(room =>
         Object.values(room).some(tOrders => tOrders.some(o => o.isNew))
     );
 
@@ -96,13 +96,30 @@ window.renderKDS = function (orders) {
                 ? `<button id="btn-done-${o.id}" onclick="window.updateOrderStatus(${o.id}, 'جاهز')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg transition shadow-md flex justify-center items-center gap-2"><span>جاهز</span> ✅</button>`
                 : `<div class="text-center text-green-400 font-bold bg-green-900/30 py-2 rounded-lg border border-green-700/50">جاهز (في انتظار الدفع)</div>`;
 
+            // --- Routing Logic: Station Filtering for Kitchen ---
+            let displayDetails = o.Details || '-';
+            if (STATE.assignedStation && STATE.assignedStation !== 'الكل' && STATE.cachedMenuItems) {
+                const lines = displayDetails.split('\n');
+                const filtered = lines.filter(line => {
+                    // Extract item name from "1x Item Name = Price"
+                    const itemName = line.replace(/^\d+x\s+/, '').split('=')[0].trim();
+                    const menuItem = STATE.cachedMenuItems.find(m => (m.Name || m.name) === itemName);
+                    if (menuItem) {
+                        const stationRaw = (typeof menuItem.Station === 'object' && menuItem.Station) ? menuItem.Station.value : menuItem.Station;
+                        return stationRaw === STATE.assignedStation;
+                    }
+                    return true; // Keep it if unknown
+                });
+                displayDetails = filtered.join('\n') || '<span class="text-gray-500 italic">(لا توجد أصناف تتبع لمحطتك)</span>';
+            }
+
             return `
             <div class="bg-gray-900 rounded-xl p-3 border border-gray-700 shadow-sm flex flex-col h-fit mb-3 last:mb-0">
                 <div class="flex justify-between items-center mb-3 border-b border-gray-700 pb-2">
                     <span class="text-xs text-gray-400 font-mono bg-gray-800 px-2 py-1 rounded">الطلب ${o.dailySequence}</span>
                     <span class="text-sm flex items-center gap-1 transition-colors duration-300 ${timerStyle} font-bold">⏱️ ${timerText}</span>
                 </div>
-                <div class="text-sm text-white mb-4 leading-loose pl-3 border-l-2 border-brand whitespace-pre-line font-medium">${o.Details || '-'}</div>
+                <div class="text-sm text-white mb-4 leading-loose pl-3 border-l-2 border-brand whitespace-pre-line font-medium">${displayDetails}</div>
                 <div class="mt-auto pt-2">
                     ${btnHtml}
                 </div>
@@ -131,7 +148,7 @@ window.renderKDS = function (orders) {
                     const card = document.createElement('div');
                     const isCooking = tOrders.some(o => getStatus(o) === 'قيد التحضير');
                     const isEating = tOrders.every(o => getStatus(o) === 'جاهز');
-                    
+
                     let cardClass = "";
                     let headerClass = "";
 
@@ -198,7 +215,7 @@ window.renderKDS = function (orders) {
                         <span class="text-sm flex items-center gap-1 transition-colors duration-300 ${timerStyle} font-bold">⏱️ ${timerText}</span>
                     </div>
                     <div class="text-xs text-gray-400 mb-4 bg-gray-800 inline-block px-3 py-1.5 rounded-lg border border-gray-700 w-fit">الوجهة: <span class="text-white font-bold text-sm">${o.Table || o.table || 'غير محدد'}</span></div>
-                    <div class="text-base text-white mb-6 leading-loose pl-3 border-l-4 ${themeBorder} whitespace-pre-line font-medium">${o.Details || '-'}</div>
+                    <div class="text-base text-white mb-6 leading-loose pl-3 border-l-4 ${themeBorder} whitespace-pre-line font-medium">${displayDetails}</div>
                     <div class="mt-auto">
                         ${btnHtml}
                     </div>

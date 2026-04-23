@@ -37,6 +37,7 @@ window.renderStaff = async function () {
                                 <tr>
                                     <th class="py-4 px-4 font-semibold w-1/4">الاسم</th>
                                     <th class="py-4 px-4 font-semibold w-1/4">الدور الوظيفي</th>
+                                    <th class="py-4 px-4 font-semibold text-center w-1/6">التخصيص</th>
                                     <th class="py-4 px-4 font-semibold text-center w-1/6">الرمز السري</th>
                                     <th class="py-4 px-4 font-semibold text-center w-1/6">الحالة</th>
                                     <th class="py-4 px-4 font-semibold text-center w-1/6">إجراءات</th>
@@ -62,6 +63,9 @@ window.renderStaff = async function () {
                         </td>
                         <td class="py-4 px-4 text-gray-300">
                             ${roleName}
+                        </td>
+                        <td class="py-4 px-4 text-center text-brand font-medium">
+                            ${user.AssignedRoom || user.AssignedStation || '---'}
                         </td>
                         <td class="py-4 px-4 text-center">
                             <div class="flex items-center justify-center gap-2">
@@ -119,11 +123,27 @@ window.renderStaff = async function () {
                     
                     <div class="mb-4">
                         <label class="block text-gray-400 text-sm font-bold mb-2">الدور الوظيفي</label>
-                        <select id="add-staff-role" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
+                        <select id="add-staff-role" onchange="window.handleRoleChange(this.value)" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
                             <option value="Cashier">Cashier</option>
                             <option value="Admin">Admin</option>
                             <option value="Kitchen">Kitchen</option>
                             <option value="Waiter">Waiter</option>
+                        </select>
+                    </div>
+
+                    <div id="room-assignment-div" class="mb-4 hidden">
+                        <label class="block text-gray-400 text-sm font-bold mb-2">الغرفة المخصصة (Assigned Room)</label>
+                        <input type="text" id="add-staff-room" placeholder="رقم أو اسم الغرفة..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white">
+                    </div>
+
+                    <div id="station-assignment-div" class="mb-4 hidden">
+                        <label class="block text-gray-400 text-sm font-bold mb-2">القسم المخصص (Assigned Station)</label>
+                        <select id="add-staff-station" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
+                            <option value="الكل">الكل</option>
+                            <option value="بيتزا">بيتزا</option>
+                            <option value="مشويات">مشويات</option>
+                            <option value="مشروبات">مشروبات</option>
+                            <option value="تحضير سريع">تحضير سريع</option>
                         </select>
                     </div>
 
@@ -211,18 +231,37 @@ window.saveNewPin = async function () {
     }
 };
 
-window.showAddStaffModal = function() {
+window.showAddStaffModal = function () {
     document.getElementById('add-staff-name').value = '';
     document.getElementById('add-staff-pin').value = '';
     document.getElementById('add-staff-role').value = 'Cashier';
+    document.getElementById('add-staff-room').value = '';
+    document.getElementById('add-staff-station').value = 'الكل';
+    window.handleRoleChange('Cashier');
     document.getElementById('add-staff-modal').classList.remove('hidden');
     setTimeout(() => document.getElementById('add-staff-name').focus(), 100);
 };
 
-window.saveNewStaff = async function() {
+window.handleRoleChange = function (role) {
+    const roomDiv = document.getElementById('room-assignment-div');
+    const stationDiv = document.getElementById('station-assignment-div');
+
+    roomDiv.classList.add('hidden');
+    stationDiv.classList.add('hidden');
+
+    if (role === 'Waiter') {
+        roomDiv.classList.remove('hidden');
+    } else if (role === 'Kitchen') {
+        stationDiv.classList.remove('hidden');
+    }
+};
+
+window.saveNewStaff = async function () {
     const name = document.getElementById('add-staff-name').value.trim();
     const role = document.getElementById('add-staff-role').value;
     const pin = document.getElementById('add-staff-pin').value.trim();
+    const assignedRoom = document.getElementById('add-staff-room').value.trim();
+    const assignedStation = document.getElementById('add-staff-station').value;
 
     if (!name || !pin) {
         window.showToast("الرجاء إدخال الاسم والرمز السري", "error");
@@ -235,13 +274,17 @@ window.saveNewStaff = async function() {
     btn.disabled = true;
 
     try {
+        const payload = { Name: name, Role: role, PIN: pin, Status: true };
+        if (role === 'Waiter') payload.AssignedRoom = assignedRoom;
+        if (role === 'Kitchen') payload.AssignedStation = assignedStation;
+
         const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/?user_field_names=true`, {
             method: 'POST',
             headers: {
                 "Authorization": `Token ${BASEROW_TOKEN}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ Name: name, Role: role, PIN: pin, Status: true })
+            body: JSON.stringify(payload)
         });
 
         if (!response.ok) throw new Error("Failed to add staff");
