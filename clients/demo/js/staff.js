@@ -1,3 +1,7 @@
+// =========================================================
+// 👥 إدارة العمال (Staff Management) - النسخة النهائية المصلحة
+// =========================================================
+
 window.renderStaff = async function () {
     const dynamicContent = document.getElementById('dynamic-content');
     dynamicContent.innerHTML = '<div class="text-center text-gray-400 py-10">جاري تحميل بيانات العمال...</div>';
@@ -12,36 +16,28 @@ window.renderStaff = async function () {
         const data = await response.json();
         const staff = data.results;
 
-        // 💡 استخراج أسماء القاعات الحقيقية من الطاولات
+        // 💡 جلب القاعات المتوفرة من السيستام
         let uniqueRooms = new Set();
         if (typeof STATE !== 'undefined' && STATE.tableMapData) {
             Object.values(STATE.tableMapData).forEach(table => {
-                if (table.room) uniqueRooms.add(table.room);
-                if (table.Room) uniqueRooms.add(table.Room);
+                const r = table.room || table.Room;
+                if (r) uniqueRooms.add(r);
             });
         }
         
-        let roomOptions = '';
-        if (uniqueRooms.size > 0) {
-            uniqueRooms.forEach(room => {
-                roomOptions += `<option value="${room}">`;
-            });
-        } else {
-            roomOptions += `<option value="القاعة 1"><option value="التراس">`;
-        }
+        let roomOptions = '<option value="">-- اختر القاعة --</option>';
+        uniqueRooms.forEach(room => {
+            roomOptions += `<option value="${room}">${room}</option>`;
+        });
 
         let html = `
-            <datalist id="room-datalist">
-                ${roomOptions}
-            </datalist>
-
             <div class="max-w-5xl mx-auto pb-10">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
                         <h2 class="text-2xl font-bold text-white mb-1">إدارة العمال (Staff)</h2>
-                        <p class="text-gray-400 text-sm">إدارة الصلاحيات، التخصيص، والرموز السرية.</p>
+                        <p class="text-gray-400 text-sm">تخصيص القاعات، المحطات، وتعديل الرموز السرية.</p>
                     </div>
-                    <button onclick="window.showAddStaffModal()" class="bg-brand hover:bg-brand-dark text-black font-bold py-2.5 px-5 rounded-xl transition shadow-[0_0_15px_rgba(255,153,0,0.3)] flex items-center gap-2 whitespace-nowrap">
+                    <button onclick="window.showAddStaffModal()" class="bg-brand hover:bg-brand-dark text-black font-bold py-2.5 px-5 rounded-xl transition shadow-lg flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         إضافة عامل جديد
                     </button>
@@ -50,176 +46,119 @@ window.renderStaff = async function () {
                 <div class="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden shadow-lg">
                     <div class="overflow-x-auto w-full">
                         <table class="w-full text-right min-w-[700px]">
-                            <thead class="bg-gray-800 text-gray-400 text-sm">
+                            <thead class="bg-gray-800 text-gray-400 text-sm font-bold">
                                 <tr>
-                                    <th class="py-4 px-4 font-semibold w-1/4">الاسم</th>
-                                    <th class="py-4 px-4 font-semibold w-1/4">الدور الوظيفي</th>
-                                    <th class="py-4 px-4 font-semibold text-center w-1/6">التخصيص</th>
-                                    <th class="py-4 px-4 font-semibold text-center w-1/6">الرمز السري</th>
-                                    <th class="py-4 px-4 font-semibold text-center w-1/6">الحالة</th>
-                                    <th class="py-4 px-4 font-semibold text-center w-1/6">إجراءات</th>
+                                    <th class="py-4 px-4">الاسم</th>
+                                    <th class="py-4 px-4">الدور</th>
+                                    <th class="py-4 px-4 text-center">التخصيص</th>
+                                    <th class="py-4 px-4 text-center">PIN</th>
+                                    <th class="py-4 px-4 text-center">الحالة</th>
+                                    <th class="py-4 px-4 text-center">إجراءات</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-800">
         `;
 
-        if (staff.length === 0) {
-            html += `<tr><td colspan="6" class="py-8 text-center text-gray-500">لا يوجد عمال مسجلين بعد.</td></tr>`;
-        } else {
-            staff.forEach(user => {
-                const roleName = (typeof user.Role === 'object' && user.Role !== null) ? user.Role.value : (user.Role || "غير محدد");
-                const isActive = user.Status !== false; 
-                const statusBadge = isActive
-                    ? '<span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30">نشط</span>'
-                    : '<span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-bold border border-red-500/30">موقوف</span>';
+        staff.forEach(user => {
+            const role = (typeof user.Role === 'object' && user.Role) ? user.Role.value : (user.Role || "غير محدد");
+            const isActive = user.Status !== false;
+            
+            // قراءة القيم من Baserow (سواء كانت نص أو قائمة)
+            const roomVal = (typeof user.AssignedRoom === 'object' && user.AssignedRoom) ? user.AssignedRoom.value : (user.AssignedRoom || "");
+            const stationVal = (typeof user.AssignedStation === 'object' && user.AssignedStation) ? user.AssignedStation.value : (user.AssignedStation || "");
 
-                // 💡 الحل الجذري: فحص نوع البيانات قبل قرائتها (خاصة لـ Baserow Single Select)
-                const roomVal = (typeof user.AssignedRoom === 'object' && user.AssignedRoom !== null) ? user.AssignedRoom.value : (user.AssignedRoom || "");
-                const stationVal = (typeof user.AssignedStation === 'object' && user.AssignedStation !== null) ? user.AssignedStation.value : (user.AssignedStation || "");
+            let assignment = '---';
+            if (role === 'Waiter') assignment = roomVal || 'لم يحدد';
+            if (role === 'Kitchen') assignment = stationVal || 'الكل';
 
-                let assignment = '---';
-                if (roleName === 'Waiter' && roomVal) assignment = roomVal;
-                if (roleName === 'Kitchen' && stationVal) assignment = stationVal;
+            // تحضير البيانات للتعديل (حماية من الرموز الخاصة)
+            const uId = user.id;
+            const uName = String(user.Name || '').replace(/'/g, "\\'");
+            const uRole = String(role).replace(/'/g, "\\'");
+            const uRoom = String(roomVal).replace(/'/g, "\\'");
+            const uStation = String(stationVal).replace(/'/g, "\\'");
+            const uPin = String(user.PIN || '').replace(/'/g, "\\'");
 
-                // تحويل كل شيء إلى String لضمان عدم توقف المتصفح
-                const safeName = String(user.Name || '').replace(/'/g, "\\'");
-                const safeRoom = String(roomVal).replace(/'/g, "\\'");
-                const safeStation = String(stationVal).replace(/'/g, "\\'");
-                const safePin = String(user.PIN || '').replace(/'/g, "\\'");
+            html += `
+                <tr class="hover:bg-gray-800/50 transition">
+                    <td class="py-4 px-4 font-bold text-white">${user.Name || "بدون اسم"}</td>
+                    <td class="py-4 px-4 text-gray-400">${role}</td>
+                    <td class="py-4 px-4 text-center text-brand font-medium">${assignment}</td>
+                    <td class="py-4 px-4 text-center font-mono text-brand">${user.PIN || '---'}</td>
+                    <td class="py-4 px-4 text-center">
+                        <span class="${isActive ? 'text-green-400' : 'text-red-400'} text-xs font-bold px-2 py-1 bg-gray-800 rounded-full border border-gray-700">
+                            ${isActive ? 'نشط' : 'موقوف'}
+                        </span>
+                    </td>
+                    <td class="py-4 px-4 text-center">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="window.toggleStaffStatus(${uId}, ${!isActive})" class="text-xs px-2 py-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-300">
+                                ${isActive ? 'إيقاف' : 'تفعيل'}
+                            </button>
+                            <button onclick="window.showEditStaffModal(${uId}, '${uName}', '${uRole}', '${uRoom}', '${uStation}', '${uPin}')" class="text-xs px-2 py-1 bg-brand text-black font-bold rounded hover:bg-brand-dark">
+                                تعديل
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
 
-                html += `
-                    <tr class="hover:bg-gray-800/50 transition duration-150">
-                        <td class="py-4 px-4">
-                            <span class="font-bold text-white text-lg">${user.Name || "بدون اسم"}</span>
-                        </td>
-                        <td class="py-4 px-4 text-gray-300">
-                            ${roleName}
-                        </td>
-                        <td class="py-4 px-4 text-center text-brand font-medium">
-                            ${assignment}
-                        </td>
-                        <td class="py-4 px-4 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <span class="font-mono bg-gray-800 px-3 py-1 rounded text-brand font-bold tracking-widest border border-gray-700">${user.PIN || '---'}</span>
-                            </div>
-                        </td>
-                        <td class="py-4 px-4 text-center">
-                            ${statusBadge}
-                        </td>
-                        <td class="py-4 px-4">
-                            <div class="flex items-center justify-center gap-2">
-                                <button onclick="window.toggleStaffStatus(${user.id}, ${!isActive})" class="text-sm px-3 py-1.5 rounded-lg font-medium transition ${isActive ? 'bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white' : 'bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white'}" title="${isActive ? 'إيقاف الحساب' : 'تفعيل الحساب'}">
-                                    ${isActive ? 'إيقاف' : 'تفعيل'}
-                                </button>
-                                <button onclick="window.showEditStaffModal(${user.id}, '${safeName}', '${roleName}', '${safeRoom}', '${safeStation}', '${safePin}')" class="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 hover:bg-white hover:text-black rounded-lg font-medium transition shadow-sm">
-                                    تعديل
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
+        html += `</tbody></table></div></div></div>`;
+        
+        // إضافة نوافذ الـ Modals في الأسفل
         html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div id="edit-staff-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm transition-opacity p-4">
-                <div class="bg-gray-800 border-t-4 border-brand rounded-xl shadow-2xl p-6 w-full max-w-sm mx-auto transform transition-all scale-100">
-                    <h3 class="text-xl font-bold text-white mb-6">تعديل بيانات العامل</h3>
-                    
-                    <input type="hidden" id="edit-staff-id">
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-400 text-sm font-bold mb-2">الاسم</label>
-                        <input type="text" id="edit-staff-name" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white">
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-400 text-sm font-bold mb-2">الدور الوظيفي</label>
-                        <select id="edit-staff-role" onchange="window.handleRoleChange('edit')" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
-                            <option value="Cashier">Cashier</option>
-                            <option value="Admin">Admin</option>
-                            <option value="Kitchen">Kitchen</option>
-                            <option value="Waiter">Waiter</option>
-                        </select>
-                    </div>
-
-                    <div id="edit-room-div" class="mb-4 hidden">
-                        <label class="block text-gray-400 text-sm font-bold mb-2">القاعة المخصصة</label>
-                        <input type="text" id="edit-staff-room" list="room-datalist" placeholder="اختر من القائمة أو اكتب..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white">
-                    </div>
-
-                    <div id="edit-station-div" class="mb-4 hidden">
-                        <label class="block text-gray-400 text-sm font-bold mb-2">محطة المطبخ</label>
-                        <select id="edit-staff-station" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
-                            <option value="الكل">الكل</option>
-                            <option value="بيتزا">بيتزا</option>
-                            <option value="مشويات">مشويات</option>
-                            <option value="مشروبات">مشروبات</option>
-                            <option value="تحضير سريع">تحضير سريع</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-6">
-                        <label class="block text-gray-400 text-sm font-bold mb-2">الرمز السري (PIN)</label>
-                        <input type="number" id="edit-staff-pin" placeholder="أرقام فقط..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white tracking-widest font-mono">
-                    </div>
-
-                    <div class="flex justify-end gap-3 mt-8">
-                        <button onclick="document.getElementById('edit-staff-modal').classList.add('hidden')" class="px-4 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition">إلغاء</button>
-                        <button onclick="window.saveEditStaff()" id="btn-update-staff" class="px-6 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-black font-bold transition shadow-lg">حفظ التعديلات</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="add-staff-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm transition-opacity p-4">
-                <div class="bg-gray-800 border-t-4 border-brand rounded-xl shadow-2xl p-6 w-full max-w-sm mx-auto transform transition-all scale-100">
+            <div id="add-staff-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                <div class="bg-gray-800 border-t-4 border-brand rounded-xl p-6 w-full max-w-sm shadow-2xl">
                     <h3 class="text-xl font-bold text-white mb-6">إضافة عامل جديد</h3>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-400 text-sm font-bold mb-2">الاسم</label>
-                        <input type="text" id="add-staff-name" placeholder="اسم العامل..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white">
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-400 text-sm font-bold mb-2">الدور الوظيفي</label>
-                        <select id="add-staff-role" onchange="window.handleRoleChange('add')" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
-                            <option value="Cashier">Cashier</option>
-                            <option value="Admin">Admin</option>
-                            <option value="Kitchen">Kitchen</option>
-                            <option value="Waiter">Waiter</option>
+                    <div class="space-y-4">
+                        <input type="text" id="add-name" placeholder="اسم العامل" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white outline-none">
+                        <select id="add-role" onchange="window.updateStaffFields('add')" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white outline-none">
+                            <option value="Cashier">Cashier</option><option value="Admin">Admin</option><option value="Waiter">Waiter</option><option value="Kitchen">Kitchen</option>
                         </select>
+                        <div id="add-room-box" class="hidden">
+                            <label class="text-xs text-gray-500">القاعة المخصصة</label>
+                            <select id="add-room" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white">${roomOptions}</select>
+                        </div>
+                        <div id="add-station-box" class="hidden">
+                            <label class="text-xs text-gray-500">محطة المطبخ</label>
+                            <select id="add-station" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white">
+                                <option value="الكل">الكل</option><option value="بيتزا">بيتزا</option><option value="مشويات">مشويات</option><option value="مشروبات">مشروبات</option>
+                            </select>
+                        </div>
+                        <input type="number" id="add-pin" placeholder="الرمز السري (4 أرقام)" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white text-center font-bold tracking-widest">
                     </div>
-
-                    <div id="add-room-div" class="mb-4 hidden">
-                        <label class="block text-gray-400 text-sm font-bold mb-2">القاعة المخصصة</label>
-                        <input type="text" id="add-staff-room" list="room-datalist" placeholder="اختر من القائمة أو اكتب..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white">
-                    </div>
-
-                    <div id="add-station-div" class="mb-4 hidden">
-                        <label class="block text-gray-400 text-sm font-bold mb-2">محطة المطبخ</label>
-                        <select id="add-staff-station" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
-                            <option value="الكل">الكل</option>
-                            <option value="بيتزا">بيتزا</option>
-                            <option value="مشويات">مشويات</option>
-                            <option value="مشروبات">مشروبات</option>
-                            <option value="تحضير سريع">تحضير سريع</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-6">
-                        <label class="block text-gray-400 text-sm font-bold mb-2">الرمز السري (PIN)</label>
-                        <input type="number" id="add-staff-pin" placeholder="أرقام فقط..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white tracking-widest font-mono">
-                    </div>
-
                     <div class="flex justify-end gap-3 mt-8">
-                        <button onclick="document.getElementById('add-staff-modal').classList.add('hidden')" class="px-4 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition">إلغاء</button>
-                        <button onclick="window.saveNewStaff()" id="btn-save-staff" class="px-6 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-black font-bold transition shadow-lg">حفظ وإضافة</button>
+                        <button onclick="document.getElementById('add-staff-modal').classList.add('hidden')" class="text-gray-400 px-4 py-2">إلغاء</button>
+                        <button onclick="window.saveStaff('add')" class="bg-brand px-6 py-2 rounded font-bold text-black">حفظ</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="edit-staff-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                <div class="bg-gray-800 border-t-4 border-brand rounded-xl p-6 w-full max-w-sm shadow-2xl">
+                    <h3 class="text-xl font-bold text-white mb-6">تعديل بيانات العامل</h3>
+                    <input type="hidden" id="edit-id">
+                    <div class="space-y-4">
+                        <input type="text" id="edit-name" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white outline-none">
+                        <select id="edit-role" onchange="window.updateStaffFields('edit')" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white outline-none">
+                            <option value="Cashier">Cashier</option><option value="Admin">Admin</option><option value="Waiter">Waiter</option><option value="Kitchen">Kitchen</option>
+                        </select>
+                        <div id="edit-room-box" class="hidden">
+                            <label class="text-xs text-gray-500">القاعة المخصصة</label>
+                            <select id="edit-room" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white">${roomOptions}</select>
+                        </div>
+                        <div id="edit-station-box" class="hidden">
+                            <label class="text-xs text-gray-500">محطة المطبخ</label>
+                            <select id="edit-station" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white">
+                                <option value="الكل">الكل</option><option value="بيتزا">بيتزا</option><option value="مشويات">مشويات</option><option value="مشروبات">مشروبات</option>
+                            </select>
+                        </div>
+                        <input type="number" id="edit-pin" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white text-center font-bold tracking-widest">
+                    </div>
+                    <div class="flex justify-end gap-3 mt-8">
+                        <button onclick="document.getElementById('edit-staff-modal').classList.add('hidden')" class="text-gray-400 px-4 py-2">إلغاء</button>
+                        <button onclick="window.saveStaff('edit')" class="bg-brand px-6 py-2 rounded font-bold text-black">تحديث</button>
                     </div>
                 </div>
             </div>
@@ -228,7 +167,96 @@ window.renderStaff = async function () {
         dynamicContent.innerHTML = html;
 
     } catch (e) {
-        console.error("Staff Render Error:", e);
-        dynamicContent.innerHTML = `<div class="text-center text-red-500 py-10 font-bold">حدث خطأ أثناء تحميل بيانات العمال. تأكد من إعدادات Baserow.</div>`;
+        console.error(e);
+        dynamicContent.innerHTML = '<div class="text-center text-red-500 py-10 font-bold">حدث خطأ أثناء تحميل البيانات.</div>';
+    }
+};
+
+// 💡 دوال التحكم في الواجهة
+window.showAddStaffModal = function() {
+    document.getElementById('add-name').value = '';
+    document.getElementById('add-role').value = 'Cashier';
+    document.getElementById('add-pin').value = '';
+    window.updateStaffFields('add');
+    document.getElementById('add-staff-modal').classList.remove('hidden');
+};
+
+window.showEditStaffModal = function(id, name, role, room, station, pin) {
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-name').value = name;
+    document.getElementById('edit-role').value = role;
+    document.getElementById('edit-pin').value = pin;
+    
+    window.updateStaffFields('edit');
+    
+    if (role === 'Waiter') document.getElementById('edit-room').value = room;
+    if (role === 'Kitchen') document.getElementById('edit-station').value = station || 'الكل';
+
+    document.getElementById('edit-staff-modal').classList.remove('hidden');
+};
+
+window.updateStaffFields = function(prefix) {
+    const role = document.getElementById(prefix + '-role').value;
+    const roomBox = document.getElementById(prefix + '-room-box');
+    const stationBox = document.getElementById(prefix + '-station-box');
+
+    roomBox.classList.add('hidden');
+    stationBox.classList.add('hidden');
+
+    if (role === 'Waiter') roomBox.classList.remove('hidden');
+    if (role === 'Kitchen') stationBox.classList.remove('hidden');
+};
+
+// 💡 دوال الحفظ والتحديث (Baserow)
+window.saveStaff = async function(mode) {
+    const id = mode === 'edit' ? document.getElementById('edit-id').value : null;
+    const name = document.getElementById(mode + '-name').value.trim();
+    const role = document.getElementById(mode + '-role').value;
+    const pin = document.getElementById(mode + '-pin').value.trim();
+    const room = document.getElementById(mode + '-room').value;
+    const station = document.getElementById(mode + '-station').value;
+
+    if (!name || !pin) {
+        window.showToast("الاسم والرمز السري مطلوبان", "error");
+        return;
+    }
+
+    try {
+        const payload = { Name: name, Role: role, PIN: pin };
+        if (role === 'Waiter') payload.AssignedRoom = room;
+        if (role === 'Kitchen') payload.AssignedStation = station;
+
+        const url = id 
+            ? `https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/${id}/?user_field_names=true`
+            : `https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/?user_field_names=true`;
+
+        const response = await fetch(url, {
+            method: id ? 'PATCH' : 'POST',
+            headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+            body: JSON.stringify(id ? payload : { ...payload, Status: true })
+        });
+
+        if (!response.ok) throw new Error("API Fail");
+
+        window.showToast("تمت العملية بنجاح ✅", "success");
+        document.getElementById(mode + '-staff-modal').classList.add('hidden');
+        window.renderStaff();
+
+    } catch (e) {
+        console.error(e);
+        window.showToast("فشل في حفظ البيانات", "error");
+    }
+};
+
+window.toggleStaffStatus = async function(id, status) {
+    try {
+        await fetch(`https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/${id}/?user_field_names=true`, {
+            method: 'PATCH',
+            headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ Status: status })
+        });
+        window.renderStaff();
+    } catch (e) {
+        window.showToast("فشل التحديث", "error");
     }
 };
