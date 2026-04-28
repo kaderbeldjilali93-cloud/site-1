@@ -1,5 +1,5 @@
 // =========================================================
-// 👥 إدارة العمال (Staff Management) - النسخة النهائية المصلحة
+// 👥 إدارة العمال (Staff Management) - النسخة الذكية (ديناميكية 100%)
 // =========================================================
 
 window.renderStaff = async function () {
@@ -7,6 +7,7 @@ window.renderStaff = async function () {
     dynamicContent.innerHTML = '<div class="text-center text-gray-400 py-10">جاري تحميل بيانات العمال...</div>';
 
     try {
+        // 1. جلب بيانات العمال من Baserow
         const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/?user_field_names=true`, {
             method: 'GET',
             headers: { "Authorization": `Token ${typeof BASEROW_TOKEN !== 'undefined' ? BASEROW_TOKEN : ''}` }
@@ -16,7 +17,7 @@ window.renderStaff = async function () {
         const data = await response.json();
         const staff = data.results;
 
-        // 💡 جلب القاعات المتوفرة من السيستام
+        // 2. 💡 جلب أسماء القاعات ديناميكياً من خريطة الطاولات
         let uniqueRooms = new Set();
         if (typeof STATE !== 'undefined' && STATE.tableMapData) {
             Object.values(STATE.tableMapData).forEach(table => {
@@ -30,6 +31,46 @@ window.renderStaff = async function () {
             roomOptions += `<option value="${room}">${room}</option>`;
         });
 
+        // 3. 💡 جلب "محطات المطبخ" ديناميكياً من المنيو (Menu)
+        let uniqueStations = new Set();
+        try {
+            // التحقق إذا كان المنيو محمل مسبقاً، وإلا نقوم بتحميله
+            let menuItems = STATE.cachedMenuItems;
+            if (!menuItems || menuItems.length === 0) {
+                if (typeof window.fetchMenu === 'function') {
+                    menuItems = await window.fetchMenu();
+                    STATE.cachedMenuItems = menuItems; // حفظه في الذاكرة لتسريع النظام
+                }
+            }
+            
+            if (menuItems && menuItems.length > 0) {
+                menuItems.forEach(item => {
+                    // قراءة حقل Station (سواء كان نص عادي أو قائمة منسدلة من Baserow)
+                    const st = (typeof item.Station === 'object' && item.Station !== null) ? item.Station.value : (item.Station || "");
+                    if (st && String(st).trim() !== "") {
+                        uniqueStations.add(String(st).trim());
+                    }
+                });
+            }
+        } catch (err) {
+            console.warn("Failed to extract stations from menu", err);
+        }
+
+        let stationOptions = '<option value="الكل">الكل</option>';
+        if (uniqueStations.size > 0) {
+            uniqueStations.forEach(st => {
+                stationOptions += `<option value="${st}">${st}</option>`;
+            });
+        } else {
+            // خيارات احتياطية في حال كان المنيو فارغاً تماماً
+            stationOptions += `
+                <option value="بيتزا">بيتزا</option>
+                <option value="مشويات">مشويات</option>
+                <option value="مشروبات">مشروبات</option>
+            `;
+        }
+
+        // 4. بناء الواجهة
         let html = `
             <div class="max-w-5xl mx-auto pb-10">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -59,54 +100,56 @@ window.renderStaff = async function () {
                             <tbody class="divide-y divide-gray-800">
         `;
 
-        staff.forEach(user => {
-            const role = (typeof user.Role === 'object' && user.Role) ? user.Role.value : (user.Role || "غير محدد");
-            const isActive = user.Status !== false;
-            
-            // قراءة القيم من Baserow (سواء كانت نص أو قائمة)
-            const roomVal = (typeof user.AssignedRoom === 'object' && user.AssignedRoom) ? user.AssignedRoom.value : (user.AssignedRoom || "");
-            const stationVal = (typeof user.AssignedStation === 'object' && user.AssignedStation) ? user.AssignedStation.value : (user.AssignedStation || "");
+        if (staff.length === 0) {
+            html += `<tr><td colspan="6" class="py-8 text-center text-gray-500">لا يوجد عمال مسجلين بعد.</td></tr>`;
+        } else {
+            staff.forEach(user => {
+                const role = (typeof user.Role === 'object' && user.Role) ? user.Role.value : (user.Role || "غير محدد");
+                const isActive = user.Status !== false;
+                
+                const roomVal = (typeof user.AssignedRoom === 'object' && user.AssignedRoom) ? user.AssignedRoom.value : (user.AssignedRoom || "");
+                const stationVal = (typeof user.AssignedStation === 'object' && user.AssignedStation) ? user.AssignedStation.value : (user.AssignedStation || "");
 
-            let assignment = '---';
-            if (role === 'Waiter') assignment = roomVal || 'لم يحدد';
-            if (role === 'Kitchen') assignment = stationVal || 'الكل';
+                let assignment = '---';
+                if (role === 'Waiter') assignment = roomVal || 'لم يحدد';
+                if (role === 'Kitchen') assignment = stationVal || 'الكل';
 
-            // تحضير البيانات للتعديل (حماية من الرموز الخاصة)
-            const uId = user.id;
-            const uName = String(user.Name || '').replace(/'/g, "\\'");
-            const uRole = String(role).replace(/'/g, "\\'");
-            const uRoom = String(roomVal).replace(/'/g, "\\'");
-            const uStation = String(stationVal).replace(/'/g, "\\'");
-            const uPin = String(user.PIN || '').replace(/'/g, "\\'");
+                const uId = user.id;
+                const uName = String(user.Name || '').replace(/'/g, "\\'");
+                const uRole = String(role).replace(/'/g, "\\'");
+                const uRoom = String(roomVal).replace(/'/g, "\\'");
+                const uStation = String(stationVal).replace(/'/g, "\\'");
+                const uPin = String(user.PIN || '').replace(/'/g, "\\'");
 
-            html += `
-                <tr class="hover:bg-gray-800/50 transition">
-                    <td class="py-4 px-4 font-bold text-white">${user.Name || "بدون اسم"}</td>
-                    <td class="py-4 px-4 text-gray-400">${role}</td>
-                    <td class="py-4 px-4 text-center text-brand font-medium">${assignment}</td>
-                    <td class="py-4 px-4 text-center font-mono text-brand">${user.PIN || '---'}</td>
-                    <td class="py-4 px-4 text-center">
-                        <span class="${isActive ? 'text-green-400' : 'text-red-400'} text-xs font-bold px-2 py-1 bg-gray-800 rounded-full border border-gray-700">
-                            ${isActive ? 'نشط' : 'موقوف'}
-                        </span>
-                    </td>
-                    <td class="py-4 px-4 text-center">
-                        <div class="flex justify-center gap-2">
-                            <button onclick="window.toggleStaffStatus(${uId}, ${!isActive})" class="text-xs px-2 py-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-300">
-                                ${isActive ? 'إيقاف' : 'تفعيل'}
-                            </button>
-                            <button onclick="window.showEditStaffModal(${uId}, '${uName}', '${uRole}', '${uRoom}', '${uStation}', '${uPin}')" class="text-xs px-2 py-1 bg-brand text-black font-bold rounded hover:bg-brand-dark">
-                                تعديل
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        });
+                html += `
+                    <tr class="hover:bg-gray-800/50 transition">
+                        <td class="py-4 px-4 font-bold text-white">${user.Name || "بدون اسم"}</td>
+                        <td class="py-4 px-4 text-gray-400">${role}</td>
+                        <td class="py-4 px-4 text-center text-brand font-medium">${assignment}</td>
+                        <td class="py-4 px-4 text-center font-mono text-brand">${user.PIN || '---'}</td>
+                        <td class="py-4 px-4 text-center">
+                            <span class="${isActive ? 'text-green-400' : 'text-red-400'} text-xs font-bold px-2 py-1 bg-gray-800 rounded-full border border-gray-700">
+                                ${isActive ? 'نشط' : 'موقوف'}
+                            </span>
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <div class="flex justify-center gap-2">
+                                <button onclick="window.toggleStaffStatus(${uId}, ${!isActive})" class="text-xs px-2 py-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-300">
+                                    ${isActive ? 'إيقاف' : 'تفعيل'}
+                                </button>
+                                <button onclick="window.showEditStaffModal(${uId}, '${uName}', '${uRole}', '${uRoom}', '${uStation}', '${uPin}')" class="text-xs px-2 py-1 bg-brand text-black font-bold rounded hover:bg-brand-dark">
+                                    تعديل
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
 
         html += `</tbody></table></div></div></div>`;
         
-        // إضافة نوافذ الـ Modals في الأسفل
+        // نوافذ الإضافة والتعديل مع الخيارات الديناميكية
         html += `
             <div id="add-staff-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
                 <div class="bg-gray-800 border-t-4 border-brand rounded-xl p-6 w-full max-w-sm shadow-2xl">
@@ -121,9 +164,9 @@ window.renderStaff = async function () {
                             <select id="add-room" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white">${roomOptions}</select>
                         </div>
                         <div id="add-station-box" class="hidden">
-                            <label class="text-xs text-gray-500">محطة المطبخ</label>
+                            <label class="text-xs text-gray-500">محطة المطبخ (تلقائية من المنيو)</label>
                             <select id="add-station" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white">
-                                <option value="الكل">الكل</option><option value="بيتزا">بيتزا</option><option value="مشويات">مشويات</option><option value="مشروبات">مشروبات</option>
+                                ${stationOptions}
                             </select>
                         </div>
                         <input type="number" id="add-pin" placeholder="الرمز السري (4 أرقام)" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white text-center font-bold tracking-widest">
@@ -149,9 +192,9 @@ window.renderStaff = async function () {
                             <select id="edit-room" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white">${roomOptions}</select>
                         </div>
                         <div id="edit-station-box" class="hidden">
-                            <label class="text-xs text-gray-500">محطة المطبخ</label>
+                            <label class="text-xs text-gray-500">محطة المطبخ (تلقائية من المنيو)</label>
                             <select id="edit-station" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white">
-                                <option value="الكل">الكل</option><option value="بيتزا">بيتزا</option><option value="مشويات">مشويات</option><option value="مشروبات">مشروبات</option>
+                                ${stationOptions}
                             </select>
                         </div>
                         <input type="number" id="edit-pin" class="w-full p-3 bg-gray-900 border border-gray-700 rounded text-white text-center font-bold tracking-widest">
@@ -167,7 +210,7 @@ window.renderStaff = async function () {
         dynamicContent.innerHTML = html;
 
     } catch (e) {
-        console.error(e);
+        console.error("Staff Render Error:", e);
         dynamicContent.innerHTML = '<div class="text-center text-red-500 py-10 font-bold">حدث خطأ أثناء تحميل البيانات.</div>';
     }
 };
@@ -223,8 +266,16 @@ window.saveStaff = async function(mode) {
 
     try {
         const payload = { Name: name, Role: role, PIN: pin };
-        if (role === 'Waiter') payload.AssignedRoom = room;
-        if (role === 'Kitchen') payload.AssignedStation = station;
+        if (role === 'Waiter') {
+            payload.AssignedRoom = room;
+            payload.AssignedStation = ''; // تفريغ
+        } else if (role === 'Kitchen') {
+            payload.AssignedStation = station;
+            payload.AssignedRoom = ''; // تفريغ
+        } else {
+            payload.AssignedRoom = '';
+            payload.AssignedStation = '';
+        }
 
         const url = id 
             ? `https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/${id}/?user_field_names=true`
