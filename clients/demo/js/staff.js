@@ -192,4 +192,132 @@ window.renderStaff = async function () {
     }
 };
 
-// ... باقي الدوال (showAddStaffModal, updateStaffFields, saveStaff, toggleStaffStatus) تبقى كما هي في ملفك الأصلي
+window.showAddStaffModal = function () {
+    document.getElementById('add-name').value = '';
+    document.getElementById('add-role').value = 'Cashier';
+    document.getElementById('add-pin').value = '';
+    document.getElementById('add-room').value = '';
+    document.getElementById('add-station').value = 'الكل';
+    window.updateStaffFields('add');
+    document.getElementById('add-staff-modal').classList.remove('hidden');
+};
+
+window.showEditStaffModal = function (id, name, role, room, station, pin) {
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-name').value = name;
+    
+    // Set role carefully if options exist
+    const roleSelect = document.getElementById('edit-role');
+    if (roleSelect && Array.from(roleSelect.options).some(opt => opt.value === role)) {
+        roleSelect.value = role;
+    } else if (roleSelect) {
+        roleSelect.value = 'Cashier'; // default
+    }
+
+    document.getElementById('edit-room').value = room || '';
+    document.getElementById('edit-station').value = station || 'الكل';
+    document.getElementById('edit-pin').value = pin !== '---' && pin !== 'undefined' ? pin : '';
+    
+    window.updateStaffFields('edit');
+    document.getElementById('edit-staff-modal').classList.remove('hidden');
+};
+
+window.updateStaffFields = function (prefix) {
+    const role = document.getElementById(`${prefix}-role`).value;
+    const roomBox = document.getElementById(`${prefix}-room-box`);
+    const stationBox = document.getElementById(`${prefix}-station-box`);
+
+    if (role === 'Waiter') {
+        roomBox.classList.remove('hidden');
+        stationBox.classList.add('hidden');
+    } else if (role === 'Kitchen') {
+        roomBox.classList.add('hidden');
+        stationBox.classList.remove('hidden');
+    } else {
+        roomBox.classList.add('hidden');
+        stationBox.classList.add('hidden');
+    }
+};
+
+window.saveStaff = async function (action) {
+    const isEdit = action === 'edit';
+    const id = isEdit ? document.getElementById('edit-id').value : null;
+    const name = document.getElementById(`${action}-name`).value.trim();
+    const role = document.getElementById(`${action}-role`).value;
+    const room = document.getElementById(`${action}-room`).value;
+    const station = document.getElementById(`${action}-station`).value;
+    const pin = document.getElementById(`${action}-pin`).value.trim();
+
+    if (!name) {
+        alert("يرجى إدخال اسم العامل");
+        return;
+    }
+
+    const payload = {
+        "Name": name,
+        "Role": role,
+        "PIN": pin,
+        "Status": true // Always active on new/edit unless toggled
+    };
+
+    if (role === 'Waiter') {
+        payload["AssignedRoom"] = room || null;
+        payload["AssignedStation"] = null;
+    } else if (role === 'Kitchen') {
+        payload["AssignedStation"] = station || null;
+        payload["AssignedRoom"] = null;
+    } else {
+        payload["AssignedRoom"] = null;
+        payload["AssignedStation"] = null;
+    }
+
+    try {
+        const url = isEdit 
+            ? `https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/${id}/?user_field_names=true`
+            : `https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/?user_field_names=true`;
+            
+        const response = await fetch(url, {
+            method: isEdit ? 'PATCH' : 'POST',
+            headers: { 
+                "Authorization": `Token ${BASEROW_TOKEN}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error("Failed to save staff");
+
+        // إغلاق النافذة
+        document.getElementById(`${action}-staff-modal`).classList.add('hidden');
+        
+        // إعادة تحميل القائمة من السيرفر مباشرة لتظهر التعديلات
+        await window.renderStaff();
+
+    } catch (e) {
+        console.error("Save staff error:", e);
+        alert("حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.");
+    }
+};
+
+window.toggleStaffStatus = async function (id, newStatus) {
+    if (!confirm(newStatus ? "هل أنت متأكد من تفعيل هذا العامل؟" : "هل أنت متأكد من إيقاف هذا العامل؟")) return;
+    
+    try {
+        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/${id}/?user_field_names=true`, {
+            method: 'PATCH',
+            headers: { 
+                "Authorization": `Token ${BASEROW_TOKEN}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "Status": newStatus })
+        });
+
+        if (!response.ok) throw new Error("Failed to toggle status");
+        
+        // إعادة تحميل القائمة من السيرفر مباشرة
+        await window.renderStaff();
+    } catch (e) {
+        console.error("Toggle status error:", e);
+        alert("حدث خطأ أثناء تغيير حالة العامل.");
+    }
+};

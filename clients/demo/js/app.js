@@ -609,7 +609,7 @@ window.loadView = async function (viewType) {
             if (STATE.currentActiveView === 'tables') STATE.pollingInterval = setInterval(runTables, 10000);
         }
         else if (viewType === 'staff') {
-            if (window.renderStaff) window.renderStaff();
+            if (window.renderStaff) await window.renderStaff();
         }
         else if (viewType === 'settings_restaurant') {
             await window.renderSettingsRestaurant();
