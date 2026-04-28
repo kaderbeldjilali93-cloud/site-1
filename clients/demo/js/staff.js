@@ -16,26 +16,34 @@ window.renderStaff = async function () {
         const data = await response.json();
         const staff = data.results;
 
-        // 💡 جلب أسماء القاعات ديناميكياً من السيستام
-        let roomOptions = '<option value="">-- اختر القاعة --</option>';
-        if (typeof STATE !== 'undefined' && STATE.tableMapData && Object.keys(STATE.tableMapData).length > 0) {
-            Object.keys(STATE.tableMapData).forEach(roomName => {
-                roomOptions += `<option value="${roomName}">${roomName}</option>`;
+        // 💡 استخراج أسماء القاعات الحقيقية من الطاولات (وليس أرقام الطاولات)
+        let uniqueRooms = new Set();
+        if (typeof STATE !== 'undefined' && STATE.tableMapData) {
+            Object.values(STATE.tableMapData).forEach(table => {
+                if (table.room) uniqueRooms.add(table.room);
+                if (table.Room) uniqueRooms.add(table.Room);
+            });
+        }
+        
+        let roomOptions = '';
+        if (uniqueRooms.size > 0) {
+            uniqueRooms.forEach(room => {
+                roomOptions += `<option value="${room}">`;
             });
         } else {
-            // خيارات احتياطية في حالة عدم توفر قاعات
-            roomOptions += `
-                <option value="القاعة 1">القاعة 1</option>
-                <option value="التراس">التراس</option>
-            `;
+            roomOptions += `<option value="القاعة 1"><option value="التراس">`;
         }
 
         let html = `
+            <datalist id="room-datalist">
+                ${roomOptions}
+            </datalist>
+
             <div class="max-w-5xl mx-auto pb-10">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
                         <h2 class="text-2xl font-bold text-white mb-1">إدارة العمال (Staff)</h2>
-                        <p class="text-gray-400 text-sm">إدارة الصلاحيات، الحسابات، والرموز السرية للموظفين.</p>
+                        <p class="text-gray-400 text-sm">إدارة الصلاحيات، التخصيص، والرموز السرية.</p>
                     </div>
                     <button onclick="window.showAddStaffModal()" class="bg-brand hover:bg-brand-dark text-black font-bold py-2.5 px-5 rounded-xl transition shadow-[0_0_15px_rgba(255,153,0,0.3)] flex items-center gap-2 whitespace-nowrap">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -69,6 +77,17 @@ window.renderStaff = async function () {
                     ? '<span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30">نشط</span>'
                     : '<span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-bold border border-red-500/30">موقوف</span>';
 
+                // 💡 تحديد التخصيص بشكل دقيق حسب الدور
+                let assignment = '---';
+                if (roleName === 'Waiter' && user.AssignedRoom) assignment = user.AssignedRoom;
+                if (roleName === 'Kitchen' && user.AssignedStation) assignment = user.AssignedStation;
+
+                // حماية المتغيرات من الأخطاء أثناء تمريرها
+                const safeName = (user.Name || '').replace(/'/g, "\\'");
+                const safeRoom = (user.AssignedRoom || '').replace(/'/g, "\\'");
+                const safeStation = (user.AssignedStation || '').replace(/'/g, "\\'");
+                const safePin = (user.PIN || '').toString().replace(/'/g, "\\'");
+
                 html += `
                     <tr class="hover:bg-gray-800/50 transition duration-150">
                         <td class="py-4 px-4">
@@ -78,7 +97,7 @@ window.renderStaff = async function () {
                             ${roleName}
                         </td>
                         <td class="py-4 px-4 text-center text-brand font-medium">
-                            ${user.AssignedRoom || user.AssignedStation || '---'}
+                            ${assignment}
                         </td>
                         <td class="py-4 px-4 text-center">
                             <div class="flex items-center justify-center gap-2">
@@ -93,8 +112,8 @@ window.renderStaff = async function () {
                                 <button onclick="window.toggleStaffStatus(${user.id}, ${!isActive})" class="text-sm px-3 py-1.5 rounded-lg font-medium transition ${isActive ? 'bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white' : 'bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white'}" title="${isActive ? 'إيقاف الحساب' : 'تفعيل الحساب'}">
                                     ${isActive ? 'إيقاف' : 'تفعيل'}
                                 </button>
-                                <button onclick="window.showEditPinModal(${user.id}, '${user.Name || ''}')" class="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 hover:bg-white hover:text-black rounded-lg font-medium transition shadow-sm">
-                                    تعديل PIN
+                                <button onclick="window.showEditStaffModal(${user.id}, '${safeName}', '${roleName}', '${safeRoom}', '${safeStation}', '${safePin}')" class="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 hover:bg-white hover:text-black rounded-lg font-medium transition shadow-sm">
+                                    تعديل
                                 </button>
                             </div>
                         </td>
@@ -109,16 +128,52 @@ window.renderStaff = async function () {
                     </div>
                 </div>
             </div>
-            
-            <div id="edit-pin-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm transition-opacity p-4">
+
+            <div id="edit-staff-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm transition-opacity p-4">
                 <div class="bg-gray-800 border-t-4 border-brand rounded-xl shadow-2xl p-6 w-full max-w-sm mx-auto transform transition-all scale-100">
-                    <h3 class="text-xl font-bold text-white mb-4">تعديل الرمز السري</h3>
-                    <p class="text-gray-400 text-sm mb-4">تعديل الرمز للموظف: <strong id="edit-pin-staff-name" class="text-brand"></strong></p>
-                    <input type="hidden" id="edit-pin-staff-id">
-                    <input type="number" id="edit-pin-input" placeholder="أدخل أرقام فقط..." class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white mb-6 text-center text-xl font-bold tracking-widest">
-                    <div class="flex justify-end gap-3">
-                        <button onclick="document.getElementById('edit-pin-modal').classList.add('hidden')" class="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition">إلغاء</button>
-                        <button onclick="window.saveNewPin()" class="px-4 py-2 rounded-lg bg-brand hover:bg-brand-dark text-black font-bold transition shadow-lg">حفظ التعديل</button>
+                    <h3 class="text-xl font-bold text-white mb-6">تعديل بيانات العامل</h3>
+                    
+                    <input type="hidden" id="edit-staff-id">
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-400 text-sm font-bold mb-2">الاسم</label>
+                        <input type="text" id="edit-staff-name" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-400 text-sm font-bold mb-2">الدور الوظيفي</label>
+                        <select id="edit-staff-role" onchange="window.handleRoleChange('edit')" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
+                            <option value="Cashier">Cashier</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Kitchen">Kitchen</option>
+                            <option value="Waiter">Waiter</option>
+                        </select>
+                    </div>
+
+                    <div id="edit-room-div" class="mb-4 hidden">
+                        <label class="block text-gray-400 text-sm font-bold mb-2">القاعة المخصصة</label>
+                        <input type="text" id="edit-staff-room" list="room-datalist" placeholder="اختر من القائمة أو اكتب..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white">
+                    </div>
+
+                    <div id="edit-station-div" class="mb-4 hidden">
+                        <label class="block text-gray-400 text-sm font-bold mb-2">محطة المطبخ</label>
+                        <select id="edit-staff-station" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
+                            <option value="الكل">الكل</option>
+                            <option value="بيتزا">بيتزا</option>
+                            <option value="مشويات">مشويات</option>
+                            <option value="مشروبات">مشروبات</option>
+                            <option value="تحضير سريع">تحضير سريع</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-gray-400 text-sm font-bold mb-2">الرمز السري (PIN)</label>
+                        <input type="number" id="edit-staff-pin" placeholder="أرقام فقط..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white tracking-widest font-mono">
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-8">
+                        <button onclick="document.getElementById('edit-staff-modal').classList.add('hidden')" class="px-4 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition">إلغاء</button>
+                        <button onclick="window.saveEditStaff()" id="btn-update-staff" class="px-6 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-black font-bold transition shadow-lg">حفظ التعديلات</button>
                     </div>
                 </div>
             </div>
@@ -134,7 +189,7 @@ window.renderStaff = async function () {
                     
                     <div class="mb-4">
                         <label class="block text-gray-400 text-sm font-bold mb-2">الدور الوظيفي</label>
-                        <select id="add-staff-role" onchange="window.handleRoleChange(this.value)" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
+                        <select id="add-staff-role" onchange="window.handleRoleChange('add')" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
                             <option value="Cashier">Cashier</option>
                             <option value="Admin">Admin</option>
                             <option value="Kitchen">Kitchen</option>
@@ -142,15 +197,13 @@ window.renderStaff = async function () {
                         </select>
                     </div>
 
-                    <div id="room-assignment-div" class="mb-4 hidden">
-                        <label class="block text-gray-400 text-sm font-bold mb-2">الغرفة المخصصة (Assigned Room)</label>
-                        <select id="add-staff-room" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
-                            ${roomOptions}
-                        </select>
+                    <div id="add-room-div" class="mb-4 hidden">
+                        <label class="block text-gray-400 text-sm font-bold mb-2">القاعة المخصصة</label>
+                        <input type="text" id="add-staff-room" list="room-datalist" placeholder="اختر من القائمة أو اكتب..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white">
                     </div>
 
-                    <div id="station-assignment-div" class="mb-4 hidden">
-                        <label class="block text-gray-400 text-sm font-bold mb-2">القسم المخصص (Assigned Station)</label>
+                    <div id="add-station-div" class="mb-4 hidden">
+                        <label class="block text-gray-400 text-sm font-bold mb-2">محطة المطبخ</label>
                         <select id="add-staff-station" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
                             <option value="الكل">الكل</option>
                             <option value="بيتزا">بيتزا</option>
@@ -205,42 +258,75 @@ window.toggleStaffStatus = async function (staffId, makeActive) {
     }
 };
 
-window.showEditPinModal = function (staffId, staffName) {
-    document.getElementById('edit-pin-staff-id').value = staffId;
-    document.getElementById('edit-pin-staff-name').innerText = staffName;
-    document.getElementById('edit-pin-input').value = '';
-    document.getElementById('edit-pin-modal').classList.remove('hidden');
-    setTimeout(() => document.getElementById('edit-pin-input').focus(), 100);
+// 💡 دالة فتح نافذة التعديل الشاملة
+window.showEditStaffModal = function (id, name, role, room, station, pin) {
+    document.getElementById('edit-staff-id').value = id;
+    document.getElementById('edit-staff-name').value = name;
+    document.getElementById('edit-staff-role').value = role;
+    document.getElementById('edit-staff-pin').value = pin;
+    
+    document.getElementById('edit-staff-room').value = room !== 'undefined' ? room : '';
+    document.getElementById('edit-staff-station').value = station && station !== 'undefined' ? station : 'الكل';
+    
+    window.handleRoleChange('edit');
+    document.getElementById('edit-staff-modal').classList.remove('hidden');
 };
 
-window.saveNewPin = async function () {
-    const staffId = document.getElementById('edit-pin-staff-id').value;
-    const newPin = document.getElementById('edit-pin-input').value.trim();
+// 💡 دالة حفظ التعديلات الشاملة
+window.saveEditStaff = async function () {
+    const id = document.getElementById('edit-staff-id').value;
+    const name = document.getElementById('edit-staff-name').value.trim();
+    const role = document.getElementById('edit-staff-role').value;
+    const pin = document.getElementById('edit-staff-pin').value.trim();
+    const assignedRoom = document.getElementById('edit-staff-room').value.trim();
+    const assignedStation = document.getElementById('edit-staff-station').value;
 
-    if (!newPin) {
-        window.showToast("الرجاء إدخال رمز سري صحيح", "error");
+    if (!name || !pin) {
+        window.showToast("الاسم والرمز السري مطلوبان", "error");
         return;
     }
 
+    const btn = document.getElementById('btn-update-staff');
+    const origText = btn.innerHTML;
+    btn.innerHTML = 'جاري التحديث...';
+    btn.disabled = true;
+
     try {
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/${staffId}/?user_field_names=true`, {
+        const payload = { Name: name, Role: role, PIN: pin };
+        
+        // إرسال القيم الخاصة بكل دور وتفريغ الأخرى
+        if (role === 'Waiter') {
+            payload.AssignedRoom = assignedRoom;
+            payload.AssignedStation = ''; // تفريغ
+        } else if (role === 'Kitchen') {
+            payload.AssignedStation = assignedStation;
+            payload.AssignedRoom = ''; // تفريغ
+        } else {
+            payload.AssignedRoom = '';
+            payload.AssignedStation = '';
+        }
+
+        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/${id}/?user_field_names=true`, {
             method: 'PATCH',
             headers: {
                 "Authorization": `Token ${BASEROW_TOKEN}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ PIN: newPin })
+            body: JSON.stringify(payload)
         });
 
-        if (!response.ok) throw new Error("Failed to update PIN");
+        if (!response.ok) throw new Error("Failed to update staff");
 
-        window.showToast("تم تحديث الرمز السري بنجاح", "success");
-        document.getElementById('edit-pin-modal').classList.add('hidden');
+        window.showToast("تم التحديث بنجاح", "success");
+        document.getElementById('edit-staff-modal').classList.add('hidden');
         window.renderStaff(); 
 
     } catch (e) {
         console.error(e);
-        window.showToast("فشل في تحديث الرمز السري", "error");
+        window.showToast("فشل في التحديث", "error");
+    } finally {
+        btn.innerHTML = origText;
+        btn.disabled = false;
     }
 };
 
@@ -250,14 +336,16 @@ window.showAddStaffModal = function () {
     document.getElementById('add-staff-role').value = 'Cashier';
     document.getElementById('add-staff-room').value = '';
     document.getElementById('add-staff-station').value = 'الكل';
-    window.handleRoleChange('Cashier');
+    window.handleRoleChange('add');
     document.getElementById('add-staff-modal').classList.remove('hidden');
     setTimeout(() => document.getElementById('add-staff-name').focus(), 100);
 };
 
-window.handleRoleChange = function (role) {
-    const roomDiv = document.getElementById('room-assignment-div');
-    const stationDiv = document.getElementById('station-assignment-div');
+// 💡 دالة التحكم في إظهار الخانات (تخدم الإضافة والتعديل معاً)
+window.handleRoleChange = function (type) {
+    const role = document.getElementById(type + '-staff-role').value;
+    const roomDiv = document.getElementById(type + '-room-div');
+    const stationDiv = document.getElementById(type + '-station-div');
 
     roomDiv.classList.add('hidden');
     stationDiv.classList.add('hidden');
