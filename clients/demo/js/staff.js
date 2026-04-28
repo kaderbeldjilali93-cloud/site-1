@@ -1,7 +1,3 @@
-// =========================================================
-// 👥 إدارة العمال (Staff Management)
-// =========================================================
-
 window.renderStaff = async function () {
     const dynamicContent = document.getElementById('dynamic-content');
     dynamicContent.innerHTML = '<div class="text-center text-gray-400 py-10">جاري تحميل بيانات العمال...</div>';
@@ -16,7 +12,7 @@ window.renderStaff = async function () {
         const data = await response.json();
         const staff = data.results;
 
-        // 💡 استخراج أسماء القاعات الحقيقية من الطاولات (وليس أرقام الطاولات)
+        // 💡 استخراج أسماء القاعات الحقيقية من الطاولات
         let uniqueRooms = new Set();
         if (typeof STATE !== 'undefined' && STATE.tableMapData) {
             Object.values(STATE.tableMapData).forEach(table => {
@@ -77,16 +73,19 @@ window.renderStaff = async function () {
                     ? '<span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30">نشط</span>'
                     : '<span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-bold border border-red-500/30">موقوف</span>';
 
-                // 💡 تحديد التخصيص بشكل دقيق حسب الدور
-                let assignment = '---';
-                if (roleName === 'Waiter' && user.AssignedRoom) assignment = user.AssignedRoom;
-                if (roleName === 'Kitchen' && user.AssignedStation) assignment = user.AssignedStation;
+                // 💡 الحل الجذري: فحص نوع البيانات قبل قرائتها (خاصة لـ Baserow Single Select)
+                const roomVal = (typeof user.AssignedRoom === 'object' && user.AssignedRoom !== null) ? user.AssignedRoom.value : (user.AssignedRoom || "");
+                const stationVal = (typeof user.AssignedStation === 'object' && user.AssignedStation !== null) ? user.AssignedStation.value : (user.AssignedStation || "");
 
-                // حماية المتغيرات من الأخطاء أثناء تمريرها
-                const safeName = (user.Name || '').replace(/'/g, "\\'");
-                const safeRoom = (user.AssignedRoom || '').replace(/'/g, "\\'");
-                const safeStation = (user.AssignedStation || '').replace(/'/g, "\\'");
-                const safePin = (user.PIN || '').toString().replace(/'/g, "\\'");
+                let assignment = '---';
+                if (roleName === 'Waiter' && roomVal) assignment = roomVal;
+                if (roleName === 'Kitchen' && stationVal) assignment = stationVal;
+
+                // تحويل كل شيء إلى String لضمان عدم توقف المتصفح
+                const safeName = String(user.Name || '').replace(/'/g, "\\'");
+                const safeRoom = String(roomVal).replace(/'/g, "\\'");
+                const safeStation = String(stationVal).replace(/'/g, "\\'");
+                const safePin = String(user.PIN || '').replace(/'/g, "\\'");
 
                 html += `
                     <tr class="hover:bg-gray-800/50 transition duration-150">
@@ -229,176 +228,7 @@ window.renderStaff = async function () {
         dynamicContent.innerHTML = html;
 
     } catch (e) {
-        console.error(e);
-        dynamicContent.innerHTML = '<div class="text-center text-red-500 py-10 font-bold">حدث خطأ أثناء تحميل بيانات العمال.</div>';
-    }
-};
-
-window.toggleStaffStatus = async function (staffId, makeActive) {
-    if (!confirm(makeActive ? 'هل أنت متأكد من تفعيل هذا الحساب؟' : 'هل أنت متأكد من إيقاف منع هذا الحساب من الدخول؟')) return;
-
-    try {
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/${staffId}/?user_field_names=true`, {
-            method: 'PATCH',
-            headers: {
-                "Authorization": `Token ${BASEROW_TOKEN}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ Status: makeActive })
-        });
-
-        if (!response.ok) throw new Error("Failed to update status");
-
-        window.showToast("تم تحديث الحالة بنجاح", "success");
-        window.renderStaff(); 
-
-    } catch (e) {
-        console.error(e);
-        window.showToast("فشل في تحديث الحالة", "error");
-    }
-};
-
-// 💡 دالة فتح نافذة التعديل الشاملة
-window.showEditStaffModal = function (id, name, role, room, station, pin) {
-    document.getElementById('edit-staff-id').value = id;
-    document.getElementById('edit-staff-name').value = name;
-    document.getElementById('edit-staff-role').value = role;
-    document.getElementById('edit-staff-pin').value = pin;
-    
-    document.getElementById('edit-staff-room').value = room !== 'undefined' ? room : '';
-    document.getElementById('edit-staff-station').value = station && station !== 'undefined' ? station : 'الكل';
-    
-    window.handleRoleChange('edit');
-    document.getElementById('edit-staff-modal').classList.remove('hidden');
-};
-
-// 💡 دالة حفظ التعديلات الشاملة
-window.saveEditStaff = async function () {
-    const id = document.getElementById('edit-staff-id').value;
-    const name = document.getElementById('edit-staff-name').value.trim();
-    const role = document.getElementById('edit-staff-role').value;
-    const pin = document.getElementById('edit-staff-pin').value.trim();
-    const assignedRoom = document.getElementById('edit-staff-room').value.trim();
-    const assignedStation = document.getElementById('edit-staff-station').value;
-
-    if (!name || !pin) {
-        window.showToast("الاسم والرمز السري مطلوبان", "error");
-        return;
-    }
-
-    const btn = document.getElementById('btn-update-staff');
-    const origText = btn.innerHTML;
-    btn.innerHTML = 'جاري التحديث...';
-    btn.disabled = true;
-
-    try {
-        const payload = { Name: name, Role: role, PIN: pin };
-        
-        // إرسال القيم الخاصة بكل دور وتفريغ الأخرى
-        if (role === 'Waiter') {
-            payload.AssignedRoom = assignedRoom;
-            payload.AssignedStation = ''; // تفريغ
-        } else if (role === 'Kitchen') {
-            payload.AssignedStation = assignedStation;
-            payload.AssignedRoom = ''; // تفريغ
-        } else {
-            payload.AssignedRoom = '';
-            payload.AssignedStation = '';
-        }
-
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/${id}/?user_field_names=true`, {
-            method: 'PATCH',
-            headers: {
-                "Authorization": `Token ${BASEROW_TOKEN}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) throw new Error("Failed to update staff");
-
-        window.showToast("تم التحديث بنجاح", "success");
-        document.getElementById('edit-staff-modal').classList.add('hidden');
-        window.renderStaff(); 
-
-    } catch (e) {
-        console.error(e);
-        window.showToast("فشل في التحديث", "error");
-    } finally {
-        btn.innerHTML = origText;
-        btn.disabled = false;
-    }
-};
-
-window.showAddStaffModal = function () {
-    document.getElementById('add-staff-name').value = '';
-    document.getElementById('add-staff-pin').value = '';
-    document.getElementById('add-staff-role').value = 'Cashier';
-    document.getElementById('add-staff-room').value = '';
-    document.getElementById('add-staff-station').value = 'الكل';
-    window.handleRoleChange('add');
-    document.getElementById('add-staff-modal').classList.remove('hidden');
-    setTimeout(() => document.getElementById('add-staff-name').focus(), 100);
-};
-
-// 💡 دالة التحكم في إظهار الخانات (تخدم الإضافة والتعديل معاً)
-window.handleRoleChange = function (type) {
-    const role = document.getElementById(type + '-staff-role').value;
-    const roomDiv = document.getElementById(type + '-room-div');
-    const stationDiv = document.getElementById(type + '-station-div');
-
-    roomDiv.classList.add('hidden');
-    stationDiv.classList.add('hidden');
-
-    if (role === 'Waiter') {
-        roomDiv.classList.remove('hidden');
-    } else if (role === 'Kitchen') {
-        stationDiv.classList.remove('hidden');
-    }
-};
-
-window.saveNewStaff = async function () {
-    const name = document.getElementById('add-staff-name').value.trim();
-    const role = document.getElementById('add-staff-role').value;
-    const pin = document.getElementById('add-staff-pin').value.trim();
-    const assignedRoom = document.getElementById('add-staff-room').value.trim();
-    const assignedStation = document.getElementById('add-staff-station').value;
-
-    if (!name || !pin) {
-        window.showToast("الرجاء إدخال الاسم والرمز السري", "error");
-        return;
-    }
-
-    const btn = document.getElementById('btn-save-staff');
-    const origText = btn.innerHTML;
-    btn.innerHTML = 'جاري الحفظ...';
-    btn.disabled = true;
-
-    try {
-        const payload = { Name: name, Role: role, PIN: pin, Status: true };
-        if (role === 'Waiter') payload.AssignedRoom = assignedRoom;
-        if (role === 'Kitchen') payload.AssignedStation = assignedStation;
-
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/?user_field_names=true`, {
-            method: 'POST',
-            headers: {
-                "Authorization": `Token ${BASEROW_TOKEN}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) throw new Error("Failed to add staff");
-
-        window.showToast("تم إضافة العامل بنجاح", "success");
-        document.getElementById('add-staff-modal').classList.add('hidden');
-        window.renderStaff();
-
-    } catch (e) {
-        console.error(e);
-        window.showToast("فشل في إضافة العامل", "error");
-    } finally {
-        btn.innerHTML = origText;
-        btn.disabled = false;
+        console.error("Staff Render Error:", e);
+        dynamicContent.innerHTML = `<div class="text-center text-red-500 py-10 font-bold">حدث خطأ أثناء تحميل بيانات العمال. تأكد من إعدادات Baserow.</div>`;
     }
 };
