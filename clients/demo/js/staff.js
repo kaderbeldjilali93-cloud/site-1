@@ -2,7 +2,6 @@
 // 👥 إدارة العمال (Staff Management)
 // =========================================================
 
-
 window.renderStaff = async function () {
     const dynamicContent = document.getElementById('dynamic-content');
     dynamicContent.innerHTML = '<div class="text-center text-gray-400 py-10">جاري تحميل بيانات العمال...</div>';
@@ -16,6 +15,20 @@ window.renderStaff = async function () {
         if (!response.ok) throw new Error("Failed to load staff");
         const data = await response.json();
         const staff = data.results;
+
+        // 💡 جلب أسماء القاعات ديناميكياً من السيستام
+        let roomOptions = '<option value="">-- اختر القاعة --</option>';
+        if (typeof STATE !== 'undefined' && STATE.tableMapData && Object.keys(STATE.tableMapData).length > 0) {
+            Object.keys(STATE.tableMapData).forEach(roomName => {
+                roomOptions += `<option value="${roomName}">${roomName}</option>`;
+            });
+        } else {
+            // خيارات احتياطية في حالة عدم توفر قاعات
+            roomOptions += `
+                <option value="القاعة 1">القاعة 1</option>
+                <option value="التراس">التراس</option>
+            `;
+        }
 
         let html = `
             <div class="max-w-5xl mx-auto pb-10">
@@ -47,11 +60,11 @@ window.renderStaff = async function () {
         `;
 
         if (staff.length === 0) {
-            html += `<tr><td colspan="5" class="py-8 text-center text-gray-500">لا يوجد عمال مسجلين بعد.</td></tr>`;
+            html += `<tr><td colspan="6" class="py-8 text-center text-gray-500">لا يوجد عمال مسجلين بعد.</td></tr>`;
         } else {
             staff.forEach(user => {
                 const roleName = (typeof user.Role === 'object' && user.Role !== null) ? user.Role.value : (user.Role || "غير محدد");
-                const isActive = user.Status !== false; // Default to true if undefined
+                const isActive = user.Status !== false; 
                 const statusBadge = isActive
                     ? '<span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30">نشط</span>'
                     : '<span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-bold border border-red-500/30">موقوف</span>';
@@ -97,7 +110,6 @@ window.renderStaff = async function () {
                 </div>
             </div>
             
-            <!-- نافذة تعديل الرمز السري -->
             <div id="edit-pin-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm transition-opacity p-4">
                 <div class="bg-gray-800 border-t-4 border-brand rounded-xl shadow-2xl p-6 w-full max-w-sm mx-auto transform transition-all scale-100">
                     <h3 class="text-xl font-bold text-white mb-4">تعديل الرمز السري</h3>
@@ -111,7 +123,6 @@ window.renderStaff = async function () {
                 </div>
             </div>
 
-            <!-- نافذة إضافة عامل جديد -->
             <div id="add-staff-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm transition-opacity p-4">
                 <div class="bg-gray-800 border-t-4 border-brand rounded-xl shadow-2xl p-6 w-full max-w-sm mx-auto transform transition-all scale-100">
                     <h3 class="text-xl font-bold text-white mb-6">إضافة عامل جديد</h3>
@@ -133,7 +144,9 @@ window.renderStaff = async function () {
 
                     <div id="room-assignment-div" class="mb-4 hidden">
                         <label class="block text-gray-400 text-sm font-bold mb-2">الغرفة المخصصة (Assigned Room)</label>
-                        <input type="text" id="add-staff-room" placeholder="رقم أو اسم الغرفة..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white">
+                        <select id="add-staff-room" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-brand outline-none transition text-white appearance-none">
+                            ${roomOptions}
+                        </select>
                     </div>
 
                     <div id="station-assignment-div" class="mb-4 hidden">
@@ -184,7 +197,7 @@ window.toggleStaffStatus = async function (staffId, makeActive) {
         if (!response.ok) throw new Error("Failed to update status");
 
         window.showToast("تم تحديث الحالة بنجاح", "success");
-        window.renderStaff(); // إعادة تحميل القائمة
+        window.renderStaff(); 
 
     } catch (e) {
         console.error(e);
@@ -223,7 +236,7 @@ window.saveNewPin = async function () {
 
         window.showToast("تم تحديث الرمز السري بنجاح", "success");
         document.getElementById('edit-pin-modal').classList.add('hidden');
-        window.renderStaff(); // إعادة التحديث
+        window.renderStaff(); 
 
     } catch (e) {
         console.error(e);
