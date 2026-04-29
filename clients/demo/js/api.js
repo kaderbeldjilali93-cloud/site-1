@@ -156,7 +156,7 @@ window.updateMenuItem = async function (rowId, updateData, btnId = null) {
 
 window.fetchWaiterCalls = async function () {
     try {
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${CALLS_TABLE_ID}/?user_field_names=true&size=100`, {
+        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${CALLS_TABLE_ID}/?user_field_names=true&size=100&order_by=-id`, {
             method: 'GET',
             headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
         });
@@ -211,9 +211,10 @@ window.fetchWaiterCalls = async function () {
             else badge.classList.add('hidden');
         }
 
-        // لا نحتاج استدعاء renderTableView هنا لأن الطاولات الآن لديها تحديث تلقائي كل 10 ثوانٍ
-        // نكتفي بتحديث STATE.activeCalls وسيتم استخدامها في الرسم التالي
-
+        // تحديث الواجهة مباشرة إذا كان هناك تغيير في الطاولات المنادية
+        if (newCallIds.length > 0) {
+            window.renderTableView();
+        }
     } catch (e) {
         console.warn("Failed to fetch waiter calls (Network Error):", e.message);
     }
