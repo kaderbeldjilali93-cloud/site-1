@@ -180,7 +180,7 @@ window.renderTableView = async function () {
                      onclick="window.handleTableMapClick('${numStr}', ${isCalling}, ${hasActiveOrder}, ${orderIdVal}, '${matchingRawCall ? matchingRawCall.replace(/'/g, "\\'") : ''}')">
                     ${window.generateTableSVG ? window.generateTableSVG(shapeStr, chairColor, tScale, tRot) : '<svg width="70" height="70"><circle cx="35" cy="35" r="22" fill="#374151"/></svg>'}
                     ${isCalling
-                    ? `<span class="table-number-label" style="color: #ef4444; font-size: 14px; font-weight: 900; animation: textPulse 1s infinite; background: rgba(31, 41, 55, 0.8); padding: 2px 6px; border-radius: 4px;">نداء T${numStr}</span>`
+                    ? `<span class="table-number-label" style="color: #ef4444; font-size: 16px; font-weight: 900; animation: textPulse 1s infinite; background: transparent;">نداء</span>`
                     : `<span class="table-number-label">T${numStr}</span>`
                 }
                 </div>
