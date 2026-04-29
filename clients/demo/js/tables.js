@@ -161,7 +161,7 @@ window.renderTableView = async function () {
                     : String(orderForTable.Status || '').trim();
 
                 if (orderSt === 'جاهز') chairColor = "#eab308"; // أصفر
-                else if (orderSt === 'نصف جاهز') chairColor = "#fca5a5"; // أحمر بارد
+                else if (orderSt === 'نصف جاهز' || (orderSt === 'قيد التحضير' && String(orderForTable.Details || '').includes('✅'))) chairColor = "#fca5a5"; // أحمر بارد
                 else chairColor = "#ef4444"; // أحمر
             }
 
