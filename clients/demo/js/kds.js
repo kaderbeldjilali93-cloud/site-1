@@ -398,7 +398,7 @@ window.renderKDS = function (orders) {
 };
 
 window.handleOrderReady = async function (orderId) {
-    const order = STATE.lastFetchedOrders.find(o => o.id === orderId);
+    const order = (STATE.latestKdsOrders || []).find(o => o.id === orderId);
     if (!order) return;
 
     const isAdmin = STATE.currentRole === 'admin';
