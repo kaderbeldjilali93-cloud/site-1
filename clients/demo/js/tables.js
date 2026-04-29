@@ -151,10 +151,8 @@ window.renderTableView = async function () {
             let statusClass = "table-status-free";
             let chairColor = "#22c55e"; // أخضر
 
-            if (isCalling) {
-                statusClass = "table-status-calling";
-                chairColor = "#ef4444";
-            } else if (hasActiveOrder) {
+            // لون الطاولة يعتمد دائماً على حالة الطلب (إن وجد)
+            if (hasActiveOrder) {
                 statusClass = "table-status-occupied";
                 const orderSt = (typeof orderForTable.Status === 'object' && orderForTable.Status)
                     ? String(orderForTable.Status.value || '').trim()
@@ -181,8 +179,10 @@ window.renderTableView = async function () {
                      style="left: ${leftPct}%; top: ${topPct}%; cursor: pointer; pointer-events: auto; z-index: 10;" 
                      onclick="window.handleTableMapClick('${numStr}', ${isCalling}, ${hasActiveOrder}, ${orderIdVal}, '${matchingRawCall ? matchingRawCall.replace(/'/g, "\\'") : ''}')">
                     ${window.generateTableSVG ? window.generateTableSVG(shapeStr, chairColor, tScale, tRot) : '<svg width="70" height="70"><circle cx="35" cy="35" r="22" fill="#374151"/></svg>'}
-                    <span class="table-number-label">T${numStr}</span>
-                    ${isCalling ? `<div class="calling-overlay"><span>⚠️ نداء</span></div>` : ''}
+                    ${isCalling
+                    ? `<span class="table-number-label" style="color: #ef4444; font-size: 13px; font-weight: 900; animation: tablePulse 1s infinite; background: rgba(31, 41, 55, 0.7); padding: 2px 6px; border-radius: 4px; backdrop-filter: blur(2px);">نداء T${numStr}</span>`
+                    : `<span class="table-number-label">T${numStr}</span>`
+                }
                 </div>
             `;
         });
