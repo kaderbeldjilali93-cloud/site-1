@@ -398,15 +398,6 @@ window.renderKDS = function (orders) {
 };
 
 window.handleOrderReady = async function (orderId) {
-    const btn = document.getElementById(`btn-done-${orderId}`);
-    if (btn) {
-        if (btn.dataset.processing) return;
-        btn.dataset.processing = "true";
-        btn.disabled = true;
-        btn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
-        btn.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-current mr-2 inline-block"></div>جاري التحويل...`;
-    }
-
     const order = STATE.lastFetchedOrders.find(o => o.id === orderId);
     if (!order) return;
 
