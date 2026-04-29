@@ -177,9 +177,9 @@ window.fetchWaiterCalls = async function () {
                 if (rawTable) {
                     currentActiveCalls.push(rawTable); // دفع النص الكامل ليطابق "الطاولة X - قاعة Y"
                     currentActiveRows[rawTable] = row.id;
-                    
+
                     if (!STATE.activeCalls.includes(rawTable)) newCallIds.push(rawTable);
-                    
+
                     const tableNum = parseInt(rawTable);
                     if (!isNaN(tableNum)) {
                         currentActiveCalls.push(tableNum);

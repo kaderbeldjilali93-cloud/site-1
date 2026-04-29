@@ -13,12 +13,12 @@ const logoutModal = document.getElementById('logout-modal');
 const checkoutModal = document.getElementById('checkout-modal');
 const sidebar = document.getElementById('sidebar');
 
-window.showDeleteConfirm = function(title, msg, onConfirm) {
+window.showDeleteConfirm = function (title, msg, onConfirm) {
     const m = document.getElementById('delete-confirm-modal');
     const t = document.getElementById('delete-confirm-title');
     const d = document.getElementById('delete-confirm-msg');
     const btn = document.getElementById('delete-confirm-btn');
-    if(!m) return;
+    if (!m) return;
 
     t.innerText = title || "هل أنت متأكد؟";
     d.innerText = msg || "لا يمكن التراجع عن هذا الإجراء.";
@@ -29,9 +29,9 @@ window.showDeleteConfirm = function(title, msg, onConfirm) {
     m.classList.remove('hidden');
 };
 
-window.closeDeleteConfirm = function() {
+window.closeDeleteConfirm = function () {
     const m = document.getElementById('delete-confirm-modal');
-    if(m) m.classList.add('hidden');
+    if (m) m.classList.add('hidden');
 };
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -201,7 +201,7 @@ window.authenticateUser = function (username, links, role, assignedRoom, assigne
     localStorage.setItem(STATE.storageKeys.role, role);
     if (roomStr) localStorage.setItem(STATE.storageKeys.room, roomStr);
     else localStorage.removeItem(STATE.storageKeys.room);
-    
+
     if (stationStr) localStorage.setItem(STATE.storageKeys.station, stationStr);
     else localStorage.removeItem(STATE.storageKeys.station);
 
@@ -554,7 +554,7 @@ window.loadView = async function (viewType) {
                 if (STATE.currentActiveView !== 'kds') return;
                 try {
                     // Always fetch menu to ensure station names and items are up to date
-                    try { STATE.cachedMenuItems = await window.fetchMenu(); } catch(e) {}
+                    try { STATE.cachedMenuItems = await window.fetchMenu(); } catch (e) { }
                     if (!STATE.tableMapData || STATE.tableMapData.length === 0) {
                         try {
                             const _t = Date.now();
@@ -562,7 +562,7 @@ window.loadView = async function (viewType) {
                                 headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
                             });
                             if (tmRes.ok) { const tmData = await tmRes.json(); STATE.tableMapData = tmData.results || []; }
-                        } catch(e) {}
+                        } catch (e) { }
                     }
                     const data = await window.fetchOrders(ORDERS_TABLE_ID);
                     if (STATE.currentActiveView !== 'kds') return;
