@@ -527,7 +527,7 @@
 
         function getTableNumber() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('table') || '2'; // User requested default fallback is now table 2
+            return urlParams.get('table') || 'قاعة 1 - طاولة رقم 5'; 
         }
 
         const MENU_API_URL = "https://n8n.vidsai.site/webhook/get-menu";
