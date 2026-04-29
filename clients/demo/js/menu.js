@@ -202,18 +202,36 @@ window.openNewOrderModal = async function (type = 'quick', isPreSelected = false
         roomSelect.innerHTML = '<option value="" disabled selected>إختر القاعة...</option>';
         const allRooms = [...new Set(STATE.tableMapData.map(t => t.Room).filter(Boolean))].sort();
 
-        allRooms.forEach(room => {
+        // === تقييد النادل بالقاعة المخصصة له ===
+        const isRestrictedWaiter = (STATE.currentRole === 'waiter' && STATE.assignedRoom);
+
+        if (isRestrictedWaiter) {
+            // النادل المقيد يرى فقط قاعته المخصصة
             const opt = document.createElement('option');
-            opt.value = room;
-            opt.innerText = room;
+            opt.value = STATE.assignedRoom;
+            opt.innerText = STATE.assignedRoom;
             opt.className = "bg-gray-900 text-white";
             roomSelect.appendChild(opt);
-        });
-
-        // إذا كنا في وضع "الخريطة" نختار القاعة الحالية تلقائياً
-        if (STATE.currentRoom) {
-            roomSelect.value = STATE.currentRoom;
+            roomSelect.value = STATE.assignedRoom;
+            roomSelect.disabled = true;
+            roomSelect.style.opacity = '0.7';
             window.updateTableListByRoom();
+        } else {
+            // المدير أو الكاشير يرون كل القاعات
+            allRooms.forEach(room => {
+                const opt = document.createElement('option');
+                opt.value = room;
+                opt.innerText = room;
+                opt.className = "bg-gray-900 text-white";
+                roomSelect.appendChild(opt);
+            });
+            roomSelect.disabled = false;
+            roomSelect.style.opacity = '1';
+
+            if (STATE.currentRoom) {
+                roomSelect.value = STATE.currentRoom;
+                window.updateTableListByRoom();
+            }
         }
     }
 
