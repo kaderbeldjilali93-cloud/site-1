@@ -104,7 +104,8 @@ if (loginForm) {
                 name: user.Name,
                 role: roleRaw,
                 assignedRoom: user.AssignedRoom,
-                assignedStation: user.AssignedStation
+                assignedStation: user.AssignedStation,
+                kitchenRoom: user.KitchenRoom
             }));
 
             let currentLinks = null;
@@ -115,7 +116,7 @@ if (loginForm) {
             submitBtn.innerHTML = originalBtnText;
             submitBtn.disabled = false;
 
-            window.authenticateUser(user.Name, currentLinks, role, user.AssignedRoom, user.AssignedStation);
+            window.authenticateUser(user.Name, currentLinks, role, user.AssignedRoom, user.AssignedStation, user.KitchenRoom);
 
             if (role === 'admin') {
                 window.loadView('analytics');
@@ -189,7 +190,7 @@ window.applyRolePermissions = function (role) {
     }
 };
 
-window.authenticateUser = function (username, links, role, assignedRoom, assignedStation) {
+window.authenticateUser = function (username, links, role, assignedRoom, assignedStation, kitchenRoom) {
     localStorage.setItem(STATE.storageKeys.username, username);
     localStorage.setItem(STATE.storageKeys.role, role);
     if (assignedRoom) localStorage.setItem(STATE.storageKeys.room, assignedRoom);
@@ -198,11 +199,15 @@ window.authenticateUser = function (username, links, role, assignedRoom, assigne
     if (assignedStation) localStorage.setItem(STATE.storageKeys.station, assignedStation);
     else localStorage.removeItem(STATE.storageKeys.station);
 
+    if (kitchenRoom) localStorage.setItem('kitchenRoom', kitchenRoom);
+    else localStorage.removeItem('kitchenRoom');
+
     STATE.currentUser = username;
     STATE.currentLinks = links;
     STATE.currentRole = role;
     STATE.assignedRoom = assignedRoom;
     STATE.assignedStation = assignedStation;
+    STATE.assignedKitchenRoom = kitchenRoom || null;
 
     window.applyRolePermissions(role);
 

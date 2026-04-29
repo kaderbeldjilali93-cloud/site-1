@@ -33,6 +33,7 @@ const STATE = {
     isMuted: false,
     assignedRoom: null,
     assignedStation: null,
+    assignedKitchenRoom: null,
     selectedCashierDate: window.getLocalYYYYMMDD(),
     selectedAnalyticsDate: window.getLocalYYYYMMDD(),
     lastFetchedOrders: [],

@@ -82,8 +82,8 @@ window.renderStaff = async function () {
             var stationVal = (typeof user.AssignedStation === 'object' && user.AssignedStation) ? user.AssignedStation.value : (user.AssignedStation || "");
 
             var assignment = '<span class="text-gray-600">---</span>';
-            if (role === 'Waiter') assignment = roomVal ? '<span class="text-blue-400">🏠 ' + roomVal + '</span>' : '<span class="text-yellow-500">⚠️ لم يحدد</span>';
-            if (role === 'Kitchen') assignment = stationVal && stationVal !== 'الكل' ? '<span class="text-orange-400">🍳 ' + stationVal + '</span>' : '<span class="text-green-400">✅ الكل</span>';
+            if (role === 'Waiter') assignment = roomVal ? '<span class="text-brand font-bold">' + roomVal + '</span>' : '<span class="text-yellow-500">لم يحدد</span>';
+            if (role === 'Kitchen') assignment = stationVal && stationVal !== 'الكل' ? '<span class="text-brand font-bold">' + stationVal + '</span>' : '<span class="text-gray-400">الكل</span>';
 
             var uId = user.id;
             var uName = String(user.Name || '').replace(/'/g, "\\'");
@@ -101,13 +101,13 @@ window.renderStaff = async function () {
                 role === 'Kitchen' ? 'bg-orange-500/20 text-orange-400' : 'bg-gray-700 text-gray-400') + '">' + role + '</span></td>';
             html += '<td class="py-4 px-4 text-center text-sm font-medium">' + assignment + '</td>';
             html += '<td class="py-4 px-4 text-center font-mono text-brand">' + (user.PIN || '<span class="text-gray-600">---</span>') + '</td>';
-            html += '<td class="py-4 px-4 text-center"><span class="' + (isActive ? 'text-green-400' : 'text-red-400') + ' text-xs font-bold px-2.5 py-1 bg-gray-800 rounded-full border border-gray-700">' + (isActive ? '🟢 نشط' : '🔴 موقوف') + '</span></td>';
+            html += '<td class="py-4 px-4 text-center"><span class="' + (isActive ? 'text-green-400' : 'text-red-400') + ' text-xs font-bold px-2.5 py-1 bg-gray-800 rounded-full border border-gray-700">' + (isActive ? 'نشط' : 'موقوف') + '</span></td>';
 
             // أزرار الإجراءات: تفعيل/إيقاف + تعديل + حذف
-            html += '<td class="py-4 px-4 text-center"><div class="flex justify-center gap-1.5">';
-            html += '<button onclick="window.toggleStaffStatus(' + uId + ', ' + !isActive + ')" class="text-xs px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 transition" title="' + (isActive ? 'إيقاف' : 'تفعيل') + '">' + (isActive ? '⏸️' : '▶️') + '</button>';
-            html += '<button onclick="window.showEditStaffModal(' + uId + ', \'' + uName + '\', \'' + uRole + '\', \'' + uRoom + '\', \'' + uStation + '\', \'' + uPin + '\')" class="text-xs px-2.5 py-1.5 bg-brand/20 text-brand font-bold rounded-lg hover:bg-brand/30 transition" title="تعديل">✏️</button>';
-            html += '<button onclick="window.deleteStaff(' + uId + ', \'' + uName + '\')" class="text-xs px-2.5 py-1.5 bg-red-500/20 text-red-400 font-bold rounded-lg hover:bg-red-500/30 transition" title="حذف">🗑️</button>';
+            html += '<td class="py-4 px-4 text-center"><div class="flex justify-center gap-2">';
+            html += '<button onclick="window.toggleStaffStatus(' + uId + ', ' + !isActive + ')" class="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-300 font-bold transition">' + (isActive ? 'إيقاف' : 'تفعيل') + '</button>';
+            html += '<button onclick="window.showEditStaffModal(' + uId + ', \'' + uName + '\', \'' + uRole + '\', \'' + uRoom + '\', \'' + uStation + '\', \'' + uPin + '\')" class="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-brand font-bold transition">تعديل</button>';
+            html += '<button onclick="window.deleteStaff(' + uId + ', \'' + uName + '\')" class="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-red-400 font-bold transition">حذف</button>';
             html += '</div></td></tr>';
         });
 
@@ -116,41 +116,51 @@ window.renderStaff = async function () {
         // === نافذة الإضافة ===
         html += '<div id="add-staff-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">';
         html += '<div class="bg-gray-800 border-t-4 border-brand rounded-xl p-6 w-full max-w-sm shadow-2xl">';
-        html += '<h3 class="text-xl font-bold text-white mb-6">➕ إضافة عامل جديد</h3><div class="space-y-4">';
-        html += '<div><label class="block text-xs text-gray-400 mb-1.5 font-bold">👤 اسم العامل</label>';
+        html += '<h3 class="text-xl font-bold text-white mb-6">إضافة عامل جديد</h3><div class="space-y-4">';
+        html += '<div><label class="block text-xs text-gray-400 mb-1.5 font-bold">اسم العامل</label>';
         html += '<input type="text" id="add-name" placeholder="مثال: أحمد بن علي" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white outline-none focus:border-brand transition"></div>';
-        html += '<div><label class="block text-xs text-gray-400 mb-1.5 font-bold">🎭 الدور الوظيفي</label>';
+        html += '<div><label class="block text-xs text-gray-400 mb-1.5 font-bold">الدور الوظيفي</label>';
         html += '<select id="add-role" onchange="window.updateStaffFields(\'add\')" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white outline-none focus:border-brand transition">';
-        html += '<option value="Cashier">💰 Cashier (كاشير)</option><option value="Admin">👑 Admin (مدير)</option><option value="Waiter">🍽️ Waiter (نادل)</option><option value="Kitchen">👨‍🍳 Kitchen (طباخ)</option></select></div>';
-        html += '<div id="add-room-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">🏠 القاعة المخصصة للنادل</label>';
+        html += '<option value="Cashier">Cashier (كاشير)</option><option value="Admin">Admin (مدير)</option><option value="Waiter">Waiter (نادل)</option><option value="Kitchen">Kitchen (طباخ)</option></select></div>';
+        html += '<div id="add-room-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">القاعة المخصصة</label>';
         html += '<select id="add-room" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">' + roomOptions + '</select></div>';
-        html += '<div id="add-station-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">🍳 محطة المطبخ المخصصة</label>';
+        html += '<div id="add-station-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">نوع التخصيص</label>';
+        html += '<select id="add-kitchen-mode" onchange="window.updateKitchenMode(\'add\')" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white mb-3">';
+        html += '<option value="station">حسب المحطة (الأطباق)</option><option value="room">حسب القاعة</option></select>';
+        html += '<div id="add-station-select-box"><label class="block text-xs text-gray-400 mb-1.5 font-bold">محطة المطبخ</label>';
         html += '<select id="add-station" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">' + stationOptions + '</select></div>';
-        html += '<div><label class="block text-xs text-gray-400 mb-1.5 font-bold">🔑 الرمز السري (PIN)</label>';
+        html += '<div id="add-kitchen-room-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">قاعة المطبخ</label>';
+        html += '<select id="add-kitchen-room" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">' + roomOptions + '</select></div></div>';
+        html += '<div><label class="block text-xs text-gray-400 mb-1.5 font-bold">الرمز السري (PIN)</label>';
         html += '<input type="number" id="add-pin" placeholder="مثال: 1234" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white text-center font-bold tracking-widest outline-none focus:border-brand transition"></div>';
         html += '</div><div class="flex justify-end gap-3 mt-8">';
         html += '<button onclick="document.getElementById(\'add-staff-modal\').classList.add(\'hidden\')" class="text-gray-400 px-4 py-2 hover:text-white transition">إلغاء</button>';
-        html += '<button onclick="window.saveStaff(\'add\')" class="bg-brand px-6 py-2.5 rounded-lg font-bold text-black hover:bg-brand-dark transition">💾 حفظ</button>';
+        html += '<button onclick="window.saveStaff(\'add\')" class="bg-brand px-6 py-2.5 rounded-lg font-bold text-black hover:bg-brand-dark transition">حفظ</button>';
         html += '</div></div></div>';
 
         // === نافذة التعديل ===
         html += '<div id="edit-staff-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">';
         html += '<div class="bg-gray-800 border-t-4 border-blue-500 rounded-xl p-6 w-full max-w-sm shadow-2xl">';
-        html += '<h3 class="text-xl font-bold text-white mb-6">✏️ تعديل بيانات العامل</h3><input type="hidden" id="edit-id"><div class="space-y-4">';
-        html += '<div><label class="block text-xs text-gray-400 mb-1.5 font-bold">👤 اسم العامل</label>';
+        html += '<h3 class="text-xl font-bold text-white mb-6">تعديل بيانات العامل</h3><input type="hidden" id="edit-id"><div class="space-y-4">';
+        html += '<div><label class="block text-xs text-gray-400 mb-1.5 font-bold">اسم العامل</label>';
         html += '<input type="text" id="edit-name" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white outline-none focus:border-brand transition"></div>';
-        html += '<div><label class="block text-xs text-gray-400 mb-1.5 font-bold">🎭 الدور الوظيفي</label>';
+        html += '<div><label class="block text-xs text-gray-400 mb-1.5 font-bold">الدور الوظيفي</label>';
         html += '<select id="edit-role" onchange="window.updateStaffFields(\'edit\')" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white outline-none focus:border-brand transition">';
-        html += '<option value="Cashier">💰 Cashier (كاشير)</option><option value="Admin">👑 Admin (مدير)</option><option value="Waiter">🍽️ Waiter (نادل)</option><option value="Kitchen">👨‍🍳 Kitchen (طباخ)</option></select></div>';
-        html += '<div id="edit-room-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">🏠 القاعة المخصصة للنادل</label>';
+        html += '<option value="Cashier">Cashier (كاشير)</option><option value="Admin">Admin (مدير)</option><option value="Waiter">Waiter (نادل)</option><option value="Kitchen">Kitchen (طباخ)</option></select></div>';
+        html += '<div id="edit-room-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">القاعة المخصصة</label>';
         html += '<select id="edit-room" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">' + roomOptions + '</select></div>';
-        html += '<div id="edit-station-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">🍳 محطة المطبخ المخصصة</label>';
+        html += '<div id="edit-station-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">نوع التخصيص</label>';
+        html += '<select id="edit-kitchen-mode" onchange="window.updateKitchenMode(\'edit\')" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white mb-3">';
+        html += '<option value="station">حسب المحطة (الأطباق)</option><option value="room">حسب القاعة</option></select>';
+        html += '<div id="edit-station-select-box"><label class="block text-xs text-gray-400 mb-1.5 font-bold">محطة المطبخ</label>';
         html += '<select id="edit-station" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">' + stationOptions + '</select></div>';
-        html += '<div><label class="block text-xs text-gray-400 mb-1.5 font-bold">🔑 الرمز السري (PIN)</label>';
+        html += '<div id="edit-kitchen-room-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">قاعة المطبخ</label>';
+        html += '<select id="edit-kitchen-room" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">' + roomOptions + '</select></div></div>';
+        html += '<div><label class="block text-xs text-gray-400 mb-1.5 font-bold">الرمز السري (PIN)</label>';
         html += '<input type="number" id="edit-pin" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white text-center font-bold tracking-widest outline-none focus:border-brand transition"></div>';
         html += '</div><div class="flex justify-end gap-3 mt-8">';
         html += '<button onclick="document.getElementById(\'edit-staff-modal\').classList.add(\'hidden\')" class="text-gray-400 px-4 py-2 hover:text-white transition">إلغاء</button>';
-        html += '<button onclick="window.saveStaff(\'edit\')" class="bg-blue-500 px-6 py-2.5 rounded-lg font-bold text-white hover:bg-blue-600 transition">💾 تحديث</button>';
+        html += '<button onclick="window.saveStaff(\'edit\')" class="bg-brand px-6 py-2.5 rounded-lg font-bold text-black hover:bg-brand-dark transition">تحديث</button>';
         html += '</div></div></div>';
 
         dynamicContent.innerHTML = html;
@@ -212,9 +222,25 @@ window.updateStaffFields = function (prefix) {
     } else if (role === 'Kitchen') {
         if (roomBox) roomBox.classList.add('hidden');
         if (stationBox) stationBox.classList.remove('hidden');
+        window.updateKitchenMode(prefix);
     } else {
         if (roomBox) roomBox.classList.add('hidden');
         if (stationBox) stationBox.classList.add('hidden');
+    }
+};
+
+window.updateKitchenMode = function (prefix) {
+    var modeEl = document.getElementById(prefix + '-kitchen-mode');
+    var stationSelectBox = document.getElementById(prefix + '-station-select-box');
+    var kitchenRoomBox = document.getElementById(prefix + '-kitchen-room-box');
+    if (!modeEl) return;
+
+    if (modeEl.value === 'room') {
+        if (stationSelectBox) stationSelectBox.classList.add('hidden');
+        if (kitchenRoomBox) kitchenRoomBox.classList.remove('hidden');
+    } else {
+        if (stationSelectBox) stationSelectBox.classList.remove('hidden');
+        if (kitchenRoomBox) kitchenRoomBox.classList.add('hidden');
     }
 };
 
@@ -227,28 +253,37 @@ window.saveStaff = async function (action) {
     var role = document.getElementById(action + '-role').value;
     var room = document.getElementById(action + '-room').value;
     var station = document.getElementById(action + '-station').value;
+    var kitchenMode = document.getElementById(action + '-kitchen-mode');
+    var kitchenRoom = document.getElementById(action + '-kitchen-room');
     var pin = document.getElementById(action + '-pin').value.trim();
 
     if (!name) {
         window.showToast ? window.showToast("يرجى إدخال اسم العامل", "error") : alert("يرجى إدخال اسم العامل");
         return;
     }
-    if (pin && pin.length < 4) {
-        window.showToast ? window.showToast("الرمز السري يجب أن يكون 4 أرقام على الأقل", "error") : alert("الرمز السري يجب أن يكون 4 أرقام على الأقل");
-        return;
-    }
+    // لا حاجة لتحقق من طول PIN - يمكن أن يكون أي رقم
 
     var payload = { "Name": name, "Role": role, "PIN": pin || "", "Status": true };
 
     if (role === 'Waiter') {
         payload["AssignedRoom"] = room || null;
         payload["AssignedStation"] = null;
+        payload["KitchenRoom"] = null;
     } else if (role === 'Kitchen') {
-        payload["AssignedStation"] = station || null;
-        payload["AssignedRoom"] = null;
+        var mode = kitchenMode ? kitchenMode.value : 'station';
+        if (mode === 'room') {
+            payload["AssignedStation"] = null;
+            payload["KitchenRoom"] = kitchenRoom ? kitchenRoom.value : null;
+            payload["AssignedRoom"] = null;
+        } else {
+            payload["AssignedStation"] = station || null;
+            payload["KitchenRoom"] = null;
+            payload["AssignedRoom"] = null;
+        }
     } else {
         payload["AssignedRoom"] = null;
         payload["AssignedStation"] = null;
+        payload["KitchenRoom"] = null;
     }
 
     try {

@@ -424,24 +424,26 @@ window.saveOrderEdit = async function () {
         const roomVal = document.getElementById('manual-room-select')?.value;
         const tableVal = document.getElementById('manual-table-select')?.value;
 
-        // إذا كان هناك اختيار يدوي للطاولة، نستخدمه. وإلا نستخدم القيمة الافتراضية بناءً على النوع
-        const manualTable = tableVal || "";
-        payload["Table"] = manualTable || (STATE.newOrderType === 'table' ? "طاولة جديدة" : "سفري");
-
-        if (manualTable || STATE.newOrderType === 'table') {
-            payload["order_type"] = "table";
-            if (manualTable) {
-                const roomMatch = manualTable.match(/-\s*(.+)$/);
-                if (roomMatch) payload["Room"] = roomMatch[1].trim();
-                else if (roomVal) payload["Room"] = roomVal;
-                else if (STATE.currentRoom) payload["Room"] = STATE.currentRoom;
-            } else {
-                if (roomVal) payload["Room"] = roomVal;
-                else if (STATE.currentRoom) payload["Room"] = STATE.currentRoom;
-            }
+        if (STATE.newOrderType === 'quick') {
+            // طلب سريع: لا طاولة ولا قاعة
+            payload["Table"] = "سفري";
+            payload["order_type"] = "quick";
+            payload["Room"] = "";
         } else {
-            payload["order_type"] = STATE.newOrderType || "quick";
-            if (STATE.currentRoom) payload["Room"] = STATE.currentRoom;
+            // طلب طاولة
+            const manualTable = tableVal || "";
+            if (manualTable) {
+                payload["Table"] = manualTable;
+                // استخراج القاعة من اسم الطاولة
+                const roomMatch = manualTable.match(/-\s*(.+)$/);
+                payload["Room"] = roomMatch ? roomMatch[1].trim() : (roomVal || STATE.currentRoom || "قاعة 1");
+            } else {
+                // افتراضي: الطاولة 2 من القاعة الأولى
+                const defaultRoom = roomVal || STATE.currentRoom || "قاعة 1";
+                payload["Table"] = "الطاولة 2 - " + defaultRoom;
+                payload["Room"] = defaultRoom;
+            }
+            payload["order_type"] = "table";
         }
 
         payload["Status"] = "قيد التحضير";

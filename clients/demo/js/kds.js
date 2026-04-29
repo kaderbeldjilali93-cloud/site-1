@@ -28,9 +28,59 @@ window.renderKDS = function (orders) {
         return (s === 'قيد التحضير' || s === 'جاهز') && isToday;
     });
 
+    // === فلترة حسب المحطة أو القاعة للطباخ ===
+    const myStation = STATE.assignedStation || null;
+    const myKitchenRoom = STATE.assignedKitchenRoom || null;
+    const menuItems = STATE.cachedMenuItems || [];
+
+    // دالة لفلترة أصناف الطلب حسب محطة الطباخ
+    function filterDetailsByStation(details, station) {
+        if (!station || station === 'الكل' || !details) return details;
+        var lines = details.split('\n');
+        var filtered = lines.filter(function (line) {
+            var itemName = line.replace(/^\d+x\s+/, '').split('=')[0].trim();
+            var menuItem = menuItems.find(function (m) { return (m.Name || m.name) === itemName; });
+            if (menuItem) {
+                var stRaw = (typeof menuItem.Station === 'object' && menuItem.Station) ? menuItem.Station.value : menuItem.Station;
+                return stRaw === station;
+            }
+            return false;
+        });
+        return filtered.length > 0 ? filtered.join('\n') : null;
+    }
+
+    // تطبيق الفلترة على الطلبات النشطة
+    var processedOrders = activeOrders.map(function (order) {
+        var clone = Object.assign({}, order);
+        
+        // فلترة حسب القاعة (إذا الطباخ مخصص لقاعة)
+        if (myKitchenRoom) {
+            var orderRoom = order.Room || order.room || '';
+            if (!orderRoom && String(order.Table || '').includes('-')) {
+                var match = String(order.Table).match(/-\s*(.+)$/);
+                if (match) orderRoom = match[1].trim();
+            }
+            if (orderRoom && orderRoom !== myKitchenRoom) {
+                clone._hidden = true;
+                return clone;
+            }
+        }
+
+        // فلترة حسب المحطة (إذا الطباخ مخصص لمحطة)
+        if (myStation && myStation !== 'الكل') {
+            var filteredDetails = filterDetailsByStation(clone.Details || '', myStation);
+            if (!filteredDetails) {
+                clone._hidden = true;
+            } else {
+                clone._filteredDetails = filteredDetails;
+            }
+        }
+        return clone;
+    }).filter(function (o) { return !o._hidden; });
+
     const groupedOrders = { quick: [], delivery: [], rooms: {} };
 
-    activeOrders.forEach(order => {
+    processedOrders.forEach(order => {
         let type = order.order_type || 'quick';
         const tableRaw = String(order.Table || order.table || '').trim();
         let roomName = order.Room || order.room || '';
@@ -96,22 +146,8 @@ window.renderKDS = function (orders) {
                 ? `<button id="btn-done-${o.id}" onclick="window.updateOrderStatus(${o.id}, 'جاهز')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg transition shadow-md flex justify-center items-center gap-2"><span>جاهز</span> ✅</button>`
                 : `<div class="text-center text-green-400 font-bold bg-green-900/30 py-2 rounded-lg border border-green-700/50">جاهز (في انتظار الدفع)</div>`;
 
-            // --- Routing Logic: Station Filtering for Kitchen ---
-            let displayDetails = o.Details || '-';
-            if (STATE.assignedStation && STATE.assignedStation !== 'الكل' && STATE.cachedMenuItems) {
-                const lines = displayDetails.split('\n');
-                const filtered = lines.filter(line => {
-                    // Extract item name from "1x Item Name = Price"
-                    const itemName = line.replace(/^\d+x\s+/, '').split('=')[0].trim();
-                    const menuItem = STATE.cachedMenuItems.find(m => (m.Name || m.name) === itemName);
-                    if (menuItem) {
-                        const stationRaw = (typeof menuItem.Station === 'object' && menuItem.Station) ? menuItem.Station.value : menuItem.Station;
-                        return stationRaw === STATE.assignedStation;
-                    }
-                    return true; // Keep it if unknown
-                });
-                displayDetails = filtered.join('\n') || '<span class="text-gray-500 italic">(لا توجد أصناف تتبع لمحطتك)</span>';
-            }
+            // استخدام التفاصيل المفلترة مسبقاً (حسب المحطة) أو التفاصيل الكاملة
+            let displayDetails = o._filteredDetails || o.Details || '-';
 
             return `
             <div class="bg-gray-900 rounded-xl p-3 border border-gray-700 shadow-sm flex flex-col h-fit mb-3 last:mb-0">
@@ -207,6 +243,8 @@ window.renderKDS = function (orders) {
                 const btnHtml = s === 'قيد التحضير'
                     ? `<button id="btn-done-${o.id}" onclick="window.updateOrderStatus(${o.id}, 'جاهز')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition shadow-lg flex justify-center items-center gap-2 mt-auto text-lg hover:scale-[1.02]"><span>جاهز للتسليم</span> ✅</button>`
                     : `<div class="text-center text-yellow-400 font-bold bg-yellow-900/30 py-3 rounded-xl border border-yellow-700/50 mt-auto">جاهز (في انتظار الدفع)</div>`;
+
+                const displayDetails = o._filteredDetails || o.Details || '-';
 
                 let ordersHTML = `
                 <div class="bg-gray-900 rounded-xl p-4 border border-gray-700 m-3 flex flex-col shadow-inner h-fit">

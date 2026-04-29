@@ -83,12 +83,20 @@ window.renderTableView = async function () {
                 const rawTime = o['Created at'] || o.Time || o.time || o.created_on || o.CreatedOn || o.Date || '';
                 if (!window.isOrderFromToday(rawTime)) return false;
 
+                // تجاهل الطلبات السريعة تماماً
+                if (o.order_type === 'quick' || tblRaw === 'سفري') return false;
+
+                // مطابقة بالتنسيق الموحد "الطاولة X - قاعة Y"
                 if (tblRaw === expectedTableFormat) return true;
+
+                // استخراج رقم الطاولة واسم القاعة من النص
                 const parsed = tblRaw.match(/^(?:الطاولة|طاولة|Table)\s*(\d+)\s*-\s*(.+)$/i);
                 if (parsed) return parsed[1] === numStr && parsed[2].trim() === STATE.currentRoom;
+
+                // إذا كان رقم فقط، نتحقق من حقل Room بشكل صارم
                 if (/^\d+$/.test(tblRaw) && tblRaw === numStr) {
                     const r = String(o.Room || o.room || '').trim();
-                    return !r || r === STATE.currentRoom;
+                    return r === STATE.currentRoom; // يجب أن يتطابق - لا نقبل قاعة فارغة
                 }
                 return false;
             });
