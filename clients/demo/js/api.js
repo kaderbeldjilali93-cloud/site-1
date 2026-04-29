@@ -7,7 +7,8 @@ window.fetchOrders = async function (tableId) {
         const _t = Date.now(); // cache-busting
         const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true&size=200&_t=${_t}`, {
             method: 'GET',
-            headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+            headers: { "Authorization": `Token ${BASEROW_TOKEN}` },
+            cache: 'no-store'
         });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
@@ -23,7 +24,8 @@ window.fetchMenu = async function () {
         const _t = Date.now(); // cache-busting لتجنب التخزين المؤقت
         const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true&size=200&_t=${_t}`, {
             method: 'GET',
-            headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+            headers: { "Authorization": `Token ${BASEROW_TOKEN}` },
+            cache: 'no-store'
         });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();

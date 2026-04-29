@@ -1,9 +1,15 @@
 // =========================================================
-// 👨‍🍳 KDS Logic (شاشة المطبخ)
+// 👨‍🍳 KDS Logic (شاشة المطبخ) - v6.0
 // =========================================================
 
 window.setKdsTab = function (tab) {
     STATE.kdsActiveTab = tab;
+    window.renderKDS(STATE.latestKdsOrders || []);
+};
+
+// === فلتر الأدمين للطباخين ===
+window.setKdsAdminFilter = function (filterType, filterValue) {
+    STATE.kdsAdminFilter = { type: filterType, value: filterValue };
     window.renderKDS(STATE.latestKdsOrders || []);
 };
 
@@ -19,34 +25,51 @@ window.renderKDS = function (orders) {
 
     dynamicContent.innerHTML = '';
     const getStatus = (o) => (typeof o.Status === 'object' && o.Status) ? o.Status.value : o.Status;
+    const isAdmin = STATE.currentRole === 'admin';
 
+    // === 1. فلترة الطلبات النشطة فقط (اليوم + حالة صالحة) ===
     const activeOrders = filteredOrders.filter(o => {
         const s = getStatus(o);
-        const rawTime = o['Created at'] || o['Created'] || o.Time || o.time || o.created_on || o.Created || '';
-        // إذا لا يوجد وقت، نعتبر الطلب من اليوم (حتى لا نخفي طلبات صالحة)
+        const rawTime = o['Created at'] || o['Created'] || o.Time || o.time || o.created_on || '';
         const isToday = rawTime ? window.isOrderFromToday(rawTime) : true;
-
-        // قبول حالات متعددة للطلبات النشطة
         const validStatuses = ['قيد التحضير', 'جاهز', 'pending', 'Pending', 'preparing', 'ready'];
-        const isActive = validStatuses.includes(s);
-        
-        return isActive && isToday;
+        return validStatuses.includes(s) && isToday;
     });
 
-    // === فلترة حسب المحطة أو القاعة للطباخ ===
-    const myStation = STATE.assignedStation || null;
-    const myKitchenRoom = STATE.assignedKitchenRoom || null;
+    // === 2. فلترة حسب الطباخ (محطة / قاعة) ===
     const menuItems = STATE.cachedMenuItems || [];
-    const hasStationFilter = myStation && myStation !== 'الكل' && menuItems.length > 0;
+
+    // تحديد فلتر العرض (الأدمين يمكنه اختيار طباخ، الطباخ يستعمل تخصيصه)
+    var viewStation = null;
+    var viewKitchenRoom = null;
+
+    if (isAdmin && STATE.kdsAdminFilter) {
+        // الأدمين يستعمل الفلتر المختار
+        if (STATE.kdsAdminFilter.type === 'station') viewStation = STATE.kdsAdminFilter.value;
+        if (STATE.kdsAdminFilter.type === 'room') viewKitchenRoom = STATE.kdsAdminFilter.value;
+    } else if (!isAdmin) {
+        // الطباخ يستعمل تخصيصه
+        viewStation = STATE.assignedStation || null;
+        viewKitchenRoom = STATE.assignedKitchenRoom || null;
+    }
+
+    var hasStationFilter = viewStation && viewStation !== 'الكل' && menuItems.length > 0;
 
     // دالة لفلترة أصناف الطلب حسب محطة الطباخ
     function filterDetailsByStation(details, station) {
         if (!station || station === 'الكل' || !details || menuItems.length === 0) return details;
-        var lines = details.split('\n').filter(function(l) { return l.trim(); });
+        var lines = details.split('\n').filter(function (l) { return l.trim(); });
         if (lines.length === 0) return details;
         var filtered = lines.filter(function (line) {
-            var itemName = line.replace(/^\d+x\s+/, '').split('=')[0].trim();
-            var menuItem = menuItems.find(function (m) { return (m.Name || m.name) === itemName; });
+            // استخراج اسم الصنف: "2x برغر كلاسيكي = 1200 DA" → "برغر كلاسيكي"
+            var cleanLine = line.replace(/^\d+x\s*/, '').trim();
+            var itemName = cleanLine.split(/\s*[=\-]\s*\d/)[0].trim();
+            if (!itemName) return true;
+
+            var menuItem = menuItems.find(function (m) {
+                var mName = (m.Name || m.name || '').trim();
+                return mName === itemName || itemName.includes(mName) || mName.includes(itemName);
+            });
             if (menuItem) {
                 var stRaw = (typeof menuItem.Station === 'object' && menuItem.Station) ? menuItem.Station.value : menuItem.Station;
                 return stRaw === station;
@@ -56,31 +79,30 @@ window.renderKDS = function (orders) {
         return filtered.length > 0 ? filtered.join('\n') : null;
     }
 
-    // تطبيق الفلترة على الطلبات النشطة (فقط إذا الطباخ مخصص)
+    // تطبيق الفلترة
     var processedOrders;
-    if (!hasStationFilter && !myKitchenRoom) {
-        // لا فلترة - الطباخ يرى كل شيء
+    if (!hasStationFilter && !viewKitchenRoom) {
         processedOrders = activeOrders;
     } else {
         processedOrders = activeOrders.map(function (order) {
             var clone = Object.assign({}, order);
-            
-            // فلترة حسب القاعة (إذا الطباخ مخصص لقاعة)
-            if (myKitchenRoom) {
+
+            // فلترة حسب القاعة
+            if (viewKitchenRoom) {
                 var orderRoom = order.Room || order.room || '';
                 if (!orderRoom && String(order.Table || '').includes('-')) {
                     var match = String(order.Table).match(/-\s*(.+)$/);
                     if (match) orderRoom = match[1].trim();
                 }
-                if (orderRoom && orderRoom !== myKitchenRoom) {
+                if (orderRoom && orderRoom !== viewKitchenRoom) {
                     clone._hidden = true;
                     return clone;
                 }
             }
 
-            // فلترة حسب المحطة (إذا الطباخ مخصص لمحطة)
+            // فلترة حسب المحطة
             if (hasStationFilter) {
-                var filteredDetails = filterDetailsByStation(clone.Details || '', myStation);
+                var filteredDetails = filterDetailsByStation(clone.Details || '', viewStation);
                 if (!filteredDetails) {
                     clone._hidden = true;
                 } else {
@@ -91,14 +113,14 @@ window.renderKDS = function (orders) {
         }).filter(function (o) { return !o._hidden; });
     }
 
+    // === 3. تصنيف الطلبات ===
     const groupedOrders = { quick: [], delivery: [], rooms: {} };
 
     processedOrders.forEach(order => {
-        let type = order.order_type || 'quick';
+        let type = order.order_type || '';
         const tableRaw = String(order.Table || order.table || '').trim();
         let roomName = order.Room || order.room || '';
 
-        // استخراج اسم القاعة من حقل الطاولة إذا كان مفقوداً
         if (!roomName && tableRaw.includes('-')) {
             const match = tableRaw.match(/-\s*(.+)$/);
             if (match) roomName = match[1].trim();
@@ -116,8 +138,9 @@ window.renderKDS = function (orders) {
         }
     });
 
+    // === 4. بناء الهيدر ===
     const header = document.createElement('div');
-    header.className = "flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700 gap-4";
+    header.className = "flex flex-col gap-3 mb-6 sticky top-0 bg-gray-800 py-4 -mx-6 -mt-6 px-6 pt-6 z-30 border-b border-gray-700";
 
     const hasNewQuick = groupedOrders.quick.some(o => o.isNew);
     const hasNewDelivery = groupedOrders.delivery.some(o => o.isNew);
@@ -131,25 +154,68 @@ window.renderKDS = function (orders) {
         return 'text-gray-400 hover:bg-gray-700 hover:text-white';
     };
 
-    header.innerHTML = `
-        <div class="flex items-center gap-3">
-            <span class="live-indicator" title="تحديث مباشر"></span>
+    // شريط التبويبات
+    var headerHTML = `
+        <div class="flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <span class="live-indicator" title="تحديث مباشر"></span>
+            </div>
+            <div class="flex bg-gray-900 p-1 rounded-xl border border-gray-700 shadow-inner flex-wrap gap-1">
+                <button onclick="window.setKdsTab('tables')" class="px-6 py-2.5 rounded-lg text-sm font-bold transition ${getTabClass('tables', hasNewTable)}">طلبات الطاولات</button>
+                <button onclick="window.setKdsTab('quick')" class="px-6 py-2.5 rounded-lg text-sm font-bold transition ${getTabClass('quick', hasNewQuick)} relative">الطلبات السريعة ${groupedOrders.quick.length > 0 ? `<span class="bg-black/30 px-2 py-0.5 rounded-full ml-1.5 text-xs">${groupedOrders.quick.length}</span>` : ''}</button>
+                <button onclick="window.setKdsTab('delivery')" class="px-6 py-2.5 rounded-lg text-sm font-bold transition ${getTabClass('delivery', hasNewDelivery)} relative">طلبات التوصيل ${groupedOrders.delivery.length > 0 ? `<span class="bg-black/30 px-2 py-0.5 rounded-full ml-1.5 text-xs">${groupedOrders.delivery.length}</span>` : ''}</button>
+            </div>
+            <div class="text-gray-300 font-mono text-sm hidden xl:block">${new Date().toLocaleTimeString('ar-DZ')}</div>
         </div>
-        <div class="flex bg-gray-900 p-1 rounded-xl border border-gray-700 shadow-inner flex-wrap gap-1">
-            <button onclick="window.setKdsTab('tables')" class="px-6 py-2.5 rounded-lg text-sm font-bold transition ${getTabClass('tables', hasNewTable)}">طلبات الطاولات</button>
-            <button onclick="window.setKdsTab('quick')" class="px-6 py-2.5 rounded-lg text-sm font-bold transition ${getTabClass('quick', hasNewQuick)} relative">الطلبات السريعة ${groupedOrders.quick.length > 0 ? `<span class="bg-black/30 px-2 py-0.5 rounded-full ml-1.5 text-xs">${groupedOrders.quick.length}</span>` : ''}</button>
-            <button onclick="window.setKdsTab('delivery')" class="px-6 py-2.5 rounded-lg text-sm font-bold transition ${getTabClass('delivery', hasNewDelivery)} relative">طلبات التوصيل ${groupedOrders.delivery.length > 0 ? `<span class="bg-black/30 px-2 py-0.5 rounded-full ml-1.5 text-xs">${groupedOrders.delivery.length}</span>` : ''}</button>
-        </div>
-        <div class="text-gray-300 font-mono text-sm hidden xl:block">${new Date().toLocaleTimeString('ar-DZ')}</div>
     `;
+
+    // === شريط فلتر الأدمين (فقط للأدمين) ===
+    if (isAdmin) {
+        var adminFilter = STATE.kdsAdminFilter || { type: 'all', value: '' };
+        var filterBtnClass = function (t, v) {
+            return (adminFilter.type === t && adminFilter.value === v)
+                ? 'bg-brand text-black font-bold'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white';
+        };
+
+        headerHTML += `<div class="flex flex-wrap items-center gap-2 mt-2">`;
+        headerHTML += `<span class="text-gray-400 text-xs font-bold">عرض شاشة:</span>`;
+        headerHTML += `<button onclick="window.setKdsAdminFilter('all','')" class="text-xs px-3 py-1.5 rounded-lg transition ${filterBtnClass('all', '')}">كل الطلبات</button>`;
+
+        // أزرار فلتر القاعات
+        var rooms = [];
+        (STATE.tableMapData || []).forEach(function (t) {
+            var r = t.Room || t.room || '';
+            if (r && !rooms.includes(r)) rooms.push(r);
+        });
+        rooms.forEach(function (r) {
+            headerHTML += `<button onclick="window.setKdsAdminFilter('room','${r}')" class="text-xs px-3 py-1.5 rounded-lg transition ${filterBtnClass('room', r)}">🏠 ${r}</button>`;
+        });
+
+        // أزرار فلتر المحطات
+        var stations = [];
+        menuItems.forEach(function (item) {
+            var st = (typeof item.Station === 'object' && item.Station !== null) ? item.Station.value : (item.Station || '');
+            st = String(st).trim();
+            if (st && !stations.includes(st)) stations.push(st);
+        });
+        stations.forEach(function (st) {
+            headerHTML += `<button onclick="window.setKdsAdminFilter('station','${st}')" class="text-xs px-3 py-1.5 rounded-lg transition ${filterBtnClass('station', st)}">🍳 ${st}</button>`;
+        });
+
+        headerHTML += `</div>`;
+    }
+
+    header.innerHTML = headerHTML;
     dynamicContent.appendChild(header);
 
+    // === 5. بناء الشبكة ===
     const grid = document.createElement('div');
     grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start pb-10";
 
     const renderOrderList = (ordersArray) => {
         return ordersArray.map(o => {
-            const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
+            const rawTime = o['Created at'] || o['Created'] || o.Time || o.time || o.created_on || '';
             const elapsedMins = window.calculateElapsedMinutes(rawTime);
             const timerStyle = window.getTimerStyle(elapsedMins);
             const timerText = window.formatTimerText(elapsedMins);
@@ -159,7 +225,6 @@ window.renderKDS = function (orders) {
                 ? `<button id="btn-done-${o.id}" onclick="window.updateOrderStatus(${o.id}, 'جاهز')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg transition shadow-md flex justify-center items-center gap-2"><span>جاهز</span> ✅</button>`
                 : `<div class="text-center text-green-400 font-bold bg-green-900/30 py-2 rounded-lg border border-green-700/50">جاهز (في انتظار الدفع)</div>`;
 
-            // استخدام التفاصيل المفلترة مسبقاً (حسب المحطة) أو التفاصيل الكاملة
             let displayDetails = o._filteredDetails || o.Details || '-';
 
             return `
@@ -183,7 +248,6 @@ window.renderKDS = function (orders) {
             grid.innerHTML = `<div class="text-6xl mb-4 opacity-50">🍽️</div><div class="text-xl font-medium">لا توجد طلبات طاولات نشطة حالياً</div>`;
         } else {
             roomEntries.forEach(([roomName, tables]) => {
-                // عنوان القاعة
                 const roomHeader = document.createElement('div');
                 roomHeader.className = "col-span-full mt-4 mb-2 text-xl font-bold text-brand border-b border-gray-700 pb-2 flex items-center gap-2";
                 roomHeader.innerHTML = `
@@ -192,7 +256,6 @@ window.renderKDS = function (orders) {
                 `;
                 grid.appendChild(roomHeader);
 
-                // رسم كروت الطاولات لهذه القاعة
                 Object.entries(tables).forEach(([tableName, tOrders]) => {
                     const card = document.createElement('div');
                     const isCooking = tOrders.some(o => getStatus(o) === 'قيد التحضير');
@@ -248,7 +311,7 @@ window.renderKDS = function (orders) {
 
                 card.className = `bg-gray-800 border-2 ${borderColorClass} rounded-2xl flex flex-col overflow-hidden h-fit ${hasNew ? 'animate-pulse' : ''}`;
 
-                const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
+                const rawTime = o['Created at'] || o['Created'] || o.Time || o.time || o.created_on || '';
                 const elapsedMins = window.calculateElapsedMinutes(rawTime);
                 const timerStyle = window.getTimerStyle(elapsedMins);
                 const timerText = window.formatTimerText(elapsedMins);

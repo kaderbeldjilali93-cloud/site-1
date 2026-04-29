@@ -11,11 +11,13 @@ window.renderStaff = async function () {
         const _t = Date.now(); // cache-busting
         const [staffResponse, menuItems, tableMapRes] = await Promise.all([
             fetch(`https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/?user_field_names=true&_t=${_t}`, {
-                headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+                headers: { "Authorization": `Token ${BASEROW_TOKEN}` },
+                cache: 'no-store'
             }),
             (typeof window.fetchMenu === 'function') ? window.fetchMenu() : Promise.resolve([]),
             fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true&size=200&_t=${_t}`, {
-                headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+                headers: { "Authorization": `Token ${BASEROW_TOKEN}` },
+                cache: 'no-store'
             })
         ]);
 
@@ -111,10 +113,16 @@ window.renderStaff = async function () {
             var assignment = '<span class="text-gray-600">---</span>';
             if (role === 'Waiter') assignment = roomVal ? '<span class="text-brand font-bold">' + roomVal + '</span>' : '<span class="text-yellow-500">لم يحدد</span>';
             if (role === 'Kitchen') {
-                if (kitchenRoomVal) {
+                var hasKRoom = kitchenRoomVal && kitchenRoomVal.trim();
+                var hasStation = stationVal && stationVal !== 'الكل' && stationVal.trim();
+                
+                if (hasKRoom && hasStation) {
+                    // تخصيص مزدوج: قاعة + محطة
+                    assignment = '<span class="text-purple-400 font-bold text-xs">🏠 ' + kitchenRoomVal + ' • 🍳 ' + stationVal + '</span>';
+                } else if (hasKRoom) {
                     assignment = '<span class="text-blue-400 font-bold">🏠 ' + kitchenRoomVal + '</span>';
-                } else if (stationVal && stationVal !== 'الكل') {
-                    assignment = '<span class="text-brand font-bold">' + stationVal + '</span>';
+                } else if (hasStation) {
+                    assignment = '<span class="text-brand font-bold">🍳 ' + stationVal + '</span>';
                 } else {
                     assignment = '<span class="text-gray-400">الكل</span>';
                 }
@@ -162,7 +170,7 @@ window.renderStaff = async function () {
         html += '<select id="add-room" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">' + roomOptions + '</select></div>';
         html += '<div id="add-station-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">نوع التخصيص</label>';
         html += '<select id="add-kitchen-mode" onchange="window.updateKitchenMode(\'add\')" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white mb-3">';
-        html += '<option value="station">حسب المحطة (الأطباق)</option><option value="room">حسب القاعة</option></select>';
+        html += '<option value="station">حسب المحطة (الأطباق)</option><option value="room">حسب القاعة</option><option value="both">قاعة + محطة (مزدوج)</option></select>';
         html += '<div id="add-station-select-box"><label class="block text-xs text-gray-400 mb-1.5 font-bold">محطة المطبخ</label>';
         html += '<select id="add-station" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">' + stationOptions + '</select></div>';
         html += '<div id="add-kitchen-room-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">قاعة المطبخ</label>';
@@ -187,7 +195,7 @@ window.renderStaff = async function () {
         html += '<select id="edit-room" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">' + roomOptions + '</select></div>';
         html += '<div id="edit-station-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">نوع التخصيص</label>';
         html += '<select id="edit-kitchen-mode" onchange="window.updateKitchenMode(\'edit\')" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white mb-3">';
-        html += '<option value="station">حسب المحطة (الأطباق)</option><option value="room">حسب القاعة</option></select>';
+        html += '<option value="station">حسب المحطة (الأطباق)</option><option value="room">حسب القاعة</option><option value="both">قاعة + محطة (مزدوج)</option></select>';;
         html += '<div id="edit-station-select-box"><label class="block text-xs text-gray-400 mb-1.5 font-bold">محطة المطبخ</label>';
         html += '<select id="edit-station" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">' + stationOptions + '</select></div>';
         html += '<div id="edit-kitchen-room-box" class="hidden"><label class="block text-xs text-gray-400 mb-1.5 font-bold">قاعة المطبخ</label>';
@@ -243,12 +251,19 @@ window.showEditStaffModal = function (id, name, role, room, station, pin, kitche
     if (stationEl) stationEl.value = station || 'الكل';
     if (pinEl) pinEl.value = (pin && pin !== '---' && pin !== 'undefined') ? pin : '';
 
-    // إعداد وضع المطبخ (station vs room)
-    if (role === 'Kitchen' && kitchenRoom && kitchenRoom !== '' && kitchenRoom !== 'undefined') {
-        if (kitchenModeEl) kitchenModeEl.value = 'room';
-        if (kitchenRoomEl) kitchenRoomEl.value = kitchenRoom;
-    } else {
-        if (kitchenModeEl) kitchenModeEl.value = 'station';
+    // إعداد وضع المطبخ (station vs room vs both)
+    if (role === 'Kitchen') {
+        var hasStation = station && station !== '' && station !== 'undefined' && station !== 'الكل';
+        var hasRoom = kitchenRoom && kitchenRoom !== '' && kitchenRoom !== 'undefined';
+        
+        if (hasStation && hasRoom) {
+            if (kitchenModeEl) kitchenModeEl.value = 'both';
+        } else if (hasRoom) {
+            if (kitchenModeEl) kitchenModeEl.value = 'room';
+        } else {
+            if (kitchenModeEl) kitchenModeEl.value = 'station';
+        }
+        if (kitchenRoomEl && hasRoom) kitchenRoomEl.value = kitchenRoom;
     }
 
     window.updateStaffFields('edit');
@@ -283,6 +298,9 @@ window.updateKitchenMode = function (prefix) {
 
     if (modeEl.value === 'room') {
         if (stationSelectBox) stationSelectBox.classList.add('hidden');
+        if (kitchenRoomBox) kitchenRoomBox.classList.remove('hidden');
+    } else if (modeEl.value === 'both') {
+        if (stationSelectBox) stationSelectBox.classList.remove('hidden');
         if (kitchenRoomBox) kitchenRoomBox.classList.remove('hidden');
     } else {
         if (stationSelectBox) stationSelectBox.classList.remove('hidden');
@@ -319,6 +337,10 @@ window.saveStaff = async function (action) {
         var mode = kitchenMode ? kitchenMode.value : 'station';
         if (mode === 'room') {
             payload["AssignedStation"] = null;
+            payload["KitchenRoom"] = kitchenRoom ? kitchenRoom.value : null;
+            payload["AssignedRoom"] = null;
+        } else if (mode === 'both') {
+            payload["AssignedStation"] = station || null;
             payload["KitchenRoom"] = kitchenRoom ? kitchenRoom.value : null;
             payload["AssignedRoom"] = null;
         } else {

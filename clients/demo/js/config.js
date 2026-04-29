@@ -35,6 +35,7 @@ const STATE = {
     assignedStation: null,
     assignedKitchenRoom: null,
     staffRoleFilter: 'all',
+    kdsAdminFilter: { type: 'all', value: '' },
     selectedCashierDate: window.getLocalYYYYMMDD(),
     selectedAnalyticsDate: window.getLocalYYYYMMDD(),
     lastFetchedOrders: [],
