@@ -75,13 +75,47 @@ window.renderTableView = async function () {
         currentTables.forEach(t => {
             const numStr = String(t.TableNumber);
             const expectedTableFormat = `الطاولة ${numStr} - ${STATE.currentRoom}`;
-            const isCalling = activeCalls.some(c => String(c) === numStr || String(c) === expectedTableFormat);
+            let matchingRawCall = null;
+            const isCalling = activeCalls.some(c => {
+                const cStr = String(c).trim();
+                if (cStr === numStr || cStr === expectedTableFormat) {
+                    matchingRawCall = cStr;
+                    return true;
+                }
+                
+                // استخراج رقم الطاولة بمرونة فائقة (يبحث عن الرقم بعد كلمة طاولة أو table أو رقم)
+                const tblMatch = cStr.match(/(?:طاولة|الطاولة|table|رقم)[^\d]*(\d+)/i);
+                let extractedNum = null;
+                if (tblMatch) {
+                    extractedNum = tblMatch[1];
+                } else if (/^\d+$/.test(cStr)) {
+                    extractedNum = cStr;
+                }
+
+                if (extractedNum === numStr) {
+                    // التحقق من اسم القاعة إذا كان موجوداً في النص
+                    if (/(?:قاعة|room|-)/i.test(cStr)) {
+                        // التأكد من أن القاعة الحالية المحددة في الداشبورد مذكورة في النص
+                        if (cStr.includes(STATE.currentRoom)) {
+                            matchingRawCall = cStr;
+                            return true;
+                        }
+                    } else {
+                        // النص لا يحتوي على إشارة للقاعة (مثل رقم فقط)، نقبله
+                        matchingRawCall = cStr;
+                        return true;
+                    }
+                }
+                return false;
+            });
 
             // ========== مطابقة الطلبات بالطاولة ==========
             const tableOrders = orders.filter(o => {
                 const tblRaw = String(o.Table || '').trim();
                 const rawTime = o['Created at'] || o.Time || o.time || o.created_on || o.CreatedOn || o.Date || '';
-                if (!window.isOrderFromToday(rawTime)) return false;
+                
+                // تجاهل فحص اليوم إذا كان الحقل مفقوداً (نفس منطق KDS)
+                if (rawTime && !window.isOrderFromToday(rawTime)) return false;
 
                 // تجاهل الطلبات السريعة تماماً
                 if (o.order_type === 'quick' || tblRaw === 'سفري') return false;
@@ -144,7 +178,7 @@ window.renderTableView = async function () {
             floorHtml += `
                 <div class="table-element ${statusClass}" 
                      style="left: ${leftPct}%; top: ${topPct}%; cursor: pointer; pointer-events: auto; z-index: 10;" 
-                     onclick="window.handleTableMapClick('${numStr}', ${isCalling}, ${hasActiveOrder}, ${orderIdVal})">
+                     onclick="window.handleTableMapClick('${numStr}', ${isCalling}, ${hasActiveOrder}, ${orderIdVal}, '${matchingRawCall ? matchingRawCall.replace(/'/g, "\\'") : ''}')">
                     ${window.generateTableSVG ? window.generateTableSVG(shapeStr, chairColor, tScale, tRot) : '<svg width="70" height="70"><circle cx="35" cy="35" r="22" fill="#374151"/></svg>'}
                     <span class="table-number-label">T${numStr}</span>
                     ${isCalling ? `<div class="calling-overlay"><span>⚠️ نداء</span></div>` : ''}
@@ -187,12 +221,12 @@ window.switchTableRoom = function (r) {
     window.renderTableView();
 };
 
-window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, orderId) {
-    console.log("Table Clicked:", { tableNumber, isCalling, hasActiveOrder, orderId });
+window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, orderId, matchingRawCall) {
+    console.log("Table Clicked:", { tableNumber, isCalling, hasActiveOrder, orderId, matchingRawCall });
 
     if (isCalling) {
         if (typeof window.resolveTableCall === 'function') {
-            window.resolveTableCall(tableNumber);
+            window.resolveTableCall(matchingRawCall || tableNumber);
         }
         // Do NOT return here, so that if the table also has an order, the edit modal will still open.
     }

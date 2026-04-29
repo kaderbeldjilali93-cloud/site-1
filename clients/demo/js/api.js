@@ -172,20 +172,24 @@ window.fetchWaiterCalls = async function () {
             if (typeof rawStatus === 'object' && rawStatus !== null && rawStatus.value) rawStatus = rawStatus.value;
             const statusVal = String(rawStatus || '').trim();
 
-            if (statusVal === 'قيد الانتظار') {
+            if (statusVal === 'قيد الانتظار' || statusVal.includes('قيد الانتظار') || statusVal.toLowerCase() === 'pending') {
                 const rawTable = String(row.table || row.Table || '').trim();
                 if (rawTable) {
-                    currentActiveCalls.push(rawTable); // دفع النص الكامل ليطابق "الطاولة X - قاعة Y"
+                    currentActiveCalls.push(rawTable); // دفع النص الكامل دائماً
                     currentActiveRows[rawTable] = row.id;
 
                     if (!STATE.activeCalls.includes(rawTable)) newCallIds.push(rawTable);
 
-                    const tableNum = parseInt(rawTable);
-                    if (!isNaN(tableNum)) {
-                        currentActiveCalls.push(tableNum);
-                        currentActiveRows[tableNum] = row.id;
-                        if (!STATE.activeCalls.includes(tableNum) && !newCallIds.includes(tableNum)) {
-                            newCallIds.push(tableNum);
+                    // استخراج الرقم للمرونة في حال كان النص رقماً فقط
+                    const numMatch = rawTable.match(/^(\d+)$/);
+                    if (numMatch) {
+                        const tableNum = parseInt(numMatch[1]);
+                        if (!isNaN(tableNum) && !currentActiveCalls.includes(tableNum)) {
+                            currentActiveCalls.push(tableNum);
+                            currentActiveRows[tableNum] = row.id;
+                            if (!STATE.activeCalls.includes(tableNum) && !newCallIds.includes(tableNum)) {
+                                newCallIds.push(tableNum);
+                            }
                         }
                     }
                 }
