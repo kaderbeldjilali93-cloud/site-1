@@ -34,6 +34,7 @@ const STATE = {
     assignedRoom: null,
     assignedStation: null,
     assignedKitchenRoom: null,
+    staffRoleFilter: 'all',
     selectedCashierDate: window.getLocalYYYYMMDD(),
     selectedAnalyticsDate: window.getLocalYYYYMMDD(),
     lastFetchedOrders: [],
@@ -74,20 +75,30 @@ const STATE = {
     }
 };
 
-window.isOrderFromToday = function (timeStr) {
-    if (!timeStr) return false;
-    const orderDate = new Date(timeStr);
-    const today = new Date();
-    return orderDate.getDate() === today.getDate() &&
-        orderDate.getMonth() === today.getMonth() &&
-        orderDate.getFullYear() === today.getFullYear();
-};
 
-window.isOrderFromSelectedDate = function (timeStr, selectedDateStr) {
-    if (!timeStr || !selectedDateStr) return false;
-    const orderDate = new Date(timeStr);
-    const [year, month, day] = selectedDateStr.split('-').map(Number);
-    return orderDate.getFullYear() === year &&
-        orderDate.getMonth() === (month - 1) &&
-        orderDate.getDate() === day;
-};
+// Fallback versions - سيتم تعويضها بالنسخ المحسّنة في app.js
+if (typeof window.isOrderFromToday !== 'function') {
+    window.isOrderFromToday = function (timeStr) {
+        if (!timeStr) return false;
+        try {
+            var todayStr = window.getLocalYYYYMMDD();
+            if (String(timeStr).includes(todayStr)) return true;
+            var d = new Date(timeStr);
+            if (isNaN(d.getTime())) return false;
+            var y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+            return y+'-'+m+'-'+dd === todayStr;
+        } catch(e) { return false; }
+    };
+}
+if (typeof window.isOrderFromSelectedDate !== 'function') {
+    window.isOrderFromSelectedDate = function (timeStr, dateStr) {
+        if (!timeStr || !dateStr) return false;
+        try {
+            if (String(timeStr).includes(dateStr)) return true;
+            var d = new Date(timeStr);
+            if (isNaN(d.getTime())) return false;
+            var y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+            return y+'-'+m+'-'+dd === dateStr;
+        } catch(e) { return false; }
+    };
+}

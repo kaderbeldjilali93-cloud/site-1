@@ -22,21 +22,28 @@ window.renderKDS = function (orders) {
 
     const activeOrders = filteredOrders.filter(o => {
         const s = getStatus(o);
-        const rawTime = o['Created at'] || o.Time || o.time || o.created_on;
-        const isToday = window.isOrderFromToday(rawTime);
+        const rawTime = o['Created at'] || o['Created'] || o.Time || o.time || o.created_on || o.Created || '';
+        // إذا لا يوجد وقت، نعتبر الطلب من اليوم (حتى لا نخفي طلبات صالحة)
+        const isToday = rawTime ? window.isOrderFromToday(rawTime) : true;
 
-        return (s === 'قيد التحضير' || s === 'جاهز') && isToday;
+        // قبول حالات متعددة للطلبات النشطة
+        const validStatuses = ['قيد التحضير', 'جاهز', 'pending', 'Pending', 'preparing', 'ready'];
+        const isActive = validStatuses.includes(s);
+        
+        return isActive && isToday;
     });
 
     // === فلترة حسب المحطة أو القاعة للطباخ ===
     const myStation = STATE.assignedStation || null;
     const myKitchenRoom = STATE.assignedKitchenRoom || null;
     const menuItems = STATE.cachedMenuItems || [];
+    const hasStationFilter = myStation && myStation !== 'الكل' && menuItems.length > 0;
 
     // دالة لفلترة أصناف الطلب حسب محطة الطباخ
     function filterDetailsByStation(details, station) {
-        if (!station || station === 'الكل' || !details) return details;
-        var lines = details.split('\n');
+        if (!station || station === 'الكل' || !details || menuItems.length === 0) return details;
+        var lines = details.split('\n').filter(function(l) { return l.trim(); });
+        if (lines.length === 0) return details;
         var filtered = lines.filter(function (line) {
             var itemName = line.replace(/^\d+x\s+/, '').split('=')[0].trim();
             var menuItem = menuItems.find(function (m) { return (m.Name || m.name) === itemName; });
@@ -44,39 +51,45 @@ window.renderKDS = function (orders) {
                 var stRaw = (typeof menuItem.Station === 'object' && menuItem.Station) ? menuItem.Station.value : menuItem.Station;
                 return stRaw === station;
             }
-            return false;
+            return true; // إذا الصنف غير معروف في المنيو، نعرضه
         });
         return filtered.length > 0 ? filtered.join('\n') : null;
     }
 
-    // تطبيق الفلترة على الطلبات النشطة
-    var processedOrders = activeOrders.map(function (order) {
-        var clone = Object.assign({}, order);
-        
-        // فلترة حسب القاعة (إذا الطباخ مخصص لقاعة)
-        if (myKitchenRoom) {
-            var orderRoom = order.Room || order.room || '';
-            if (!orderRoom && String(order.Table || '').includes('-')) {
-                var match = String(order.Table).match(/-\s*(.+)$/);
-                if (match) orderRoom = match[1].trim();
+    // تطبيق الفلترة على الطلبات النشطة (فقط إذا الطباخ مخصص)
+    var processedOrders;
+    if (!hasStationFilter && !myKitchenRoom) {
+        // لا فلترة - الطباخ يرى كل شيء
+        processedOrders = activeOrders;
+    } else {
+        processedOrders = activeOrders.map(function (order) {
+            var clone = Object.assign({}, order);
+            
+            // فلترة حسب القاعة (إذا الطباخ مخصص لقاعة)
+            if (myKitchenRoom) {
+                var orderRoom = order.Room || order.room || '';
+                if (!orderRoom && String(order.Table || '').includes('-')) {
+                    var match = String(order.Table).match(/-\s*(.+)$/);
+                    if (match) orderRoom = match[1].trim();
+                }
+                if (orderRoom && orderRoom !== myKitchenRoom) {
+                    clone._hidden = true;
+                    return clone;
+                }
             }
-            if (orderRoom && orderRoom !== myKitchenRoom) {
-                clone._hidden = true;
-                return clone;
-            }
-        }
 
-        // فلترة حسب المحطة (إذا الطباخ مخصص لمحطة)
-        if (myStation && myStation !== 'الكل') {
-            var filteredDetails = filterDetailsByStation(clone.Details || '', myStation);
-            if (!filteredDetails) {
-                clone._hidden = true;
-            } else {
-                clone._filteredDetails = filteredDetails;
+            // فلترة حسب المحطة (إذا الطباخ مخصص لمحطة)
+            if (hasStationFilter) {
+                var filteredDetails = filterDetailsByStation(clone.Details || '', myStation);
+                if (!filteredDetails) {
+                    clone._hidden = true;
+                } else {
+                    clone._filteredDetails = filteredDetails;
+                }
             }
-        }
-        return clone;
-    }).filter(function (o) { return !o._hidden; });
+            return clone;
+        }).filter(function (o) { return !o._hidden; });
+    }
 
     const groupedOrders = { quick: [], delivery: [], rooms: {} };
 

@@ -4,7 +4,8 @@
 
 window.fetchOrders = async function (tableId) {
     try {
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true&size=200`, {
+        const _t = Date.now(); // cache-busting
+        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true&size=200&_t=${_t}`, {
             method: 'GET',
             headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
         });
@@ -19,7 +20,8 @@ window.fetchOrders = async function (tableId) {
 
 window.fetchMenu = async function () {
     try {
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true`, {
+        const _t = Date.now(); // cache-busting لتجنب التخزين المؤقت
+        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true&size=200&_t=${_t}`, {
             method: 'GET',
             headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
         });

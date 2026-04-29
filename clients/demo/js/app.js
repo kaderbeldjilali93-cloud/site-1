@@ -548,8 +548,8 @@ window.loadView = async function (viewType) {
                 if (STATE.currentActiveView !== 'kds') return;
                 try {
                     // Fetch menu if missing for station filtering
-                    if (!STATE.cachedMenuItems) {
-                        window.fetchMenu().then(m => STATE.cachedMenuItems = m);
+                    if (!STATE.cachedMenuItems || STATE.cachedMenuItems.length === 0) {
+                        try { STATE.cachedMenuItems = await window.fetchMenu(); } catch(e) {}
                     }
                     const data = await window.fetchOrders(ORDERS_TABLE_ID);
                     if (STATE.currentActiveView !== 'kds') return;

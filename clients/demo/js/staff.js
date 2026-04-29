@@ -8,12 +8,13 @@ window.renderStaff = async function () {
 
     try {
         // 1. جلب العمال + المنيو + القاعات بشكل متوازي للسرعة
+        const _t = Date.now(); // cache-busting
         const [staffResponse, menuItems, tableMapRes] = await Promise.all([
-            fetch(`https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/?user_field_names=true`, {
+            fetch(`https://baserow.vidsai.site/api/database/rows/table/${STAFF_TABLE_ID}/?user_field_names=true&_t=${_t}`, {
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
             }),
             (typeof window.fetchMenu === 'function') ? window.fetchMenu() : Promise.resolve([]),
-            fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true&size=200`, {
+            fetch(`https://baserow.vidsai.site/api/database/rows/table/${TABLEMAP_TABLE_ID}/?user_field_names=true&size=200&_t=${_t}`, {
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
             })
         ]);
@@ -64,6 +65,31 @@ window.renderStaff = async function () {
         html += '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>';
         html += 'إضافة عامل جديد</button></div>';
 
+        // === فلتر الأدوار ===
+        var currentFilter = STATE.staffRoleFilter || 'all';
+        var filterBtnClass = function(val) {
+            return val === currentFilter 
+                ? 'bg-brand text-black font-bold' 
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white';
+        };
+        html += '<div class="flex flex-wrap items-center gap-2 mb-4">';
+        html += '<span class="text-gray-400 text-sm font-bold ml-2">فلترة حسب الدور:</span>';
+        html += '<button onclick="STATE.staffRoleFilter=\'all\';window.renderStaff()" class="text-xs px-3 py-1.5 rounded-lg transition ' + filterBtnClass('all') + '">الكل</button>';
+        html += '<button onclick="STATE.staffRoleFilter=\'Admin\';window.renderStaff()" class="text-xs px-3 py-1.5 rounded-lg transition ' + filterBtnClass('Admin') + '">Admin</button>';
+        html += '<button onclick="STATE.staffRoleFilter=\'Cashier\';window.renderStaff()" class="text-xs px-3 py-1.5 rounded-lg transition ' + filterBtnClass('Cashier') + '">Cashier</button>';
+        html += '<button onclick="STATE.staffRoleFilter=\'Waiter\';window.renderStaff()" class="text-xs px-3 py-1.5 rounded-lg transition ' + filterBtnClass('Waiter') + '">Waiter</button>';
+        html += '<button onclick="STATE.staffRoleFilter=\'Kitchen\';window.renderStaff()" class="text-xs px-3 py-1.5 rounded-lg transition ' + filterBtnClass('Kitchen') + '">Kitchen</button>';
+        html += '</div>';
+
+        // تطبيق الفلتر
+        var filteredStaff = staff;
+        if (currentFilter !== 'all') {
+            filteredStaff = staff.filter(function(u) {
+                var r = (typeof u.Role === 'object' && u.Role) ? u.Role.value : (u.Role || '');
+                return r === currentFilter;
+            });
+        }
+
         html += '<div class="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden shadow-lg"><div class="overflow-x-auto w-full">';
         html += '<table class="w-full text-right min-w-[750px]"><thead class="bg-gray-800 text-gray-400 text-sm font-bold"><tr>';
         html += '<th class="py-4 px-4">الاسم</th><th class="py-4 px-4">الدور</th>';
@@ -71,19 +97,28 @@ window.renderStaff = async function () {
         html += '<th class="py-4 px-4 text-center">الحالة</th><th class="py-4 px-4 text-center">إجراءات</th>';
         html += '</tr></thead><tbody class="divide-y divide-gray-800">';
 
-        if (staff.length === 0) {
-            html += '<tr><td colspan="6" class="py-10 text-center text-gray-500">لا يوجد عمال مسجلين حالياً. اضغط "إضافة عامل جديد" للبدء.</td></tr>';
+        if (filteredStaff.length === 0) {
+            html += '<tr><td colspan="6" class="py-10 text-center text-gray-500">' + (currentFilter !== 'all' ? 'لا يوجد عمال بدور "' + currentFilter + '"' : 'لا يوجد عمال مسجلين حالياً. اضغط "إضافة عامل جديد" للبدء.') + '</td></tr>';
         }
 
-        staff.forEach(function (user) {
+        filteredStaff.forEach(function (user) {
             var role = (typeof user.Role === 'object' && user.Role) ? user.Role.value : (user.Role || "غير محدد");
             var isActive = user.Status !== false;
             var roomVal = (typeof user.AssignedRoom === 'object' && user.AssignedRoom) ? user.AssignedRoom.value : (user.AssignedRoom || "");
             var stationVal = (typeof user.AssignedStation === 'object' && user.AssignedStation) ? user.AssignedStation.value : (user.AssignedStation || "");
+            var kitchenRoomVal = (typeof user.KitchenRoom === 'object' && user.KitchenRoom) ? user.KitchenRoom.value : (user.KitchenRoom || "");
 
             var assignment = '<span class="text-gray-600">---</span>';
             if (role === 'Waiter') assignment = roomVal ? '<span class="text-brand font-bold">' + roomVal + '</span>' : '<span class="text-yellow-500">لم يحدد</span>';
-            if (role === 'Kitchen') assignment = stationVal && stationVal !== 'الكل' ? '<span class="text-brand font-bold">' + stationVal + '</span>' : '<span class="text-gray-400">الكل</span>';
+            if (role === 'Kitchen') {
+                if (kitchenRoomVal) {
+                    assignment = '<span class="text-blue-400 font-bold">🏠 ' + kitchenRoomVal + '</span>';
+                } else if (stationVal && stationVal !== 'الكل') {
+                    assignment = '<span class="text-brand font-bold">' + stationVal + '</span>';
+                } else {
+                    assignment = '<span class="text-gray-400">الكل</span>';
+                }
+            }
 
             var uId = user.id;
             var uName = String(user.Name || '').replace(/'/g, "\\'");
@@ -91,6 +126,7 @@ window.renderStaff = async function () {
             var uRoom = String(roomVal).replace(/'/g, "\\'");
             var uStation = String(stationVal).replace(/'/g, "\\'");
             var uPin = String(user.PIN || '').replace(/'/g, "\\'");
+            var uKitchenRoom = String(kitchenRoomVal).replace(/'/g, "\\'");
 
             html += '<tr class="hover:bg-gray-800/50 transition">';
             html += '<td class="py-4 px-4 font-bold text-white">' + (user.Name || "بدون اسم") + '</td>';
@@ -106,7 +142,7 @@ window.renderStaff = async function () {
             // أزرار الإجراءات: تفعيل/إيقاف + تعديل + حذف
             html += '<td class="py-4 px-4 text-center"><div class="flex justify-center gap-2">';
             html += '<button onclick="window.toggleStaffStatus(' + uId + ', ' + !isActive + ')" class="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-300 font-bold transition">' + (isActive ? 'إيقاف' : 'تفعيل') + '</button>';
-            html += '<button onclick="window.showEditStaffModal(' + uId + ', \'' + uName + '\', \'' + uRole + '\', \'' + uRoom + '\', \'' + uStation + '\', \'' + uPin + '\')" class="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-brand font-bold transition">تعديل</button>';
+            html += '<button onclick="window.showEditStaffModal(' + uId + ', \'' + uName + '\', \'' + uRole + '\', \'' + uRoom + '\', \'' + uStation + '\', \'' + uPin + '\', \'' + uKitchenRoom + '\')" class="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-brand font-bold transition">تعديل</button>';
             html += '<button onclick="window.deleteStaff(' + uId + ', \'' + uName + '\')" class="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-red-400 font-bold transition">حذف</button>';
             html += '</div></td></tr>';
         });
@@ -188,7 +224,7 @@ window.showAddStaffModal = function () {
     document.getElementById('add-staff-modal').classList.remove('hidden');
 };
 
-window.showEditStaffModal = function (id, name, role, room, station, pin) {
+window.showEditStaffModal = function (id, name, role, room, station, pin, kitchenRoom) {
     document.getElementById('edit-id').value = id;
     document.getElementById('edit-name').value = name;
 
@@ -201,9 +237,19 @@ window.showEditStaffModal = function (id, name, role, room, station, pin) {
     var roomEl = document.getElementById('edit-room');
     var stationEl = document.getElementById('edit-station');
     var pinEl = document.getElementById('edit-pin');
+    var kitchenModeEl = document.getElementById('edit-kitchen-mode');
+    var kitchenRoomEl = document.getElementById('edit-kitchen-room');
     if (roomEl) roomEl.value = room || '';
     if (stationEl) stationEl.value = station || 'الكل';
     if (pinEl) pinEl.value = (pin && pin !== '---' && pin !== 'undefined') ? pin : '';
+
+    // إعداد وضع المطبخ (station vs room)
+    if (role === 'Kitchen' && kitchenRoom && kitchenRoom !== '' && kitchenRoom !== 'undefined') {
+        if (kitchenModeEl) kitchenModeEl.value = 'room';
+        if (kitchenRoomEl) kitchenRoomEl.value = kitchenRoom;
+    } else {
+        if (kitchenModeEl) kitchenModeEl.value = 'station';
+    }
 
     window.updateStaffFields('edit');
     document.getElementById('edit-staff-modal').classList.remove('hidden');
