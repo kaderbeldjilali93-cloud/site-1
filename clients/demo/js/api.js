@@ -156,7 +156,7 @@ window.updateMenuItem = async function (rowId, updateData, btnId = null) {
 
 window.fetchWaiterCalls = async function () {
     try {
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${CALLS_TABLE_ID}/?user_field_names=true&size=100&order_by=-id`, {
+        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${CALLS_TABLE_ID}/?user_field_names=true&size=100&order_by=-Created%20at`, {
             method: 'GET',
             headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
         });

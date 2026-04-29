@@ -180,7 +180,7 @@ window.renderTableView = async function () {
                      onclick="window.handleTableMapClick('${numStr}', ${isCalling}, ${hasActiveOrder}, ${orderIdVal}, '${matchingRawCall ? matchingRawCall.replace(/'/g, "\\'") : ''}')">
                     ${window.generateTableSVG ? window.generateTableSVG(shapeStr, chairColor, tScale, tRot) : '<svg width="70" height="70"><circle cx="35" cy="35" r="22" fill="#374151"/></svg>'}
                     ${isCalling
-                    ? `<span class="table-number-label" style="color: #ef4444; font-size: 13px; font-weight: 900; animation: tablePulse 1s infinite; background: rgba(31, 41, 55, 0.7); padding: 2px 6px; border-radius: 4px; backdrop-filter: blur(2px);">نداء T${numStr}</span>`
+                    ? `<span class="table-number-label" style="color: #ef4444; font-size: 14px; font-weight: 900; animation: textPulse 1s infinite; background: rgba(31, 41, 55, 0.8); padding: 2px 6px; border-radius: 4px;">نداء T${numStr}</span>`
                     : `<span class="table-number-label">T${numStr}</span>`
                 }
                 </div>
@@ -230,7 +230,8 @@ window.handleTableMapClick = function (tableNumber, isCalling, hasActiveOrder, o
         if (typeof window.resolveTableCall === 'function') {
             window.resolveTableCall(matchingRawCall || tableNumber);
         }
-        // Do NOT return here, so that if the table also has an order, the edit modal will still open.
+        // إيقاف التنفيذ هنا حتى لا يتم فتح الطلب عند الاستجابة للنداء (الضغطة الأولى للنداء فقط)
+        return;
     }
 
     // إذا كانت الطاولة مشغولة ولديها طلب، نفتح مودال التعديل فوراً
