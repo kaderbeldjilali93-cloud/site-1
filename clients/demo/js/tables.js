@@ -82,7 +82,7 @@ window.renderTableView = async function () {
                     matchingRawCall = cStr;
                     return true;
                 }
-                
+
                 // استخراج رقم الطاولة بمرونة فائقة (يبحث عن الرقم بعد كلمة طاولة أو table أو رقم)
                 const tblMatch = cStr.match(/(?:طاولة|الطاولة|table|رقم)[^\d]*(\d+)/i);
                 let extractedNum = null;
@@ -113,7 +113,7 @@ window.renderTableView = async function () {
             const tableOrders = orders.filter(o => {
                 const tblRaw = String(o.Table || '').trim();
                 const rawTime = o['Created at'] || o.Time || o.time || o.created_on || o.CreatedOn || o.Date || '';
-                
+
                 // تجاهل فحص اليوم إذا كان الحقل مفقوداً (نفس منطق KDS)
                 if (rawTime && !window.isOrderFromToday(rawTime)) return false;
 
@@ -137,7 +137,7 @@ window.renderTableView = async function () {
 
             let hasActiveOrder = false;
             let orderForTable = null;
-            const activeStatuses = ['جديد', 'قيد التحضير', 'جاهز', 'مستلم']; // Removed 'سداد' and 'مدفوع' so tables return to green
+            const activeStatuses = ['جديد', 'قيد التحضير', 'نصف جاهز', 'جاهز', 'مستلم'];
 
             for (const o of tableOrders) {
                 const st = (typeof o.Status === 'object' && o.Status) ? String(o.Status.value || '').trim() : String(o.Status || '').trim();
@@ -161,6 +161,7 @@ window.renderTableView = async function () {
                     : String(orderForTable.Status || '').trim();
 
                 if (orderSt === 'جاهز') chairColor = "#eab308"; // أصفر
+                else if (orderSt === 'نصف جاهز') chairColor = "#fca5a5"; // أحمر بارد
                 else chairColor = "#ef4444"; // أحمر
             }
 
@@ -190,6 +191,7 @@ window.renderTableView = async function () {
         <div class="flex flex-wrap items-center justify-center gap-5 text-xs font-bold bg-gray-800 p-4 rounded-xl border border-gray-700 w-fit mx-auto shadow mt-6">
             <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-green-500"></div> فارغة</div>
             <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-red-500"></div> قيد التحضير</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-red-300"></div> نصف جاهزة</div>
             <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-yellow-500"></div> جاهزة</div>
             <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-red-500 animate-pulse outline outline-2 outline-offset-1 outline-red-500"></div> نداء نادل</div>
         </div>

@@ -63,7 +63,7 @@ window.fetchMenu = async function () {
     }
 };
 
-window.updateOrderStatus = async function (rowId, newStatus) {
+window.updateOrderStatus = async function (rowId, newStatus, extraData = {}) {
     const btn = document.getElementById(`btn-done-${rowId}`);
     if (btn) {
         if (btn.dataset.processing) return;
@@ -74,10 +74,11 @@ window.updateOrderStatus = async function (rowId, newStatus) {
     }
 
     try {
+        const payload = { "Status": newStatus, ...extraData };
         await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${rowId}/?user_field_names=true`, {
             method: 'PATCH',
             headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ "Status": newStatus })
+            body: JSON.stringify(payload)
         });
         const data = await window.fetchOrders(ORDERS_TABLE_ID);
         STATE.latestKdsOrders = data;

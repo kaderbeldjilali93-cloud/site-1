@@ -32,7 +32,7 @@ window.renderKDS = function (orders) {
         const s = getStatus(o);
         const rawTime = o['Created at'] || o['Created'] || o.Time || o.time || o.created_on || '';
         const isToday = rawTime ? window.isOrderFromToday(rawTime) : true;
-        const validStatuses = ['قيد التحضير', 'جاهز', 'pending', 'Pending', 'preparing', 'ready'];
+        const validStatuses = ['قيد التحضير', 'نصف جاهز', 'جاهز', 'pending', 'Pending', 'preparing', 'ready'];
         return validStatuses.includes(s) && isToday;
     });
 
@@ -221,9 +221,29 @@ window.renderKDS = function (orders) {
             const timerText = window.formatTimerText(elapsedMins);
             const s = getStatus(o);
 
-            const btnHtml = s === 'قيد التحضير'
-                ? `<button id="btn-done-${o.id}" onclick="window.updateOrderStatus(${o.id}, 'جاهز')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg transition shadow-md flex justify-center items-center gap-2"><span>جاهز</span> ✅</button>`
-                : `<div class="text-center text-green-400 font-bold bg-green-900/30 py-2 rounded-lg border border-green-700/50">جاهز (في انتظار الدفع)</div>`;
+            let stationIsReady = false;
+            if (viewStation && viewStation !== 'الكل') {
+                const details = o._filteredDetails || '';
+                const lines = details.split('\n').filter(l => l.trim());
+                if (lines.length > 0) {
+                    stationIsReady = lines.every(l => l.includes('[جاهز]') || l.includes('✅'));
+                } else {
+                    stationIsReady = true;
+                }
+            } else {
+                stationIsReady = (s === 'جاهز');
+            }
+
+            let btnHtml = '';
+            if (s === 'قيد التحضير' || s === 'نصف جاهز') {
+                if (stationIsReady) {
+                    btnHtml = `<div class="text-center text-green-400 font-bold bg-green-900/30 py-2 rounded-lg border border-green-700/50">جاهز (بانتظار البقية)</div>`;
+                } else {
+                    btnHtml = `<button id="btn-done-${o.id}" onclick="window.handleOrderReady(${o.id})" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg transition shadow-md flex justify-center items-center gap-2"><span>جاهز من طرفي</span> ✅</button>`;
+                }
+            } else {
+                btnHtml = `<div class="text-center text-yellow-400 font-bold bg-yellow-900/30 py-2 rounded-lg border border-yellow-700/50">جاهز كلياً</div>`;
+            }
 
             let displayDetails = o._filteredDetails || o.Details || '-';
 
@@ -258,7 +278,7 @@ window.renderKDS = function (orders) {
 
                 Object.entries(tables).forEach(([tableName, tOrders]) => {
                     const card = document.createElement('div');
-                    const isCooking = tOrders.some(o => getStatus(o) === 'قيد التحضير');
+                    const isCooking = tOrders.some(o => ['قيد التحضير', 'نصف جاهز'].includes(getStatus(o)));
                     const isEating = tOrders.every(o => getStatus(o) === 'جاهز');
 
                     let cardClass = "";
@@ -266,8 +286,16 @@ window.renderKDS = function (orders) {
 
                     if (isCooking) {
                         const hasNew = tOrders.some(o => o.isNew);
-                        cardClass = `bg-gray-800 border-2 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)] rounded-2xl flex flex-col overflow-hidden ${hasNew ? 'animate-pulse' : ''}`;
-                        headerClass = "bg-red-600 text-white";
+                        const hasHalfReady = tOrders.some(o => getStatus(o) === 'نصف جاهز');
+                        const hasPreparing = tOrders.some(o => getStatus(o) === 'قيد التحضير');
+
+                        if (hasHalfReady && !hasPreparing) {
+                            cardClass = `bg-gray-800 border-2 border-red-300 shadow-[0_0_15px_rgba(252,165,165,0.4)] rounded-2xl flex flex-col overflow-hidden ${hasNew ? 'animate-pulse' : ''}`;
+                            headerClass = "bg-red-400 text-black";
+                        } else {
+                            cardClass = `bg-gray-800 border-2 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)] rounded-2xl flex flex-col overflow-hidden ${hasNew ? 'animate-pulse' : ''}`;
+                            headerClass = "bg-red-600 text-white";
+                        }
                     } else if (isEating) {
                         cardClass = `bg-gray-800 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)] rounded-2xl flex flex-col overflow-hidden`;
                         headerClass = "bg-yellow-500 text-black";
@@ -305,9 +333,10 @@ window.renderKDS = function (orders) {
                 const hasNew = o.isNew;
                 const s = getStatus(o);
 
-                let borderColorClass = s === 'قيد التحضير'
-                    ? `${themeBorder} shadow-[0_0_15px_rgba(100,100,255,0.3)]`
-                    : 'border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]';
+                let borderColorClass = '';
+                if (s === 'قيد التحضير') borderColorClass = `${themeBorder} shadow-[0_0_15px_rgba(100,100,255,0.3)]`;
+                else if (s === 'نصف جاهز') borderColorClass = `border-red-400 shadow-[0_0_15px_rgba(248,113,113,0.3)]`;
+                else borderColorClass = 'border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]';
 
                 card.className = `bg-gray-800 border-2 ${borderColorClass} rounded-2xl flex flex-col overflow-hidden h-fit ${hasNew ? 'animate-pulse' : ''}`;
 
@@ -316,9 +345,29 @@ window.renderKDS = function (orders) {
                 const timerStyle = window.getTimerStyle(elapsedMins);
                 const timerText = window.formatTimerText(elapsedMins);
 
-                const btnHtml = s === 'قيد التحضير'
-                    ? `<button id="btn-done-${o.id}" onclick="window.updateOrderStatus(${o.id}, 'جاهز')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition shadow-lg flex justify-center items-center gap-2 mt-auto text-lg hover:scale-[1.02]"><span>جاهز للتسليم</span> ✅</button>`
-                    : `<div class="text-center text-yellow-400 font-bold bg-yellow-900/30 py-3 rounded-xl border border-yellow-700/50 mt-auto">جاهز (في انتظار الدفع)</div>`;
+                let stationIsReady = false;
+                if (viewStation && viewStation !== 'الكل') {
+                    const details = o._filteredDetails || '';
+                    const lines = details.split('\n').filter(l => l.trim());
+                    if (lines.length > 0) {
+                        stationIsReady = lines.every(l => l.includes('[جاهز]') || l.includes('✅'));
+                    } else {
+                        stationIsReady = true;
+                    }
+                } else {
+                    stationIsReady = (s === 'جاهز');
+                }
+
+                let btnHtml = '';
+                if (s === 'قيد التحضير' || s === 'نصف جاهز') {
+                    if (stationIsReady) {
+                        btnHtml = `<div class="text-center text-green-400 font-bold bg-green-900/30 py-3 rounded-xl border border-green-700/50 mt-auto">جاهز (بانتظار البقية)</div>`;
+                    } else {
+                        btnHtml = `<button id="btn-done-${o.id}" onclick="window.handleOrderReady(${o.id})" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition shadow-lg flex justify-center items-center gap-2 mt-auto text-lg hover:scale-[1.02]"><span>جاهز من طرفي</span> ✅</button>`;
+                    }
+                } else {
+                    btnHtml = `<div class="text-center text-yellow-400 font-bold bg-yellow-900/30 py-3 rounded-xl border border-yellow-700/50 mt-auto">جاهز كلياً</div>`;
+                }
 
                 const displayDetails = o._filteredDetails || o.Details || '-';
 
@@ -335,12 +384,78 @@ window.renderKDS = function (orders) {
                     </div>
                 </div>`;
 
-                const headerBg = s === 'قيد التحضير' ? themeBg : 'bg-yellow-500 text-black';
-                card.innerHTML = `<div class="${headerBg} text-white font-bold p-3 text-center text-lg flex justify-between items-center shadow-md"><span>${tabTitle}</span></div>${ordersHTML}`;
+                let headerBg = '';
+                if (s === 'قيد التحضير') headerBg = themeBg;
+                else if (s === 'نصف جاهز') headerBg = 'bg-red-400 text-black';
+                else headerBg = 'bg-yellow-500 text-black';
+                card.innerHTML = `<div class="${headerBg} font-bold p-3 text-center text-lg flex justify-between items-center shadow-md"><span>${tabTitle}</span></div>${ordersHTML}`;
                 grid.appendChild(card);
             });
         }
     }
 
     dynamicContent.appendChild(grid);
+};
+
+window.handleOrderReady = async function (orderId) {
+    const btn = document.getElementById(`btn-done-${orderId}`);
+    if (btn) {
+        if (btn.dataset.processing) return;
+        btn.dataset.processing = "true";
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+        btn.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-current mr-2 inline-block"></div>جاري التحويل...`;
+    }
+
+    const order = STATE.lastFetchedOrders.find(o => o.id === orderId);
+    if (!order) return;
+
+    const isAdmin = STATE.currentRole === 'admin';
+    let viewStation = null;
+    if (isAdmin && STATE.kdsAdminFilter && STATE.kdsAdminFilter.type === 'station') {
+        viewStation = STATE.kdsAdminFilter.value;
+    } else if (!isAdmin) {
+        viewStation = STATE.assignedStation;
+    }
+
+    const menuItems = STATE.cachedMenuItems || [];
+    let updatedDetailsLines = [];
+    let allLinesAreReady = true;
+
+    const lines = (order.Details || '').split('\n').filter(l => l.trim());
+
+    lines.forEach(line => {
+        let cleanLine = line.trim();
+        const isLineReady = cleanLine.includes('[جاهز]') || cleanLine.includes('✅');
+
+        if (isLineReady) {
+            updatedDetailsLines.push(cleanLine);
+            return;
+        }
+
+        // استخراج اسم الصنف الفعلي بدون الكميات أو الأسعار
+        const itemNameRaw = cleanLine.replace(/^\d+x\s*/, '').split(/\s*[=\-]\s*\d/)[0].trim();
+        const menuItem = menuItems.find(m => {
+            const mName = (m.Name || m.name || '').trim();
+            return mName === itemNameRaw || itemNameRaw.includes(mName) || mName.includes(itemNameRaw);
+        });
+
+        const lineStation = menuItem ? ((typeof menuItem.Station === 'object' && menuItem.Station) ? menuItem.Station.value : menuItem.Station) : null;
+
+        // إذا كان الصنف يتبع للمحطة الحالية (أو لا توجد محطة محددة)، نعتبره جاهزاً
+        if (!viewStation || viewStation === 'الكل' || lineStation === viewStation) {
+            updatedDetailsLines.push(cleanLine + ' ✅'); // تعديل النص لإظهاره كجاهز
+        } else {
+            // صنف تابع لمحطة أخرى ولم يجهز بعد
+            updatedDetailsLines.push(cleanLine);
+            allLinesAreReady = false;
+        }
+    });
+
+    const newDetails = updatedDetailsLines.join('\n');
+    const newStatus = allLinesAreReady ? 'جاهز' : 'نصف جاهز';
+
+    if (typeof window.updateOrderStatus === 'function') {
+        window.updateOrderStatus(orderId, newStatus, { Details: newDetails });
+    }
 };
