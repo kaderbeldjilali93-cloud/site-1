@@ -148,20 +148,25 @@ window.openEditOrderModal = async function (orderId) {
     if (STATE.originalEditDetails) {
         const lines = STATE.originalEditDetails.split('\n').filter(l => l.trim() !== "");
         lines.forEach(line => {
+            const hasCheck = line.includes('✅') || line.includes('[جاهز]');
+            const cleanLine = line.replace(/✅|\[جاهز\]/g, '').trim();
             // محاولة استخراج الاسم والسعر من الصيغة: "1x اسم المنتج = 100"
-            const match = line.match(/(.*)\s*=\s*(\d+)/);
+            const match = cleanLine.match(/(.*)\s*=\s*(\d+)/);
+
+            const readyHtml = hasCheck ? ' <span class="text-green-400 font-bold ml-2 text-[10px] bg-green-900/30 px-1 rounded">✅ جاهز</span>' : '';
+
             if (match) {
                 STATE.originalItemsList.push({
                     id: Math.random(),
-                    text: line,
-                    name: match[1].trim(),
+                    text: line, // نحتفظ بالنص الأصلي لكي لا نفقده عند الحفظ
+                    name: match[1].trim() + readyHtml,
                     price: parseFloat(match[2])
                 });
             } else {
                 STATE.originalItemsList.push({
                     id: Math.random(),
                     text: line,
-                    name: line,
+                    name: cleanLine + readyHtml,
                     price: 0 // إذا لم نجد السعر نعتبره 0 لتجنب أخطاء الحساب
                 });
             }
@@ -410,6 +415,18 @@ window.saveOrderEdit = async function () {
         else if ('Price' in STATE.currentEditOrder) priceKey = 'Price';
     }
 
+    // تحديد حالة الطلب بعد التعديل
+    let finalStatus = "قيد التحضير";
+    if (finalDetails) {
+        const detailsLines = finalDetails.split('\n').filter(l => l.trim());
+        if (detailsLines.length > 0) {
+            const allReady = detailsLines.every(l => l.includes('✅') || l.includes('[جاهز]'));
+            if (allReady) {
+                finalStatus = "جاهز";
+            }
+        }
+    }
+
     const url = isNewOrder
         ? `https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/?user_field_names=true`
         : `https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${STATE.currentEditOrder.id}/?user_field_names=true`;
@@ -418,8 +435,10 @@ window.saveOrderEdit = async function () {
 
     const payload = {
         "Details": finalDetails,
-        [priceKey]: String(finalPrice)
+        [priceKey]: String(finalPrice),
+        "Status": finalStatus // إعادة الطلب لحالته الصحيحة (قيد التحضير لو تم إضافة جديد، جاهز لو كلها جاهزة)
     };
+
     if (isNewOrder) {
         const roomVal = document.getElementById('manual-room-select')?.value;
         const tableVal = document.getElementById('manual-table-select')?.value;
@@ -445,8 +464,6 @@ window.saveOrderEdit = async function () {
             }
             payload["order_type"] = "table";
         }
-
-        payload["Status"] = "قيد التحضير";
     }
 
     try {
