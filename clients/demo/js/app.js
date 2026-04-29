@@ -553,10 +553,8 @@ window.loadView = async function (viewType) {
             const runKDS = async () => {
                 if (STATE.currentActiveView !== 'kds') return;
                 try {
-                    // Fetch menu + table map if missing (needed for admin filter bar)
-                    if (!STATE.cachedMenuItems || STATE.cachedMenuItems.length === 0) {
-                        try { STATE.cachedMenuItems = await window.fetchMenu(); } catch(e) {}
-                    }
+                    // Always fetch menu to ensure station names and items are up to date
+                    try { STATE.cachedMenuItems = await window.fetchMenu(); } catch(e) {}
                     if (!STATE.tableMapData || STATE.tableMapData.length === 0) {
                         try {
                             const _t = Date.now();
@@ -629,7 +627,14 @@ window.loadView = async function (viewType) {
             if (STATE.currentActiveView === 'tables') STATE.pollingInterval = setInterval(runTables, 10000);
         }
         else if (viewType === 'staff') {
-            if (window.renderStaff) await window.renderStaff();
+            const runStaff = async () => {
+                if (STATE.currentActiveView !== 'staff') return;
+                try {
+                    if (window.renderStaff) await window.renderStaff();
+                } catch (e) { console.warn('Staff polling error:', e); }
+            };
+            await runStaff();
+            if (STATE.currentActiveView === 'staff') STATE.pollingInterval = setInterval(runStaff, 10000);
         }
         else if (viewType === 'settings_restaurant') {
             await window.renderSettingsRestaurant();

@@ -173,12 +173,21 @@ window.fetchWaiterCalls = async function () {
             const statusVal = String(rawStatus || '').trim();
 
             if (statusVal === 'قيد الانتظار') {
-                const rawTable = row.table || row.Table;
-                const tableNum = parseInt(String(rawTable || '').trim());
-                if (!isNaN(tableNum)) {
-                    currentActiveCalls.push(tableNum);
-                    currentActiveRows[tableNum] = row.id;
-                    if (!STATE.activeCalls.includes(tableNum)) newCallIds.push(tableNum);
+                const rawTable = String(row.table || row.Table || '').trim();
+                if (rawTable) {
+                    currentActiveCalls.push(rawTable); // دفع النص الكامل ليطابق "الطاولة X - قاعة Y"
+                    currentActiveRows[rawTable] = row.id;
+                    
+                    if (!STATE.activeCalls.includes(rawTable)) newCallIds.push(rawTable);
+                    
+                    const tableNum = parseInt(rawTable);
+                    if (!isNaN(tableNum)) {
+                        currentActiveCalls.push(tableNum);
+                        currentActiveRows[tableNum] = row.id;
+                        if (!STATE.activeCalls.includes(tableNum) && !newCallIds.includes(tableNum)) {
+                            newCallIds.push(tableNum);
+                        }
+                    }
                 }
             }
         });
