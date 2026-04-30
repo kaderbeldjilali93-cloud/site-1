@@ -572,14 +572,15 @@ window.processInventoryDeduction = async function(orderDetailsString) {
         catch(e) { console.warn('Silent Menu Fetch Fail', e); return; }
     }
 
-    // Parse Order String (Format expected: "2x Burger\n1x Cola")
-    // Note: The system format might have prices like "1x برغر - 1200"
-    const lines = orderDetailsString.split('\\n');
+    // Parse Order String (Supports "2x Burger", "1 | Cola", "1x برغر - 1200")
+    const lines = orderDetailsString.split('\n');
     const orderItems = [];
     
     lines.forEach(line => {
-        // Regex extracts quantity and name, ignoring price suffix if present
-        const match = line.match(/^(\\d+)[xX]\\s+(.+?)(?:\\s+-\\s+\\d+.*)?$/);
+        line = line.trim();
+        if (!line) return;
+        // Regex supports both 'x' separator (2x Burger) and '|' separator (2 | Burger)
+        const match = line.match(/^(\d+)(?:\s*[xX]\s*|\s*\|\s*)(.+?)(?:\s+-\s+\d+.*)?$/);
         if (match) {
             orderItems.push({ qty: parseInt(match[1], 10), name: match[2].trim() });
         }
