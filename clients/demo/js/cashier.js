@@ -86,6 +86,12 @@ window.processPayment = async function (rowId, shouldPrint) {
 
         window.showToast("تم تأكيد الدفع بنجاح", "success");
 
+        // 🔥 استدعاء نظام الخصم التلقائي للمخزون
+        const orderForInv = STATE.processedCashierOrders.find(o => o.id === rowId);
+        if (orderForInv && window.processInventoryDeduction) {
+            window.processInventoryDeduction(orderForInv.Details || orderForInv.details);
+        }
+
         // مزامنة فورية بعد الدفع - تحديث كل الشاشات بدون انتظار
         setTimeout(async () => {
             try {

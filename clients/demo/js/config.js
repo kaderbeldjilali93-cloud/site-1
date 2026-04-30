@@ -9,6 +9,7 @@ const CALLS_TABLE_ID = '753';
 const MENU_TABLE_ID = '36';
 const STAFF_TABLE_ID = '757';
 const SETTINGS_TABLE_ID = '754';
+const INVENTORY_TABLE_ID = '759';
 
 window.getLocalYYYYMMDD = function() {
     const now = new Date();

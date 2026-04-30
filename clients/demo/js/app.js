@@ -645,6 +645,9 @@ window.loadView = async function (viewType) {
         else if (viewType === 'settings_rooms') {
             await window.renderSettingsRooms();
         }
+        else if (viewType === 'inventory') {
+            await window.renderInventory();
+        }
 
         // التحقق من وجود روابط خارجية (فقط إذا لم يتم رسم محتوى ديناميكي)
         if (!dynamicContent.innerHTML) {
