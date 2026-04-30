@@ -65,7 +65,7 @@ window.renderInventoryUI = function () {
         <!-- Header -->
         <div class="flex flex-wrap justify-between items-center mb-8 gap-4">
             <div>
-                <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-500 tracking-tight">إدارة المخزون</h2>
+                <h2 class="text-3xl font-black text-white tracking-tight">إدارة المخزون</h2>
                 <p class="text-gray-400 text-sm mt-1">المواد الأولية، التكاليف، والوصفات</p>
             </div>
             <div class="flex gap-3">
@@ -87,8 +87,8 @@ window.renderInventoryUI = function () {
                 <p class="text-emerald-400 font-bold text-sm mb-1">قيمة المخزون الإجمالية</p>
                 <h3 class="text-3xl font-black text-white number-font">${totalValue.toFixed(2)} <span class="text-sm font-normal text-gray-400">د.ج</span></h3>
             </div>
-            <div class="glass-3d bg-red-900/20 border border-red-500/20 p-6 rounded-2xl shadow-xl relative overflow-hidden group">
-                <div class="absolute -right-6 -top-6 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-all"></div>
+            <div onclick="window.filterInventory('low')" class="cursor-pointer glass-3d bg-red-900/20 border border-red-500/20 p-6 rounded-2xl shadow-xl relative overflow-hidden group hover:bg-red-900/40 transition-all">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/30 transition-all"></div>
                 <p class="text-red-400 font-bold text-sm mb-1">تنبيهات نقص المخزون</p>
                 <h3 class="text-3xl font-black text-white number-font">${lowStockCount} <span class="text-sm font-normal text-gray-400">مكونات</span></h3>
             </div>
@@ -259,27 +259,39 @@ function renderInventoryModals() {
                 <input type="hidden" id="inv-id">
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1.5 font-bold">اسم المكون</label>
-                        <input type="text" id="inv-name" placeholder="مثال: خبز برغر" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white outline-none focus:border-brand transition">
+                        <label class="block text-xs text-gray-300 mb-1.5 font-bold">اسم المكون</label>
+                        <input type="text" id="inv-name" placeholder="مثال: خبز برغر" class="w-full p-3 bg-gray-700 border border-gray-500 rounded-lg text-white placeholder-gray-400 outline-none focus:border-brand focus:ring-1 focus:ring-brand transition">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs text-gray-400 mb-1.5 font-bold">الكمية الحالية</label>
-                            <input type="number" id="inv-stock" step="0.01" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white outline-none focus:border-brand transition number-font">
+                            <label class="block text-xs text-gray-300 mb-1.5 font-bold">الوحدة</label>
+                            <select id="inv-unit" class="w-full p-3 bg-gray-700 border border-gray-500 rounded-lg text-white outline-none focus:border-brand focus:ring-1 focus:ring-brand transition">
+                                <option value="" disabled selected>اختر الوحدة</option>
+                                <option value="كغ">كيلوغرام (كغ)</option>
+                                <option value="غ">غرام (غ)</option>
+                                <option value="لتر">لتر (L)</option>
+                                <option value="مل">مليلتر (ml)</option>
+                                <option value="حبة">حبة (قطعة)</option>
+                                <option value="علبة">علبة</option>
+                                <option value="صندوق">صندوق</option>
+                            </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-400 mb-1.5 font-bold">الوحدة</label>
-                            <input type="text" id="inv-unit" placeholder="مثال: حبة، كغ، لتر" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white outline-none focus:border-brand transition">
+                            <label class="block text-xs text-gray-300 mb-1.5 font-bold">الكمية الحالية</label>
+                            <input type="number" id="inv-stock" step="0.01" placeholder="الكمية" class="w-full p-3 bg-gray-700 border border-gray-500 rounded-lg text-white placeholder-gray-400 outline-none focus:border-brand focus:ring-1 focus:ring-brand transition number-font">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs text-gray-400 mb-1.5 font-bold">سعر الوحدة (د.ج)</label>
-                            <input type="number" id="inv-price" step="0.01" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white outline-none focus:border-brand transition number-font">
+                            <label class="block text-xs text-gray-300 mb-1.5 font-bold">سعر الوحدة (د.ج)</label>
+                            <input type="number" id="inv-price" step="0.01" placeholder="السعر" class="w-full p-3 bg-gray-700 border border-gray-500 rounded-lg text-white placeholder-gray-400 outline-none focus:border-brand focus:ring-1 focus:ring-brand transition number-font">
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-400 mb-1.5 font-bold">حد التنبيه (Low Stock)</label>
-                            <input type="number" id="inv-alert" step="0.01" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white outline-none focus:border-brand transition number-font">
+                            <label class="block text-xs text-gray-300 mb-1.5 font-bold">حد التنبيه (Low Stock)</label>
+                            <select id="inv-alert" class="w-full p-3 bg-gray-700 border border-gray-500 rounded-lg text-white outline-none focus:border-brand focus:ring-1 focus:ring-brand transition number-font">
+                                <option value="0">بدون تنبيه</option>
+                                ${Array.from({length: 100}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('')}
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -352,16 +364,32 @@ window.showInventoryModal = function(id = null) {
         if (item) {
             document.getElementById('inv-name').value = item.Name || '';
             document.getElementById('inv-stock').value = item.Stock || 0;
-            document.getElementById('inv-unit').value = item.Unit || '';
+            
+            const unitSelect = document.getElementById('inv-unit');
+            if (item.Unit) {
+                if (!Array.from(unitSelect.options).some(opt => opt.value === item.Unit)) {
+                    unitSelect.add(new Option(item.Unit, item.Unit));
+                }
+                unitSelect.value = item.Unit;
+            } else {
+                unitSelect.value = '';
+            }
+
             document.getElementById('inv-price').value = item.Unit_Price || 0;
-            document.getElementById('inv-alert').value = item.Alert_Limit || 0;
+            
+            const alertSelect = document.getElementById('inv-alert');
+            const alertVal = Math.round(item.Alert_Limit || 0);
+            if (!Array.from(alertSelect.options).some(opt => String(opt.value) === String(alertVal))) {
+                alertSelect.add(new Option(alertVal, alertVal));
+            }
+            alertSelect.value = alertVal;
         }
     } else {
         document.getElementById('inv-name').value = '';
         document.getElementById('inv-stock').value = '';
         document.getElementById('inv-unit').value = '';
         document.getElementById('inv-price').value = '';
-        document.getElementById('inv-alert').value = '';
+        document.getElementById('inv-alert').value = '0';
     }
     
     document.getElementById('inv-item-modal').classList.remove('hidden');
