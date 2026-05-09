@@ -24,7 +24,7 @@ window.renderInventory = async function () {
         });
 
         if (!invRes.ok) throw new Error("فشل في تحميل المخزون");
-        
+
         const data = await invRes.json();
         STATE.inventoryItems = data.results || [];
 
@@ -46,7 +46,7 @@ window.renderInventory = async function () {
 
 window.renderInventoryUI = function () {
     const dynamicContent = document.getElementById('dynamic-content');
-    
+
     let totalValue = 0;
     let lowStockCount = 0;
     let uniqueItems = STATE.inventoryItems.length;
@@ -55,7 +55,7 @@ window.renderInventoryUI = function () {
         const stock = parseFloat(item.Stock) || 0;
         const price = parseFloat(item.Unit_Price) || 0;
         const alertLimit = parseFloat(item.Alert_Limit) || 0;
-        
+
         totalValue += (stock * price);
         if (stock <= alertLimit) lowStockCount++;
     });
@@ -150,15 +150,15 @@ function generateInventoryTableHTML(items) {
         const unit = item.Unit || '';
         const name = item.Name || 'بدون اسم';
         const total = (stock * price).toFixed(2);
-        
+
         let statusColor = "bg-emerald-500";
         let textStatus = "text-emerald-400";
         let progressPct = Math.min(100, Math.max(0, (stock / (limit * 3 || 1)) * 100)); // Arbitrary max logic for visual
-        
+
         if (stock <= limit) {
             statusColor = "bg-red-500";
             textStatus = "text-red-400";
-            progressPct = Math.max(5, (stock / limit) * 50); 
+            progressPct = Math.max(5, (stock / limit) * 50);
         } else if (stock <= limit * 1.5) {
             statusColor = "bg-yellow-500";
             textStatus = "text-yellow-400";
@@ -200,24 +200,24 @@ function generateInventoryTableHTML(items) {
     }).join('');
 }
 
-window.filterInventory = function(type) {
+window.filterInventory = function (type) {
     // Handle tab styling
     if (type) {
         document.querySelectorAll('.inv-filter').forEach(btn => {
             btn.className = "inv-filter bg-gray-700 text-gray-300 hover:bg-gray-600 font-bold px-4 py-2 rounded-lg text-sm transition";
         });
         const activeBtn = document.getElementById(`filter-${type}`);
-        if(activeBtn) activeBtn.className = "inv-filter bg-brand text-black font-bold px-4 py-2 rounded-lg text-sm transition shadow-md";
+        if (activeBtn) activeBtn.className = "inv-filter bg-brand text-black font-bold px-4 py-2 rounded-lg text-sm transition shadow-md";
         STATE.invActiveFilter = type;
     }
 
     const filterType = STATE.invActiveFilter || 'all';
     const query = (document.getElementById('inv-search') ? document.getElementById('inv-search').value.toLowerCase() : '');
-    
+
     document.querySelectorAll('.inv-row').forEach(row => {
         const nameMatch = row.dataset.name.includes(query);
         const statusMatch = (filterType === 'all') || (filterType === 'low' && row.dataset.status === 'low');
-        
+
         if (nameMatch && statusMatch) {
             row.style.display = '';
         } else {
@@ -226,16 +226,16 @@ window.filterInventory = function(type) {
     });
 };
 
-window.quickAdjustStock = async function(id, change) {
+window.quickAdjustStock = async function (id, change) {
     const item = STATE.inventoryItems.find(i => i.id === id);
     if (!item) return;
-    
+
     const newStock = Math.max(0, (parseFloat(item.Stock) || 0) + change);
     item.Stock = newStock; // Optimistic UI update
-    
+
     // Quick Re-render
     window.renderInventoryUI();
-    
+
     // Silent API Patch
     try {
         await fetch(`https://baserow.vidsai.site/api/database/rows/table/${INVENTORY_TABLE_ID}/${id}/?user_field_names=true`, {
@@ -243,7 +243,7 @@ window.quickAdjustStock = async function(id, change) {
             headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
             body: JSON.stringify({ "Stock": newStock })
         });
-    } catch(e) { console.warn("Quick adjust failed", e); }
+    } catch (e) { console.warn("Quick adjust failed", e); }
 };
 
 // ==========================================
@@ -290,7 +290,7 @@ function renderInventoryModals() {
                             <label class="block text-xs text-gray-300 mb-1.5 font-bold">حد التنبيه (Low Stock)</label>
                             <select id="inv-alert" class="w-full p-3 bg-gray-700 border border-gray-500 rounded-lg text-white outline-none focus:border-brand focus:ring-1 focus:ring-brand transition number-font">
                                 <option value="0">بدون تنبيه</option>
-                                ${Array.from({length: 100}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('')}
+                                ${Array.from({ length: 100 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('')}
                             </select>
                         </div>
                     </div>
@@ -355,16 +355,16 @@ function renderInventoryModals() {
     `;
 }
 
-window.showInventoryModal = function(id = null) {
+window.showInventoryModal = function (id = null) {
     document.getElementById('inv-id').value = id || '';
     document.getElementById('inv-modal-title').innerText = id ? 'تعديل مكون' : 'إضافة مكون جديد';
-    
+
     if (id) {
         const item = STATE.inventoryItems.find(i => i.id === id);
         if (item) {
             document.getElementById('inv-name').value = item.Name || '';
             document.getElementById('inv-stock').value = item.Stock || 0;
-            
+
             const unitSelect = document.getElementById('inv-unit');
             if (item.Unit) {
                 if (!Array.from(unitSelect.options).some(opt => opt.value === item.Unit)) {
@@ -376,7 +376,7 @@ window.showInventoryModal = function(id = null) {
             }
 
             document.getElementById('inv-price').value = item.Unit_Price || 0;
-            
+
             const alertSelect = document.getElementById('inv-alert');
             const alertVal = Math.round(item.Alert_Limit || 0);
             if (!Array.from(alertSelect.options).some(opt => String(opt.value) === String(alertVal))) {
@@ -391,11 +391,11 @@ window.showInventoryModal = function(id = null) {
         document.getElementById('inv-price').value = '';
         document.getElementById('inv-alert').value = '0';
     }
-    
+
     document.getElementById('inv-item-modal').classList.remove('hidden');
 };
 
-window.saveInventoryItem = async function() {
+window.saveInventoryItem = async function () {
     const id = document.getElementById('inv-id').value;
     const payload = {
         "Name": document.getElementById('inv-name').value.trim(),
@@ -405,17 +405,17 @@ window.saveInventoryItem = async function() {
         "Alert_Limit": document.getElementById('inv-alert').value
     };
 
-    if(!payload.Name) return window.showToast("يرجى إدخال اسم المكون", "error");
+    if (!payload.Name) return window.showToast("يرجى إدخال اسم المكون", "error");
 
     const btn = document.getElementById('inv-save-btn');
     btn.innerText = "جاري الحفظ...";
     btn.disabled = true;
 
     try {
-        const url = id 
+        const url = id
             ? `https://baserow.vidsai.site/api/database/rows/table/${INVENTORY_TABLE_ID}/${id}/?user_field_names=true`
             : `https://baserow.vidsai.site/api/database/rows/table/${INVENTORY_TABLE_ID}/?user_field_names=true`;
-        
+
         const method = id ? 'PATCH' : 'POST';
 
         const res = await fetch(url, {
@@ -437,7 +437,7 @@ window.saveInventoryItem = async function() {
     }
 };
 
-window.deleteInventoryItem = async function(id) {
+window.deleteInventoryItem = async function (id) {
     if (!confirm("هل أنت متأكد من حذف هذا المكون نهائياً؟")) return;
     try {
         await fetch(`https://baserow.vidsai.site/api/database/rows/table/${INVENTORY_TABLE_ID}/${id}/`, {
@@ -446,7 +446,7 @@ window.deleteInventoryItem = async function(id) {
         });
         window.showToast("تم الحذف بنجاح", "success");
         await window.renderInventory();
-    } catch(e) {
+    } catch (e) {
         window.showToast("فشل الحذف", "error");
     }
 };
@@ -456,14 +456,14 @@ window.deleteInventoryItem = async function(id) {
 // ==========================================
 let currentRecipeIngredients = [];
 
-window.showRecipeModal = function() {
+window.showRecipeModal = function () {
     document.getElementById('recipe-modal').classList.remove('hidden');
     document.getElementById('recipe-menu-select').value = "";
     document.getElementById('recipe-builder-area').classList.add('hidden');
     document.getElementById('recipe-save-btn').classList.add('hidden');
 };
 
-window.loadRecipeDetails = function() {
+window.loadRecipeDetails = function () {
     const menuId = document.getElementById('recipe-menu-select').value;
     if (!menuId) return;
 
@@ -475,7 +475,7 @@ window.loadRecipeDetails = function() {
         const parts = menuItem.Recipe.split(',');
         parts.forEach(p => {
             const split = p.split(':');
-            if(split.length === 2) {
+            if (split.length === 2) {
                 currentRecipeIngredients.push({ name: split[0].trim(), qty: parseFloat(split[1].trim()) });
             }
         });
@@ -486,7 +486,7 @@ window.loadRecipeDetails = function() {
     document.getElementById('recipe-save-btn').classList.remove('hidden');
 };
 
-window.renderRecipeIngredients = function() {
+window.renderRecipeIngredients = function () {
     const list = document.getElementById('recipe-ingredients-list');
     if (currentRecipeIngredients.length === 0) {
         list.innerHTML = `<p class="text-sm text-gray-500 italic">لم يتم ربط أي مكونات بعد.</p>`;
@@ -503,7 +503,7 @@ window.renderRecipeIngredients = function() {
     `).join('');
 };
 
-window.addIngredientToRecipe = function() {
+window.addIngredientToRecipe = function () {
     const name = document.getElementById('recipe-new-ing').value;
     const qty = parseFloat(document.getElementById('recipe-new-qty').value);
 
@@ -516,12 +516,12 @@ window.addIngredientToRecipe = function() {
     renderRecipeIngredients();
 };
 
-window.removeIngredientFromRecipe = function(idx) {
+window.removeIngredientFromRecipe = function (idx) {
     currentRecipeIngredients.splice(idx, 1);
     renderRecipeIngredients();
 };
 
-window.saveRecipe = async function() {
+window.saveRecipe = async function () {
     const menuId = document.getElementById('recipe-menu-select').value;
     if (!menuId) return;
 
@@ -538,14 +538,14 @@ window.saveRecipe = async function() {
             headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
             body: JSON.stringify({ "Recipe": recipeString })
         });
-        
+
         window.showToast("تم تحديث الوصفة بنجاح", "success");
         // Update local cache
         const menuItem = STATE.cachedMenuItems.find(m => String(m.id) === String(menuId));
         if (menuItem) menuItem.Recipe = recipeString;
-        
+
         document.getElementById('recipe-modal').classList.add('hidden');
-    } catch(e) {
+    } catch (e) {
         window.showToast("فشل تحديث الوصفة", "error");
     } finally {
         btn.innerText = "حفظ الوصفة";
@@ -556,47 +556,73 @@ window.saveRecipe = async function() {
 // =========================================================
 // ⚙️ Auto-Deduct Logic (Called from Cashier / KDS)
 // =========================================================
-window.processInventoryDeduction = async function(orderDetailsString) {
-    if (!orderDetailsString) return;
+window.processInventoryDeduction = async function (orderInput) {
+    console.log("🛠️ [Inventory] Starting deduction process. Input:", orderInput);
 
-    // Ensure inventory data exists for calculations
+    // 1. Safely extract the details string
+    let detailsString = "";
+    if (typeof orderInput === 'object' && orderInput !== null) {
+        detailsString = orderInput.Details || orderInput.details || orderInput.Order || "";
+    } else if (typeof orderInput === 'string') {
+        detailsString = orderInput;
+    }
+
+    if (!detailsString) {
+        console.warn("⚠️ [Inventory] No valid details string found to process.");
+        return;
+    }
+
+    // Ensure inventory data exists
     if (!STATE.inventoryItems || STATE.inventoryItems.length === 0) {
         try {
-            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${INVENTORY_TABLE_ID}/?user_field_names=true&size=200`, { headers: { "Authorization": `Token ${BASEROW_TOKEN}` }});
+            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${INVENTORY_TABLE_ID}/?user_field_names=true&size=200`, { headers: { "Authorization": `Token ${BASEROW_TOKEN}` } });
             if (res.ok) { const data = await res.json(); STATE.inventoryItems = data.results || []; }
         } catch (e) { console.warn('Silent Inventory Fetch Fail', e); return; }
     }
-
     if (!STATE.cachedMenuItems || STATE.cachedMenuItems.length === 0) {
-        try { STATE.cachedMenuItems = await window.fetchMenu(); } 
-        catch(e) { console.warn('Silent Menu Fetch Fail', e); return; }
+        try { STATE.cachedMenuItems = await window.fetchMenu(); }
+        catch (e) { console.warn('Silent Menu Fetch Fail', e); return; }
     }
 
-    // Parse Order String (Supports "2x Burger", "1 | Cola", "1x برغر - 1200")
-    const lines = orderDetailsString.split('\n');
+    // 2. Robust Parsing of Order Lines
+    const lines = detailsString.split('\n');
     const orderItems = [];
-    
+
     lines.forEach(line => {
-        line = line.trim();
-        if (!line) return;
-        // Regex supports both 'x' separator (2x Burger) and '|' separator (2 | Burger)
-        const match = line.match(/^(\d+)(?:\s*[xX]\s*|\s*\|\s*)(.+?)(?:\s+-\s+\d+.*)?$/);
-        if (match) {
-            orderItems.push({ qty: parseInt(match[1], 10), name: match[2].trim() });
+        let cleanLine = line.trim();
+        if (!cleanLine) return;
+
+        let qty = 1;
+        // Extract quantity if exists (e.g., "2x ", "2 * ", "2 | ", "2 ")
+        const qtyMatch = cleanLine.match(/^(\d+)\s*(?:[xX\*\|])?\s*/);
+        if (qtyMatch) {
+            qty = parseInt(qtyMatch[1], 10);
+            cleanLine = cleanLine.substring(qtyMatch[0].length);
+        }
+
+        // Remove price/end garbage (e.g., " = 1200", " - 1200")
+        let namePart = cleanLine.split(/\s*[=\-]\s*\d/)[0].trim();
+        // Remove status tags just in case
+        namePart = namePart.replace(/\[جاهز\]/g, '').replace(/✅/g, '').trim();
+
+        if (namePart) {
+            orderItems.push({ qty: qty, name: namePart });
         }
     });
 
+    console.log("📦 [Inventory] Parsed Order Items:", orderItems);
     const inventoryDeductions = {};
 
+    // 3. Match against Menu Recipes
     orderItems.forEach(orderItem => {
-        // Find matching menu item robustly
         const menuItem = STATE.cachedMenuItems.find(m => {
-            const mName = (m.Name || m.name || '').trim();
+            const mNameRaw = m.Name || m.name;
+            const mName = (typeof mNameRaw === 'object' && mNameRaw) ? String(mNameRaw.value).trim() : String(mNameRaw || '').trim();
             return mName === orderItem.name || mName.includes(orderItem.name) || orderItem.name.includes(mName);
         });
 
         if (menuItem && menuItem.Recipe) {
-            // Recipe expected format: "Burger Bun: 1, Minced Meat: 150"
+            console.log(`✅ [Inventory] Found Recipe for '${orderItem.name}':`, menuItem.Recipe);
             const ingredients = menuItem.Recipe.split(',');
             ingredients.forEach(ing => {
                 const parts = ing.split(':');
@@ -609,40 +635,51 @@ window.processInventoryDeduction = async function(orderDetailsString) {
                     }
                 }
             });
+        } else {
+            console.warn(`⚠️ [Inventory] No Recipe found for sold item:`, orderItem.name);
         }
     });
 
-    // Execute Deductions against Baserow (Silent Execution)
+    console.log("📉 [Inventory] Final Deductions to apply:", inventoryDeductions);
+
+    // 4. Execute PATCH Requests Safely
     for (const [ingName, rawDeduct] of Object.entries(inventoryDeductions)) {
-        const invItem = STATE.inventoryItems.find(i => (i.Name || '').trim() === ingName);
+        const invItem = STATE.inventoryItems.find(i => {
+            const iNameRaw = i.Name || i.name;
+            const iName = (typeof iNameRaw === 'object' && iNameRaw) ? String(iNameRaw.value).trim() : String(iNameRaw || '').trim();
+            return iName === ingName;
+        });
+
         if (invItem) {
             let actualDeduct = rawDeduct;
-            const unit = (invItem.Unit || '').trim();
-            
-            // Smart UOM Conversion
-            if (unit === 'كلغ' || unit === 'كغ') {
-                actualDeduct = rawDeduct / 1000; // Recipe in g, Inventory in kg
-            } else if (unit === 'لتر') {
-                actualDeduct = rawDeduct / 1000; // Recipe in ml, Inventory in L
-            }
+            // Handle Unit object from Baserow
+            const unitRaw = invItem.Unit;
+            const unit = (typeof unitRaw === 'object' && unitRaw !== null) ? String(unitRaw.value).trim() : String(unitRaw || '').trim();
+
+            if (unit === 'كلغ' || unit === 'كغ') actualDeduct = rawDeduct / 1000;
+            else if (unit === 'لتر') actualDeduct = rawDeduct / 1000;
 
             const currentStock = parseFloat(invItem.Stock) || 0;
             let newStock = Math.max(0, currentStock - actualDeduct);
-            
-            // Prevent JS floating point precision issues (e.g., 0.3000000004)
-            newStock = parseFloat(newStock.toFixed(3));
-            
+            newStock = parseFloat(newStock.toFixed(3)); // Clean floats
+
+            console.log(`➡️ Deducting ${actualDeduct} from ${ingName}. Old: ${currentStock}, New: ${newStock}`);
+
             try {
                 fetch(`https://baserow.vidsai.site/api/database/rows/table/${INVENTORY_TABLE_ID}/${invItem.id}/?user_field_names=true`, {
                     method: 'PATCH',
                     headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                     body: JSON.stringify({ "Stock": String(newStock) })
                 }).then(res => res.json()).then(data => {
-                    invItem.Stock = data.Stock; // Update local state silently
-                }).catch(e => console.warn('Inventory Deduction Patch Fail:', e));
+                    invItem.Stock = data.Stock; // Update locally
+                    console.log(`✅ [Inventory] Patched successfully: ${ingName}`);
+                }).catch(e => console.warn('Patch Request Failed:', e));
             } catch (e) {
-                console.warn('Inventory Deduction Request Error:', e);
+                console.warn('Inventory Deduction Fetch Error:', e);
             }
+        } else {
+            console.warn(`❌ [Inventory] Ingredient '${ingName}' not found in Inventory Database!`);
         }
     }
 };
+
