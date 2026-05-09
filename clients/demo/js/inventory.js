@@ -643,11 +643,26 @@ window.processInventoryDeduction = async function (orderInput) {
     console.log("📉 [Inventory] Final Deductions to apply:", inventoryDeductions);
 
     // 4. Execute PATCH Requests Safely
+    console.log("🔎 [Inventory] Current DB Items available for matching:", STATE.inventoryItems);
     for (const [ingName, rawDeduct] of Object.entries(inventoryDeductions)) {
         const invItem = STATE.inventoryItems.find(i => {
-            const iNameRaw = i.Name || i.name;
-            const iName = (typeof iNameRaw === 'object' && iNameRaw) ? String(iNameRaw.value).trim() : String(iNameRaw || '').trim();
-            return iName === ingName;
+            let matches = false;
+            const targetName = ingName.trim().toLowerCase();
+            
+            // 1. Try standard Name column
+            if (i.Name && String(i.Name).trim().toLowerCase() === targetName) matches = true;
+            if (i.name && String(i.name).trim().toLowerCase() === targetName) matches = true;
+            
+            // 2. Deep search across ALL fields (Crucial if the Baserow column is named in Arabic e.g., 'اسم المكون')
+            if (!matches) {
+                for (const key in i) {
+                    if (typeof i[key] === 'string' && i[key].trim().toLowerCase() === targetName) {
+                        matches = true;
+                        break;
+                    }
+                }
+            }
+            return matches;
         });
 
         if (invItem) {
