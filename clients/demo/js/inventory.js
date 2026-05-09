@@ -340,6 +340,14 @@ function renderInventoryModals() {
                                     <label class="block text-xs text-gray-400 mb-1 font-bold">الكمية</label>
                                     <input type="number" id="recipe-new-qty" step="0.01" value="1" class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-white text-center number-font outline-none">
                                 </div>
+                                <select id="recipe-new-unit" class="w-24 p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-white outline-none">
+                                    <option value="غ">غ</option>
+                                    <option value="كغ">كغ</option>
+                                    <option value="مل">مل</option>
+                                    <option value="لتر">لتر</option>
+                                    <option value="حبة">حبة</option>
+                                    <option value="علبة">علبة</option>
+                                </select>
                                 <button onclick="window.addIngredientToRecipe()" class="bg-gray-700 hover:bg-gray-600 text-brand px-4 py-2.5 rounded-lg font-bold transition">إضافة</button>
                             </div>
                         </div>
@@ -471,12 +479,21 @@ window.loadRecipeDetails = function () {
     currentRecipeIngredients = [];
 
     if (menuItem && menuItem.Recipe) {
-        // Parse "Burger Bun: 1, Minced Meat: 150"
+        // Parse "Burger Bun: 1 حبة, Minced Meat: 150 غ"
         const parts = menuItem.Recipe.split(',');
         parts.forEach(p => {
             const split = p.split(':');
             if (split.length === 2) {
-                currentRecipeIngredients.push({ name: split[0].trim(), qty: parseFloat(split[1].trim()) });
+                const name = split[0].trim();
+                const qtyStr = split[1].trim();
+                const qtyMatch = qtyStr.match(/^([\d.]+)\s*(.*)$/);
+                if (qtyMatch) {
+                    const qty = parseFloat(qtyMatch[1]);
+                    const unit = qtyMatch[2].trim();
+                    currentRecipeIngredients.push({ name, qty, unit });
+                } else {
+                    currentRecipeIngredients.push({ name, qty: parseFloat(qtyStr) });
+                }
             }
         });
     }
@@ -495,7 +512,7 @@ window.renderRecipeIngredients = function () {
 
     list.innerHTML = currentRecipeIngredients.map((ing, idx) => `
         <div class="flex justify-between items-center bg-gray-800 p-3 rounded-lg border border-gray-700">
-            <div class="font-bold text-gray-200">${ing.name} <span class="text-xs text-brand ml-2 number-font">x${ing.qty}</span></div>
+            <div class="font-bold text-gray-200">${ing.name} <span class="text-xs text-brand ml-2 number-font">x${ing.qty} ${ing.unit || ''}</span></div>
             <button onclick="window.removeIngredientFromRecipe(${idx})" class="text-red-400 hover:text-red-300 transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </button>
@@ -506,12 +523,13 @@ window.renderRecipeIngredients = function () {
 window.addIngredientToRecipe = function () {
     const name = document.getElementById('recipe-new-ing').value;
     const qty = parseFloat(document.getElementById('recipe-new-qty').value);
+    const unit = document.getElementById('recipe-new-unit').value;
 
     if (!name || isNaN(qty) || qty <= 0) return window.showToast("يرجى تحديد مكون وكمية صحيحة", "error");
 
-    const existing = currentRecipeIngredients.find(i => i.name === name);
+    const existing = currentRecipeIngredients.find(i => i.name === name && i.unit === unit);
     if (existing) existing.qty += qty;
-    else currentRecipeIngredients.push({ name, qty });
+    else currentRecipeIngredients.push({ name, qty, unit });
 
     renderRecipeIngredients();
 };
@@ -525,8 +543,8 @@ window.saveRecipe = async function () {
     const menuId = document.getElementById('recipe-menu-select').value;
     if (!menuId) return;
 
-    // Convert array back to string: "Item1: 2, Item2: 150"
-    const recipeString = currentRecipeIngredients.map(i => `${i.name}: ${i.qty}`).join(', ');
+    // Convert array back to string: "Item1: 2 unit, Item2: 150 unit"
+    const recipeString = currentRecipeIngredients.map(i => `${i.name}: ${i.qty} ${i.unit || ''}`.trim()).join(', ');
 
     const btn = document.getElementById('recipe-save-btn');
     btn.innerText = "جاري الحفظ...";
@@ -628,10 +646,23 @@ window.processInventoryDeduction = async function (orderInput) {
                 const parts = ing.split(':');
                 if (parts.length === 2) {
                     const ingName = parts[0].trim();
-                    const ingQty = parseFloat(parts[1].trim()) * orderItem.qty;
+                    const qtyStr = parts[1].trim();
+                    const qtyMatch = qtyStr.match(/^([\d.]+)\s*(.*)$/);
+                    let ingQty = 0;
+                    let recipeUnit = "";
+                    
+                    if (qtyMatch) {
+                        ingQty = parseFloat(qtyMatch[1]) * orderItem.qty;
+                        recipeUnit = qtyMatch[2].trim();
+                    } else {
+                        ingQty = parseFloat(qtyStr) * orderItem.qty;
+                    }
+                    
                     if (!isNaN(ingQty)) {
-                        if (!inventoryDeductions[ingName]) inventoryDeductions[ingName] = 0;
-                        inventoryDeductions[ingName] += ingQty;
+                        if (!inventoryDeductions[ingName]) {
+                            inventoryDeductions[ingName] = { qty: 0, unit: recipeUnit };
+                        }
+                        inventoryDeductions[ingName].qty += ingQty;
                     }
                 }
             });
@@ -666,19 +697,29 @@ window.processInventoryDeduction = async function (orderInput) {
         });
 
         if (invItem) {
-            let actualDeduct = rawDeduct;
             // Handle Unit object from Baserow
             const unitRaw = invItem.Unit;
-            const unit = (typeof unitRaw === 'object' && unitRaw !== null) ? String(unitRaw.value).trim() : String(unitRaw || '').trim();
+            const dbUnit = (typeof unitRaw === 'object' && unitRaw !== null) ? String(unitRaw.value).trim() : String(unitRaw || '').trim();
+            const recipeUnit = rawDeduct.unit;
 
-            if (unit === 'كلغ' || unit === 'كغ') actualDeduct = rawDeduct / 1000;
-            else if (unit === 'لتر') actualDeduct = rawDeduct / 1000;
+            let multiplier = 1;
+            if (recipeUnit === 'غ' && (dbUnit === 'كغ' || dbUnit === 'كلغ')) multiplier = 0.001;
+            else if (recipeUnit === 'مل' && dbUnit === 'لتر') multiplier = 0.001;
+            else if ((recipeUnit === 'كغ' || recipeUnit === 'كلغ') && dbUnit === 'غ') multiplier = 1000;
+            else if (recipeUnit === 'لتر' && dbUnit === 'مل') multiplier = 1000;
+            
+            // Legacy fallback if no recipe unit is provided
+            if (!recipeUnit) {
+                if (dbUnit === 'كغ' || dbUnit === 'كلغ') multiplier = 0.001;
+                else if (dbUnit === 'لتر') multiplier = 0.001;
+            }
+
+            const actualDeduct = rawDeduct.qty * multiplier;
 
             const currentStock = parseFloat(invItem.Stock) || 0;
-            let newStock = Math.max(0, currentStock - actualDeduct);
-            newStock = parseFloat(newStock.toFixed(3)); // Clean floats
+            let newStock = Number(Math.max(0, currentStock - actualDeduct).toFixed(3));
 
-            console.log(`➡️ Deducting ${actualDeduct} from ${ingName}. Old: ${currentStock}, New: ${newStock}`);
+            console.log(`➡️ Deducting ${actualDeduct} (Recipe: ${rawDeduct.qty} ${recipeUnit || 'N/A'}, DB: ${dbUnit}) from ${ingName}. Old: ${currentStock}, New: ${newStock}`);
 
             try {
                 fetch(`https://baserow.vidsai.site/api/database/rows/table/${INVENTORY_TABLE_ID}/${invItem.id}/?user_field_names=true`, {
