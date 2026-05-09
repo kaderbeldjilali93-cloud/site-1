@@ -613,11 +613,24 @@ window.processInventoryDeduction = async function(orderDetailsString) {
     });
 
     // Execute Deductions against Baserow (Silent Execution)
-    for (const [ingName, totalDeduct] of Object.entries(inventoryDeductions)) {
+    for (const [ingName, rawDeduct] of Object.entries(inventoryDeductions)) {
         const invItem = STATE.inventoryItems.find(i => (i.Name || '').trim() === ingName);
         if (invItem) {
+            let actualDeduct = rawDeduct;
+            const unit = (invItem.Unit || '').trim();
+            
+            // Smart UOM Conversion
+            if (unit === 'كلغ' || unit === 'كغ') {
+                actualDeduct = rawDeduct / 1000; // Recipe in g, Inventory in kg
+            } else if (unit === 'لتر') {
+                actualDeduct = rawDeduct / 1000; // Recipe in ml, Inventory in L
+            }
+
             const currentStock = parseFloat(invItem.Stock) || 0;
-            const newStock = Math.max(0, currentStock - totalDeduct);
+            let newStock = Math.max(0, currentStock - actualDeduct);
+            
+            // Prevent JS floating point precision issues (e.g., 0.3000000004)
+            newStock = parseFloat(newStock.toFixed(3));
             
             try {
                 fetch(`https://baserow.vidsai.site/api/database/rows/table/${INVENTORY_TABLE_ID}/${invItem.id}/?user_field_names=true`, {
