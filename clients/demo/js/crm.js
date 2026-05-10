@@ -15,10 +15,13 @@ window.renderMarketingSettings = async function () {
             const data = await res.json();
             if (data.results && data.results.length > 0) {
                 settings = data.results[0];
-                window.currentMarketingRowId = settings.id || settings.id;
+                window.currentMarketingRowId = settings.id;
                 console.log("⚙️ [CRM] Settings loaded from Row ID:", window.currentMarketingRowId);
             }
         }
+
+        // Parse existing prizes into array
+        window.currentMarketingPrizes = settings.Prizes ? settings.Prizes.split(',').map(p => p.trim()).filter(p => p) : [];
 
         const exists = window.currentMarketingRowId !== null;
 
@@ -65,19 +68,96 @@ window.renderMarketingSettings = async function () {
                     <p class="text-xs text-gray-500 mt-1">الوقت المستغرق قبل ظهور اللعبة للعميل بعد فتح المنيو</p>
                 </div>
 
-                <!-- Prizes -->
+                <!-- Smart Prizes Selector -->
                 <div>
-                    <label class="block text-sm text-gray-300 mb-2 font-bold">الجوائز المتاحة (مفصولة بفاصلة)</label>
-                    <textarea id="crm-prizes" rows="4" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white outline-none focus:border-brand transition" placeholder="مثال: خصم 10%, مشروب مجاني, حظ أوفر...">${settings.Prizes || ''}</textarea>
+                    <label class="block text-sm text-gray-300 mb-2 font-bold">الجوائز المتاحة</label>
+                    <div class="flex gap-2 mb-3">
+                        <select id="crm-prize-select" onchange="window.handleCrmPrizeSelectChange()" class="flex-1 p-3 bg-gray-900 border border-gray-700 rounded-lg text-white outline-none focus:border-brand transition">
+                            <option value="خصم 5%">خصم 5%</option>
+                            <option value="خصم 10%">خصم 10%</option>
+                            <option value="خصم 15%">خصم 15%</option>
+                            <option value="خصم 20%">خصم 20%</option>
+                            <option value="خصم 25%">خصم 25%</option>
+                            <option value="مشروب مجاني">مشروب مجاني</option>
+                            <option value="حلوى مجانية">حلوى مجانية</option>
+                            <option value="custom">جائزة مخصصة...</option>
+                        </select>
+                        <button onclick="window.addCrmPrize()" class="bg-brand/20 text-brand border border-brand/50 px-6 py-2 rounded-lg hover:bg-brand hover:text-black transition font-bold">إضافة</button>
+                    </div>
+                    
+                    <div id="crm-custom-prize-container" class="hidden mb-3 animate-fade-in">
+                        <input type="text" id="crm-custom-prize-input" class="w-full p-3 bg-gray-900 border border-brand/50 rounded-lg text-white outline-none placeholder-gray-600 focus:ring-1 ring-brand/50" placeholder="أدخل اسم الجائزة المخصصة...">
+                    </div>
+
+                    <div id="crm-prizes-chips" class="flex flex-wrap gap-2 p-3 bg-gray-900/30 rounded-xl border border-gray-700 min-h-[60px]">
+                        <!-- Chips will render here -->
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">سيتم اختيار جائزة عشوائية من هذه القائمة لكل عميل يفتح الصندوق.</p>
                 </div>
 
             </div>
         </div>`;
 
+        // Render initial chips
+        window.renderCrmPrizeChips();
+
     } catch (error) {
         dynamicContent.innerHTML = `<div class="text-center text-red-500 mt-10">حدث خطأ أثناء تحميل الإعدادات</div>`;
         console.error("Marketing settings fetch error:", error);
     }
+};
+
+// ── Smart Prizes Logic ──
+
+window.handleCrmPrizeSelectChange = function() {
+    const select = document.getElementById('crm-prize-select');
+    const customContainer = document.getElementById('crm-custom-prize-container');
+    if (select.value === 'custom') {
+        customContainer.classList.remove('hidden');
+    } else {
+        customContainer.classList.add('hidden');
+    }
+};
+
+window.addCrmPrize = function() {
+    const select = document.getElementById('crm-prize-select');
+    const customInput = document.getElementById('crm-custom-prize-input');
+    let prizeName = select.value;
+
+    if (prizeName === 'custom') {
+        prizeName = customInput.value.trim();
+        if (!prizeName) return;
+        customInput.value = '';
+    }
+
+    if (!window.currentMarketingPrizes.includes(prizeName)) {
+        window.currentMarketingPrizes.push(prizeName);
+        window.renderCrmPrizeChips();
+    }
+};
+
+window.removeCrmPrize = function(index) {
+    window.currentMarketingPrizes.splice(index, 1);
+    window.renderCrmPrizeChips();
+};
+
+window.renderCrmPrizeChips = function() {
+    const container = document.getElementById('crm-prizes-chips');
+    if (!container) return;
+
+    if (window.currentMarketingPrizes.length === 0) {
+        container.innerHTML = `<span class="text-gray-600 text-xs italic m-auto">لا توجد جوائز مضافة..</span>`;
+        return;
+    }
+
+    container.innerHTML = window.currentMarketingPrizes.map((p, i) => `
+        <div class="flex items-center gap-2 bg-emerald-900/50 text-ivory-100 border border-brand/30 px-3 py-1.5 rounded-full text-sm animate-zoom-in">
+            <span class="font-medium">${p}</span>
+            <button onclick="window.removeCrmPrize(${i})" class="text-brand hover:text-red-400 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+    `).join('');
 };
 
 window.saveMarketingSettings = async function (exists) {
@@ -90,7 +170,7 @@ window.saveMarketingSettings = async function (exists) {
         "Is_Active": document.getElementById('crm-is-active').checked,
         "Game_Type": document.getElementById('crm-game-type').value,
         "Trigger_Delay": parseInt(document.getElementById('crm-trigger-delay').value) || 30,
-        "Prizes": document.getElementById('crm-prizes').value.trim()
+        "Prizes": window.currentMarketingPrizes.join(', ')
     };
 
     try {
