@@ -8,12 +8,11 @@ const TABLEMAP_TABLE_ID = '758';
 const CALLS_TABLE_ID = '753';
 const MENU_TABLE_ID = '36';
 const STAFF_TABLE_ID = '757';
-const SETTINGS_TABLE_ID = '754';
 const INVENTORY_TABLE_ID = '759';
 const MARKETING_SETTINGS_TABLE_ID = '760';
 const CUSTOMERS_TABLE_ID = '761';
 
-window.getLocalYYYYMMDD = function() {
+window.getLocalYYYYMMDD = function () {
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth() + 1).padStart(2, '0');
@@ -70,9 +69,9 @@ const STATE = {
     splitTotalPrice: 0,
     splitPersonCount: 2,
     splitMode: 'even',
-    storageKeys: { 
-        username: "rp_username", 
-        role: "rp_role", 
+    storageKeys: {
+        username: "rp_username",
+        role: "rp_role",
         lastView: "rp_last_view",
         room: "rp_assigned_room",
         station: "rp_assigned_station"
@@ -89,9 +88,9 @@ if (typeof window.isOrderFromToday !== 'function') {
             if (String(timeStr).includes(todayStr)) return true;
             var d = new Date(timeStr);
             if (isNaN(d.getTime())) return false;
-            var y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
-            return y+'-'+m+'-'+dd === todayStr;
-        } catch(e) { return false; }
+            var y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), dd = String(d.getDate()).padStart(2, '0');
+            return y + '-' + m + '-' + dd === todayStr;
+        } catch (e) { return false; }
     };
 }
 if (typeof window.isOrderFromSelectedDate !== 'function') {
@@ -101,8 +100,8 @@ if (typeof window.isOrderFromSelectedDate !== 'function') {
             if (String(timeStr).includes(dateStr)) return true;
             var d = new Date(timeStr);
             if (isNaN(d.getTime())) return false;
-            var y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
-            return y+'-'+m+'-'+dd === dateStr;
-        } catch(e) { return false; }
+            var y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), dd = String(d.getDate()).padStart(2, '0');
+            return y + '-' + m + '-' + dd === dateStr;
+        } catch (e) { return false; }
     };
 }

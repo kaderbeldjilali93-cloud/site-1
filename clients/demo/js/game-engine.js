@@ -5,9 +5,6 @@
     const MARKETING_SETTINGS_TABLE_ID = '760';
     const CUSTOMERS_TABLE_ID = '761';
     const BASEROW_TOKEN = window.BASEROW_TOKEN || 'DfaoAk1o41H4iPUtkblY2ZKzXcbHxizb';
-
-    // Inject Custom Styles for the Game
-    const style = document.createElement('style');
     // Inject Custom Styles for the Game
     const style = document.createElement('style');
     style.innerHTML = `
