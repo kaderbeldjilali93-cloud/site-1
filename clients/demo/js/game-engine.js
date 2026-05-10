@@ -34,27 +34,38 @@
         console.log("🎮 [Game Engine] Initializing...");
         try {
             const cb = new Date().getTime();
-            // Fetch the first available row instead of hardcoding ID /1/
-            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MARKETING_SETTINGS_TABLE_ID}/?user_field_names=true&size=1&cb=${cb}`, {
+            // Fetch the table rows
+            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MARKETING_SETTINGS_TABLE_ID}/?user_field_names=true&cb=${cb}`, {
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
             });
 
             if (!res.ok) {
-                console.warn("⚠️ [Game Engine] Failed to connect to Baserow. Status:", res.status);
+                console.warn("⚠️ [Game Engine] API Error. Status:", res.status);
                 return;
             }
 
             const data = await res.json();
-            if (!data.results || data.results.length === 0) {
-                console.warn("⚠️ [Game Engine] No settings row found in Baserow!");
+            console.log("🔍 [Game Engine] RAW Data from Baserow:", data);
+
+            let settings = null;
+            
+            // Handle BOTH data shapes dynamically
+            if (data.results && data.results.length > 0) {
+                settings = data.results[0]; // Extracted from Array
+            } else if (data.id) {
+                settings = data; // Extracted as direct Object
+            }
+
+            if (!settings) {
+                console.warn("⚠️ [Game Engine] Table is completely empty (No rows).");
                 return;
             }
 
-            const settings = data.results[0];
-            console.log("⚙️ [Game Engine] Settings loaded:", settings);
+            console.log("⚙️ [Game Engine] Settings applied:", settings);
 
-            if (!settings.Is_Active) {
-                console.log("🛑 [Game Engine] Gamification is currently DISABLED in settings.");
+            // Handle Boolean strictly (Accounting for string "false" or actual boolean false)
+            if (settings.Is_Active === false || settings.Is_Active === "false" || !settings.Is_Active) {
+                console.log("🛑 [Game Engine] Gamification is DISABLED in settings.");
                 return;
             }
 
@@ -63,19 +74,19 @@
             const prizes = prizesRaw.split(',').map(p => p.trim()).filter(p => p);
 
             if (prizes.length === 0) {
-                console.warn("⚠️ [Game Engine] Gamification is active, but NO PRIZES are defined!");
+                console.warn("⚠️ [Game Engine] Active, but NO PRIZES defined!");
                 return;
             }
 
-            console.log(`⏳ [Game Engine] Countdown started. Modal will show in ${delay / 1000} seconds...`);
+            console.log(`⏳ [Game Engine] Countdown: ${delay / 1000} seconds...`);
             
             setTimeout(() => {
-                console.log("🎁 [Game Engine] Triggering Lead Capture Modal NOW!");
+                console.log("🎁 [Game Engine] Showing Game Modal!");
                 showLeadCaptureModal(prizes);
             }, delay);
 
         } catch (e) {
-            console.error("❌ [Game Engine] Gamification failed with error:", e);
+            console.error("❌ [Game Engine] Error:", e);
         }
     };
 
