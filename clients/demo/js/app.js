@@ -153,9 +153,10 @@ window.applyRolePermissions = function (role) {
     const menuStaff = document.getElementById('menu-staff');
     const menuInventory = document.getElementById('menu-inventory');
     const menuSettings = document.getElementById('menu-settings');
+    const menuMarketing = document.getElementById('menu-marketing');
     const btnSettingsRooms = document.getElementById('btn-settings_rooms');
 
-    [btnKds, btnCashier, btnTables, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuSettings, btnSettingsRooms].forEach(el => {
+    [btnKds, btnCashier, btnTables, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuMarketing, menuSettings, btnSettingsRooms].forEach(el => {
         if (el) {
             if (el.id === 'btn-menu-parent' || el.id === 'menu-settings') {
                 el.style.display = 'flex';
@@ -178,14 +179,15 @@ window.applyRolePermissions = function (role) {
     } else if (r === 'cashier') {
         styleEl.innerHTML += ' #waiter-action-buttons { display: none !important; }';
         if (menuStaff) menuStaff.style.display = 'none';
+        if (menuMarketing) menuMarketing.style.display = 'none';
         if (btnSettingsRooms) btnSettingsRooms.style.display = 'none';
     } else if (r === 'waiter') {
-        [btnKds, btnCashier, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuSettings].forEach(el => {
+        [btnKds, btnCashier, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuMarketing, menuSettings].forEach(el => {
             if (el) el.style.display = 'none';
         });
     } else if (r === 'kitchen') {
         styleEl.innerHTML += ' #waiter-action-buttons { display: none !important; }';
-        [btnCashier, btnTables, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuSettings].forEach(el => {
+        [btnCashier, btnTables, btnMenuParent, menuAnalytics, menuStaff, menuInventory, menuMarketing, menuSettings].forEach(el => {
             if (el) el.style.display = 'none';
         });
     }
@@ -647,6 +649,11 @@ window.loadView = async function (viewType) {
         }
         else if (viewType === 'inventory') {
             await window.renderInventory();
+        }
+        else if (viewType === 'marketing') {
+            if (window.renderMarketingSettings) {
+                await window.renderMarketingSettings();
+            }
         }
 
         // التحقق من وجود روابط خارجية (فقط إذا لم يتم رسم محتوى ديناميكي)
