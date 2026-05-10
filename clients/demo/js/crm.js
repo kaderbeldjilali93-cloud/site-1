@@ -1,19 +1,26 @@
-window.renderMarketingSettings = async function() {
+window.renderMarketingSettings = async function () {
     const dynamicContent = document.getElementById('dynamic-content');
     dynamicContent.innerHTML = `<div class="flex items-center justify-center h-64"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div></div>`;
 
     try {
-        const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MARKETING_SETTINGS_TABLE_ID}/1/?user_field_names=true`, {
+        const cb = new Date().getTime();
+        const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MARKETING_SETTINGS_TABLE_ID}/?user_field_names=true&size=1&cb=${cb}`, {
             headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
         });
-        
+
         let settings = { Is_Active: false, Game_Type: 'boxes', Trigger_Delay: 30, Prizes: 'خصم 10%, حلويات مجانية, مشروب مجاني, حظ أوفر' };
-        let exists = false;
-        
+        window.currentMarketingRowId = null;
+
         if (res.ok) {
-            settings = await res.json();
-            exists = true;
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+                settings = data.results[0];
+                window.currentMarketingRowId = settings.id || settings.id;
+                console.log("⚙️ [CRM] Settings loaded from Row ID:", window.currentMarketingRowId);
+            }
         }
+
+        const exists = window.currentMarketingRowId !== null;
 
         dynamicContent.innerHTML = `
         <div class="animate-fade-in pb-20 max-w-4xl mx-auto">
@@ -36,7 +43,7 @@ window.renderMarketingSettings = async function() {
                         <p class="text-xs text-gray-400 mt-1">عرض اللعبة للعميل أثناء تصفح المنيو</p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="crm-is-active" class="sr-only peer" ${settings.Is_Active ? 'checked' : ''}>
+                        <input type="checkbox" id="crm-is-active" class="sr-only peer" ${(settings.Is_Active === true || settings.Is_Active === "true") ? 'checked' : ''}>
                         <div class="w-14 h-7 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-brand"></div>
                     </label>
                 </div>
@@ -73,7 +80,7 @@ window.renderMarketingSettings = async function() {
     }
 };
 
-window.saveMarketingSettings = async function(exists) {
+window.saveMarketingSettings = async function (exists) {
     const btn = document.getElementById('crm-save-btn');
     const originalText = btn.innerText;
     btn.innerText = "جاري الحفظ...";
@@ -87,9 +94,10 @@ window.saveMarketingSettings = async function(exists) {
     };
 
     try {
-        const method = exists ? 'PATCH' : 'POST';
-        const url = exists 
-            ? `https://baserow.vidsai.site/api/database/rows/table/${MARKETING_SETTINGS_TABLE_ID}/1/?user_field_names=true`
+        const id = window.currentMarketingRowId;
+        const method = id ? 'PATCH' : 'POST';
+        const url = id
+            ? `https://baserow.vidsai.site/api/database/rows/table/${MARKETING_SETTINGS_TABLE_ID}/${id}/?user_field_names=true`
             : `https://baserow.vidsai.site/api/database/rows/table/${MARKETING_SETTINGS_TABLE_ID}/?user_field_names=true`;
 
         const res = await fetch(url, {
@@ -101,6 +109,8 @@ window.saveMarketingSettings = async function(exists) {
         if (res.ok) {
             window.showToast("تم حفظ الإعدادات بنجاح", "success");
         } else {
+            const err = await res.json();
+            console.error("Save error:", err);
             throw new Error("Failed to save");
         }
     } catch (e) {
