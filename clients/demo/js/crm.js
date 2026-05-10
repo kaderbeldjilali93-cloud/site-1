@@ -112,3 +112,126 @@ window.saveMarketingSettings = async function(exists) {
         setTimeout(() => window.renderMarketingSettings(), 500);
     }
 };
+
+// ══════════════════════════════════════════════
+//  قائمة الزبائن (Customers List)
+// ══════════════════════════════════════════════
+window.renderCustomersList = async function () {
+    const dynamicContent = document.getElementById('dynamic-content');
+    dynamicContent.innerHTML = `<div class="flex items-center justify-center h-64"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div></div>`;
+
+    try {
+        const cb = new Date().getTime();
+        const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${CUSTOMERS_TABLE_ID}/?user_field_names=true&size=200&cb=${cb}`, {
+            headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
+        });
+
+        if (!res.ok) throw new Error("API Error: " + res.status);
+
+        const data = await res.json();
+        let customers = [];
+
+        if (data.results && data.results.length > 0) {
+            customers = data.results;
+        } else if (data.id) {
+            customers = [data];
+        }
+
+        // Format date helper
+        const formatDate = (raw) => {
+            if (!raw) return '--';
+            try {
+                const d = new Date(raw);
+                if (isNaN(d.getTime())) return raw;
+                return d.toLocaleDateString('ar-DZ', { year: 'numeric', month: 'short', day: 'numeric' }) + ' — ' + d.toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit', hour12: false });
+            } catch (e) { return raw; }
+        };
+
+        // Extract field value (handles Baserow single_select objects)
+        const val = (v) => {
+            if (v === null || v === undefined) return '--';
+            if (typeof v === 'object' && v.value !== undefined) return v.value;
+            return String(v) || '--';
+        };
+
+        // Build table rows
+        let rowsHtml = '';
+        if (customers.length === 0) {
+            rowsHtml = `
+            <tr>
+                <td colspan="4" class="text-center py-16">
+                    <div class="flex flex-col items-center gap-3">
+                        <svg class="w-16 h-16 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <p class="text-gray-500 text-lg font-bold">لا يوجد زبائن بعد</p>
+                        <p class="text-gray-600 text-sm">سيظهر الزبائن هنا بعد مشاركتهم في ألعاب التسويق</p>
+                    </div>
+                </td>
+            </tr>`;
+        } else {
+            // Reverse to show newest first
+            customers.reverse().forEach((c, i) => {
+                const isWin = c.Prize_Won && !String(c.Prize_Won).includes('حظ');
+                const prizeBadgeClass = isWin
+                    ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                    : 'bg-gray-700/50 text-gray-400 border border-gray-600';
+                const prizeIcon = isWin ? '🏆' : '😅';
+
+                rowsHtml += `
+                <tr class="border-b border-gray-700/50 hover:bg-gray-800/50 transition">
+                    <td class="py-3.5 px-4 text-gray-400 text-xs number-font whitespace-nowrap">${formatDate(c.created_on || c['Created at'] || c.Date)}</td>
+                    <td class="py-3.5 px-4 text-white font-medium">${val(c.Name) || 'بدون اسم'}</td>
+                    <td class="py-3.5 px-4 text-gray-300 number-font text-left" dir="ltr">${val(c.Phone)}</td>
+                    <td class="py-3.5 px-4">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${prizeBadgeClass}">
+                            ${prizeIcon} ${val(c.Prize_Won)}
+                        </span>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        dynamicContent.innerHTML = `
+        <div class="animate-fade-in pb-20 max-w-5xl mx-auto">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-2 tracking-tight">قائمة الزبائن</h2>
+                    <p class="text-gray-400 text-sm">جميع الزبائن المسجلين عبر نظام الألعاب التسويقية</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="bg-brand/10 text-brand border border-brand/20 px-4 py-2 rounded-lg text-sm font-bold number-font">${customers.length} زبون</span>
+                    <button onclick="window.renderCustomersList()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition text-sm font-bold">
+                        <svg class="w-4 h-4 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        تحديث
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-gray-700 shadow-xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right" style="direction: rtl;">
+                        <thead>
+                            <tr class="bg-gray-900/80 border-b border-gray-700">
+                                <th class="py-3.5 px-4 text-xs text-gray-400 font-bold uppercase tracking-wider">التاريخ</th>
+                                <th class="py-3.5 px-4 text-xs text-gray-400 font-bold uppercase tracking-wider">الاسم</th>
+                                <th class="py-3.5 px-4 text-xs text-gray-400 font-bold uppercase tracking-wider">الهاتف</th>
+                                <th class="py-3.5 px-4 text-xs text-gray-400 font-bold uppercase tracking-wider">الجائزة</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700/30">
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>`;
+
+    } catch (error) {
+        console.error("Customers list fetch error:", error);
+        dynamicContent.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-64 gap-4">
+            <svg class="w-16 h-16 text-red-500/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <p class="text-red-400 font-bold text-lg">حدث خطأ أثناء تحميل قائمة الزبائن</p>
+            <button onclick="window.renderCustomersList()" class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition text-sm">إعادة المحاولة</button>
+        </div>`;
+    }
+};

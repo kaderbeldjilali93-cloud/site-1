@@ -339,6 +339,20 @@ window.toggleSettingsAccordion = function () {
     }
 };
 
+window.toggleCrmAccordion = function () {
+    const submenu = document.getElementById('crm-submenu');
+    const icon = document.getElementById('crm-accordion-icon');
+    if (submenu.classList.contains('hidden')) {
+        submenu.classList.remove('hidden');
+        submenu.classList.add('flex', 'flex-col');
+        icon.classList.add('rotate-180');
+    } else {
+        submenu.classList.add('hidden');
+        submenu.classList.remove('flex', 'flex-col');
+        icon.classList.remove('rotate-180');
+    }
+};
+
 window.parseCustomDate = function (dateStr) {
     if (!dateStr) return new Date(NaN);
     let date = new Date(dateStr);
@@ -655,6 +669,11 @@ window.loadView = async function (viewType) {
                 await window.renderMarketingSettings();
             }
         }
+        else if (viewType === 'crm_customers') {
+            if (window.renderCustomersList) {
+                await window.renderCustomersList();
+            }
+        }
 
         // التحقق من وجود روابط خارجية (فقط إذا لم يتم رسم محتوى ديناميكي)
         if (!dynamicContent.innerHTML) {
@@ -711,6 +730,19 @@ window.updateNavStyles = function (activeView) {
 
                 const submenu = document.getElementById('settings-submenu');
                 const icon = document.getElementById('settings-accordion-icon');
+                if (submenu && submenu.classList.contains('hidden')) {
+                    submenu.classList.remove('hidden');
+                    submenu.classList.add('flex');
+                    icon.classList.add('rotate-180');
+                }
+            } else if ((activeView === 'marketing' || activeView === 'crm_customers')) {
+                const parentCrmBtn = document.getElementById('btn-crm-parent');
+                if (parentCrmBtn) {
+                    parentCrmBtn.classList.remove('text-gray-300', 'hover:bg-gray-800');
+                    parentCrmBtn.classList.add('text-white');
+                }
+                const submenu = document.getElementById('crm-submenu');
+                const icon = document.getElementById('crm-accordion-icon');
                 if (submenu && submenu.classList.contains('hidden')) {
                     submenu.classList.remove('hidden');
                     submenu.classList.add('flex');
