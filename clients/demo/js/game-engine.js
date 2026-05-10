@@ -31,28 +31,51 @@
     document.head.appendChild(style);
 
     const initGame = async () => {
+        console.log("🎮 [Game Engine] Initializing...");
         try {
             const cb = new Date().getTime();
-            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MARKETING_SETTINGS_TABLE_ID}/1/?user_field_names=true&cb=${cb}`, {
+            // Fetch the first available row instead of hardcoding ID /1/
+            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MARKETING_SETTINGS_TABLE_ID}/?user_field_names=true&size=1&cb=${cb}`, {
                 headers: { "Authorization": `Token ${BASEROW_TOKEN}` }
             });
 
-            if (!res.ok) return; // Silent fail
+            if (!res.ok) {
+                console.warn("⚠️ [Game Engine] Failed to connect to Baserow. Status:", res.status);
+                return;
+            }
 
-            const settings = await res.json();
-            if (!settings.Is_Active) return;
+            const data = await res.json();
+            if (!data.results || data.results.length === 0) {
+                console.warn("⚠️ [Game Engine] No settings row found in Baserow!");
+                return;
+            }
+
+            const settings = data.results[0];
+            console.log("⚙️ [Game Engine] Settings loaded:", settings);
+
+            if (!settings.Is_Active) {
+                console.log("🛑 [Game Engine] Gamification is currently DISABLED in settings.");
+                return;
+            }
 
             const delay = (parseInt(settings.Trigger_Delay) || 30) * 1000;
-            const prizes = (settings.Prizes || "").split(',').map(p => p.trim()).filter(p => p);
+            const prizesRaw = settings.Prizes || "";
+            const prizes = prizesRaw.split(',').map(p => p.trim()).filter(p => p);
 
-            if (prizes.length === 0) return;
+            if (prizes.length === 0) {
+                console.warn("⚠️ [Game Engine] Gamification is active, but NO PRIZES are defined!");
+                return;
+            }
 
+            console.log(`⏳ [Game Engine] Countdown started. Modal will show in ${delay / 1000} seconds...`);
+            
             setTimeout(() => {
+                console.log("🎁 [Game Engine] Triggering Lead Capture Modal NOW!");
                 showLeadCaptureModal(prizes);
             }, delay);
 
         } catch (e) {
-            console.warn("Gamification failed silently:", e);
+            console.error("❌ [Game Engine] Gamification failed with error:", e);
         }
     };
 
