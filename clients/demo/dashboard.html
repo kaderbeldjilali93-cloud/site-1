@@ -652,11 +652,29 @@
                         <span class="font-medium">إدارة المخزون</span>
                     </button>
 
-                    <!-- زر التسويق CRM -->
-                    <button onclick="window.loadView('marketing')" id="menu-marketing"
-                        class="nav-btn w-full block text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition relative">
-                        <span class="font-medium">التسويق (CRM)</span>
-                    </button>
+                    <!-- زر التسويق CRM (قائمة منسدلة) -->
+                    <div class="relative" id="menu-marketing">
+                        <button onclick="window.toggleCrmAccordion()" id="btn-crm-parent"
+                            class="nav-btn w-full flex justify-between items-center text-right px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition">
+                            <span class="font-medium">التسويق (CRM)</span>
+                            <svg id="crm-accordion-icon" class="w-4 h-4 transition-transform duration-300" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="crm-submenu"
+                            class="hidden flex-col w-full gap-1 pl-2 pr-6 py-2 mt-1 bg-gray-800/50 rounded-lg border-r-2 border-gray-700">
+                            <button onclick="window.loadView('marketing')" id="btn-marketing"
+                                class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                                <span class="font-medium">ألعاب تسويقية</span>
+                            </button>
+                            <button onclick="window.loadView('crm_customers')" id="btn-crm_customers"
+                                class="sub-nav-btn w-full block text-right px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded transition">
+                                <span class="font-medium">قائمة الزبائن</span>
+                            </button>
+                        </div>
+                    </div>
 
                     <!-- زر الإعدادات (قائمة منسدلة جديدة) -->
                     <div class="relative flex-col" id="menu-settings">
