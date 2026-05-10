@@ -1,6 +1,13 @@
 // game-engine.js
 
-(function() {
+(function () {
+    // ⚙️ تعريف المتغيرات هنا مباشرة لضمان عملها 100% وتفادي مشاكل الكاش
+    const MARKETING_SETTINGS_TABLE_ID = '760';
+    const CUSTOMERS_TABLE_ID = '761';
+    const BASEROW_TOKEN = window.BASEROW_TOKEN || 'DfaoAk1o41H4iPUtkblY2ZKzXcbHxizb';
+
+    // Inject Custom Styles for the Game
+    const style = document.createElement('style');
     // Inject Custom Styles for the Game
     const style = document.createElement('style');
     style.innerHTML = `
@@ -48,7 +55,7 @@
             console.log("🔍 [Game Engine] RAW Data from Baserow:", data);
 
             let settings = null;
-            
+
             // Handle BOTH data shapes dynamically
             if (data.results && data.results.length > 0) {
                 settings = data.results[0]; // Extracted from Array
@@ -79,7 +86,7 @@
             }
 
             console.log(`⏳ [Game Engine] Countdown: ${delay / 1000} seconds...`);
-            
+
             setTimeout(() => {
                 console.log("🎁 [Game Engine] Showing Game Modal!");
                 showLeadCaptureModal(prizes);
@@ -169,26 +176,26 @@
         });
 
         // Expose function globally for the onclick
-        window.playBoxGame = async function(el) {
+        window.playBoxGame = async function (el) {
             if (el.classList.contains('opened')) return;
-            
+
             // Disable other boxes
             document.querySelectorAll('.box-3d').forEach(b => b.classList.add('opened', 'opacity-50', 'cursor-not-allowed'));
             el.classList.remove('opacity-50');
             el.classList.add('shake');
-            
+
             const randomPrize = window._gamificationLead.prizes[Math.floor(Math.random() * window._gamificationLead.prizes.length)];
-            
+
             setTimeout(() => {
                 el.classList.remove('shake', 'box-3d');
                 el.classList.add('box-open');
                 el.innerHTML = `<span class="text-brand font-bold text-sm text-center px-1">${randomPrize}</span>`;
-                
+
                 setTimeout(() => {
                     document.getElementById('step-2-game').classList.add('hidden');
                     document.getElementById('game-prize-result').innerText = randomPrize;
                     document.getElementById('step-3-success').classList.remove('hidden');
-                    
+
                     // Post to Baserow in background
                     postGamificationLead(window._gamificationLead.name, window._gamificationLead.phone, randomPrize);
                 }, 1500);
