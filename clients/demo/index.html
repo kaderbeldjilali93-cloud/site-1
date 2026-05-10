@@ -1069,6 +1069,11 @@
                     total: totalPrice,
                     lang: currentLang
                 };
+                // 🎁 Gamification: Append won prize to order if exists
+                if (window._wonPrize) {
+                    orderPayload.items.push({ name: "🎁 جائزة: " + window._wonPrize, qty: 1, price: 0 });
+                    console.log("🎁 [Order] Prize appended to order:", window._wonPrize);
+                }
                 const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderPayload) });
                 if (response.ok) {
                     new Audio('assets/sound_effect/success.mp3').play().catch(e => { });
