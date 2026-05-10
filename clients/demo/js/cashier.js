@@ -18,12 +18,51 @@ window.handlePaymentToggle = function (rowId) {
 
     STATE.currentCheckoutOrder = order;
 
-    const price = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
-    const tableStr = order.Table || order.table || 'سفري';
+    // 1. Calculate base subtotal
+    const subtotal = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
+    let discountPercent = 0;
+
+    // 2. Scan details for the prize string using regex: 🎁 جائزة: خصم X%
+    const details = order.Details || "";
+    const discountMatch = details.match(/🎁 جائزة: خصم\s+(\d+)%/);
+    if (discountMatch) {
+        discountPercent = parseInt(discountMatch[1]);
+    }
+
+    const discountAmount = subtotal * (discountPercent / 100);
+    const finalTotal = subtotal - discountAmount;
+
+    // Store calculated values in the order object for persistence
+    STATE.currentCheckoutOrder.calculatedSubtotal = subtotal;
+    STATE.currentCheckoutOrder.calculatedDiscount = discountAmount;
+    STATE.currentCheckoutOrder.calculatedFinalTotal = finalTotal;
+
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
+    const tableStr = order.Table || order.table || 'سفري';
 
     document.getElementById('checkout-title').innerText = `تأكيد الدفع: الطلب ${order.dailySequence} - ${tableStr}`;
-    document.getElementById('checkout-amount').innerText = `${price.toLocaleString()} ${sysCurrency}`;
+
+    // 3. Update Modal UI with breakdown if discount exists
+    const amountDisplay = document.getElementById('checkout-amount');
+    if (discountPercent > 0) {
+        amountDisplay.innerHTML = `
+            <div class="flex flex-col gap-1">
+                <div class="text-gray-400 text-xs flex justify-between px-2">
+                    <span>المجموع الفرعي:</span>
+                    <span class="line-through">${subtotal.toLocaleString()} ${sysCurrency}</span>
+                </div>
+                <div class="text-green-500 text-xs flex justify-between px-2 font-bold">
+                    <span>خصم الجائزة (${discountPercent}%):</span>
+                    <span>-${discountAmount.toLocaleString()} ${sysCurrency}</span>
+                </div>
+                <div class="mt-2 pt-2 border-t border-gray-700 text-3xl font-black text-brand tracking-wider">
+                    ${finalTotal.toLocaleString()} ${sysCurrency}
+                </div>
+            </div>
+        `;
+    } else {
+        amountDisplay.innerText = `${subtotal.toLocaleString()} ${sysCurrency}`;
+    }
 
     document.getElementById('checkout-modal').classList.remove('hidden');
 };
@@ -42,6 +81,9 @@ window.confirmPayment = function (shouldPrint) {
 };
 
 window.processPayment = async function (rowId, shouldPrint) {
+    const order = STATE.currentCheckoutOrder || STATE.processedCashierOrders.find(o => o.id === rowId);
+    if (!order) return;
+
     const payBtn = document.getElementById(`btn-pay-${rowId}`);
     let originalHTML = '';
     let originalClassName = '';
@@ -49,93 +91,76 @@ window.processPayment = async function (rowId, shouldPrint) {
     if (payBtn) {
         originalHTML = payBtn.innerHTML;
         originalClassName = payBtn.className;
-
-        payBtn.innerHTML = 'مدفوع';
-        payBtn.className = 'px-3 py-1 rounded-full text-xs border border-blue-700 bg-blue-800 text-white font-bold transition shadow-lg pointer-events-none whitespace-nowrap';
+        payBtn.innerHTML = 'جاري...';
+        payBtn.disabled = true;
     }
 
-    const updateLocalStatus = (ordersArray) => {
-        if (!ordersArray) return;
-        const order = ordersArray.find(o => o.id === rowId);
-        if (order) {
-            if (typeof order.Status === 'object' && order.Status !== null) {
-                order.Status.value = 'مدفوع';
-            } else {
-                order.Status = 'مدفوع';
-            }
-        }
-    };
-    updateLocalStatus(STATE.lastFetchedOrders);
-    updateLocalStatus(STATE.latestKdsOrders);
-    updateLocalStatus(STATE.processedCashierOrders);
+    // Determine the final total to persist (use calculation if exists, otherwise original)
+    const finalPriceToSave = order.calculatedFinalTotal !== undefined ? order.calculatedFinalTotal : (parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0);
 
-    if (shouldPrint) {
-        const orderToPrint = STATE.processedCashierOrders.find(o => o.id === rowId);
-        if (orderToPrint) window.printReceipt(orderToPrint);
-    }
+    // Determine price key
+    let priceKey = 'Total';
+    if ('Total' in order) priceKey = 'Total';
+    else if ('total' in order) priceKey = 'total';
+    else if ('Price' in order) priceKey = 'Price';
+    else if ('price' in order) priceKey = 'price';
 
     try {
-        await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${rowId}/?user_field_names=true`, {
+        const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${rowId}/?user_field_names=true`, {
             method: 'PATCH',
-            headers: {
-                "Authorization": `Token ${BASEROW_TOKEN}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ "Status": 'مدفوع' })
+            headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                "Status": 'مدفوع',
+                [priceKey]: String(finalPriceToSave)
+            })
         });
+
+        if (!res.ok) throw new Error("API Save Failed");
+
+        // Success: Update UI
+        if (payBtn) {
+            payBtn.innerHTML = 'مدفوع';
+            payBtn.className = 'px-3 py-1 rounded-full text-xs border border-blue-700 bg-blue-800 text-white font-bold transition shadow-lg pointer-events-none whitespace-nowrap';
+            payBtn.disabled = false;
+        }
+
+        const updateLocalStatus = (ordersArray) => {
+            if (!ordersArray) return;
+            const o = ordersArray.find(x => x.id === rowId);
+            if (o) {
+                if (typeof o.Status === 'object') o.Status.value = 'مدفوع'; else o.Status = 'مدفوع';
+                o[priceKey] = String(finalPriceToSave);
+            }
+        };
+        updateLocalStatus(STATE.lastFetchedOrders);
+        updateLocalStatus(STATE.latestKdsOrders);
+        updateLocalStatus(STATE.processedCashierOrders);
+
+        if (shouldPrint) {
+            // Update order object for printing with the correct final total
+            const orderToPrint = { ...order, [priceKey]: finalPriceToSave };
+            window.printReceipt(orderToPrint);
+        }
 
         window.showToast("تم تأكيد الدفع بنجاح", "success");
 
-        // 🔥 استدعاء نظام الخصم التلقائي للمخزون
-        const orderForInv = STATE.processedCashierOrders.find(o => o.id === rowId);
-        if (orderForInv && window.processInventoryDeduction) {
-            window.processInventoryDeduction(orderForInv.Details || orderForInv.details);
+        if (window.processInventoryDeduction) {
+            window.processInventoryDeduction(order.Details || order.details);
         }
 
-        // مزامنة فورية بعد الدفع - تحديث كل الشاشات بدون انتظار
         setTimeout(async () => {
-            try {
-                const freshData = await window.fetchOrders(ORDERS_TABLE_ID);
-                STATE.latestKdsOrders = freshData;
-                STATE.lastFetchedOrders = freshData;
-
-                // تحديث الشاشة الحالية
-                const currentView = STATE.currentActiveView || localStorage.getItem(STATE.storageKeys.lastView);
-                if (currentView === 'cashier') {
-                    window.renderCashier(freshData);
-                } else if (currentView === 'tables') {
-                    window.renderTableView();
-                } else if (currentView === 'analytics') {
-                    window.renderAnalytics(STATE.analyticsData, 'today');
-                } else if (currentView === 'kds') {
-                    window.renderKDS(freshData);
-                }
-            } catch (e) {
-                console.warn("حدث خطأ أثناء المزامنة بعد الدفع:", e);
-            }
-        }, 500);
+            const freshData = await window.fetchOrders(ORDERS_TABLE_ID);
+            STATE.lastFetchedOrders = freshData;
+            window.renderCashier(freshData);
+        }, 800);
 
     } catch (error) {
-        console.warn("API Error:", error.message);
-        window.showToast("فشل تأكيد الدفع. تأكد من الاتصال.", "error");
-
-        const revertLocalStatus = (ordersArray) => {
-            if (!ordersArray) return;
-            const order = ordersArray.find(o => o.id === rowId);
-            if (order) {
-                // Remove reverting back to "جاهز", keep it "مدفوع" or handle it gracefully.
-                // Reverting it creates a UI inconsistency where table turns yellow again.
-                // We just keep the UI in its intended state for the cashier, but we log the error.
-                console.warn(`Silently failing to update baserow for order ${rowId}. Check if "مدفوع" is a valid option.`);
-            }
-        };
-        revertLocalStatus(STATE.lastFetchedOrders);
-        revertLocalStatus(STATE.latestKdsOrders);
-        revertLocalStatus(STATE.processedCashierOrders);
-
+        console.error("Payment error:", error);
+        window.showToast("فشل تأكيد الدفع", "error");
         if (payBtn) {
             payBtn.innerHTML = originalHTML;
             payBtn.className = originalClassName;
+            payBtn.disabled = false;
         }
     }
 };
