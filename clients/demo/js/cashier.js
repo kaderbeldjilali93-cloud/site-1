@@ -767,6 +767,23 @@ window.confirmSplitPayment = async function (shouldPrint) {
     const order = STATE.currentSplitOrder;
     if (!order) return;
 
+    // Helper to regroup flattened items back into the standard string format
+    const rebuildDetailsString = (itemsArray) => {
+        let grouped = {};
+        itemsArray.forEach(item => {
+            if (!grouped[item.name]) {
+                grouped[item.name] = { qty: 0, price: parseFloat(item.price) };
+            }
+            // Each flattened item in splitItems has qty=1
+            grouped[item.name].qty += 1; 
+        });
+        let result = [];
+        for (let name in grouped) {
+            result.push(`${grouped[name].qty}x ${name} = ${grouped[name].price}`);
+        }
+        return result.join('\n');
+    };
+
     const btn = document.getElementById('btn-confirm-split');
     const originalText = btn ? btn.innerHTML : 'تأكيد ودفع';
     if (btn) {
@@ -838,7 +855,8 @@ window.confirmSplitPayment = async function (shouldPrint) {
                 return;
             }
 
-            const newDetails = selectedItems.map(i => i.originalLine).join('\n');
+            // Rebuild details string from selected items
+            const newDetails = rebuildDetailsString(selectedItems);
             const newTotalRaw = selectedItems.reduce((sum, i) => sum + (i.price * i.qty), 0);
             
             // Apply proportional discount if any
@@ -847,7 +865,6 @@ window.confirmSplitPayment = async function (shouldPrint) {
 
             if (remainingItems.length === 0) {
                 // Condition A: All items selected - Just pay the original order
-                // We use splitRealFinalTotal to ensure the full discount is applied
                 const finalTotalToPay = STATE.splitRealFinalTotal || newTotal;
                 
                 const patchPayload = {
@@ -887,8 +904,8 @@ window.confirmSplitPayment = async function (shouldPrint) {
                 });
                 if (!res.ok) throw new Error("Failed to create manual split order");
 
-                // 2. PATCH the ORIGINAL order with remaining items (keep original status)
-                const remainingDetails = remainingItems.map(i => i.originalLine).join('\n');
+                // 2. PATCH the ORIGINAL order with remaining items (rebuilt from scratch)
+                const remainingDetails = rebuildDetailsString(remainingItems);
                 const remainingTotalRaw = remainingItems.reduce((sum, i) => sum + (i.price * i.qty), 0);
                 const remainingTotal = Math.ceil(remainingTotalRaw * discountFactor);
 
@@ -898,7 +915,7 @@ window.confirmSplitPayment = async function (shouldPrint) {
                     // We don't change Status here, it stays "جاهز" or "قيد التحضير"
                 };
 
-                // If there's a prize line in the original order, we might want to keep it in the remaining details
+                // Preserve prize if any
                 const prizeMatch = (order.Details || "").match(/🎁 جائزة: خصم\s+(\d+)%/);
                 if (prizeMatch) {
                     patchPayload.Details += `\n${prizeMatch[0]}`;
