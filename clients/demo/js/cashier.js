@@ -909,20 +909,41 @@ window.confirmSplitPayment = async function (shouldPrint) {
                     headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
                     body: JSON.stringify(patchPayload)
                 });
-                if (!patchRes.ok) throw new Error("Failed to update original order after partial split");
-
-                if (shouldPrint && typeof window.printReceipt === 'function') {
-                    window.printReceipt({
-                        ...order,
-                        dailySequence: `${order.dailySequence} (حصة)`,
-                        Details: newDetails,
-                        [priceKey]: String(newTotal)
+                if (patchRes.ok) {
+                    if (shouldPrint && typeof window.printReceipt === 'function') {
+                        window.printReceipt({
+                            ...order,
+                            dailySequence: `${order.dailySequence} (حصة)`,
+                            Details: newDetails,
+                            [priceKey]: String(newTotal)
+                        });
+                    }
+                    
+                    // Instant UI Refresh for Partial Split
+                    order.Details = patchPayload.Details;
+                    order[priceKey] = patchPayload[priceKey];
+                    
+                    // Update main data in background
+                    window.fetchOrders(ORDERS_TABLE_ID).then(data => {
+                        STATE.lastFetchedOrders = data;
+                        STATE.latestKdsOrders = data;
+                        // Silently refresh the board behind the modal
+                        const currentView = STATE.currentActiveView || localStorage.getItem(STATE.storageKeys.lastView);
+                        if (currentView === 'cashier') window.renderCashier(data);
                     });
+
+                    // Re-open/refresh the current modal with remaining items
+                    window.openSplitModal(order.id);
+                    window.showToast("تم دفع الجزء المحدد وتحديث المتبقي ✅", "success");
+                    return; // Prevent the default success logic that might close the modal
                 }
             }
         }
 
-        window.showToast("تم تقسيم الفاتورة بنجاح ✅", "success");
+        // Default success logic (for even split or full manual selection)
+        window.showToast("تمت العملية بنجاح ✅", "success");
+        window.closeSplitModal();
+        
         const freshData = await window.fetchOrders(ORDERS_TABLE_ID);
         STATE.lastFetchedOrders = freshData;
         STATE.latestKdsOrders = freshData;
