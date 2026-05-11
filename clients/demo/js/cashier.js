@@ -830,6 +830,8 @@ window.confirmSplitPayment = async function (shouldPrint) {
 
         } else if (STATE.splitMode === 'manual') {
             const selectedItems = STATE.splitItems.filter(i => i.selected);
+            const remainingItems = STATE.splitItems.filter(i => !i.selected);
+
             if (selectedItems.length === 0) {
                 window.showToast("الرجاء تحديد صنف واحد على الأقل", "error");
                 if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
@@ -837,53 +839,86 @@ window.confirmSplitPayment = async function (shouldPrint) {
             }
 
             const newDetails = selectedItems.map(i => i.originalLine).join('\n');
-            const newTotal = selectedItems.reduce((sum, i) => sum + (i.price * i.qty), 0);
-
-            const postPayload = {
-                "Details": newDetails,
-                [priceKey]: String(newTotal),
-                "Table": order.Table || 'سفري',
-                "Status": "مدفوع",
-                "order_type": order.order_type || "quick"
-            };
-
-            const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/?user_field_names=true`, {
-                method: 'POST',
-                headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
-                body: JSON.stringify(postPayload)
-            });
-            if (!res.ok) throw new Error("Failed to create manual split order");
-
-            const remainingItems = STATE.splitItems.filter(i => !i.selected);
-            const remainingDetails = remainingItems.map(i => i.originalLine).join('\n');
-            const remainingTotal = remainingItems.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            const newTotalRaw = selectedItems.reduce((sum, i) => sum + (i.price * i.qty), 0);
             
-            const rawCurrentStatus = (typeof order.Status === 'object' && order.Status !== null) ? order.Status.value : order.Status;
-            const currentStatus = rawCurrentStatus || "جاهز";
-            const newStatus = remainingItems.length === 0 ? "مدفوع" : currentStatus;
+            // Apply proportional discount if any
+            const discountFactor = 1 - ((STATE.splitDiscountPercent || 0) / 100);
+            const newTotal = Math.ceil(newTotalRaw * discountFactor);
 
-            const patchPayload = {
-                "Details": remainingDetails,
-                [priceKey]: String(remainingTotal),
-                "Status": newStatus
-            };
+            if (remainingItems.length === 0) {
+                // Condition A: All items selected - Just pay the original order
+                // We use splitRealFinalTotal to ensure the full discount is applied
+                const finalTotalToPay = STATE.splitRealFinalTotal || newTotal;
+                
+                const patchPayload = {
+                    [priceKey]: String(finalTotalToPay),
+                    "Status": "مدفوع"
+                };
 
-            const patchRes = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${order.id}/?user_field_names=true`, {
-                method: 'PATCH',
-                headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
-                body: JSON.stringify(patchPayload)
-            });
-            if (!patchRes.ok) throw new Error("Failed to patch original order - manual mode");
+                const patchRes = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${order.id}/?user_field_names=true`, {
+                    method: 'PATCH',
+                    headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                    body: JSON.stringify(patchPayload)
+                });
+                if (!patchRes.ok) throw new Error("Failed to pay original order");
 
-            if (shouldPrint && typeof window.printReceipt === 'function') {
-                setTimeout(() => {
+                if (shouldPrint && typeof window.printReceipt === 'function') {
+                    window.printReceipt({
+                        ...order,
+                        [priceKey]: String(finalTotalToPay),
+                        Status: "مدفوع"
+                    });
+                }
+            } else {
+                // Condition B: Partial split
+                // 1. Create the NEW paid order for selected items
+                const postPayload = {
+                    "Details": newDetails,
+                    [priceKey]: String(newTotal),
+                    "Table": order.Table || 'سفري',
+                    "Status": "مدفوع",
+                    "order_type": order.order_type || "quick"
+                };
+
+                const res = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/?user_field_names=true`, {
+                    method: 'POST',
+                    headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                    body: JSON.stringify(postPayload)
+                });
+                if (!res.ok) throw new Error("Failed to create manual split order");
+
+                // 2. PATCH the ORIGINAL order with remaining items (keep original status)
+                const remainingDetails = remainingItems.map(i => i.originalLine).join('\n');
+                const remainingTotalRaw = remainingItems.reduce((sum, i) => sum + (i.price * i.qty), 0);
+                const remainingTotal = Math.ceil(remainingTotalRaw * discountFactor);
+
+                const patchPayload = {
+                    "Details": remainingDetails,
+                    [priceKey]: String(remainingTotal)
+                    // We don't change Status here, it stays "جاهز" or "قيد التحضير"
+                };
+
+                // If there's a prize line in the original order, we might want to keep it in the remaining details
+                const prizeMatch = (order.Details || "").match(/🎁 جائزة: خصم\s+(\d+)%/);
+                if (prizeMatch) {
+                    patchPayload.Details += `\n${prizeMatch[0]}`;
+                }
+
+                const patchRes = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${ORDERS_TABLE_ID}/${order.id}/?user_field_names=true`, {
+                    method: 'PATCH',
+                    headers: { "Authorization": `Token ${BASEROW_TOKEN}`, "Content-Type": "application/json" },
+                    body: JSON.stringify(patchPayload)
+                });
+                if (!patchRes.ok) throw new Error("Failed to update original order after partial split");
+
+                if (shouldPrint && typeof window.printReceipt === 'function') {
                     window.printReceipt({
                         ...order,
                         dailySequence: `${order.dailySequence} (حصة)`,
                         Details: newDetails,
                         [priceKey]: String(newTotal)
                     });
-                }, 500);
+                }
             }
         }
 
