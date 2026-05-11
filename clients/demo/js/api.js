@@ -4,16 +4,46 @@
 
 window.fetchOrders = async function (tableId) {
     try {
-        const _t = Date.now(); // cache-busting
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true&size=200&order_by=-id&_t=${_t}`, {
+        const _t = Date.now();
+        // 1. Initial fetch to get total row count
+        const initialRes = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true&size=200&page=1&_t=${_t}`, {
             method: 'GET',
             headers: { "Authorization": `Token ${BASEROW_TOKEN}` },
             cache: 'no-store'
         });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        // Return in chronological order (oldest first) but including only the NEWEST 200 rows
-        return data.results.reverse();
+        if (!initialRes.ok) throw new Error(`HTTP Error: ${initialRes.status}`);
+        const data = await initialRes.json();
+        const totalCount = data.count || 0;
+
+        // If data is small, return it directly
+        if (totalCount <= 200) {
+            return data.results.reverse(); // Newest first
+        }
+
+        // 2. Fetch the last two pages concurrently to get the most recent rows
+        const lastPage = Math.ceil(totalCount / 200);
+        const pagesToFetch = [lastPage];
+        if (lastPage > 1) pagesToFetch.unshift(lastPage - 1);
+
+        const promises = pagesToFetch.map(p => 
+            fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true&size=200&page=${p}&_t=${Date.now()}`, {
+                method: 'GET',
+                headers: { "Authorization": `Token ${BASEROW_TOKEN}` },
+                cache: 'no-store'
+            }).then(res => {
+                if (!res.ok) throw new Error(`Page ${p} fetch failed`);
+                return res.json();
+            })
+        );
+
+        const pageResults = await Promise.all(promises);
+        let combined = [];
+        pageResults.forEach(res => {
+            combined = combined.concat(res.results || []);
+        });
+
+        // 3. Keep memory footprint light: take last 300 rows and return newest first
+        return combined.slice(-300).reverse();
     } catch (error) {
         console.warn("API Fetch Error (Silent Fail):", error.message);
         return STATE.lastFetchedOrders || [];
@@ -23,7 +53,7 @@ window.fetchOrders = async function (tableId) {
 window.fetchMenu = async function () {
     try {
         const _t = Date.now(); // cache-busting لتجنب التخزين المؤقت
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true&size=200&order_by=-id&_t=${_t}`, {
+        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true&size=200&_t=${_t}`, {
             method: 'GET',
             headers: { "Authorization": `Token ${BASEROW_TOKEN}` },
             cache: 'no-store'
