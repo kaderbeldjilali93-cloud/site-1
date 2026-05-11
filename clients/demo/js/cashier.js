@@ -18,8 +18,37 @@ window.handlePaymentToggle = function (rowId) {
 
     STATE.currentCheckoutOrder = order;
 
-    // 1. Calculate base subtotal
-    const subtotal = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
+    // 1. Calculate base subtotal by parsing items
+    let subtotal = 0;
+    const detailsList = (order.Details || "").split(/[\n،,]/).filter(i => i.trim() !== "");
+    detailsList.forEach(line => {
+        let text = line.trim();
+        if (text === '' || text.includes('🎁 جائزة:')) return;
+        
+        let qty = 1;
+        const qtyMatch = text.match(/^(\d+)\s*[xX\*]\s*/);
+        if (qtyMatch) {
+            qty = parseInt(qtyMatch[1], 10);
+        }
+
+        let unitPrice = 0;
+        if (text.includes('=')) {
+            let parts = text.split('=');
+            unitPrice = parseFloat(parts[1].replace(/[^0-9.]/g, '')) || 0;
+        } else if (text.includes('-')) {
+            let parts = text.split('-');
+            let lastPart = parts[parts.length - 1].trim();
+            if (/\d/.test(lastPart)) {
+                unitPrice = parseFloat(lastPart.replace(/[^0-9.]/g, '')) || 0;
+            }
+        }
+        
+        subtotal += (unitPrice * qty);
+    });
+
+    if (subtotal === 0) {
+        subtotal = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
+    }
     let discountPercent = 0;
 
     // 2. Scan details for the prize string using regex: 🎁 جائزة: خصم X%
@@ -194,29 +223,39 @@ window.printReceipt = function (order) {
 
         let itemName = text;
         let itemPriceStr = '';
-        let linePrice = 0;
+        let unitPrice = 0;
+        let qty = 1;
+
+        const qtyMatch = text.match(/^(\d+)\s*[xX\*]\s*/);
+        if (qtyMatch) {
+            qty = parseInt(qtyMatch[1], 10);
+            itemName = itemName.replace(qtyMatch[0], '').trim();
+        }
 
         if (text.includes('=')) {
             let parts = text.split('=');
             itemName = parts[0].trim();
+            if (qtyMatch) itemName = itemName.replace(qtyMatch[0], '').trim();
             itemPriceStr = parts[1].trim();
-            linePrice = parseFloat(itemPriceStr) || 0;
+            unitPrice = parseFloat(itemPriceStr) || 0;
         } else if (text.includes('-')) {
             let parts = text.split('-');
             let lastPart = parts[parts.length - 1].trim();
             if (/^[\d\.]+/.test(lastPart)) {
                 itemPriceStr = lastPart;
-                linePrice = parseFloat(itemPriceStr) || 0;
+                unitPrice = parseFloat(itemPriceStr) || 0;
                 parts.pop();
                 itemName = parts.join('-').trim();
+                if (qtyMatch) itemName = itemName.replace(qtyMatch[0], '').trim();
             }
         }
         
-        subtotalForReceipt += linePrice;
+        const rowTotal = unitPrice * qty;
+        subtotalForReceipt += rowTotal;
 
         itemsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 11px;">
-            <span style="flex:1;">${itemName}</span>
-            <span style="font-weight:bold; white-space:nowrap; margin-left: 8px;">${linePrice.toLocaleString()}</span>
+            <span style="flex:1;">${qty > 1 ? qty + 'x ' : ''}${itemName}</span>
+            <span style="font-weight:bold; white-space:nowrap; margin-left: 8px;">${rowTotal.toLocaleString()}</span>
         </div>`;
     });
 
