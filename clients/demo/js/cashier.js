@@ -618,16 +618,21 @@ window.openSplitModal = function (orderId) {
     // Use the shared math helper for discount-aware calculations
     const calc = window._parseOrderForMath(order);
 
-    // Store items for split selection
-    STATE.splitItems = calc.items.map((item, index) => ({
-        id: index,
-        name: item.name,
-        price: item.unitPrice,
-        qty: item.qty,
-        rowTotal: item.rowTotal,
-        originalLine: `${item.qty}x ${item.name} = ${item.rowTotal}`,
-        selected: false
-    }));
+    // Store items for split selection (Decomposed for individual item payment)
+    STATE.splitItems = [];
+    calc.items.forEach((item, index) => {
+        for (let i = 0; i < item.qty; i++) {
+            STATE.splitItems.push({
+                id: `${index}-${i}`, // Unique ID for each decomposed item
+                name: item.name,
+                price: item.unitPrice,
+                qty: 1,
+                rowTotal: item.unitPrice,
+                originalLine: `1x ${item.name} = ${item.unitPrice}`,
+                selected: false
+            });
+        }
+    });
 
     // Store the raw subtotal and the discount-adjusted final total
     STATE.splitTotalPrice = calc.subtotal;
