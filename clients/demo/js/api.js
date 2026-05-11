@@ -5,13 +5,14 @@
 window.fetchOrders = async function (tableId) {
     try {
         const _t = Date.now(); // cache-busting
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true&size=200&_t=${_t}`, {
+        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${tableId}/?user_field_names=true&size=200&order_by=-id&_t=${_t}`, {
             method: 'GET',
             headers: { "Authorization": `Token ${BASEROW_TOKEN}` },
             cache: 'no-store'
         });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        // Return in chronological order (oldest first) but including only the NEWEST 200 rows
         return data.results.reverse();
     } catch (error) {
         console.warn("API Fetch Error (Silent Fail):", error.message);
@@ -22,7 +23,7 @@ window.fetchOrders = async function (tableId) {
 window.fetchMenu = async function () {
     try {
         const _t = Date.now(); // cache-busting لتجنب التخزين المؤقت
-        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true&size=200&_t=${_t}`, {
+        const response = await fetch(`https://baserow.vidsai.site/api/database/rows/table/${MENU_TABLE_ID}/?user_field_names=true&size=200&order_by=-id&_t=${_t}`, {
             method: 'GET',
             headers: { "Authorization": `Token ${BASEROW_TOKEN}` },
             cache: 'no-store'
