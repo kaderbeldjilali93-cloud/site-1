@@ -146,7 +146,8 @@ window.openEditOrderModal = async function (orderId) {
     // تحويل التفاصيل النصية إلى قائمة أصناف قابلة للحذف والتعامل مع الكميات
     STATE.originalItemsList = [];
     if (STATE.originalEditDetails) {
-        const lines = STATE.originalEditDetails.split('\n').filter(l => l.trim() !== "");
+        // Bug Fix: Filter out gamification prize lines
+        const lines = STATE.originalEditDetails.split('\n').filter(l => l.trim() !== "" && !l.includes('🎁 جائزة'));
         lines.forEach(line => {
             const hasCheck = line.includes('✅') || line.includes('[جاهز]');
             const cleanLine = line.replace(/✅|\[جاهز\]/g, '').trim();
@@ -155,13 +156,12 @@ window.openEditOrderModal = async function (orderId) {
             let name = cleanLine;
             let unitPrice = 0;
 
-            // محاولة استخراج الكمية والاسم والسعر: "2x Burger = 1000" أو "Burger = 500"
+            // Bug Fix: Treat the price after '=' as the UNIT PRICE directly
             const qtyMatch = cleanLine.match(/^(\d+)\s*[xX]\s*(.*)\s*=\s*(\d+)/);
             if (qtyMatch) {
                 qty = parseInt(qtyMatch[1]);
                 name = qtyMatch[2].trim();
-                const totalLinePrice = parseFloat(qtyMatch[3]);
-                unitPrice = totalLinePrice / qty;
+                unitPrice = parseFloat(qtyMatch[3]); // Use strictly as unit price
             } else {
                 const priceMatch = cleanLine.match(/(.*)\s*=\s*(\d+)/);
                 if (priceMatch) {
@@ -421,16 +421,23 @@ window.saveOrderEdit = async function () {
 
     const originalLines = STATE.originalItemsList.map(item => {
         const checkPrefix = item.hasCheck ? '✅ ' : '';
-        const lineTotal = item.price * item.qty;
-        return `${item.qty}x ${item.pureName} = ${lineTotal}${checkPrefix}`;
+        // Bug Fix: Save unit price, not line total
+        return `${item.qty}x ${item.pureName} = ${item.price}${checkPrefix}`;
     });
 
     const newLines = STATE.newlyAddedItems.map(item => {
-        const lineTotal = item.price * item.qty;
-        return `${item.qty}x ${item.name} = ${lineTotal}`;
+        // Bug Fix: Save unit price, not line total
+        return `${item.qty}x ${item.name} = ${item.price}`;
     });
 
-    const finalDetails = [...originalLines, ...newLines].join('\n');
+    let finalDetails = [...originalLines, ...newLines].join('\n');
+    
+    // Bug Fix: Preserve original gamification prize if it existed
+    const prizeMatch = (STATE.originalEditDetails || "").match(/🎁 جائزة: خصم\s+(\d+)%/);
+    if (prizeMatch) {
+        finalDetails += `\n${prizeMatch[0]}`;
+    }
+
     const finalPrice = STATE.originalItemsList.reduce((sum, item) => sum + (item.price * item.qty), 0) +
                        STATE.newlyAddedItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
 

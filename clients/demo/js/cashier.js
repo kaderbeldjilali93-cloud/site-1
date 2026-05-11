@@ -44,13 +44,13 @@ window._parseOrderForMath = function (order) {
         let unitPrice = 0;
         let rowTotal = 0;
 
-        // Format A: "2x Burger = 1000"  (rowTotal is already qty * unitPrice)
+        // Format A: "2x Burger = 1000" (User clarified: the number after = is the UNIT PRICE)
         const fullMatch = text.match(/^(\d+)\s*[xX\*]\s*(.+?)\s*=\s*([\d.]+)/);
         if (fullMatch) {
             qty = parseInt(fullMatch[1], 10) || 1;
             itemName = fullMatch[2].replace(/✅|\[جاهز\]/g, '').trim();
-            rowTotal = parseFloat(fullMatch[3]) || 0;
-            unitPrice = qty > 0 ? rowTotal / qty : 0;
+            unitPrice = parseFloat(fullMatch[3]) || 0;
+            rowTotal = qty * unitPrice;
         }
         // Format B: "Burger = 500" (no qty prefix → single unit)
         else if (text.includes('=')) {
