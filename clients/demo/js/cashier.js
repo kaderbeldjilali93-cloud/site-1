@@ -12,85 +12,122 @@ window.setCashierFilter = function (status) {
     window.renderCashier(STATE.lastFetchedOrders);
 };
 
+/**
+ * Shared helper: Parse order Details text and compute the correct subtotal.
+ * Handles two formats:
+ *   A) "{qty}x {name} = {rowTotal}"  → rowTotal is ALREADY price*qty → add as-is
+ *   B) "{name} = {price}" or "{name} - {price}"  → single-unit price → add as-is
+ * Returns { subtotal, discountPercent, items[] }
+ */
+window._parseOrderForMath = function (order) {
+    let subtotal = 0;
+    let discountPercent = 0;
+    const items = [];
+
+    const detailsRaw = order.Details || "";
+
+    // Extract gamification discount
+    const discountMatch = detailsRaw.match(/🎁 جائزة: خصم\s+(\d+)%/);
+    if (discountMatch) {
+        discountPercent = parseInt(discountMatch[1], 10);
+    }
+
+    // Split lines (newline is the canonical separator from saveOrderEdit)
+    const lines = detailsRaw.split(/\n/).filter(l => l.trim() !== "");
+
+    lines.forEach(line => {
+        const text = line.trim();
+        if (text === '' || text.includes('🎁 جائزة:') || text.includes('-- ')) return;
+
+        let itemName = text;
+        let qty = 1;
+        let unitPrice = 0;
+        let rowTotal = 0;
+
+        // Format A: "2x Burger = 1000"  (rowTotal is already qty * unitPrice)
+        const fullMatch = text.match(/^(\d+)\s*[xX\*]\s*(.+?)\s*=\s*([\d.]+)/);
+        if (fullMatch) {
+            qty = parseInt(fullMatch[1], 10) || 1;
+            itemName = fullMatch[2].replace(/✅|\[جاهز\]/g, '').trim();
+            rowTotal = parseFloat(fullMatch[3]) || 0;
+            unitPrice = qty > 0 ? rowTotal / qty : 0;
+        }
+        // Format B: "Burger = 500" (no qty prefix → single unit)
+        else if (text.includes('=')) {
+            const parts = text.split('=');
+            itemName = parts[0].replace(/✅|\[جاهز\]/g, '').trim();
+            rowTotal = parseFloat(parts[parts.length - 1].replace(/[^0-9.]/g, '')) || 0;
+            unitPrice = rowTotal;
+        }
+        // Format C: "Burger - 500"
+        else if (text.includes('-')) {
+            const parts = text.split('-');
+            const lastPart = parts[parts.length - 1].trim();
+            if (/^\d/.test(lastPart)) {
+                rowTotal = parseFloat(lastPart.replace(/[^0-9.]/g, '')) || 0;
+                unitPrice = rowTotal;
+                parts.pop();
+                itemName = parts.join('-').replace(/✅|\[جاهز\]/g, '').trim();
+            }
+        }
+
+        subtotal += rowTotal;
+        items.push({ name: itemName, qty, unitPrice, rowTotal });
+    });
+
+    // Fallback: if parsing yields 0 but order has a stored total, use that
+    if (subtotal === 0) {
+        subtotal = parseFloat(
+            (order.total || order.Total || order.price || order.Price || 0)
+                .toString().replace(/[^0-9.]/g, '')
+        ) || 0;
+    }
+
+    const discountAmount = subtotal * (discountPercent / 100);
+    const finalTotal = subtotal - discountAmount;
+
+    return { subtotal, discountPercent, discountAmount, finalTotal, items };
+};
+
 window.handlePaymentToggle = function (rowId) {
     const order = STATE.processedCashierOrders.find(o => o.id === rowId);
     if (!order) return;
 
     STATE.currentCheckoutOrder = order;
 
-    // 1. Calculate base subtotal by parsing items
-    let subtotal = 0;
-    const detailsList = (order.Details || "").split(/[\n،,]/).filter(i => i.trim() !== "");
-    detailsList.forEach(line => {
-        let text = line.trim();
-        if (text === '' || text.includes('🎁 جائزة:')) return;
-        
-        let qty = 1;
-        const qtyMatch = text.match(/^(\d+)\s*[xX\*]\s*/);
-        if (qtyMatch) {
-            qty = parseInt(qtyMatch[1], 10);
-        }
-
-        let unitPrice = 0;
-        if (text.includes('=')) {
-            let parts = text.split('=');
-            unitPrice = parseFloat(parts[1].replace(/[^0-9.]/g, '')) || 0;
-        } else if (text.includes('-')) {
-            let parts = text.split('-');
-            let lastPart = parts[parts.length - 1].trim();
-            if (/\d/.test(lastPart)) {
-                unitPrice = parseFloat(lastPart.replace(/[^0-9.]/g, '')) || 0;
-            }
-        }
-        
-        subtotal += (unitPrice * qty);
-    });
-
-    if (subtotal === 0) {
-        subtotal = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
-    }
-    let discountPercent = 0;
-
-    // 2. Scan details for the prize string using regex: 🎁 جائزة: خصم X%
-    const details = order.Details || "";
-    const discountMatch = details.match(/🎁 جائزة: خصم\s+(\d+)%/);
-    if (discountMatch) {
-        discountPercent = parseInt(discountMatch[1]);
-    }
-
-    const discountAmount = subtotal * (discountPercent / 100);
-    const finalTotal = subtotal - discountAmount;
+    // 1. Calculate via shared math helper
+    const calc = window._parseOrderForMath(order);
 
     // Store calculated values in the order object for persistence
-    STATE.currentCheckoutOrder.calculatedSubtotal = subtotal;
-    STATE.currentCheckoutOrder.calculatedDiscount = discountAmount;
-    STATE.currentCheckoutOrder.calculatedFinalTotal = finalTotal;
+    STATE.currentCheckoutOrder.calculatedSubtotal = calc.subtotal;
+    STATE.currentCheckoutOrder.calculatedDiscount = calc.discountAmount;
+    STATE.currentCheckoutOrder.calculatedFinalTotal = calc.finalTotal;
 
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
     const tableStr = order.Table || order.table || 'سفري';
 
     document.getElementById('checkout-title').innerText = `تأكيد الدفع: الطلب ${order.dailySequence} - ${tableStr}`;
 
-    // 3. Update Modal UI with breakdown if discount exists
+    // 2. Update Modal UI with breakdown if discount exists
     const amountDisplay = document.getElementById('checkout-amount');
-    if (discountPercent > 0) {
+    if (calc.discountPercent > 0) {
         amountDisplay.innerHTML = `
             <div class="flex flex-col gap-1">
                 <div class="text-gray-400 text-xs flex justify-between px-2">
                     <span>المجموع الفرعي:</span>
-                    <span class="line-through">${subtotal.toLocaleString()} ${sysCurrency}</span>
+                    <span class="line-through">${calc.subtotal.toLocaleString()} ${sysCurrency}</span>
                 </div>
                 <div class="text-green-500 text-xs flex justify-between px-2 font-bold">
-                    <span>خصم الجائزة (${discountPercent}%):</span>
-                    <span>-${discountAmount.toLocaleString()} ${sysCurrency}</span>
+                    <span>خصم الجائزة (${calc.discountPercent}%):</span>
+                    <span>-${calc.discountAmount.toLocaleString()} ${sysCurrency}</span>
                 </div>
                 <div class="mt-2 pt-2 border-t border-gray-700 text-3xl font-black text-brand tracking-wider">
-                    ${finalTotal.toLocaleString()} ${sysCurrency}
+                    ${calc.finalTotal.toLocaleString()} ${sysCurrency}
                 </div>
             </div>
         `;
     } else {
-        amountDisplay.innerText = `${subtotal.toLocaleString()} ${sysCurrency}`;
+        amountDisplay.innerText = `${calc.subtotal.toLocaleString()} ${sysCurrency}`;
     }
 
     document.getElementById('checkout-modal').classList.remove('hidden');
@@ -196,7 +233,6 @@ window.processPayment = async function (rowId, shouldPrint) {
 
 window.printReceipt = function (order) {
     const printSec = document.getElementById('print-section');
-    const price = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
     const tableStr = order.Table || order.table || 'سفري';
     const dateStr = new Date().toLocaleString('ar-DZ');
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
@@ -206,83 +242,39 @@ window.printReceipt = function (order) {
     const rBottom = localStorage.getItem('print_receipt_bottom') || 'شكراً لزيارتكم!';
     const rQrCode = localStorage.getItem('print_qr_code') || '';
 
-    const detailsList = (order.Details || "").split(/[\n،,]/).filter(i => i.trim() !== "");
+    // Use the shared math helper for consistent calculation
+    const calc = window._parseOrderForMath(order);
+
+    // Build items HTML from parsed items
     let itemsHtml = '';
-    let subtotalForReceipt = 0;
-    let discountPercent = 0;
-    
-    // Scan for discount prize
-    const discountMatch = (order.Details || "").match(/🎁 جائزة: خصم\s+(\d+)%/);
-    if (discountMatch) {
-        discountPercent = parseInt(discountMatch[1]);
-    }
-
-    detailsList.forEach(item => {
-        let text = item.trim();
-        if (text === '' || text.includes('🎁 جائزة:')) return; // Skip prize line in items list
-
-        let itemName = text;
-        let itemPriceStr = '';
-        let unitPrice = 0;
-        let qty = 1;
-
-        const qtyMatch = text.match(/^(\d+)\s*[xX\*]\s*/);
-        if (qtyMatch) {
-            qty = parseInt(qtyMatch[1], 10);
-            itemName = itemName.replace(qtyMatch[0], '').trim();
-        }
-
-        if (text.includes('=')) {
-            let parts = text.split('=');
-            itemName = parts[0].trim();
-            if (qtyMatch) itemName = itemName.replace(qtyMatch[0], '').trim();
-            itemPriceStr = parts[1].trim();
-            unitPrice = parseFloat(itemPriceStr) || 0;
-        } else if (text.includes('-')) {
-            let parts = text.split('-');
-            let lastPart = parts[parts.length - 1].trim();
-            if (/^[\d\.]+/.test(lastPart)) {
-                itemPriceStr = lastPart;
-                unitPrice = parseFloat(itemPriceStr) || 0;
-                parts.pop();
-                itemName = parts.join('-').trim();
-                if (qtyMatch) itemName = itemName.replace(qtyMatch[0], '').trim();
-            }
-        }
-        
-        const rowTotal = unitPrice * qty;
-        subtotalForReceipt += rowTotal;
-
+    calc.items.forEach(item => {
         itemsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 11px;">
-            <span style="flex:1;">${qty > 1 ? qty + 'x ' : ''}${itemName}</span>
-            <span style="font-weight:bold; white-space:nowrap; margin-left: 8px;">${rowTotal.toLocaleString()}</span>
+            <span style="flex:1;">${item.qty > 1 ? item.qty + 'x ' : ''}${item.name}</span>
+            <span style="font-weight:bold; white-space:nowrap; margin-left: 8px;">${item.rowTotal.toLocaleString()}</span>
         </div>`;
     });
 
-    const discountAmount = subtotalForReceipt * (discountPercent / 100);
-    const finalTotal = subtotalForReceipt - discountAmount;
-
     let totalsHtml = '';
-    if (discountPercent > 0) {
+    if (calc.discountPercent > 0) {
         totalsHtml = `
             <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
                 <span>المجموع الفرعي:</span>
-                <span>${subtotalForReceipt.toLocaleString()} ${sysCurrency}</span>
+                <span>${calc.subtotal.toLocaleString()} ${sysCurrency}</span>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 12px; color: #d97706; margin-bottom: 4px; font-weight: bold;">
-                <span>خصم الجائزة (${discountPercent}%):</span>
-                <span>-${discountAmount.toLocaleString()} ${sysCurrency}</span>
+                <span>خصم الجائزة (${calc.discountPercent}%):</span>
+                <span>-${calc.discountAmount.toLocaleString()} ${sysCurrency}</span>
             </div>
             <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-top: 8px; background-color: #f0f0f0; padding: 6px; border: 1px solid #000;">
                 <span>الإجمالي:</span>
-                <span>${finalTotal.toLocaleString()} ${sysCurrency}</span>
+                <span>${calc.finalTotal.toLocaleString()} ${sysCurrency}</span>
             </div>
         `;
     } else {
         totalsHtml = `
             <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; background-color: #f0f0f0; padding: 6px; border: 1px solid #000;">
                 <span>المجموع:</span>
-                <span>${subtotalForReceipt.toLocaleString()} ${sysCurrency}</span>
+                <span>${calc.subtotal.toLocaleString()} ${sysCurrency}</span>
             </div>
         `;
     }
@@ -623,60 +615,43 @@ window.openSplitModal = function (orderId) {
     }
     STATE.currentSplitOrder = order;
 
-    const details = order.Details || "";
-    const lines = details.split(/\n|,|،/).map(l => l.trim()).filter(l => l && !l.includes('مدمج') && !l.includes('لا توجد تفاصيل'));
+    // Use the shared math helper for discount-aware calculations
+    const calc = window._parseOrderForMath(order);
 
-    STATE.splitItems = [];
-    lines.forEach((line, index) => {
-        let name = line;
-        let price = 0;
-        let qty = 1;
+    // Store items for split selection
+    STATE.splitItems = calc.items.map((item, index) => ({
+        id: index,
+        name: item.name,
+        price: item.unitPrice,
+        qty: item.qty,
+        rowTotal: item.rowTotal,
+        originalLine: `${item.qty}x ${item.name} = ${item.rowTotal}`,
+        selected: false
+    }));
 
-        const qtyMatch = line.match(/^(\d+)\s*[xX\*]\s*/);
-        if (qtyMatch) {
-            qty = parseInt(qtyMatch[1], 10);
-            name = name.replace(qtyMatch[0], '').trim();
-        }
-
-        if (name.includes('=')) {
-            const parts = name.split('=');
-            price = parseFloat(parts[parts.length - 1].replace(/[^0-9.]/g, '')) || 0;
-            name = parts.slice(0, -1).join('=').trim();
-        } else if (name.includes('-')) {
-            const parts = name.split('-');
-            const lastPart = parts[parts.length - 1];
-            if (/\d/.test(lastPart)) {
-                price = parseFloat(lastPart.replace(/[^0-9.]/g, '')) || 0;
-                name = parts.slice(0, -1).join('-').trim();
-            }
-        }
-
-        STATE.splitItems.push({
-            id: index,
-            name: name,
-            price: price / (qty || 1),
-            qty: qty,
-            originalLine: line,
-            selected: false
-        });
-    });
-
-    let currentPriceKey = 'Total';
-    if ('Total' in order) currentPriceKey = 'Total';
-    else if ('total' in order) currentPriceKey = 'total';
-    else if ('Price' in order) currentPriceKey = 'Price';
-    else if ('price' in order) currentPriceKey = 'price';
-
-    STATE.splitTotalPrice = parseFloat(String(order[currentPriceKey] || 0).replace(/[^0-9.]/g, '')) || 0;
+    // Store the raw subtotal and the discount-adjusted final total
+    STATE.splitTotalPrice = calc.subtotal;
+    STATE.splitRealFinalTotal = calc.finalTotal;
+    STATE.splitDiscountPercent = calc.discountPercent;
+    STATE.splitDiscountAmount = calc.discountAmount;
 
     const titleEl = document.getElementById('split-order-title');
     if (titleEl) titleEl.innerText = `${order.dailySequence} - ${order.Table || 'سفري'}`;
 
+    const sysCurrency = localStorage.getItem('system_currency') || 'DA';
+
+    // Display the REAL final total (after discount) as the base for splitting
     const totalAmountEl = document.getElementById('split-total-amount');
     const manualTotalAmountEl = document.getElementById('split-manual-total-amount');
-    const sysCurrency = localStorage.getItem('system_currency') || 'DA';
-    if (totalAmountEl) totalAmountEl.innerText = `${STATE.splitTotalPrice.toLocaleString()} ${sysCurrency}`;
-    if (manualTotalAmountEl) manualTotalAmountEl.innerText = `${STATE.splitTotalPrice.toLocaleString()} ${sysCurrency}`;
+
+    if (calc.discountPercent > 0) {
+        const discountNote = `<span class="text-green-400 text-xs mr-2">(خصم ${calc.discountPercent}%)</span>`;
+        if (totalAmountEl) totalAmountEl.innerHTML = `${calc.finalTotal.toLocaleString()} ${sysCurrency} ${discountNote}`;
+        if (manualTotalAmountEl) manualTotalAmountEl.innerHTML = `${calc.finalTotal.toLocaleString()} ${sysCurrency} ${discountNote}`;
+    } else {
+        if (totalAmountEl) totalAmountEl.innerText = `${calc.finalTotal.toLocaleString()} ${sysCurrency}`;
+        if (manualTotalAmountEl) manualTotalAmountEl.innerText = `${calc.finalTotal.toLocaleString()} ${sysCurrency}`;
+    }
 
     STATE.splitPersonCount = 2;
     window.setSplitMode('even');
@@ -687,6 +662,9 @@ window.closeSplitModal = function () {
     STATE.currentSplitOrder = null;
     STATE.splitItems = [];
     STATE.splitTotalPrice = 0;
+    STATE.splitRealFinalTotal = 0;
+    STATE.splitDiscountPercent = 0;
+    STATE.splitDiscountAmount = 0;
     document.getElementById('split-modal').classList.add('hidden');
 };
 
@@ -720,7 +698,9 @@ window.updateSplitPersonCount = function (delta) {
     const countEl = document.getElementById('split-person-count');
     if (countEl) countEl.innerText = STATE.splitPersonCount;
 
-    const shareAmount = Math.ceil(STATE.splitTotalPrice / STATE.splitPersonCount);
+    // Use the REAL final total (after discount) for even split
+    const realTotal = STATE.splitRealFinalTotal || STATE.splitTotalPrice;
+    const shareAmount = Math.ceil(realTotal / STATE.splitPersonCount);
 
     const evenShareEl = document.getElementById('split-even-share');
     const currentAmountEl = document.getElementById('split-current-amount');
@@ -737,6 +717,7 @@ window.renderSplitItems = function () {
     const sysCurrency = localStorage.getItem('system_currency') || 'DA';
 
     STATE.splitItems.forEach((item, index) => {
+        const rowTotal = item.price * item.qty;
         const itemHtml = `
             <div class="flex items-center justify-between bg-gray-800 p-3 rounded-xl border ${item.selected ? 'border-brand shadow-[0_0_8px_rgba(255,153,0,0.2)]' : 'border-gray-700'} cursor-pointer hover:bg-gray-750 transition" onclick="window.toggleSplitItem(${index})">
                 <div class="flex items-center gap-3">
@@ -745,19 +726,28 @@ window.renderSplitItems = function () {
                     </div>
                     <span class="text-white font-bold text-sm select-none">${item.qty}x ${item.name}</span>
                 </div>
-                <span class="text-brand font-mono font-bold select-none">${(item.price * item.qty).toLocaleString()} ${sysCurrency}</span>
+                <span class="text-brand font-mono font-bold select-none">${rowTotal.toLocaleString()} ${sysCurrency}</span>
             </div>
         `;
         list.insertAdjacentHTML('beforeend', itemHtml);
     });
 
+    // Calculate selection totals using the real final total (discount-aware)
     const selectedTotal = STATE.splitItems.filter(i => i.selected).reduce((sum, i) => sum + (i.price * i.qty), 0);
+    const realFinalTotal = STATE.splitRealFinalTotal || STATE.splitTotalPrice;
+    const remaining = realFinalTotal - selectedTotal;
+
     const selEl = document.getElementById('split-selected-total');
     const remEl = document.getElementById('split-remaining-total');
     const curEl = document.getElementById('split-current-amount');
 
     if (selEl) selEl.innerText = `${selectedTotal.toLocaleString()} ${sysCurrency}`;
-    if (remEl) remEl.innerText = `${(STATE.splitTotalPrice - selectedTotal).toLocaleString()} ${sysCurrency}`;
+    if (remEl) {
+        remEl.innerText = `${remaining.toLocaleString()} ${sysCurrency}`;
+        remEl.className = remaining < 0
+            ? 'text-red-400 font-bold text-lg'
+            : 'text-gray-300 font-bold text-lg';
+    }
     if (curEl) curEl.innerText = `${selectedTotal.toLocaleString()} ${sysCurrency}`;
 };
 
@@ -788,7 +778,8 @@ window.confirmSplitPayment = async function (shouldPrint) {
     try {
         if (STATE.splitMode === 'even') {
             const count = STATE.splitPersonCount;
-            const shareAmount = Math.ceil(STATE.splitTotalPrice / count);
+            const realTotal = STATE.splitRealFinalTotal || STATE.splitTotalPrice;
+            const shareAmount = Math.ceil(realTotal / count);
 
             for (let i = 1; i < count; i++) {
                 const payload = {
