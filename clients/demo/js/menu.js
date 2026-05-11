@@ -143,33 +143,43 @@ window.openEditOrderModal = async function (orderId) {
     STATE.originalEditPrice = parseFloat((order.total || order.Total || order.price || order.Price || 0).toString().replace(/[^0-9.]/g, '')) || 0;
     STATE.newlyAddedItems = [];
 
-    // تحويل التفاصيل النصية إلى قائمة أصناف قابلة للحذف
+    // تحويل التفاصيل النصية إلى قائمة أصناف قابلة للحذف والتعامل مع الكميات
     STATE.originalItemsList = [];
     if (STATE.originalEditDetails) {
         const lines = STATE.originalEditDetails.split('\n').filter(l => l.trim() !== "");
         lines.forEach(line => {
             const hasCheck = line.includes('✅') || line.includes('[جاهز]');
             const cleanLine = line.replace(/✅|\[جاهز\]/g, '').trim();
-            // محاولة استخراج الاسم والسعر من الصيغة: "1x اسم المنتج = 100"
-            const match = cleanLine.match(/(.*)\s*=\s*(\d+)/);
+
+            let qty = 1;
+            let name = cleanLine;
+            let unitPrice = 0;
+
+            // محاولة استخراج الكمية والاسم والسعر: "2x Burger = 1000" أو "Burger = 500"
+            const qtyMatch = cleanLine.match(/^(\d+)\s*[xX]\s*(.*)\s*=\s*(\d+)/);
+            if (qtyMatch) {
+                qty = parseInt(qtyMatch[1]);
+                name = qtyMatch[2].trim();
+                const totalLinePrice = parseFloat(qtyMatch[3]);
+                unitPrice = totalLinePrice / qty;
+            } else {
+                const priceMatch = cleanLine.match(/(.*)\s*=\s*(\d+)/);
+                if (priceMatch) {
+                    name = priceMatch[1].trim();
+                    unitPrice = parseFloat(priceMatch[2]);
+                }
+            }
 
             const readyHtml = hasCheck ? ' <span class="text-green-400 font-bold ml-2 text-[10px] bg-green-900/30 px-1 rounded">✅ جاهز</span>' : '';
 
-            if (match) {
-                STATE.originalItemsList.push({
-                    id: Math.random(),
-                    text: line, // نحتفظ بالنص الأصلي لكي لا نفقده عند الحفظ
-                    name: match[1].trim() + readyHtml,
-                    price: parseFloat(match[2])
-                });
-            } else {
-                STATE.originalItemsList.push({
-                    id: Math.random(),
-                    text: line,
-                    name: cleanLine + readyHtml,
-                    price: 0 // إذا لم نجد السعر نعتبره 0 لتجنب أخطاء الحساب
-                });
-            }
+            STATE.originalItemsList.push({
+                id: Math.random(),
+                name: name + readyHtml,
+                pureName: name, // الاسم بدون ✅
+                qty: qty,
+                price: unitPrice,
+                hasCheck: hasCheck
+            });
         });
     }
 
@@ -295,13 +305,28 @@ window.updateTableListByRoom = function () {
 };
 
 window.addItemToEditOrder = function (name, price) {
-    STATE.newlyAddedItems.push({ id: Date.now() + Math.random(), name, price });
+    // التحقق مما إذا كان الصنف موجوداً بالفعل في الإضافات الجديدة
+    const existing = STATE.newlyAddedItems.find(item => item.name === name);
+    if (existing) {
+        existing.qty++;
+    } else {
+        STATE.newlyAddedItems.push({ id: Date.now() + Math.random(), name, price, qty: 1 });
+    }
     window.updateEditOrderUI();
 };
 
 window.removeAddedItem = function (itemId) {
     STATE.newlyAddedItems = STATE.newlyAddedItems.filter(item => item.id !== itemId);
     window.updateEditOrderUI();
+};
+
+window.changeItemQty = function (listType, itemId, delta) {
+    const list = listType === 'original' ? STATE.originalItemsList : STATE.newlyAddedItems;
+    const item = list.find(i => i.id === itemId);
+    if (item) {
+        item.qty = Math.max(1, item.qty + delta);
+        window.updateEditOrderUI();
+    }
 };
 
 window.updateEditOrderUI = function () {
@@ -311,7 +336,7 @@ window.updateEditOrderUI = function () {
 
     if (!containerNew || !containerOriginal) return;
 
-    // 1. رسم الأصناف الأصلية مع إمكانية الحذف
+    // 1. رسم الأصناف الأصلية مع إمكانية التعديل
     containerOriginal.innerHTML = '';
     let currentTotal = 0;
 
@@ -321,13 +346,21 @@ window.updateEditOrderUI = function () {
         containerOriginal.innerHTML = '<p class="text-xs text-gray-500 italic">لا توجد أصناف أصلية (أو تم حذفها بالكامل).</p>';
     } else {
         STATE.originalItemsList.forEach(item => {
-            currentTotal += item.price;
+            const lineTotal = item.price * item.qty;
+            currentTotal += lineTotal;
             containerOriginal.innerHTML += `
                 <div class="flex justify-between items-center bg-gray-800/40 p-2 rounded mb-2 border border-gray-700/50">
-                    <span class="text-xs text-gray-300 truncate flex-1">${item.name}</span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] text-gray-500 font-mono">${item.price}</span>
-                        <button onclick="window.removeOriginalItem(${item.id})" class="text-red-400 hover:text-red-300 p-1">
+                    <div class="flex flex-col flex-1 truncate">
+                        <span class="text-xs text-gray-300 truncate">${item.name}</span>
+                        <span class="text-[10px] text-gray-500 font-mono">${item.qty} × ${item.price} = ${lineTotal}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="flex items-center bg-gray-900 rounded-lg border border-gray-700">
+                            <button onclick="window.changeItemQty('original', ${item.id}, -1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white">-</button>
+                            <span class="w-6 text-center text-[10px] font-bold text-white font-mono">${item.qty}</span>
+                            <button onclick="window.changeItemQty('original', ${item.id}, 1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white">+</button>
+                        </div>
+                        <button onclick="window.removeOriginalItem(${item.id})" class="text-red-400 hover:text-red-300 p-1 ml-1" title="حذف">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </div>
@@ -341,16 +374,24 @@ window.updateEditOrderUI = function () {
     let addedTotal = 0;
 
     if (STATE.newlyAddedItems.length === 0) {
-        containerNew.innerHTML = '<p class="text-xs text-gray-500 italic bg-gray-800/40 p-2 rounded">لم يتم إضافة جديد.</p>';
+        containerNew.innerHTML = '<p class="text-xs text-gray-500 italic bg-gray-800/40 p-2 rounded text-center">لم يتم إضافة جديد.</p>';
     } else {
         STATE.newlyAddedItems.forEach(item => {
-            addedTotal += item.price;
+            const lineTotal = item.price * item.qty;
+            addedTotal += lineTotal;
             containerNew.innerHTML += `
-                <div class="flex justify-between items-center bg-brand/5 p-2 rounded border border-brand/20 shadow-sm animate-fade-in">
-                    <span class="text-sm font-bold text-white truncate flex-1 pl-2 border-l-2 border-brand">${item.name}</span>
-                    <div class="flex items-center gap-3">
-                        <span class="text-sm text-brand font-mono">${item.price}</span>
-                        <button onclick="window.removeAddedItem(${item.id})" class="text-red-500 hover:text-red-400 p-1.5 rounded" title="إلغاء الإضافة">
+                <div class="flex justify-between items-center bg-brand/5 p-2 rounded border border-brand/20 shadow-sm animate-fade-in mb-2">
+                    <div class="flex flex-col flex-1 truncate pl-2 border-l-2 border-brand">
+                        <span class="text-sm font-bold text-white truncate">${item.name}</span>
+                        <span class="text-[10px] text-brand/70 font-mono">${item.qty} × ${item.price} = ${lineTotal}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="flex items-center bg-gray-900 rounded-lg border border-brand/30">
+                            <button onclick="window.changeItemQty('new', ${item.id}, -1)" class="w-7 h-7 flex items-center justify-center text-brand hover:bg-brand/10 rounded-r-lg">-</button>
+                            <span class="w-7 text-center text-xs font-bold text-white font-mono">${item.qty}</span>
+                            <button onclick="window.changeItemQty('new', ${item.id}, 1)" class="w-7 h-7 flex items-center justify-center text-brand hover:bg-brand/10 rounded-l-lg">+</button>
+                        </div>
+                        <button onclick="window.removeAddedItem(${item.id})" class="text-red-500 hover:text-red-400 p-1.5 ml-1" title="إلغاء">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
@@ -378,6 +419,21 @@ window.closeEditOrderModal = function () {
 window.saveOrderEdit = async function () {
     const isNewOrder = STATE.currentEditOrder === null;
 
+    const originalLines = STATE.originalItemsList.map(item => {
+        const checkPrefix = item.hasCheck ? '✅ ' : '';
+        const lineTotal = item.price * item.qty;
+        return `${item.qty}x ${item.pureName} = ${lineTotal}${checkPrefix}`;
+    });
+
+    const newLines = STATE.newlyAddedItems.map(item => {
+        const lineTotal = item.price * item.qty;
+        return `${item.qty}x ${item.name} = ${lineTotal}`;
+    });
+
+    const finalDetails = [...originalLines, ...newLines].join('\n');
+    const finalPrice = STATE.originalItemsList.reduce((sum, item) => sum + (item.price * item.qty), 0) +
+                       STATE.newlyAddedItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
     // للطلب الجديد: يجب إضافة صنف واحد على الأقل
     // لتعديل طلب موجود: يمكن الحفظ حتى لو حذفنا أصناف فقط بدون إضافة جديدة
     if (isNewOrder && STATE.newlyAddedItems.length === 0) {
@@ -395,18 +451,6 @@ window.saveOrderEdit = async function () {
         btn.innerHTML = 'جاري الحفظ...';
         btn.disabled = true;
     }
-
-    const originalTotal = STATE.originalItemsList.reduce((sum, item) => sum + item.price, 0);
-    const addedTotal = STATE.newlyAddedItems.reduce((sum, item) => sum + item.price, 0);
-    const finalPrice = originalTotal + addedTotal;
-
-    const originalLines = STATE.originalItemsList.map(item => item.text).join('\n');
-    const addedLines = STATE.newlyAddedItems.map(item => `1x ${item.name} = ${item.price}`).join('\n');
-
-    let finalDetails = "";
-    if (originalLines && addedLines) finalDetails = `${originalLines}\n${addedLines}`;
-    else finalDetails = originalLines || addedLines;
-
     let priceKey = 'Total';
     if (!isNewOrder) {
         if ('Total' in STATE.currentEditOrder) priceKey = 'Total';
@@ -692,7 +736,7 @@ window.renderPromoEditor = function (items) {
             </div>
             <div class="p-4 flex-1 flex flex-col gap-3">
                 <div><h3 class="text-lg font-bold text-white truncate" title="${name}">${name}</h3></div>
-                
+
                 <div class="flex justify-between items-center bg-gray-900 px-3 py-2 rounded border border-gray-700">
                     <span class="text-xs text-gray-400">السعر الأصلي</span>
                     <span class="text-sm font-bold text-gray-200 ${hasPromo ? 'line-through decoration-red-500 opacity-60' : ''}">${price} ${sysCurrency}</span>
@@ -769,12 +813,12 @@ window.renderMenuAdd = async function () {
                 <label class="block text-sm font-medium text-gray-300 mb-2">اسم الطبق <span class="text-red-500">*</span></label>
                 <input type="text" id="add-name" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none transition" placeholder="مثال: بيتزا مارغريتا">
             </div>
-            
+
             <div>
                 <label class="block text-sm font-medium text-gray-300 mb-2">الوصف / المكونات</label>
                 <textarea id="add-desc" rows="3" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none resize-none transition" placeholder="مثال: صلصة طماطم، جبن موزاريلا، ريحان..."></textarea>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">السعر (${sysCurrency}) <span class="text-red-500">*</span></label>

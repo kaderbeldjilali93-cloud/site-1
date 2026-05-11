@@ -179,32 +179,74 @@ window.printReceipt = function (order) {
 
     const detailsList = (order.Details || "").split(/[\n،,]/).filter(i => i.trim() !== "");
     let itemsHtml = '';
+    let subtotalForReceipt = 0;
+    let discountPercent = 0;
+    
+    // Scan for discount prize
+    const discountMatch = (order.Details || "").match(/🎁 جائزة: خصم\s+(\d+)%/);
+    if (discountMatch) {
+        discountPercent = parseInt(discountMatch[1]);
+    }
+
     detailsList.forEach(item => {
         let text = item.trim();
-        if (text !== '') {
-            let itemName = text;
-            let itemPrice = '';
+        if (text === '' || text.includes('🎁 جائزة:')) return; // Skip prize line in items list
 
-            if (text.includes('=')) {
-                let parts = text.split('=');
-                itemName = parts[0].trim();
-                itemPrice = parts[1].trim();
-            } else if (text.includes('-')) {
-                let parts = text.split('-');
-                let lastPart = parts[parts.length - 1].trim();
-                if (/^[\d\.]+/.test(lastPart)) {
-                    itemPrice = lastPart;
-                    parts.pop();
-                    itemName = parts.join('-').trim();
-                }
+        let itemName = text;
+        let itemPriceStr = '';
+        let linePrice = 0;
+
+        if (text.includes('=')) {
+            let parts = text.split('=');
+            itemName = parts[0].trim();
+            itemPriceStr = parts[1].trim();
+            linePrice = parseFloat(itemPriceStr) || 0;
+        } else if (text.includes('-')) {
+            let parts = text.split('-');
+            let lastPart = parts[parts.length - 1].trim();
+            if (/^[\d\.]+/.test(lastPart)) {
+                itemPriceStr = lastPart;
+                linePrice = parseFloat(itemPriceStr) || 0;
+                parts.pop();
+                itemName = parts.join('-').trim();
             }
-
-            itemsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 11px;">
-                <span style="flex:1;">${itemName}</span>
-                <span style="font-weight:bold; white-space:nowrap; margin-left: 8px;">${itemPrice}</span>
-            </div>`;
         }
+        
+        subtotalForReceipt += linePrice;
+
+        itemsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 11px;">
+            <span style="flex:1;">${itemName}</span>
+            <span style="font-weight:bold; white-space:nowrap; margin-left: 8px;">${linePrice.toLocaleString()}</span>
+        </div>`;
     });
+
+    const discountAmount = subtotalForReceipt * (discountPercent / 100);
+    const finalTotal = subtotalForReceipt - discountAmount;
+
+    let totalsHtml = '';
+    if (discountPercent > 0) {
+        totalsHtml = `
+            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                <span>المجموع الفرعي:</span>
+                <span>${subtotalForReceipt.toLocaleString()} ${sysCurrency}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #d97706; margin-bottom: 4px; font-weight: bold;">
+                <span>خصم الجائزة (${discountPercent}%):</span>
+                <span>-${discountAmount.toLocaleString()} ${sysCurrency}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-top: 8px; background-color: #f0f0f0; padding: 6px; border: 1px solid #000;">
+                <span>الإجمالي:</span>
+                <span>${finalTotal.toLocaleString()} ${sysCurrency}</span>
+            </div>
+        `;
+    } else {
+        totalsHtml = `
+            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; background-color: #f0f0f0; padding: 6px; border: 1px solid #000;">
+                <span>المجموع:</span>
+                <span>${subtotalForReceipt.toLocaleString()} ${sysCurrency}</span>
+            </div>
+        `;
+    }
 
     printSec.innerHTML = `
         <div style="text-align: center; margin-bottom: 12px;">
@@ -224,10 +266,7 @@ window.printReceipt = function (order) {
             ${itemsHtml}
         </div>
         <div style="border-top: 1px dashed #000; margin: 12px 0;"></div>
-        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 16px; margin-bottom: 12px; background-color: #f0f0f0; padding: 4px;">
-            <span>المجموع:</span>
-            <span>${price.toLocaleString()} ${sysCurrency}</span>
-        </div>
+        ${totalsHtml}
         <div style="border-top: 1px dashed #000; margin: 12px 0;"></div>
         <div style="text-align: center; font-size: 11px; margin-top: 15px; font-weight: bold; white-space: pre-line;">
             ${rBottom}
